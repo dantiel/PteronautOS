@@ -7,6 +7,7 @@
 #include "crsf_protocol.h"
 #include "logging.h"
 #include "rxtx_intf.h"
+#include "../Ornithopter/OrnithopterFilter.h"
 
 #if defined(PLATFORM_ESP32)
 #include <driver/periph_ctrl.h>
@@ -102,8 +103,11 @@ static void servoWriteDshot(eServoOutputMode chMode, uint8_t ch, uint16_t us)
 #endif /* PLATFORM_ESP32 */
 }
 
+
+
 static void servoWrite(uint8_t ch, uint16_t us)
 {
+    us = orniFilterChannel(ch, us);
     const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
     const eServoOutputMode chMode = (eServoOutputMode)chConfig->val.mode;
     if (chMode == somDShot || chMode == somDShot3D)
@@ -151,6 +155,7 @@ static void servosFailsafe()
 
 static void servosEnterFailsafe()
 {
+    ornithopterOnLinkDown();
     newChannelsAvailable = false;
     lastUpdate = 0;
 
@@ -218,6 +223,16 @@ static void servosUpdate(unsigned long now)
         servosEnterFailsafe();
         return;
     }
+
+#ifdef ORNITHOPTER_MODE
+    // Advance flapping oscillator and write wing servos on every tick
+    ornithopterUpdate();
+    if (initialized)
+    {
+        servoWrite(ORNITHOPTER_SERVO_LEFT,  0); // value ignored by filter
+        servoWrite(ORNITHOPTER_SERVO_RIGHT, 0);
+    }
+#endif
 
     if (newChannelsAvailable)
     {
@@ -332,6 +347,7 @@ static int event()
     if (!initialized && connectionState == connected)
     {
         initialized = true;
+        ornithopterOnLinkUp();
         for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
         {
             const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);

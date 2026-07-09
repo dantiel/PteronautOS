@@ -75,7 +75,7 @@
 
 device_affinity_t ui_devices[] = {
   {&Serial0_device, 1},
-#if defined(PLATFORM_ESP32)
+#if defined(PLATFORM_ESP32) && !defined(ORNITHOPTER_MODE)
   {&Serial1_device, 1},
   {&SerialUpdate_device, 1},
 #endif
@@ -84,10 +84,14 @@ device_affinity_t ui_devices[] = {
   {&RGB_device, 0},
   {&WIFI_device, 0},
   {&Button_device, 0},
+#ifndef ORNITHOPTER_MODE
   {&AnalogVbat_device, 0},
+#endif
   {&ServoOut_device, 1},
+#ifndef ORNITHOPTER_MODE
   {&Baro_device, 0}, // must come after AnalogVbat_device to slow updates
-#if defined(PLATFORM_ESP32) && !defined(PLATFORM_ESP32_C3)
+#endif
+#if defined(PLATFORM_ESP32) && !defined(PLATFORM_ESP32_C3) && !defined(ORNITHOPTER_MODE)
   {&VTxSPI_device, 0},
   {&MSPVTx_device, 0}, // dependency on VTxSPI_device
   {&Thermal_device, 0},
