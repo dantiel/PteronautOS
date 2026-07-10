@@ -1,0 +1,21 @@
+require "rake/clean"
+
+CLOBBER.include("index.html", "assets/css/style.css")
+
+desc "Build Haml to HTML"
+task :haml do
+  sh "bundle exec haml index.haml index.html"
+end
+
+desc "Build Sass to CSS"
+task :sass do
+  sh "bundle exec sass --style compressed assets/css/style.sass assets/css/style.css"
+end
+
+desc "Build all"
+task build: [:haml, :sass]
+
+desc "Clean and build"
+task rebuild: [:clobber, :build]
+
+task default: :build

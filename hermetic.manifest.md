@@ -58,6 +58,7 @@ CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
 3. **Failsafe é survival** — se o link cair, as asas centram, o leme centra
 4. **Graça na degradação** — se o MPU6050 falhar, o módulo desliga-se sem afectar o voo
 5. **Zero dependências externas** — tudo no repositório, sem bibliotecas de terceiros
+6. **Commits são decisões** — cada commit é intenção consciente, nunca automático; a história conta a alma do código
 
 ## Stack
 

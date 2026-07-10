@@ -1,0 +1,251 @@
+// PteronautOS — Turret Road, dark/light themes
+
+// Variables
+$turret: 'Turret Road', monospace
+$os-grey: #666
+$deep-grey: #444
+$white: #fff
+$black: #000
+$text-light: #111
+$bg-light: #f5f5f5
+$accent-light: #333
+
+// Root — dark default
+\:root
+  --bg: #{$black}
+  --text: #{$white}
+  --accent: #{$os-grey}
+  --mut: #{$deep-grey}
+  --dim: #333
+  --nav: #{$white}
+
+// Light theme preference
+@media (prefers-color-scheme: light)
+  \:root
+    --bg: #{$bg-light}
+    --text: #{$text-light}
+    --accent: #{$deep-grey}
+    --mut: #666
+    --dim: #999
+    --nav: #{$text-light}
+
+// Base
+*
+  margin: 0
+  padding: 0
+  box-sizing: border-box
+
+html, body
+  height: 100%
+  font-family: $turret
+  background: var(--bg)
+  color: var(--text)
+  transition: background 0.2s ease, color 0.2s ease
+  line-height: 1.6
+
+// Navigation
+nav
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  display: flex
+  justify-content: center
+  gap: 2.5rem
+  padding: 1.5rem
+  z-index: 100
+
+  a
+    color: var(--nav)
+    text-decoration: none
+    font-size: 0.75rem
+    letter-spacing: 0.2em
+    text-transform: uppercase
+    opacity: 0.7
+    transition: opacity 0.2s
+
+    &:hover
+      opacity: 1
+
+// Hero
+.hero
+  display: flex
+  flex-direction: column
+  justify-content: center
+  align-items: center
+  min-height: 100vh
+  text-align: center
+  padding: 2rem
+
+.headline
+  font-weight: 800
+  font-size: clamp(2.5rem, 10vw, 8rem)
+  letter-spacing: 0.18em
+  text-transform: uppercase
+  line-height: 1.1
+  margin-bottom: 1rem
+
+  .pteronaut
+    color: var(--text)
+
+  .os
+    color: var(--accent)
+
+.subhead
+  font-weight: 400
+  font-size: clamp(0.875rem, 2.5vw, 1.25rem)
+  letter-spacing: 0.35em
+  text-transform: uppercase
+  color: var(--accent)
+  margin-bottom: 2rem
+
+.glyph
+  font-family: monospace
+  font-size: clamp(0.5rem, 1.5vw, 0.875rem)
+  line-height: 1
+  opacity: 0.5
+  margin: 2rem 0
+  white-space: pre
+  color: var(--mut)
+
+.version
+  font-size: 0.625rem
+  letter-spacing: 0.3em
+  text-transform: uppercase
+  opacity: 0.6
+  color: var(--dim)
+
+// Main content
+main
+  max-width: 800px
+  margin: 0 auto
+  padding: 4rem 1.5rem
+
+section
+  margin-bottom: 5rem
+
+h2
+  font-size: 1.25rem
+  font-weight: 700
+  letter-spacing: 0.25em
+  text-transform: uppercase
+  margin-bottom: 1.5rem
+  color: var(--text)
+
+p
+  margin-bottom: 1rem
+  font-size: 0.9375rem
+  line-height: 1.7
+
+strong
+  font-weight: 700
+
+// Code blocks
+code
+  font-family: $turret
+  font-size: 0.875rem
+
+.highlight
+  background: var(--dim)
+  padding: 1rem 1.5rem
+  margin: 1.5rem 0
+  opacity: 0.8
+
+  code
+    font-size: 0.8rem
+    letter-spacing: 0.05em
+
+// Definition list
+dl
+  &.grid
+    display: grid
+    grid-template-columns: auto 1fr
+    gap: 0.75rem 1.5rem
+
+dt
+  font-weight: 700
+  letter-spacing: 0.1em
+  text-transform: uppercase
+  font-size: 0.8rem
+  color: var(--text)
+
+dd
+  color: var(--accent)
+  font-size: 0.875rem
+
+// Table
+table
+  width: 100%
+  border-collapse: collapse
+  margin: 1.5rem 0
+  font-size: 0.875rem
+
+td
+  padding: 0.75rem 0
+  border-bottom: 1px solid var(--dim)
+
+  &:first-child
+    width: 120px
+    color: var(--mut)
+    font-weight: 700
+    letter-spacing: 0.1em
+    text-transform: uppercase
+    font-size: 0.7rem
+
+// Build section
+.build
+  pre
+    background: var(--dim)
+    padding: 1.5rem
+    margin: 1rem 0
+    overflow-x: auto
+
+    code
+      font-size: 0.8rem
+      letter-spacing: 0.05em
+
+.compatible
+  font-size: 0.75rem
+  letter-spacing: 0.15em
+  text-transform: uppercase
+  color: var(--mut)
+
+// Footer
+footer
+  text-align: center
+  padding: 4rem 1.5rem
+  border-top: 1px solid var(--dim)
+  font-size: 0.75rem
+  letter-spacing: 0.15em
+  text-transform: uppercase
+  line-height: 1.8
+
+  p
+    margin-bottom: 0.5rem
+    opacity: 0.6
+
+  a
+    color: var(--text)
+    text-decoration: none
+    border-bottom: 1px solid var(--accent)
+
+.credit
+  margin-top: 1rem
+  font-size: 0.625rem
+  opacity: 0.5
+
+// Responsive
+@media (max-width: 600px)
+  nav
+    gap: 1.25rem
+    font-size: 0.65rem
+
+  .headline
+    letter-spacing: 0.12em
+
+  dl.grid
+    grid-template-columns: 1fr
+    gap: 0.25rem
+
+  dt
+    margin-top: 1rem
