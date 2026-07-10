@@ -7,9 +7,10 @@
 
 #include <cstdint>
 
-// --- Wing Servo Assignments (PWM output indices) ---
-#define ORNITHOPTER_SERVO_LEFT   0
-#define ORNITHOPTER_SERVO_RIGHT  1
+// --- Servo Assignments (PWM output indices) ---
+#define ORNITHOPTER_SERVO_LEFT    0
+#define ORNITHOPTER_SERVO_RIGHT   1
+#define ORNITHOPTER_SERVO_RUDDER  2
 
 // --- CRSF Channel Indices (0-based into ChannelData[]) ---
 #define ORNI_CH_AILERON         0
@@ -52,3 +53,7 @@
 
 // --- Cadence ---
 #define ORNI_CYCLE_RATING       0.070f
+
+// --- Front Rudder ---
+#define ORNI_RUDDER_CENTER_US   1500
+#define ORNI_RUDDER_MIX_SCALE   0.25f   // aileron→rudder bleed for coordinated turns

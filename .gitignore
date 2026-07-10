@@ -8,3 +8,14 @@ src/.vscode
 src/data/*.ini
 src/data/*.json
 src/hardware
+
+# AetherCodex/TM AI
+.aethercodex
+.tm-ai
+.bundle
+.env*
+.vendor_bundle
+*.orig
+*.rej
+*.js
+!docs/*.js

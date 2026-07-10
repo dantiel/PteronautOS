@@ -8,6 +8,7 @@
 #include "logging.h"
 #include "rxtx_intf.h"
 #include "../Ornithopter/OrnithopterFilter.h"
+#include "../Zephyrus/ZephyrusFilter.h"
 
 #if defined(PLATFORM_ESP32)
 #include <driver/periph_ctrl.h>
@@ -156,6 +157,7 @@ static void servosFailsafe()
 static void servosEnterFailsafe()
 {
     ornithopterOnLinkDown();
+    zephyrusOnLinkDown();
     newChannelsAvailable = false;
     lastUpdate = 0;
 
@@ -224,13 +226,19 @@ static void servosUpdate(unsigned long now)
         return;
     }
 
+#ifdef ZEPHYRUS_ENABLED
+    // Run gyro stabilization before ornithopter to set gyroRudderCorrection
+    zephyrusUpdate();
+#endif
+
 #ifdef ORNITHOPTER_MODE
-    // Advance flapping oscillator and write wing servos on every tick
+    // Advance flapping oscillator and write wing + rudder servos on every tick
     ornithopterUpdate();
     if (initialized)
     {
-        servoWrite(ORNITHOPTER_SERVO_LEFT,  0); // value ignored by filter
-        servoWrite(ORNITHOPTER_SERVO_RIGHT, 0);
+        servoWrite(ORNITHOPTER_SERVO_LEFT,   0); // value ignored by filter
+        servoWrite(ORNITHOPTER_SERVO_RIGHT,  0);
+        servoWrite(ORNITHOPTER_SERVO_RUDDER, 0);
     }
 #endif
 
@@ -348,6 +356,7 @@ static int event()
     {
         initialized = true;
         ornithopterOnLinkUp();
+        zephyrusOnLinkUp();
         for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
         {
             const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);

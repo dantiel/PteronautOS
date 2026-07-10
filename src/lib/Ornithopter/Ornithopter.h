@@ -31,6 +31,11 @@ public:
     // Computed servo outputs (988-2012 µs)
     uint16_t servoLeftUs;
     uint16_t servoRightUs;
+    uint16_t servoRudderUs;
+
+#ifdef ZEPHYRUS_ENABLED
+    float gyroRudderCorrection;
+#endif
 
     Ornithopter();
     bool update();

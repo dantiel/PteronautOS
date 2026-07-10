@@ -15,6 +15,10 @@ Ornithopter::Ornithopter()
   , voiceAltitudeHold(172)
   , servoLeftUs(ORNI_SERVO_CENTER_US)
   , servoRightUs(ORNI_SERVO_CENTER_US)
+  , servoRudderUs(ORNI_RUDDER_CENTER_US)
+#ifdef ZEPHYRUS_ENABLED
+  , gyroRudderCorrection(0.0f)
+#endif
   , _lastUpdateUs(0)
 {}
 
@@ -22,8 +26,9 @@ void Ornithopter::onLinkUp()   { linkUp = true; }
 void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }
 
 void Ornithopter::enterFailsafe() {
-    servoLeftUs  = ORNI_SERVO_CENTER_US;
-    servoRightUs = ORNI_SERVO_CENTER_US;
+    servoLeftUs   = ORNI_SERVO_CENTER_US;
+    servoRightUs  = ORNI_SERVO_CENTER_US;
+    servoRudderUs = ORNI_RUDDER_CENTER_US;
     _osc.reset();
 }
 
@@ -125,14 +130,27 @@ void Ornithopter::_computeMixer() {
 
     servoLeftUs  = _clampServo(usL);
     servoRightUs = _clampServo(usR);
+
+    // --- Front Rudder ---
+    float rudderNorm   = _crsfToNorm(voiceRudder);
+    float rudderMix    = rudderNorm + (aileronNorm * ORNI_RUDDER_MIX_SCALE);
+    if (rudderMix > 1.0f) rudderMix = 1.0f;
+    if (rudderMix < -1.0f) rudderMix = -1.0f;
+    servoRudderUs = (uint16_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
+#ifdef ZEPHYRUS_ENABLED
+                               + gyroRudderCorrection
+#endif
+                              );
+    servoRudderUs = _clampServo(servoRudderUs);
 }
 
 bool Ornithopter::update() {
     if (!enabled) return false;
     _readChannels();
     if (!linkUp) {
-        servoLeftUs  = ORNI_SERVO_CENTER_US;
-        servoRightUs = ORNI_SERVO_CENTER_US;
+        servoLeftUs   = ORNI_SERVO_CENTER_US;
+        servoRightUs  = ORNI_SERVO_CENTER_US;
+        servoRudderUs = ORNI_RUDDER_CENTER_US;
         return true;
     }
     _computeMixer();

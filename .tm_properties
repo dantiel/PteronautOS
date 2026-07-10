@@ -1,0 +1,47 @@
+# === PTERONAUTOS ==============================================================
+# Open-source firmware for servo-driven ornithopters.
+# Forked from ExpressLRS — PlatformIO / ESP8285 RX target.
+
+projectDirectory      = "$CWD"
+windowTitle           = '${TM_DISPLAYNAME:+${TM_DISPLAYNAME}} ✧ PteronautOS${TM_DIRECTORY:+ :: ${TM_DIRECTORY/^${projectDirectory}\/?(.+)/$1/}}'
+
+spellingLanguage      = "en_GB"
+
+# --- Includes -----------------------------------------------------------------
+includeFiles          = "{$includeFiles,.aethercodex,.tm_properties,.gitignore}"
+includeInBrowser      = "{$includeInBrowser,.cpp,.h,.hpp,.ini,.md,.yml,.json,.aethercodex,.tm-ai}"
+includeDirectories    = "{$includeDirectories,src,lib,targets}"
+includeInFileChooser  = "{$includeInFileChooser,.gitignore,*.orig,*.rej,.pio,.env*}"
+includeInFolderSearch = "{$includeInFolderSearch,src,lib,targets}"
+includeInArgonaut     = "{$includeInArgonaut,.cpp,.h,.hpp,.ini,.md}"
+
+# --- Excludes -----------------------------------------------------------------
+excludeFiles          = "{$excludeFiles,destroy,tmtags,tmtagsHistory,tags,dump.rdb,*rid,*lock,*log,*.map,*.elf,*.bin,*.hex,*.s,.fuse_hidden*}"
+excludeInBrowser      = "{$excludeInBrowser,*.orig,*.rej,*.js,*.pyc,__pycache__}"
+excludeDirectories    = "{$excludeDirectories,.pio,.vscode,.github,build,cmake-build-*,node_modules}"
+excludeInFileChooser  = "{$excludeInFileChooser,.pio,build}"
+excludeInFolderSearch = "{$excludeInFolderSearch,.pio,.git,build}"
+excludeInArgonaut     = "{$excludeInBrowser}"
+
+# --- Variables ----------------------------------------------------------------
+TM_ORGANIZATION_NAME  = 'darographix'
+
+IOSEVKA_CURLY_FONT    = 'Iosevka-Curly-Light'
+INPUT_MONO_COMPRESSED = 'InputMonoCompressed-ExtraLight'
+fontName              = $IOSEVKA_CURLY_FONT
+
+# --- Scopes -------------------------------------------------------------------
+[ source.c++.platformio ]
+scopeAttributes = "attr.pteronautos attr.aethercodex"
+
+[ "**/*.ini" ]
+scopeAttributes = "attr.pteronautos attr.aethercodex"
+
+[ "**/*.cpp" ]
+scopeAttributes = "attr.pteronautos attr.aethercodex"
+
+[ "**/*.h" ]
+scopeAttributes = "attr.pteronautos attr.aethercodex"
+
+[ ** ]
+scopeAttributes = "attr.aethercodex"

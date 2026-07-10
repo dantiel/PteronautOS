@@ -20,8 +20,9 @@ static inline void ornithopterUpdate() {
 }
 
 static inline uint16_t orniFilterChannel(uint8_t ch, uint16_t us) {
-    if (ch == ORNITHOPTER_SERVO_LEFT)  return ornithopter.servoLeftUs;
-    if (ch == ORNITHOPTER_SERVO_RIGHT) return ornithopter.servoRightUs;
+    if (ch == ORNITHOPTER_SERVO_LEFT)   return ornithopter.servoLeftUs;
+    if (ch == ORNITHOPTER_SERVO_RIGHT)  return ornithopter.servoRightUs;
+    if (ch == ORNITHOPTER_SERVO_RUDDER) return ornithopter.servoRudderUs;
     return us;
 }
 
