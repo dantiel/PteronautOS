@@ -16,6 +16,7 @@
   "lang_class_zh": "active",
   "asset_prefix": "..",
   "title": "PteronautOS",
+  "nav_home": "\u2302",
   "nav_essence": "本质",
   "nav_architecture": "架构",
   "nav_zephyrus": "西风神",
