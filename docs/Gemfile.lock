@@ -18,6 +18,7 @@ GEM
     temple (0.10.4)
     thor (1.5.0)
     tilt (2.8.0)
+    webrick (1.9.2)
 
 PLATFORMS
   x86_64-darwin-24
@@ -26,6 +27,7 @@ DEPENDENCIES
   haml (~> 6.2)
   rake (~> 13.4)
   sass (~> 3.7)
+  webrick (~> 1.8)
 
 BUNDLED WITH
    2.3.27
