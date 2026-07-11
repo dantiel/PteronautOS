@@ -58,7 +58,7 @@ body
   background: var(--bg)
   line-height: 1.7
   overflow-x: hidden
-  font-size: 1.05rem
+  font-size: 1.15rem
   letter-spacing: 0.03em
 
 // ── Hero Layers ───────────────────────────────────────────────
@@ -70,7 +70,7 @@ body
   width: 100%
   height: 100vh
   z-index: 0
-  background: url('../images/hero-bg.png') center center / 90vmin auto no-repeat
+  background: url('../images/hero-bg.png') center center / 110vmin auto no-repeat
   will-change: transform
 
 // Layer 1: Nemicolopterus — same scale, same anchor, translated down
@@ -81,7 +81,7 @@ body
   width: 100%
   height: 100vh
   z-index: 1
-  background: url('../images/hero-nemicolopterus.png') center center / 90vmin auto no-repeat
+  background: url('../images/hero-nemicolopterus.png') center center / 110vmin auto no-repeat
   pointer-events: none
   will-change: transform
   transform: translateY(14%)
@@ -96,7 +96,7 @@ body
   z-index: 2
   pointer-events: none
   opacity: 0
-  background: linear-gradient(to bottom, var(--overlay-start) 0%, var(--overlay-start) 50%, var(--overlay-end) 100%)
+  background: linear-gradient(to bottom, var(--overlay-start) 0%, var(--overlay-start) 15%, var(--overlay-end) 100%)
 
 // ── Navigation ────────────────────────────────────────────────
 nav
@@ -108,13 +108,13 @@ nav
   justify-content: center
   align-items: center
   gap: 2.5rem
-  padding: 2rem
+  padding: 2.5rem 2rem
   z-index: 100
 
   a
     color: var(--nav)
     text-decoration: none
-    font-size: 0.7rem
+    font-size: 0.78rem
     font-weight: 500
     letter-spacing: 0.35em
     text-transform: uppercase
@@ -164,10 +164,10 @@ nav
   text-align: center
 
 .hero-content
-  padding-top: 64vh
-  padding-bottom: 4rem
-  padding-left: 2rem
-  padding-right: 2rem
+  padding-top: 62vh
+  padding-bottom: 5rem
+  padding-left: 3rem
+  padding-right: 3rem
   transition: opacity 0.1s linear
   will-change: opacity
 
@@ -196,7 +196,7 @@ nav
 .subhead
   font-family: $turret
   font-weight: 300
-  font-size: clamp(0.8rem, 2vw, 1.1rem)
+  font-size: clamp(0.9rem, 2.2vw, 1.25rem)
   letter-spacing: 0.45em
   text-transform: uppercase
   color: $stone
@@ -206,7 +206,7 @@ nav
 // ── ASCII Glyph ───────────────────────────────────────────────
 .glyph
   font-family: monospace
-  font-size: clamp(0.45rem, 1.2vw, 0.75rem)
+  font-size: clamp(0.5rem, 1.3vw, 0.8rem)
   line-height: 1
   opacity: 0.35
   margin: 2rem 0 1.5rem
@@ -239,7 +239,7 @@ section
 
 // ── Section Headings — thin number, bold title ───────────────
 h2
-  font-size: 1.4rem
+  font-size: 1.6rem
   font-weight: 700
   letter-spacing: 0.3em
   text-transform: uppercase
@@ -259,7 +259,7 @@ h2
 // ── Lead paragraph — thin, large, spaced ─────────────────────
 .lead
   font-weight: 300
-  font-size: 1.15rem
+  font-size: 1.3rem
   letter-spacing: 0.05em
   line-height: 1.8
   margin-bottom: 1.5rem
@@ -268,7 +268,7 @@ h2
 
 p
   margin-bottom: 1rem
-  font-size: 0.95rem
+  font-size: 1.05rem
   line-height: 1.75
   letter-spacing: 0.03em
 
@@ -289,7 +289,7 @@ code
   opacity: 0.75
 
   code
-    font-size: 0.8rem
+    font-size: 0.85rem
     letter-spacing: 0.08em
 
 // ── Definition list ───────────────────────────────────────────
@@ -302,12 +302,12 @@ dt
   font-weight: 700
   letter-spacing: 0.15em
   text-transform: uppercase
-  font-size: 0.85rem
+  font-size: 0.9rem
   color: var(--text)
 
 dd
   color: var(--accent)
-  font-size: 0.9rem
+  font-size: 0.95rem
   font-weight: 300
   letter-spacing: 0.04em
 
@@ -407,20 +407,20 @@ footer
     text-shadow: 0 1px 0 var(--shadow-a), 0 2px 2px var(--shadow-b), 0 4px 8px var(--shadow-c)
 
   .hero-content
-    padding-top: 60vh
+    padding-top: 58vh
 
   .hero-nemicolopterus
     transform: translateY(10%)
-    background-size: 95vmin auto
+    background-size: 105vmin auto
     background-position: center center
 
   .hero-bg
-    background-size: 95vmin auto
+    background-size: 105vmin auto
     background-position: center center
 
   .subhead
     letter-spacing: 0.3em
-    font-size: 0.7rem
+    font-size: 0.8rem
 
   .glyph
     display: none
@@ -437,11 +437,11 @@ footer
 
 @media (min-width: 1400px)
   .hero-nemicolopterus
-    background-size: 70vmin auto
+    background-size: 90vmin auto
     background-position: center center
 
   .hero-bg
-    background-size: 70vmin auto
+    background-size: 90vmin auto
     background-position: center center
 
   .headline
