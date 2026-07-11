@@ -70,7 +70,7 @@ Radio Packet → ChannelData[16] → servosUpdate() (≈kHz tick)
 | `Zephyrus.cpp` | 526 | Full implementation — sensor read, calibration, AHRS, PID, correction |
 | `ZephyrusFilter.h` | 35 | Bridge shim — copies `rudderCorrection` → `ornithopter.gyroRudderCorrection` |
 
-See [Zephyrus README](lib/Zephyrus/README.md) for full architecture, API, tuning guide, and troubleshooting.
+See [Zephyrus README](src/lib/Zephyrus/README.md) for full architecture, API, tuning guide, and troubleshooting.
 
 ### Integration Points in `devServoOutput.cpp`
 
@@ -99,7 +99,7 @@ Edit `src/lib/Ornithopter/OrnithopterConfig.h` to map your CRSF channels and tun
 - Servo µs limits, flapping/gliding thresholds, amplitude scaling
 - Steering differential, elevator/aileron scale, cadence rating
 
-For gyro tuning, edit `src/lib/Zephyrus/ZephyrusConfig.h` — see the [Zephyrus README](lib/Zephyrus/README.md).
+For gyro tuning, edit `src/lib/Zephyrus/ZephyrusConfig.h` — see the [Zephyrus README](src/lib/Zephyrus/README.md).
 
 ## Credits
 
