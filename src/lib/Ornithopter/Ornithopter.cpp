@@ -1,6 +1,10 @@
 #include "Ornithopter.h"
-#ifndef UNIT_TEST
-#include <Arduino.h>
+#ifdef UNIT_TEST
+  #include <stdint.h>
+  static inline uint32_t micros() { return 0; }
+  static inline void delay(unsigned long) {}
+#else
+  #include <Arduino.h>
 #endif
 #include <algorithm>  // for std::min/std::max
 

@@ -30,16 +30,16 @@
   static inline void delay(unsigned long) {}
 
   #ifndef sqrtf
-  static inline float sqrtf(float x) { return (float)sqrt((double)x); }
+  inline float sqrtf(float x) { return (float)sqrt((double)x); }
   #endif
   #ifndef atan2f
-  static inline float atan2f(float y, float x) { return (float)atan2((double)y,(double)x); }
+  inline float atan2f(float y, float x) { return (float)atan2((double)y,(double)x); }
   #endif
   #ifndef asinf
-  static inline float asinf(float x) { return (float)asin((double)x); }
+  inline float asinf(float x) { return (float)asin((double)x); }
   #endif
   #ifndef fabsf
-  static inline float fabsf(float x) { return (float)fabs((double)x); }
+  inline float fabsf(float x) { return (float)fabs((double)x); }
   #endif
 
 #else
