@@ -1,7 +1,7 @@
-:root {
+\:root {
   --bg: #000;
   --text: #fff;
-  --accent: #aaa;
+  --accent: #ccc;
   --mut: #444;
   --dim: #333;
   --nav: #fff;
@@ -15,7 +15,7 @@
   :root {
     --bg: #f5f5f5;
     --text: #111;
-    --accent: #333;
+    --accent: #999;
     --mut: #666;
     --dim: #ccc;
     --nav: #111;
@@ -162,7 +162,7 @@ nav {
     filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.3)); }
   .headline .os {
     color: var(--accent);
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25)); }
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.45)); }
 
 .subhead {
   font-family: "Turret Road", monospace;
