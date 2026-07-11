@@ -13,7 +13,7 @@ $text-light: #111
 $bg-light: #f5f5f5
 
 // ── Dark default ──────────────────────────────────────────────
-\\:root
+html
   --bg: #{$black}
   --text: #{$white}
   --accent: #ccc
@@ -28,7 +28,7 @@ $bg-light: #f5f5f5
 
 // ── Light theme ───────────────────────────────────────────────
 @media (prefers-color-scheme: light)
-  \:root
+  html
     --bg: #{$bg-light}
     --text: #{$text-light}
     --accent: #999
@@ -172,7 +172,7 @@ nav
   text-align: center
 
 .hero-content
-  padding-top: 70vh
+  padding-top: 50vh
   padding-bottom: 5rem
   padding-left: 3rem
   padding-right: 3rem
@@ -445,7 +445,7 @@ footer
 
 @media (min-width: 1400px)
   .hero-nemicolopterus
-  background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat
+    background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat
     background-size: 55em auto
     background-position: center -1em
 

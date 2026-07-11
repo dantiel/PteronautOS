@@ -127,7 +127,7 @@
         hero.style.setProperty('--scroll', t.toFixed(3));
         hero.style.opacity = 1 - t * 0.6;
 
-        const py = -6 + t * 8;
+        const py = -t * 110;
         creature.style.transform = `translateY(${py}%)`;
 
         overlay.style.opacity = Math.min(t * 0.7, 0.7);

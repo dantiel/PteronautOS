@@ -1,4 +1,4 @@
-\:root {
+html {
   --bg: #000;
   --text: #fff;
   --accent: #ccc;
@@ -12,7 +12,7 @@
   --shadow-c: rgba(0, 0, 0, 0.15); }
 
 @media (prefers-color-scheme: light) {
-  :root {
+  html {
     --bg: #f5f5f5;
     --text: #111;
     --accent: #999;
@@ -140,7 +140,7 @@ nav {
   text-align: center; }
 
 .hero-content {
-  padding-top: 70vh;
+  padding-top: 50vh;
   padding-bottom: 5rem;
   padding-left: 3rem;
   padding-right: 3rem;
@@ -388,9 +388,11 @@ footer {
   dt {
     margin-top: 1rem; } }
 @media (min-width: 1400px) {
-  background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat;
-    background-background-size: 55em auto;
-    background-background-position: center -1em;
+  .hero-nemicolopterus {
+    background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat;
+    background-size: 55em auto;
+    background-position: center -1em; }
+
   .hero-bg {
     background-size: 87em auto;
     background-position: center center; }
