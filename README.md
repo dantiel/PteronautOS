@@ -1,4 +1,4 @@
-<p align="center"><img src="pteronaut-new-header.png" alt="PteronautOS"></p>
+<p align="center"><img src="pteronaut-welcome.png" alt="PteronautOS"></p>
 
 **Open-source firmware for servo-driven ornithopters** — built on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
 
