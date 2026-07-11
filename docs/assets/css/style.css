@@ -8,6 +8,7 @@ html {
   --nav: #fff;
   --overlay-start: rgba(0, 0, 0, 0);
   --overlay-end: rgba(0, 0, 0, 0.85);
+  --headline-shield: rgba(0, 0, 0, 0.8);
   --shadow-a: rgba(0, 0, 0, 0.5);
   --shadow-b: rgba(0, 0, 0, 0.3);
   --shadow-c: rgba(0, 0, 0, 0.15);
@@ -23,6 +24,7 @@ html {
     --nav: #111;
     --overlay-start: rgba(245, 245, 245, 0);
     --overlay-end: rgba(245, 245, 245, 0.9);
+    --headline-shield: rgba(245, 245, 245, 0.8);
     --shadow-a: rgba(0, 0, 0, 0.08);
     --shadow-b: rgba(0, 0, 0, 0.05);
     --shadow-c: rgba(0, 0, 0, 0.03);
@@ -459,7 +461,7 @@ footer a {
     font-size: 0.5rem;
   }
   .headline {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.8) 55%, transparent 100%);
+    background: linear-gradient(to bottom, var(--headline-shield) 0%, var(--headline-shield) 55%, transparent 100%);
   }
   .headline h1 {
     letter-spacing: 0.25em;
@@ -575,7 +577,7 @@ footer a {
     background-position: center -2em;
   }
   .headline {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.8) 55%, transparent 100%);
+    background: linear-gradient(to bottom, var(--headline-shield) 0%, var(--headline-shield) 55%, transparent 100%);
   }
   .headline h1 {
     letter-spacing: 0.35em;
