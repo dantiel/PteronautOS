@@ -14,7 +14,7 @@
 <div class='hero-nemicolopterus'></div>
 <div class='hero-overlay'></div>
 <nav>
-<a class='home-link' href='https://dantiel.github.io/PteronautOS/' title='PteronautOS'>⌂</a>
+<a class='home-link' href='#' onclick='majesticScroll(); return false;' title='Scroll to top — PteronautOS'>↑</a>
 <a href='#essence'>Essenz</a>
 <a href='#architecture'>Architektur</a>
 <a href='#zephyrus'>Zephyrus</a>
@@ -124,6 +124,23 @@ Build
   const overlay = document.querySelector('.hero-overlay');
   const nav = document.querySelector('nav');
   const scrollBtn = document.querySelector('.scroll-top');
+  
+  function majesticScroll() {
+    const start = window.scrollY;
+    const duration = 1500;
+    const startTime = performance.now();
+  
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // Ease-out quintic — majestic deceleration
+      const eased = 1 - Math.pow(1 - t, 4);
+      window.scrollTo(0, start * (1 - eased));
+      if (t < 1) requestAnimationFrame(step);
+    }
+  
+    requestAnimationFrame(step);
+  }
   
   function tick() {
     const scroll = window.scrollY;

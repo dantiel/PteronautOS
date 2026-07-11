@@ -118,9 +118,14 @@ nav
     background: linear-gradient(to bottom, var(--bg) 40%, rgba(0,0,0,0) 100%)
 
   a.home-link
-    font-size: 1.1rem
+    font-size: 1.3rem
     letter-spacing: 0
-    opacity: 0.75
+    opacity: 0.55
+    transition: opacity 0.4s, text-shadow 0.4s
+
+    &:hover
+      opacity: 1
+      text-shadow: 0 0 12px var(--fg)
 
   a
     color: var(--nav)
@@ -204,6 +209,7 @@ nav
   .os
     color: var(--accent)
     filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.45))
+    font-weight: 100
 
 // ── Subhead — lighter weight, wide, elegant ──────────────────
 .subhead
@@ -465,6 +471,7 @@ footer
     background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat
     background-size: 55em auto
     background-position: center -1em
+    background-position: center 14em
 
   .hero-bg
     background-size: 87em auto
@@ -472,6 +479,9 @@ footer
 
   .headline
     letter-spacing: 0.55em
+    
+  .hero-content
+    padding-top: 38em
 
 // ── Scroll-to-Top Arrow ─────────────────────────────────────
 .scroll-top
