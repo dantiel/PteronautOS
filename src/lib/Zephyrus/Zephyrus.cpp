@@ -7,9 +7,44 @@
 */
 
 #include "Zephyrus.h"
-#ifndef UNIT_TEST
-#include <Arduino.h>
-#include <Wire.h>
+
+#ifdef UNIT_TEST
+  #include <stdint.h>
+  #include <math.h>
+
+  class WireClass {
+  public:
+    void begin() {}
+    void begin(int,int) {}
+    void setClock(unsigned long) {}
+    void beginTransmission(int) {}
+    void write(uint8_t) {}
+    uint8_t endTransmission(bool=true) { return 0; }
+    int requestFrom(int,uint8_t) { return 0; }
+    int available() { return 0; }
+    uint8_t read() { return 0; }
+  };
+  static WireClass Wire;
+
+  static inline uint32_t micros() { return 0; }
+  static inline void delay(unsigned long) {}
+
+  #ifndef sqrtf
+  static inline float sqrtf(float x) { return (float)sqrt((double)x); }
+  #endif
+  #ifndef atan2f
+  static inline float atan2f(float y, float x) { return (float)atan2((double)y,(double)x); }
+  #endif
+  #ifndef asinf
+  static inline float asinf(float x) { return (float)asin((double)x); }
+  #endif
+  #ifndef fabsf
+  static inline float fabsf(float x) { return (float)fabs((double)x); }
+  #endif
+
+#else
+  #include <Arduino.h>
+  #include <Wire.h>
 #endif
 
 // ---------------------------------------------------------------------------
