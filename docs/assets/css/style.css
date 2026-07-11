@@ -178,7 +178,6 @@ nav a:hover {
 }
 
 .headline {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.8) 55%, transparent 100%);
   border-radius: 0.5rem;
   padding: 1.3em 2.7em;
 }
@@ -437,6 +436,9 @@ footer a {
   .lang-switch a {
     font-size: 0.5rem;
   }
+  .headline {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.8) 55%, transparent 100%);
+  }
   .headline h1 {
     letter-spacing: 0.25em;
     font-size: clamp(1.4rem, 9vw, 2.4rem);
@@ -549,6 +551,9 @@ footer a {
   .hero-bg {
     background-size: 70em auto;
     background-position: center -2em;
+  }
+  .headline {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.8) 55%, transparent 100%);
   }
   .headline h1 {
     letter-spacing: 0.35em;
