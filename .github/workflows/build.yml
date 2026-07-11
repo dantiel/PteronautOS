@@ -1,4 +1,4 @@
-name: Build ExpressLRS
+name: Build PteronautOS
 on: [push, pull_request]
 jobs:
   build-and-validate-artifacts:
