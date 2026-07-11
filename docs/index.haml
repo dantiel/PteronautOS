@@ -31,23 +31,24 @@
 
     %header.hero
       .hero-content
-        %h1.headline
-          %span.pteronaut> PTERONAUT
-          %span.os OS
-        %p.greeting= hero_greeting
-        %p.subhead= hero_subhead
-        %pre.glyph
-          :preserve
-                 ___
-                /   \___
-               /  _     o\___
-              /  / \___  /   \
-             |  /  \   \/  _  \
-             | /    \  /  / \  |
-              \______/\/  /   \ |
-                    /\___/     \|
-                   /
-        %p.version= hero_version
+        .headline
+          %h1
+            %span.pteronaut> PTERONAUT
+            %span.os OS
+          %p.subhead= hero_subhead
+          %p.greeting= hero_greeting
+          %pre.glyph
+            :preserve
+                   ___
+                  /    \___
+                 /  _     o\___
+                /  /  \___  /    \
+               |  /   \     \/  _  \
+               | /     \    /  / \  |
+                \_____/\/  /   \  |
+                      /\___/     \ |
+                     /
+          %p.version= hero_version
 
     %main
       %section#essence
