@@ -20,10 +20,10 @@
   "nav_architecture": "架构",
   "nav_zephyrus": "西风神",
   "hero_subhead": "自然飞行。精准控制。",
-  "hero_version": "ExpressLRS分支 · ESP8285 · CRSF协议",
+  "hero_version": "ESP8285 · CRSF协议",
   "essence_num": "01",
   "essence_title": "本质",
-  "essence_lead": "PteronautOS是一个<strong>ExpressLRS分支</strong>，转化为扑翼机飞行控制器。",
+  "essence_lead": "PteronautOS<strong>基于ExpressLRS构建</strong>，改造为扑翼飞行控制器。",
   "essence_body": "不是四轴飞行器——没有电机，没有ESC，没有Betaflight。运动由<strong>波形</strong>生成，驱动两个翼舵机和一个冠舵机。",
   "essence_highlight": "CRSF（无线电）→ rx_main → Ornithopter → 波形 → PWM舵机",
   "arch_num": "02",
@@ -58,5 +58,6 @@
   "build_line": "pio run -e PteronautOS_ESP8285_2400_RX",
   "build_compatible": "兼容: ExpressLRS TX 2.4GHz · 波特率: 420000",
   "footer_hermetic": "密封固件 · 80MHz · 1MB Flash · 零依赖",
-  "footer_credit": "ExpressLRS 4.x 分支"
+  "footer_credit": "基于 ExpressLRS 4.x",
+  "nav_github": "GitHub"
 }

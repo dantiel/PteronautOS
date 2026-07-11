@@ -20,10 +20,10 @@
   "nav_architecture": "構造",
   "nav_zephyrus": "ゼピュロス",
   "hero_subhead": "自然に飛べ。精密に制御せよ。",
-  "hero_version": "ExpressLRSフォーク · ESP8285 · CRSFプロトコル",
+  "hero_version": "ESP8285 · CRSFプロトコル",
   "essence_num": "01",
   "essence_title": "本質",
-  "essence_lead": "PteronautOSは<strong>ExpressLRSのフォーク</strong>をオーニソプター用フライトコントローラに進化させたものです。",
+  "essence_lead": "PteronautOSは<strong>ExpressLRSを基盤として</strong>、オーニソプター用フライトコントローラーに進化させたものです。",
   "essence_body": "クアッドではありません — モーターもESCもBetaflightもなし。動作は<strong>波形</strong>によって生成され、2つの翼サーボとクレストラダーサーボを駆動します。",
   "essence_highlight": "CRSF（無線）→ rx_main → Ornithopter → 波形 → PWMサーボ",
   "arch_num": "02",
@@ -58,5 +58,6 @@
   "build_line": "pio run -e PteronautOS_ESP8285_2400_RX",
   "build_compatible": "互換性: ExpressLRS TX 2.4GHz · Baudrate: 420000",
   "footer_hermetic": "密閉型ファームウェア · 80MHz · 1MB Flash · 依存関係なし",
-  "footer_credit": "ExpressLRS 4.x フォーク"
+  "footer_credit": "ExpressLRS 4.x 基盤",
+  "nav_github": "GitHub"
 }

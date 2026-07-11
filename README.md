@@ -1,6 +1,6 @@
 <p align="center"><img src="pteronaut-new-header.png" alt="PteronautOS"></p>
 
-**Open-source firmware for servo-driven ornithopters** — forked and heavily customized from [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
+**Open-source firmware for servo-driven ornithopters** — built on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
 
 > 🌐 **[Documentation & Website](https://dantiel.github.io/PteronautOS/)** — [EN](https://dantiel.github.io/PteronautOS/en/) · [PT](https://dantiel.github.io/PteronautOS/)
 
@@ -101,5 +101,5 @@ For gyro tuning, edit `src/lib/Zephyrus/ZephyrusConfig.h` — see the [Zephyrus 
 
 ## Credits
 
-Forked from [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS). Ornithopter module ported from [GralhaAzul v1.29.0](https://github.com/dantiel/o-grande-codigo-da-gralha-azul).
+Built on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS). Ornithopter module ported from [GralhaAzul v1.29.0](https://github.com/dantiel/o-grande-codigo-da-gralha-azul).
 Zephyrus Gyro Module written from scratch for PteronautOS — MPU6050 register-level driver, Mahony AHRS, and dual PID with anti-windup.

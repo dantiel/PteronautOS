@@ -20,10 +20,10 @@
   "nav_architecture": "Arquitectura",
   "nav_zephyrus": "Zephyrus",
   "hero_subhead": "Voa Natural. Controla Preciso.",
-  "hero_version": "ExpressLRS fork · ESP8285 · CRSF protocol",
+  "hero_version": "ESP8285 · CRSF protocol",
   "essence_num": "01",
   "essence_title": "Essência",
-  "essence_lead": "O PteronautOS é um <strong>fork do ExpressLRS</strong> transformado em controlador de voo para ornitóptero.",
+  "essence_lead": "O PteronautOS é <strong>construído sobre o ExpressLRS</strong>, transformado em controlador de voo para ornitóptero.",
   "essence_body": "Não é um quad — não há motores, nem ESC, nem Betaflight. O movimento é gerado por <strong>forma de onda</strong> que pilota dois servos de asa e um servo de leme.",
   "essence_highlight": "CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos",
   "arch_num": "02",
@@ -58,5 +58,6 @@
   "build_line": "pio run -e PteronautOS_ESP8285_2400_RX",
   "build_compatible": "Compatível: ExpressLRS TX 2.4GHz · Baudrate: 420000",
   "footer_hermetic": "Hermetic firmware · 80MHz · 1MB Flash · Zero dependencies",
-  "footer_credit": "Fork do ExpressLRS 4.x"
+  "footer_credit": "Construído sobre ExpressLRS 4.x",
+  "nav_github": "GitHub"
 }
