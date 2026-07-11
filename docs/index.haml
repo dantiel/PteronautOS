@@ -6,7 +6,7 @@
     %title PteronautOS
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
-    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@400;700;800&display=swap"}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&display=swap"}
     %link{rel: "stylesheet", href: "assets/css/style.css"}
 
   %body
@@ -41,18 +41,24 @@
 
     %main
       %section#essence
-        %h2 Essence
-        %p
+        %h2
+          %span.section-num 01
+          Essence
+        %p.lead
           O PteronautOS é um <strong>fork do ExpressLRS</strong> transformado
-          em controlador de voo para ornitóptero. Não é um quad — não há motores,
-          nem ESC, nem Betaflight. O movimento é gerado por <strong>forma de onda</strong>
+          em controlador de voo para ornitóptero.
+        %p
+          Não é um quad — não há motores, nem ESC, nem Betaflight.
+          O movimento é gerado por <strong>forma de onda</strong>
           que pilota dois servos de asa e um servo de leme.
 
         .highlight
           %code CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
 
       %section#architecture
-        %h2 Architecture
+        %h2
+          %span.section-num 02
+          Architecture
 
         %dl.grid
           %dt> Ornithopter
@@ -68,9 +74,11 @@
           %dd> ESP8285 2400MHz RX
 
       %section#zephyrus
-        %h2 Zephyrus Gyro Module
+        %h2
+          %span.section-num 03
+          Zephyrus Gyro Module
 
-        %p
+        %p.lead
           Estabilização do leme de crista cefálica via MPU6050.
           Mahony AHRS para estimativa de atitude, dual PID para
           correção de roll angle e yaw rate.
@@ -92,14 +100,16 @@
             %td> Output
             %td> Correção ao leme de crista
           %tr
-            %td> RAM
-            %td> ~62% (margem reservada)
+            %td RAM
+            %td.value 62%
           %tr
-            %td> Flash
-            %td> ~56% (conservativo)
+            %td Flash
+            %td.value 56%
 
       %section.build
-        %h2 Build
+        %h2
+          %span.section-num 04
+          Build
         %pre
           %code pio run -e PteronautOS_ESP8285_2400_RX
 
@@ -126,11 +136,9 @@
         hero.style.setProperty('--scroll', t.toFixed(3));
         hero.style.opacity = 1 - t * 0.6;
 
-        // Subtle parallax on creature layer
-        const py = 20 + t * 8;
+        const py = t * 8;
         creature.style.transform = `translateY(${py}%)`;
 
-        // Gradient overlay intensifies with scroll
         overlay.style.opacity = Math.min(t * 0.7, 0.7);
 
         requestAnimationFrame(tick);
