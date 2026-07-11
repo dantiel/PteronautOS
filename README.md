@@ -105,3 +105,5 @@ For gyro tuning, edit `src/lib/Zephyrus/ZephyrusConfig.h` — see the [Zephyrus 
 
 Built on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS). Ornithopter module ported from [GralhaAzul v1.29.0](https://github.com/dantiel/o-grande-codigo-da-gralha-azul).
 Zephyrus Gyro Module written from scratch for PteronautOS — MPU6050 register-level driver, Mahony AHRS, and dual PID with anti-windup.
+
+<p align="center"><img src="pteronaut-os-footer.png" alt="PteronautOS"></p>
