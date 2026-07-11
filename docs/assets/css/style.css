@@ -51,6 +51,10 @@ body {
   letter-spacing: 0.03em;
 }
 
+#header {
+  text-align: center;
+}
+
 .hero-bg {
   position: fixed;
   top: 0;
