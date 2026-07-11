@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;display=swap' rel='stylesheet'>
+<link href='../assets/css/style.css' rel='stylesheet'>
+</head>
+<body>
+<div class='hero-bg'></div>
+<div class='hero-nemicolopterus'></div>
+<div class='hero-overlay'></div>
+<nav>
+<a href='#essence'>Суть</a>
+<a href='#architecture'>Архитектура</a>
+<a href='#zephyrus'>Зефир</a>
+<div class='lang-switch'>
+<a class='' href='../en/'>EN</a>
+<a class='' href='../'>PT</a>
+<a class='active' href='.'>RU</a>
+<a class='' href='../es/'>ES</a>
+<a class='' href='../de/'>DE</a>
+<a class='' href='../ja/'>日本語</a>
+<a class='' href='../zh/'>中文</a>
+</div>
+</nav>
+<header class='hero'>
+<div class='hero-content'>
+<h1 class='headline'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</h1>
+<p class='subhead'>Fly Natural. Control Precise.</p>
+<pre class='glyph'>     ___&#x000A;    /   \___&#x000A;   /  _     o\___&#x000A;  /  / \___  /   \&#x000A; |  /  \   \/  _  \&#x000A; | /    \  /  / \  |&#x000A;  \______/\/  /   \ |&#x000A;        /\___/     \|&#x000A;       /&#x000A;</pre>
+<p class='version'>Форк ExpressLRS · ESP8285 · Протокол CRSF</p>
+</div>
+</header>
+<main>
+<section id='essence'>
+<h2>
+<span class='section-num'>01</span>
+Суть
+</h2>
+<p class='lead'>PteronautOS — это <strong>форк ExpressLRS</strong>, превращённый в полётный контроллер для орнитоптеров.</p>
+<p>Не квадрокоптер — ни моторов, ни ESC, ни Betaflight. Движение создаётся <strong>формой волны</strong>, управляющей двумя сервоприводами крыльев и сервоприводом руля.</p>
+<div class='highlight'>
+<code>CRSF (радио) → rx_main → Ornithopter → волна → ШИМ сервоприводы</code>
+</div>
+</section>
+<section id='architecture'>
+<h2>
+<span class='section-num'>02</span>
+Архитектура
+</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Микшер, генерация волны, фильтрация каналов</dd>
+<dt>Zephyrus</dt>
+<dd>Гироскоп MPU6050 + Mahony AHRS + двойной PID</dd>
+<dt>ServoOutput</dt>
+<dd>ШИМ, синхронизированный с тиком CRSF</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
+</section>
+<section id='zephyrus'>
+<h2>
+<span class='section-num'>03</span>
+Гиромодуль Зефир
+</h2>
+<p class='lead'>Стабилизация цефалического гребня через MPU6050. Mahony AHRS для оценки ориентации, двойной PID для коррекции угла крена и скорости рыскания.</p>
+<table class='specs'>
+<tr>
+<td>Датчик</td>
+<td>MPU6050 (GY-521)</td>
+</tr>
+<tr>
+<td>Интерфейс</td>
+<td>Прямой I2C (GPIO4/5)</td>
+</tr>
+<tr>
+<td>AHRS</td>
+<td>Mahony (регистровый уровень, ~1кГц)</td>
+</tr>
+<tr>
+<td>PID</td>
+<td>Двойной: угол крена + скорость рыскания</td>
+</tr>
+<tr>
+<td>Выход</td>
+<td>Коррекция цефалического руля</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td class='value'>62%</td>
+</tr>
+<tr>
+<td>Flash</td>
+<td class='value'>56%</td>
+</tr>
+</table>
+</section>
+<section class='build'>
+<h2>
+<span class='section-num'>04</span>
+Сборка
+</h2>
+<pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
+<p class='compatible'>Совместимость: ExpressLRS TX 2.4GHz · Baudrate: 420000</p>
+</section>
+</main>
+<footer>
+<p>Герметичная прошивка · 80MHz · 1MB Flash · Ноль зависимостей</p>
+<p class='credit'>Форк ExpressLRS 4.x</p>
+</footer>
+<script>
+  const hero = document.querySelector('.hero-content');
+  const bg = document.querySelector('.hero-bg');
+  const creature = document.querySelector('.hero-nemicolopterus');
+  const overlay = document.querySelector('.hero-overlay');
+  
+  function tick() {
+    const scroll = window.scrollY;
+    const vh = window.innerHeight;
+    const t = Math.min(scroll / vh, 1);
+  
+    hero.style.setProperty('--scroll', t.toFixed(3));
+    hero.style.opacity = 1 - t * 0.6;
+  
+    const py = t * 8;
+    creature.style.transform = `translateY(${py}%)`;
+  
+    overlay.style.opacity = Math.min(t * 0.7, 0.7);
+  
+    requestAnimationFrame(tick);
+  }
+  
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>
