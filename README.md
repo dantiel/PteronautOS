@@ -2,6 +2,8 @@
 
 **Open-source firmware for servo-driven ornithopters** — forked and heavily customized from [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
 
+> 🌐 **[Documentation & Website](https://dantiel.github.io/PteronautOS/)** — [EN](https://dantiel.github.io/PteronautOS/en/) · [PT](https://dantiel.github.io/PteronautOS/)
+
 PteronautOS replaces the traditional fixed-wing flight controller with an adaptive flapping oscillator built directly into the receiver. No intermediate FC required. The radio link directly drives the wings.
 
 ## Features
