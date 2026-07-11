@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir='ltr' lang='ru'>
+<html dir='ltr' lang='hi'>
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
@@ -15,20 +15,20 @@
 <div class='hero-overlay'></div>
 <nav>
 <a class='home-link' href='#' onclick='majesticScroll(); return false;' title='Scroll to top — PteronautOS'>↑</a>
-<a href='#essence'>Суть</a>
-<a href='#architecture'>Архитектура</a>
-<a href='#zephyrus'>Зефир</a>
+<a href='#essence'>सार</a>
+<a href='#architecture'>संरचना</a>
+<a href='#zephyrus'>ज़ेफ़िरस</a>
 <a class='gh-link' href='https://github.com/dantiel/PteronautOS' target='_blank' title='GitHub'>GitHub</a>
 <div class='lang-switch'>
 <a class='' href='../en/'>EN</a>
 <a class='' href='../'>PT</a>
-<a class='active' href='.'>RU</a>
+<a class='' href='../ru/'>RU</a>
 <a class='' href='../es/'>ES</a>
 <a class='' href='../de/'>DE</a>
 <a class='' href='../ja/'>日本語</a>
 <a class='' href='../zh/'>中文</a>
 <a class='' href='../ar/'>عربي</a>
-<a class='' href='../hi/'>हिन्दी</a>
+<a class='active' href='.'>हिन्दी</a>
 </div>
 </nav>
 <header class='hero'>
@@ -36,10 +36,10 @@
 <div class='headline'>
 <h1><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
 </h1>
-<p class='subhead'>Лети естественно. Управляй точно.</p>
-<p class='greeting'>Добро пожаловать, Птеронавт.</p>
+<p class='subhead'>प्राकृतिक उड़ान। सटीक नियंत्रण।</p>
+<p class='greeting'>स्वागत है, टेरोनॉट।</p>
 <pre class='glyph'>     ___&#x000A;    /    \___&#x000A;   /  _     o\___&#x000A;  /  /  \___  /    \&#x000A; |  /   \     \/  _  \&#x000A; | /     \    /  / \  |&#x000A;  \_____/\/  /   \  |&#x000A;        /\___/     \ |&#x000A;       /&#x000A;</pre>
-<p class='version'>ESP8285 · Протокол CRSF</p>
+<p class='version'>ESP8285 · CRSF protocol</p>
 </div>
 </div>
 </header>
@@ -47,26 +47,26 @@
 <section id='essence'>
 <h2>
 <span class='section-num'>01</span>
-Суть
+सार
 </h2>
-<p class='lead'>PteronautOS <strong>создан на основе ExpressLRS</strong>, преобразованный в полётный контроллер для орнитоптеров.</p>
-<p>Не квадрокоптер — ни моторов, ни ESC, ни Betaflight. Движение создаётся <strong>формой волны</strong>, управляющей двумя сервоприводами крыльев и сервоприводом руля.</p>
+<p class='lead'>PteronautOS <strong>ExpressLRS पर निर्मित</strong>, ऑर्निथॉप्टर के लिए उड़ान नियंत्रक में रूपांतरित।</p>
+<p>यह क्वाड नहीं है — कोई मोटर नहीं, कोई ESC नहीं, कोई Betaflight नहीं। गति <strong>तरंगरूप</strong> द्वारा उत्पन्न होती है जो दो पंख सर्वो और एक शिखा पतवार सर्वो को चलाती है।</p>
 <div class='highlight'>
-<code>CRSF (радио) → rx_main → Ornithopter → волна → ШИМ сервоприводы</code>
+<code>CRSF (रेडियो) → rx_main → Ornithopter → तरंगरूप → PWM सर्वो</code>
 </div>
 </section>
 <section id='architecture'>
 <h2>
 <span class='section-num'>02</span>
-Архитектура
+संरचना
 </h2>
 <dl class='grid'>
 <dt>Ornithopter</dt>
-<dd>Микшер, генерация волны, фильтрация каналов</dd>
+<dd>मिक्सर, तरंगरूप निर्माण, चैनल फ़िल्टरिंग</dd>
 <dt>Zephyrus</dt>
-<dd>Гироскоп MPU6050 + Mahony AHRS + двойной PID</dd>
+<dd>MPU6050 जायरोस्कोप + Mahony AHRS + दोहरा PID</dd>
 <dt>ServoOutput</dt>
-<dd>ШИМ, синхронизированный с тиком CRSF</dd>
+<dd>PWM CRSF टिक के साथ समकालिक</dd>
 <dt>Target</dt>
 <dd>ESP8285 2400MHz RX</dd>
 </dl>
@@ -74,29 +74,29 @@
 <section id='zephyrus'>
 <h2>
 <span class='section-num'>03</span>
-Гиромодуль Зефир
+ज़ेफ़िरस जायरो मॉड्यूल
 </h2>
-<p class='lead'>Стабилизация цефалического гребня через MPU6050. Mahony AHRS для оценки ориентации, двойной PID для коррекции угла крена и скорости рыскания.</p>
+<p class='lead'>MPU6050 के माध्यम से शिखा पतवार स्थिरीकरण। Mahony AHRS अभिविन्यास अनुमान के लिए, रोल कोण और यॉ दर सुधार के लिए दोहरा PID।</p>
 <table class='specs'>
 <tr>
-<td>Датчик</td>
+<td>सेंसर</td>
 <td>MPU6050 (GY-521)</td>
 </tr>
 <tr>
-<td>Интерфейс</td>
-<td>Прямой I2C (GPIO4/5)</td>
+<td>इंटरफ़ेस</td>
+<td>प्रत्यक्ष I2C (GPIO4/5)</td>
 </tr>
 <tr>
 <td>AHRS</td>
-<td>Mahony (регистровый уровень, ~1кГц)</td>
+<td>Mahony (रजिस्टर-स्तर, ~1kHz)</td>
 </tr>
 <tr>
 <td>PID</td>
-<td>Двойной: угол крена + скорость рыскания</td>
+<td>दोहरा: रोल कोण + यॉ दर</td>
 </tr>
 <tr>
-<td>Выход</td>
-<td>Коррекция цефалического руля</td>
+<td>आउटपुट</td>
+<td>शिखा पतवार सुधार</td>
 </tr>
 <tr>
 <td>RAM</td>
@@ -108,21 +108,21 @@
 </tr>
 </table>
 <p class='doc-link'>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md'>Полная документация →</a>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md'>पूर्ण दस्तावेज़ीकरण →</a>
 </p>
 </section>
 <section class='build'>
 <h2>
 <span class='section-num'>04</span>
-Сборка
+निर्माण
 </h2>
 <pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
-<p class='compatible'>Совместимость: ExpressLRS TX 2.4GHz · Baudrate: 420000</p>
+<p class='compatible'>संगत: ExpressLRS TX 2.4GHz · बॉड दर: 420000</p>
 </section>
 </main>
 <footer>
-<p>Герметичная прошивка · 80MHz · 1MB Flash · Ноль зависимостей</p>
-<p class='credit'>Создан на основе ExpressLRS 4.x</p>
+<p>हर्मेटिक फ़र्मवेयर · 80MHz · 1MB Flash · शून्य निर्भरताएँ</p>
+<p class='credit'>ExpressLRS 4.x पर निर्मित</p>
 </footer>
 <button aria-label='Scroll to top' class='scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})'></button>
 <script>

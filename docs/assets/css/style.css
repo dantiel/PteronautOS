@@ -1,3 +1,4 @@
+@charset "UTF-8";
 html {
   --bg: #000;
   --text: #fff;
@@ -628,6 +629,30 @@ footer a {
   border-top: 1px solid var(--nav);
   border-right: 1px solid var(--nav);
   transform: rotate(-45deg) translateY(2px);
+}
+
+[dir=rtl] {
+  direction: rtl;
+  text-align: right;
+}
+[dir=rtl] nav {
+  flex-direction: row-reverse;
+}
+[dir=rtl] .hero-content {
+  padding-left: 0;
+  padding-right: 0;
+}
+[dir=rtl] .lang-switch {
+  flex-direction: row-reverse;
+}
+[dir=rtl] dl.grid {
+  direction: rtl;
+}
+[dir=rtl] .doc-link a::after {
+  content: " ←";
+}
+[dir=rtl] .headline {
+  padding: 1.3em 2.7em;
 }
 
 /*# sourceMappingURL=style.css.map */

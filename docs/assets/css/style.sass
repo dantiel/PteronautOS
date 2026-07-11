@@ -3,6 +3,8 @@
 // Turret Road: elegant, technical, weird — 200/300/400/500/700/800
 
 $turret: 'Turret Road', monospace
+$arabic: 'Noto Naskh Arabic', serif
+$devanagari: 'Noto Sans Devanagari', sans-serif
 $os-grey: #666
 $os-grey-light: #555
 $deep-grey: #444
@@ -634,3 +636,27 @@ footer
     border-top: 1px solid var(--nav)
     border-right: 1px solid var(--nav)
     transform: rotate(-45deg) translateY(2px)
+
+// ── RTL ────────────────────────────────────────────────────────
+[dir="rtl"]
+  direction: rtl
+  text-align: right
+
+  nav
+    flex-direction: row-reverse
+
+  .hero-content
+    padding-left: 0
+    padding-right: 0
+
+  .lang-switch
+    flex-direction: row-reverse
+
+  dl.grid
+    direction: rtl
+
+  .doc-link a::after
+    content: ' ←'
+
+  .headline
+    padding: 1.3em 2.7em
