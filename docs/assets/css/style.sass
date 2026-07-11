@@ -1,16 +1,17 @@
-// PteronautOS — Turret Road, dark/light themes
+// PteronautOS — Layered HUD Hero with Parallax Nemicolopterus
+// Dark/light themes, 3D text, scroll blur, gradient overlays
 
-// Variables
 $turret: 'Turret Road', monospace
 $os-grey: #666
+$os-grey-light: #555
 $deep-grey: #444
+$stone: #888
 $white: #fff
 $black: #000
 $text-light: #111
 $bg-light: #f5f5f5
-$accent-light: #333
 
-// Root — dark default
+// ── Dark default ──────────────────────────────────────────────
 \:root
   --bg: #{$black}
   --text: #{$white}
@@ -18,32 +19,82 @@ $accent-light: #333
   --mut: #{$deep-grey}
   --dim: #333
   --nav: #{$white}
+  --overlay-start: rgba(0, 0, 0, 0)
+  --overlay-end: rgba(0, 0, 0, 0.85)
+  --shadow-a: rgba(0, 0, 0, 0.5)
+  --shadow-b: rgba(0, 0, 0, 0.3)
+  --shadow-c: rgba(0, 0, 0, 0.15)
 
-// Light theme preference
+// ── Light theme ───────────────────────────────────────────────
 @media (prefers-color-scheme: light)
   \:root
     --bg: #{$bg-light}
     --text: #{$text-light}
-    --accent: #{$deep-grey}
+    --accent: #{$os-grey-light}
     --mut: #666
-    --dim: #999
+    --dim: #ccc
     --nav: #{$text-light}
+    --overlay-start: rgba(245, 245, 245, 0)
+    --overlay-end: rgba(245, 245, 245, 0.9)
+    --shadow-a: rgba(0, 0, 0, 0.08)
+    --shadow-b: rgba(0, 0, 0, 0.05)
+    --shadow-c: rgba(0, 0, 0, 0.03)
 
-// Base
+// ── Base ──────────────────────────────────────────────────────
 *
   margin: 0
   padding: 0
   box-sizing: border-box
 
-html, body
-  height: 100%
-  font-family: $turret
+html
+  scroll-behavior: smooth
   background: var(--bg)
-  color: var(--text)
-  transition: background 0.2s ease, color 0.2s ease
-  line-height: 1.6
 
-// Navigation
+body
+  font-family: $turret
+  color: var(--text)
+  background: var(--bg)
+  line-height: 1.6
+  overflow-x: hidden
+
+// ── Hero Layers ───────────────────────────────────────────────
+// Layer 0: Background — fixed, cropped to fill viewport
+.hero-bg
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100vh
+  z-index: 0
+  background: url('../images/hero-bg.png') center / cover no-repeat
+  will-change: transform
+
+// Layer 1: Nemicolopterus — fixed, offset 20% lower, HUD creature
+.hero-nemicolopterus
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100vh
+  z-index: 1
+  background: url('../images/hero-nemicolopterus.png') center / contain no-repeat
+  pointer-events: none
+  will-change: transform
+  transform: translateY(20%)
+
+// Layer 2: Gradient overlay — intensifies with scroll (JS-driven opacity)
+.hero-overlay
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100vh
+  z-index: 2
+  pointer-events: none
+  opacity: 0
+  background: linear-gradient(to bottom, var(--overlay-start) 0%, var(--overlay-start) 50%, var(--overlay-end) 100%)
+
+// ── Navigation ────────────────────────────────────────────────
 nav
   position: fixed
   top: 0
@@ -63,63 +114,94 @@ nav
     text-transform: uppercase
     opacity: 0.7
     transition: opacity 0.2s
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6)
 
     &:hover
       opacity: 1
 
-// Hero
+// ── Hero Content ──────────────────────────────────────────────
 .hero
+  position: relative
+  z-index: 3
   display: flex
-  flex-direction: column
+  align-items: flex-start
   justify-content: center
-  align-items: center
   min-height: 100vh
   text-align: center
-  padding: 2rem
 
+.hero-content
+  padding-top: 70vh
+  padding-bottom: 4rem
+  padding-left: 2rem
+  padding-right: 2rem
+  transition: opacity 0.1s linear
+  will-change: opacity
+
+// ── Headline — 3D extrusion via layered text-shadow ───────────
 .headline
+  font-family: $turret
   font-weight: 800
-  font-size: clamp(2.5rem, 10vw, 8rem)
+  font-size: clamp(3rem, 12vw, 10rem)
   letter-spacing: 0.18em
   text-transform: uppercase
-  line-height: 1.1
+  line-height: 1
   margin-bottom: 1rem
+  user-select: none
+
+  // Multi-layer 3D shadow — subtle depth
+  text-shadow: 0 1px 0 var(--shadow-a), 0 2px 0 var(--shadow-a), 0 3px 2px var(--shadow-b), 0 6px 8px var(--shadow-b), 0 10px 20px var(--shadow-c), 0 2px 12px rgba(0, 0, 0, 0.4)
 
   .pteronaut
     color: var(--text)
+    // Subtle inner glow
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.15))
 
   .os
     color: var(--accent)
+    // Subtle metallic sheen
+    filter: drop-shadow(0 0 6px rgba(102, 102, 102, 0.3))
 
+// ── Subhead ───────────────────────────────────────────────────
 .subhead
+  font-family: $turret
   font-weight: 400
-  font-size: clamp(0.875rem, 2.5vw, 1.25rem)
+  font-size: clamp(0.85rem, 2.5vw, 1.3rem)
   letter-spacing: 0.35em
   text-transform: uppercase
-  color: var(--accent)
-  margin-bottom: 2rem
+  color: $stone
+  margin-bottom: 3rem
+  text-shadow: 0 1px 4px var(--shadow-a), 0 2px 10px var(--shadow-b)
 
+// ── ASCII Glyph ───────────────────────────────────────────────
 .glyph
   font-family: monospace
-  font-size: clamp(0.5rem, 1.5vw, 0.875rem)
+  font-size: clamp(0.45rem, 1.2vw, 0.75rem)
   line-height: 1
-  opacity: 0.5
-  margin: 2rem 0
+  opacity: 0.4
+  margin: 2rem 0 1.5rem
   white-space: pre
   color: var(--mut)
+  user-select: none
 
+// ── Version tag ───────────────────────────────────────────────
 .version
-  font-size: 0.625rem
+  font-size: 0.6rem
   letter-spacing: 0.3em
   text-transform: uppercase
-  opacity: 0.6
+  opacity: 0.5
   color: var(--dim)
+  margin-top: 0.5rem
 
-// Main content
+// ── Main Content ──────────────────────────────────────────────
 main
+  position: relative
+  z-index: 3
   max-width: 800px
   margin: 0 auto
   padding: 4rem 1.5rem
+  background: var(--bg)
+  // Feathered top edge blending into hero
+  box-shadow: 0 -40px 40px -20px var(--bg)
 
 section
   margin-bottom: 5rem
@@ -140,7 +222,7 @@ p
 strong
   font-weight: 700
 
-// Code blocks
+// ── Code blocks ───────────────────────────────────────────────
 code
   font-family: $turret
   font-size: 0.875rem
@@ -155,12 +237,11 @@ code
     font-size: 0.8rem
     letter-spacing: 0.05em
 
-// Definition list
-dl
-  &.grid
-    display: grid
-    grid-template-columns: auto 1fr
-    gap: 0.75rem 1.5rem
+// ── Definition list ───────────────────────────────────────────
+dl.grid
+  display: grid
+  grid-template-columns: auto 1fr
+  gap: 0.75rem 1.5rem
 
 dt
   font-weight: 700
@@ -173,7 +254,7 @@ dd
   color: var(--accent)
   font-size: 0.875rem
 
-// Table
+// ── Table ─────────────────────────────────────────────────────
 table
   width: 100%
   border-collapse: collapse
@@ -192,7 +273,7 @@ td
     text-transform: uppercase
     font-size: 0.7rem
 
-// Build section
+// ── Build section ─────────────────────────────────────────────
 .build
   pre
     background: var(--dim)
@@ -210,8 +291,10 @@ td
   text-transform: uppercase
   color: var(--mut)
 
-// Footer
+// ── Footer ────────────────────────────────────────────────────
 footer
+  position: relative
+  z-index: 3
   text-align: center
   padding: 4rem 1.5rem
   border-top: 1px solid var(--dim)
@@ -219,6 +302,7 @@ footer
   letter-spacing: 0.15em
   text-transform: uppercase
   line-height: 1.8
+  background: var(--bg)
 
   p
     margin-bottom: 0.5rem
@@ -234,14 +318,30 @@ footer
   font-size: 0.625rem
   opacity: 0.5
 
-// Responsive
+// ── Responsive ────────────────────────────────────────────────
 @media (max-width: 600px)
   nav
     gap: 1.25rem
+    padding: 1rem
     font-size: 0.65rem
 
   .headline
     letter-spacing: 0.12em
+    font-size: clamp(2rem, 14vw, 4rem)
+    text-shadow: 0 1px 0 var(--shadow-a), 0 2px 2px var(--shadow-b), 0 4px 8px var(--shadow-c)
+
+  .hero-content
+    padding-top: 60vh
+
+  .hero-nemicolopterus
+    transform: translateY(15%)
+    background-size: 120% auto
+
+  .subhead
+    letter-spacing: 0.2em
+
+  .glyph
+    display: none
 
   dl.grid
     grid-template-columns: 1fr
@@ -249,3 +349,7 @@ footer
 
   dt
     margin-top: 1rem
+
+@media (min-width: 1400px)
+  .hero-nemicolopterus
+    background-size: 70% auto

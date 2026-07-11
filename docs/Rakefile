@@ -4,12 +4,12 @@ CLOBBER.include("index.html", "assets/css/style.css")
 
 desc "Build Haml to HTML"
 task :haml do
-  sh "bundle exec haml index.haml index.html"
+  sh "bundle exec haml render index.haml > index.html"
 end
 
 desc "Build Sass to CSS"
 task :sass do
-  sh "bundle exec sass --style compressed assets/css/style.sass assets/css/style.css"
+  sh "bundle exec sass assets/css/style.sass assets/css/style.css"
 end
 
 desc "Build all"

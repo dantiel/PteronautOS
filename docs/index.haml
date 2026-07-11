@@ -10,6 +10,10 @@
     %link{rel: "stylesheet", href: "assets/css/style.css"}
 
   %body
+    .hero-bg
+    .hero-nemicolopterus
+    .hero-overlay
+
     %nav
       %a{href: "#essence"}> Essence
       %a{href: "#architecture"}> Architecture
@@ -17,22 +21,23 @@
       %a{href: "https://github.com/paraeksperiment/PteronautOS"}> GitHub
 
     %header.hero
-      %h1.headline
-        %span.pteronaut> PTERONAUT
-        %span.os OS
-      %p.subhead Fly Natural. Control Precise.
-      %pre.glyph
-        :preserve
-               ___
-              /   \___
-             /  _     o\___
-            /  / \___  /   \
-           |  /  \   \/  _  \
-           | /    \  /  / \  |
-            \______/\/  /   \ |
-                  /\___/     \|
-                 /
-      %p.version ExpressLRS fork · ESP8285 · CRSF protocol
+      .hero-content
+        %h1.headline
+          %span.pteronaut> PTERONAUT
+          %span.os OS
+        %p.subhead Fly Natural. Control Precise.
+        %pre.glyph
+          :preserve
+                 ___
+                /   \___
+               /  _     o\___
+              /  / \___  /   \
+             |  /  \   \/  _  \
+             | /    \  /  / \  |
+              \______/\/  /   \ |
+                    /\___/     \|
+                   /
+        %p.version ExpressLRS fork · ESP8285 · CRSF protocol
 
     %main
       %section#essence
@@ -106,3 +111,29 @@
         Hermetic firmware · 80MHz · 1MB Flash · Zero dependencies
       %p.credit
         Fork do ExpressLRS 4.x · projecto <a href="https://github.com/paraeksperiment">paraeksperiment</a>
+
+    :javascript
+      const hero = document.querySelector('.hero-content');
+      const bg = document.querySelector('.hero-bg');
+      const creature = document.querySelector('.hero-nemicolopterus');
+      const overlay = document.querySelector('.hero-overlay');
+
+      function tick() {
+        const scroll = window.scrollY;
+        const vh = window.innerHeight;
+        const t = Math.min(scroll / vh, 1);
+
+        hero.style.setProperty('--scroll', t.toFixed(3));
+        hero.style.opacity = 1 - t * 0.6;
+
+        // Subtle parallax on creature layer
+        const py = 20 + t * 8;
+        creature.style.transform = `translateY(${py}%)`;
+
+        // Gradient overlay intensifies with scroll
+        overlay.style.opacity = Math.min(t * 0.7, 0.7);
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);

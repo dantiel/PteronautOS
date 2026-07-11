@@ -21,8 +21,8 @@ bundle install
 ## Building Locally
 
 ```bash
-bundle exec haml index.haml index.html
-bundle exec sass --style compressed assets/css/style.sass assets/css/style.css
+bundle exec haml render index.haml > index.html
+bundle exec sass assets/css/style.sass assets/css/style.css
 ```
 
 Or use Rake:
