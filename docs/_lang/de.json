@@ -55,6 +55,7 @@
   "zeph_ram_val": "62%",
   "zeph_flash_label": "Flash",
   "zeph_flash_val": "56%",
+  "zeph_readme_link": "Vollständige Dokumentation →",
   "build_num": "04",
   "build_title": "Build",
   "build_line": "pio run -e PteronautOS_ESP8285_2400_RX",
