@@ -67,4 +67,27 @@ task :watch do
   end
 end
 
+desc "Start a local HTTP server (http://localhost:8000)"
+task :server do
+  require "webrick"
+
+  root = File.expand_path(__dir__)
+  server = WEBrick::HTTPServer.new(
+    Port: 8000,
+    DocumentRoot: root,
+    BindAddress: "127.0.0.1"
+  )
+
+  trap("INT") { server.shutdown }
+  trap("TERM") { server.shutdown }
+
+  puts "🌐  PteronautOS docs server"
+  puts "   → http://localhost:8000/"
+  puts "   → http://localhost:8000/en/"
+  puts "   Ctrl+C to stop"
+  puts
+
+  server.start
+end
+
 task default: :build
