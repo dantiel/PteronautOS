@@ -35,4 +35,36 @@ task build: [:haml, :sass]
 desc "Clean and build"
 task rebuild: [:clobber, :build]
 
+desc "Watch for changes and rebuild automatically"
+task :watch do
+  puts "👁  Watching docs/ for changes... (Ctrl+C to stop)"
+  puts "   Monitoring: *.haml, *.sass, _lang/*.json"
+  puts
+
+  Rake::Task[:build].invoke
+
+  watched = Dir["index.haml", "assets/css/style.sass", "_lang/*.json"]
+  mtimes = watched.to_h { |f| [f, File.mtime(f)] }
+
+  loop do
+    sleep 0.5
+    changed = watched.select { |f| File.exist?(f) && File.mtime(f) != mtimes[f] }
+    next if changed.empty?
+
+    changed.each { |f| mtimes[f] = File.mtime(f) }
+    puts "\n🔄 Changed: #{changed.map { |f| f.sub(%r{^\./}, "") }.join(', ')}"
+
+    begin
+      run_sass  = changed.any? { |f| f.end_with?(".sass") }
+      run_haml  = changed.any? { |f| f.end_with?(".haml", ".json") }
+
+      Rake::Task[:sass].reenable; Rake::Task[:sass].invoke if run_sass
+      Rake::Task[:haml].reenable; Rake::Task[:haml].invoke if run_haml
+      puts "✓ Rebuilt at #{Time.now.strftime('%H:%M:%S')}"
+    rescue => e
+      puts "✗ Error: #{e.message}"
+    end
+  end
+end
+
 task default: :build
