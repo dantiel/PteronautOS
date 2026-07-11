@@ -20,6 +20,7 @@
   "nav_essence": "Essence",
   "nav_architecture": "Architecture",
   "nav_zephyrus": "Zephyrus",
+  "hero_greeting": "Welcome, Pteronaut.",
   "hero_subhead": "Fly Natural. Control Precise.",
   "hero_version": "ESP8285 · CRSF protocol",
   "essence_num": "01",

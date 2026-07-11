@@ -20,6 +20,7 @@
   "nav_essence": "Суть",
   "nav_architecture": "Архитектура",
   "nav_zephyrus": "Зефир",
+  "hero_greeting": "Добро пожаловать, Птеронавт.",
   "hero_subhead": "Лети естественно. Управляй точно.",
   "hero_version": "ESP8285 · Протокол CRSF",
   "essence_num": "01",
