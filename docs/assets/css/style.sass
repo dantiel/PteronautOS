@@ -189,7 +189,13 @@ nav
   transition: opacity 0.1s linear
   will-change: opacity
 
-// ── Headline — compact size, enormous spacing, 3D shadow ─────
+// ── Headline — gradient shield so text doesn't blend into ptero ──
+.headline
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 55%, transparent 100%)
+  border-radius: 0.5rem
+  padding: 0.5rem 0
+
+// ── Headline h1 — compact size, enormous spacing, 3D shadow ──
 .headline h1
   font-family: $turret
   font-weight: 800
@@ -422,7 +428,6 @@ footer
   letter-spacing: 0.3em
   opacity: 0.4
 
-// ── Responsive ────────────────────────────────────────────────
 // ── Responsive ────────────────────────────────────────────────
 
 // Mobile portrait — tight single column, compact hero

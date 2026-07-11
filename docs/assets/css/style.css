@@ -177,6 +177,12 @@ nav a:hover {
   will-change: opacity;
 }
 
+.headline {
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 55%, transparent 100%);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0;
+}
+
 .headline h1 {
   font-family: "Turret Road", monospace;
   font-weight: 800;
