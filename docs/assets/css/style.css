@@ -50,7 +50,7 @@ body {
   width: 100%;
   height: 100vh;
   z-index: 0;
-  background: url("../images/hero-bg.png") center 40%/85% auto no-repeat;
+  background: url("../images/hero-bg.png") center center/90vmin auto no-repeat;
   will-change: transform; }
 
 .hero-nemicolopterus {
@@ -60,10 +60,10 @@ body {
   width: 100%;
   height: 100vh;
   z-index: 1;
-  background: url("../images/hero-nemicolopterus.png") center 25%/115% auto no-repeat;
+  background: url("../images/hero-nemicolopterus.png") center center/90vmin auto no-repeat;
   pointer-events: none;
   will-change: transform;
-  transform: translateY(0%); }
+  transform: translateY(14%); }
 
 .hero-overlay {
   position: fixed;
@@ -356,13 +356,13 @@ footer {
     padding-top: 60vh; }
 
   .hero-nemicolopterus {
-    transform: translateY(0%);
-    background-size: 130% auto;
-    background-position: center 15%; }
+    transform: translateY(10%);
+    background-size: 95vmin auto;
+    background-position: center center; }
 
   .hero-bg {
-    background-size: 95% auto;
-    background-position: center 35%; }
+    background-size: 95vmin auto;
+    background-position: center center; }
 
   .subhead {
     letter-spacing: 0.3em;
@@ -382,12 +382,12 @@ footer {
     margin-top: 1rem; } }
 @media (min-width: 1400px) {
   .hero-nemicolopterus {
-    background-size: 65% auto;
-    background-position: center 15%; }
+    background-size: 70vmin auto;
+    background-position: center center; }
 
   .hero-bg {
-    background-size: 60% auto;
-    background-position: center 40%; }
+    background-size: 70vmin auto;
+    background-position: center center; }
 
   .headline {
     letter-spacing: 0.55em; } }
