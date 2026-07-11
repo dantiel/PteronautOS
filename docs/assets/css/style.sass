@@ -16,7 +16,7 @@ $bg-light: #f5f5f5
 \:root
   --bg: #{$black}
   --text: #{$white}
-  --accent: #{$os-grey}
+  --accent: #aaa
   --mut: #{$deep-grey}
   --dim: #333
   --nav: #{$white}
@@ -31,7 +31,7 @@ $bg-light: #f5f5f5
   \:root
     --bg: #{$bg-light}
     --text: #{$text-light}
-    --accent: #{$os-grey-light}
+    --accent: #333
     --mut: #666
     --dim: #ccc
     --nav: #{$text-light}
@@ -71,7 +71,7 @@ body
   width: 100%
   height: 100vh
   z-index: 0
-  background: url('../images/hero-bg.png') center center / 150vmin auto no-repeat
+  background: url("../images/hero-bg.png") center -6em/82em auto no-repeat
   will-change: transform
 
 // Layer 1: Nemicolopterus — same scale, same anchor, translated down
@@ -82,7 +82,7 @@ body
   width: 100%
   height: 100vh
   z-index: 1
-  background: url('../images/hero-nemicolopterus.png') center center / 135vmin auto no-repeat
+  background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat
   pointer-events: none
   will-change: transform
   transform: translateY(-6%)
@@ -194,11 +194,11 @@ nav
 
   .pteronaut
     color: var(--text)
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.12))
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.3))
 
   .os
     color: var(--accent)
-    filter: drop-shadow(0 0 6px rgba(102, 102, 102, 0.25))
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.25))
 
 // ── Subhead — lighter weight, wide, elegant ──────────────────
 .subhead
@@ -445,11 +445,12 @@ footer
 
 @media (min-width: 1400px)
   .hero-nemicolopterus
-    background-size: 120vmin auto
-    background-position: center center
+  background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat
+    background-size: 55em auto
+    background-position: center -1em
 
   .hero-bg
-    background-size: 135vmin auto
+    background-size: 87em auto
     background-position: center center
 
   .headline

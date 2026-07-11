@@ -17,7 +17,7 @@ includeInArgonaut     = "{$includeInArgonaut,.cpp,.h,.hpp,.ini,.md}"
 
 # --- Excludes -----------------------------------------------------------------
 excludeFiles          = "{$excludeFiles,destroy,tmtags,tmtagsHistory,tags,dump.rdb,*rid,*lock,*log,*.map,*.elf,*.bin,*.hex,*.s,.fuse_hidden*}"
-excludeInBrowser      = "{$excludeInBrowser,*.orig,*.rej,*.js,*.pyc,__pycache__}"
+excludeInBrowser      = "{$excludeInBrowser,*.orig,*.rej,*.js,*.pyc,__pycache__,docs/**index.html}"
 excludeDirectories    = "{$excludeDirectories,.pio,.vscode,.github,build,cmake-build-*,node_modules}"
 excludeInFileChooser  = "{$excludeInFileChooser,.pio,build}"
 excludeInFolderSearch = "{$excludeInFolderSearch,.pio,.git,build}"
