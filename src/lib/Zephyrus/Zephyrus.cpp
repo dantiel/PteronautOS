@@ -7,8 +7,10 @@
 */
 
 #include "Zephyrus.h"
+#ifndef UNIT_TEST
 #include <Arduino.h>
 #include <Wire.h>
+#endif
 
 // ---------------------------------------------------------------------------
 //  MPU6050 Register Map (only the registers we use)

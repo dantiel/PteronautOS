@@ -1,5 +1,7 @@
 #include "Ornithopter.h"
+#ifndef UNIT_TEST
 #include <Arduino.h>
+#endif
 #include <algorithm>  // for std::min/std::max
 
 Ornithopter ornithopter;
