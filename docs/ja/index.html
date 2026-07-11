@@ -114,11 +114,13 @@
 <p>密閉型ファームウェア · 80MHz · 1MB Flash · 依存関係なし</p>
 <p class='credit'>ExpressLRS 4.x フォーク</p>
 </footer>
+<button aria-label='Scroll to top' class='scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})'></button>
 <script>
   const hero = document.querySelector('.hero-content');
-  const bg = document.querySelector('.hero-bg');
   const creature = document.querySelector('.hero-nemicolopterus');
   const overlay = document.querySelector('.hero-overlay');
+  const nav = document.querySelector('nav');
+  const scrollBtn = document.querySelector('.scroll-top');
   
   function tick() {
     const scroll = window.scrollY;
@@ -128,10 +130,14 @@
     hero.style.setProperty('--scroll', t.toFixed(3));
     hero.style.opacity = 1 - t * 0.6;
   
-    const py = t * 8;
+    const py = 14 + t * 8;
     creature.style.transform = `translateY(${py}%)`;
   
     overlay.style.opacity = Math.min(t * 0.7, 0.7);
+  
+    nav.classList.toggle('scrolled', scroll > 40);
+  
+    scrollBtn.classList.toggle('visible', scroll > vh * 0.6);
   
     requestAnimationFrame(tick);
   }

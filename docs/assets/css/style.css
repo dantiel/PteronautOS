@@ -50,7 +50,7 @@ body {
   width: 100%;
   height: 100vh;
   z-index: 0;
-  background: url("../images/hero-bg.png") center center/125vmin auto no-repeat;
+  background: url("../images/hero-bg.png") center center/150vmin auto no-repeat;
   will-change: transform; }
 
 .hero-nemicolopterus {
@@ -60,7 +60,7 @@ body {
   width: 100%;
   height: 100vh;
   z-index: 1;
-  background: url("../images/hero-nemicolopterus.png") center center/125vmin auto no-repeat;
+  background: url("../images/hero-nemicolopterus.png") center center/135vmin auto no-repeat;
   pointer-events: none;
   will-change: transform;
   transform: translateY(14%); }
@@ -74,7 +74,7 @@ body {
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(to bottom, var(--overlay-start) 0%, var(--overlay-start) 15%, var(--overlay-end) 100%); }
+  background: linear-gradient(to bottom, var(--overlay-start) 0%, var(--overlay-start) 10%, var(--overlay-end) 100%); }
 
 nav {
   position: fixed;
@@ -85,8 +85,12 @@ nav {
   justify-content: center;
   align-items: center;
   gap: 2.5rem;
-  padding: 2.5rem 2rem;
-  z-index: 100; }
+  padding: 2.5rem 2rem 2rem;
+  z-index: 100;
+  background: linear-gradient(to bottom, var(--bg) 20%, transparent 100%);
+  transition: background 0.3s; }
+  nav.scrolled {
+    background: linear-gradient(to bottom, var(--bg) 40%, rgba(0, 0, 0, 0) 100%); }
   nav a {
     color: var(--nav);
     text-decoration: none;
@@ -135,7 +139,7 @@ nav {
   text-align: center; }
 
 .hero-content {
-  padding-top: 66vh;
+  padding-top: 70vh;
   padding-bottom: 5rem;
   padding-left: 3rem;
   padding-right: 3rem;
@@ -260,7 +264,7 @@ dt {
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text); }
 
 dd {
@@ -273,19 +277,19 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin: 2rem 0;
-  font-size: 0.9rem; }
+  font-size: 0.95rem; }
 
 td {
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--dim);
   letter-spacing: 0.04em; }
   td:first-child {
-    width: 120px;
+    width: 130px;
     color: var(--mut);
     font-weight: 700;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    font-size: 0.7rem; }
+    font-size: 0.75rem; }
 
 .value {
   font-weight: 200;
@@ -316,7 +320,7 @@ footer {
   text-align: center;
   padding: 4rem 1.5rem;
   border-top: 1px solid var(--dim);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -325,7 +329,7 @@ footer {
   footer p {
     margin-bottom: 0.5rem;
     opacity: 0.5;
-    font-size: 0.7rem; }
+    font-size: 0.75rem; }
   footer a {
     color: var(--text);
     text-decoration: none;
@@ -355,15 +359,15 @@ footer {
     text-shadow: 0 1px 0 var(--shadow-a), 0 2px 2px var(--shadow-b), 0 4px 8px var(--shadow-c); }
 
   .hero-content {
-    padding-top: 62vh; }
+    padding-top: 66vh; }
 
   .hero-nemicolopterus {
     transform: translateY(10%);
-    background-size: 115vmin auto;
+    background-size: 120vmin auto;
     background-position: center center; }
 
   .hero-bg {
-    background-size: 115vmin auto;
+    background-size: 135vmin auto;
     background-position: center center; }
 
   .subhead {
@@ -384,14 +388,44 @@ footer {
     margin-top: 1rem; } }
 @media (min-width: 1400px) {
   .hero-nemicolopterus {
-    background-size: 105vmin auto;
+    background-size: 120vmin auto;
     background-position: center center; }
 
   .hero-bg {
-    background-size: 105vmin auto;
+    background-size: 135vmin auto;
     background-position: center center; }
 
   .headline {
     letter-spacing: 0.55em; } }
+.scroll-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--dim);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s, border-color 0.3s; }
+  .scroll-top.visible {
+    opacity: 0.5;
+    pointer-events: auto; }
+    .scroll-top.visible:hover {
+      opacity: 0.85;
+      border-color: var(--accent); }
+  .scroll-top::after {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-top: 1px solid var(--nav);
+    border-right: 1px solid var(--nav);
+    transform: rotate(-45deg) translateY(2px); }
 
 /*# sourceMappingURL=style.css.map */
