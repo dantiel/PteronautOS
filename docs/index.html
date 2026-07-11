@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang='zh'>
+<html lang='pt'>
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
@@ -7,59 +7,59 @@
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;display=swap' rel='stylesheet'>
-<link href='../assets/css/style.css' rel='stylesheet'>
+<link href='./assets/css/style.css' rel='stylesheet'>
 </head>
 <body>
 <div class='hero-bg'></div>
 <div class='hero-nemicolopterus'></div>
 <div class='hero-overlay'></div>
 <nav>
-<a href='#essence'>本质</a>
-<a href='#architecture'>架构</a>
-<a href='#zephyrus'>西风神</a>
+<a href='#essence'>Essência</a>
+<a href='#architecture'>Arquitectura</a>
+<a href='#zephyrus'>Zephyrus</a>
 <div class='lang-switch'>
-<a class='' href='../en/'>EN</a>
-<a class='' href='../'>PT</a>
-<a class='' href='../ru/'>RU</a>
-<a class='' href='../es/'>ES</a>
-<a class='' href='../de/'>DE</a>
-<a class='' href='../ja/'>日本語</a>
-<a class='active' href='.'>中文</a>
+<a class='' href='en/'>EN</a>
+<a class='active' href='.'>PT</a>
+<a class='' href='ru/'>RU</a>
+<a class='' href='es/'>ES</a>
+<a class='' href='de/'>DE</a>
+<a class='' href='ja/'>日本語</a>
+<a class='' href='zh/'>中文</a>
 </div>
 </nav>
 <header class='hero'>
 <div class='hero-content'>
 <h1 class='headline'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
 </h1>
-<p class='subhead'>自然飞行。精准控制。</p>
+<p class='subhead'>Voa Natural. Controla Preciso.</p>
 <pre class='glyph'>     ___&#x000A;    /   \___&#x000A;   /  _     o\___&#x000A;  /  / \___  /   \&#x000A; |  /  \   \/  _  \&#x000A; | /    \  /  / \  |&#x000A;  \______/\/  /   \ |&#x000A;        /\___/     \|&#x000A;       /&#x000A;</pre>
-<p class='version'>ExpressLRS分支 · ESP8285 · CRSF协议</p>
+<p class='version'>ExpressLRS fork · ESP8285 · CRSF protocol</p>
 </div>
 </header>
 <main>
 <section id='essence'>
 <h2>
 <span class='section-num'>01</span>
-本质
+Essência
 </h2>
-<p class='lead'>PteronautOS是一个<strong>ExpressLRS分支</strong>，转化为扑翼机飞行控制器。</p>
-<p>不是四轴飞行器——没有电机，没有ESC，没有Betaflight。运动由<strong>波形</strong>生成，驱动两个翼舵机和一个冠舵机。</p>
+<p class='lead'>O PteronautOS é um <strong>fork do ExpressLRS</strong> transformado em controlador de voo para ornitóptero.</p>
+<p>Não é um quad — não há motores, nem ESC, nem Betaflight. O movimento é gerado por <strong>forma de onda</strong> que pilota dois servos de asa e um servo de leme.</p>
 <div class='highlight'>
-<code>CRSF（无线电）→ rx_main → Ornithopter → 波形 → PWM舵机</code>
+<code>CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos</code>
 </div>
 </section>
 <section id='architecture'>
 <h2>
 <span class='section-num'>02</span>
-架构
+Arquitectura
 </h2>
 <dl class='grid'>
 <dt>Ornithopter</dt>
-<dd>混控器、波形生成、通道滤波</dd>
+<dd>Mixer, waveform generation, channel filtering</dd>
 <dt>Zephyrus</dt>
-<dd>MPU6050陀螺仪 + Mahony AHRS + 双PID</dd>
+<dd>MPU6050 gyroscope + Mahony AHRS + dual PID</dd>
 <dt>ServoOutput</dt>
-<dd>PWM同步于CRSF节拍</dd>
+<dd>PWM synchronized to CRSF tick</dd>
 <dt>Target</dt>
 <dd>ESP8285 2400MHz RX</dd>
 </dl>
@@ -67,29 +67,29 @@
 <section id='zephyrus'>
 <h2>
 <span class='section-num'>03</span>
-西风神陀螺仪模块
+Zephyrus Gyro Module
 </h2>
-<p class='lead'>通过MPU6050稳定头冠舵。Mahony AHRS用于姿态估计，双PID用于滚转角和偏航率校正。</p>
+<p class='lead'>Estabilização do leme de crista cefálica via MPU6050. Mahony AHRS para estimativa de atitude, dual PID para correção de roll angle e yaw rate.</p>
 <table class='specs'>
 <tr>
-<td>传感器</td>
+<td>Sensor</td>
 <td>MPU6050 (GY-521)</td>
 </tr>
 <tr>
-<td>接口</td>
-<td>直接I2C（GPIO4/5）</td>
+<td>Interface</td>
+<td>I2C directo (GPIO4/5)</td>
 </tr>
 <tr>
 <td>AHRS</td>
-<td>Mahony（寄存器级，约1kHz）</td>
+<td>Mahony (registo a registo, ~1kHz)</td>
 </tr>
 <tr>
 <td>PID</td>
-<td>双：滚转角 + 偏航率</td>
+<td>Duplo: roll angle + yaw rate</td>
 </tr>
 <tr>
-<td>输出</td>
-<td>冠舵校正</td>
+<td>Output</td>
+<td>Correcção ao leme de crista</td>
 </tr>
 <tr>
 <td>RAM</td>
@@ -104,15 +104,15 @@
 <section class='build'>
 <h2>
 <span class='section-num'>04</span>
-构建
+Build
 </h2>
 <pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
-<p class='compatible'>兼容: ExpressLRS TX 2.4GHz · 波特率: 420000</p>
+<p class='compatible'>Compatível: ExpressLRS TX 2.4GHz · Baudrate: 420000</p>
 </section>
 </main>
 <footer>
-<p>密封固件 · 80MHz · 1MB Flash · 零依赖</p>
-<p class='credit'>ExpressLRS 4.x 分支</p>
+<p>Hermetic firmware · 80MHz · 1MB Flash · Zero dependencies</p>
+<p class='credit'>Fork do ExpressLRS 4.x</p>
 </footer>
 <script>
   const hero = document.querySelector('.hero-content');
