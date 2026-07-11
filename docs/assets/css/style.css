@@ -31,7 +31,8 @@
 
 html {
   scroll-behavior: smooth;
-  background: var(--bg); }
+  background: var(--bg);
+  scroll-padding-top: 6rem; }
 
 body {
   font-family: "Turret Road", monospace;
@@ -63,7 +64,7 @@ body {
   background: url("../images/hero-nemicolopterus.png") center center/135vmin auto no-repeat;
   pointer-events: none;
   will-change: transform;
-  transform: translateY(14%); }
+  transform: translateY(-6%); }
 
 .hero-overlay {
   position: fixed;
