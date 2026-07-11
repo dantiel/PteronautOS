@@ -62,7 +62,7 @@ body
   letter-spacing: 0.03em
 
 // ── Hero Layers ───────────────────────────────────────────────
-// Layer 0: Background — scaled down, positioned lower
+// Layer 0: Background — larger, positioned lower
 .hero-bg
   position: fixed
   top: 0
@@ -70,10 +70,10 @@ body
   width: 100%
   height: 100vh
   z-index: 0
-  background: url('../images/hero-bg.png') center 35% / 65% auto no-repeat
+  background: url('../images/hero-bg.png') center 40% / 85% auto no-repeat
   will-change: transform
 
-// Layer 1: Nemicolopterus — near top edge (transparent padding accounted for)
+// Layer 1: Nemicolopterus — larger, positioned lower
 .hero-nemicolopterus
   position: fixed
   top: 0
@@ -81,7 +81,7 @@ body
   width: 100%
   height: 100vh
   z-index: 1
-  background: url('../images/hero-nemicolopterus.png') center 8% / contain no-repeat
+  background: url('../images/hero-nemicolopterus.png') center 18% / 115% auto no-repeat
   pointer-events: none
   will-change: transform
   transform: translateY(0%)
@@ -106,7 +106,8 @@ nav
   right: 0
   display: flex
   justify-content: center
-  gap: 3rem
+  align-items: center
+  gap: 2.5rem
   padding: 2rem
   z-index: 100
 
@@ -123,6 +124,34 @@ nav
 
     &:hover
       opacity: 1
+
+// ── Language switcher ─────────────────────────────────────────
+.lang-switch
+  display: flex
+  align-items: center
+  gap: 0
+  margin-left: 0.5rem
+
+  a
+    font-size: 0.6rem
+    letter-spacing: 0.25em
+    opacity: 0.35
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5)
+
+    &:hover
+      opacity: 0.7
+
+    &.active
+      opacity: 0.9
+      pointer-events: none
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.15)
+
+  .lang-sep
+    font-size: 0.6rem
+    opacity: 0.25
+    color: var(--nav)
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5)
+    user-select: none
 
 // ── Hero Content ──────────────────────────────────────────────
 .hero
@@ -146,16 +175,13 @@ nav
 .headline
   font-family: $turret
   font-weight: 800
-  // Smaller size — a surprise in the void
   font-size: clamp(2rem, 6vw, 4.5rem)
-  // Almost double letter width spacing
   letter-spacing: 0.45em
   text-transform: uppercase
   line-height: 1.1
   margin-bottom: 1.5rem
   user-select: none
 
-  // Multi-layer 3D shadow — subtle depth in the black
   text-shadow: 0 1px 0 var(--shadow-a), 0 2px 0 var(--shadow-a), 0 3px 2px var(--shadow-b), 0 6px 8px var(--shadow-b), 0 10px 20px var(--shadow-c), 0 2px 12px rgba(0, 0, 0, 0.4)
 
   .pteronaut
@@ -365,9 +391,15 @@ footer
 // ── Responsive ────────────────────────────────────────────────
 @media (max-width: 600px)
   nav
-    gap: 1.25rem
+    gap: 1rem
     padding: 1.25rem
     font-size: 0.6rem
+
+  .lang-switch
+    margin-left: 0
+
+    a
+      font-size: 0.55rem
 
   .headline
     letter-spacing: 0.3em
@@ -379,12 +411,12 @@ footer
 
   .hero-nemicolopterus
     transform: translateY(0%)
-    background-size: 120% auto
-    background-position: center 5%
+    background-size: 130% auto
+    background-position: center 15%
 
   .hero-bg
-    background-size: 85% auto
-    background-position: center 30%
+    background-size: 95% auto
+    background-position: center 35%
 
   .subhead
     letter-spacing: 0.3em
@@ -405,12 +437,12 @@ footer
 
 @media (min-width: 1400px)
   .hero-nemicolopterus
-    background-size: 55% auto
-    background-position: center 5%
+    background-size: 65% auto
+    background-position: center 15%
 
   .hero-bg
-    background-size: 50% auto
-    background-position: center 35%
+    background-size: 60% auto
+    background-position: center 40%
 
   .headline
     letter-spacing: 0.55em

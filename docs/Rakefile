@@ -1,10 +1,25 @@
+# encoding: utf-8
 require "rake/clean"
+require "json"
+require "haml"
 
-CLOBBER.include("index.html", "assets/css/style.css")
+CLOBBER.include("index.html", "en/index.html", "assets/css/style.css")
 
-desc "Build Haml to HTML"
+def build_html(lang)
+  vars = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
+  template = File.read("index.haml", encoding: "UTF-8")
+  engine = Haml::Template.new { template }
+  output = engine.render(Object.new, vars)
+
+  out_path = lang == "pt" ? "index.html" : "en/index.html"
+  File.write(out_path, output, encoding: "UTF-8")
+  puts "  Built #{out_path} (#{lang.upcase})"
+end
+
+desc "Build Haml to HTML (PT + EN)"
 task :haml do
-  sh "bundle exec haml render index.haml > index.html"
+  build_html("pt")
+  build_html("en")
 end
 
 desc "Build Sass to CSS"

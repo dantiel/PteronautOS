@@ -35,13 +35,9 @@ jobs:
         working-directory: docs
         run: bundle install
 
-      - name: Compile Sass to CSS
+      - name: Build site (Sass + Haml PT/EN)
         working-directory: docs
-        run: bundle exec sass --style compressed assets/css/style.sass assets/css/style.css
-
-      - name: Compile Haml to HTML
-        working-directory: docs
-        run: bundle exec haml render index.haml > index.html
+        run: bundle exec rake build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

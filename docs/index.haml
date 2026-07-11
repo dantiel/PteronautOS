@@ -1,9 +1,9 @@
 !!!
-%html{lang: "en"}
+%html{lang: lang}
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title PteronautOS
+    %title= title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&display=swap"}
@@ -15,17 +15,21 @@
     .hero-overlay
 
     %nav
-      %a{href: "#essence"}> Essence
-      %a{href: "#architecture"}> Architecture
-      %a{href: "#zephyrus"}> Zephyrus
-      %a{href: "https://github.com/paraeksperiment/PteronautOS"}> GitHub
+      %a{href: "#essence"}= nav_essence
+      %a{href: "#architecture"}= nav_architecture
+      %a{href: "#zephyrus"}= nav_zephyrus
+      %a{href: "https://github.com/paraeksperiment/PteronautOS"}= nav_github
+      .lang-switch
+        %a{href: lang_href_pt, class: lang_class_pt} PT
+        %span.lang-sep!= "&nbsp;·&nbsp;"
+        %a{href: lang_href_en, class: lang_class_en} EN
 
     %header.hero
       .hero-content
         %h1.headline
           %span.pteronaut> PTERONAUT
           %span.os OS
-        %p.subhead Fly Natural. Control Precise.
+        %p.subhead= hero_subhead
         %pre.glyph
           :preserve
                  ___
@@ -37,90 +41,71 @@
               \______/\/  /   \ |
                     /\___/     \|
                    /
-        %p.version ExpressLRS fork · ESP8285 · CRSF protocol
+        %p.version= hero_version
 
     %main
       %section#essence
         %h2
-          %span.section-num 01
-          Essence
-        %p.lead
-          O PteronautOS é um <strong>fork do ExpressLRS</strong> transformado
-          em controlador de voo para ornitóptero.
-        %p
-          Não é um quad — não há motores, nem ESC, nem Betaflight.
-          O movimento é gerado por <strong>forma de onda</strong>
-          que pilota dois servos de asa e um servo de leme.
-
+          %span.section-num= essence_num
+          = essence_title
+        %p.lead!= essence_lead
+        %p!= essence_body
         .highlight
-          %code CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
+          %code= essence_highlight
 
       %section#architecture
         %h2
-          %span.section-num 02
-          Architecture
-
+          %span.section-num= arch_num
+          = arch_title
         %dl.grid
-          %dt> Ornithopter
-          %dd> Mixer, waveform generation, channel filtering
-
-          %dt> Zephyrus
-          %dd> MPU6050 gyroscope + Mahony AHRS + dual PID
-
-          %dt> ServoOutput
-          %dd> PWM synchronized to CRSF tick
-
-          %dt> Target
-          %dd> ESP8285 2400MHz RX
+          %dt= arch_ornithopter_title
+          %dd= arch_ornithopter_desc
+          %dt= arch_zephyrus_title
+          %dd= arch_zephyrus_desc
+          %dt= arch_servo_title
+          %dd= arch_servo_desc
+          %dt= arch_target_title
+          %dd= arch_target_desc
 
       %section#zephyrus
         %h2
-          %span.section-num 03
-          Zephyrus Gyro Module
-
-        %p.lead
-          Estabilização do leme de crista cefálica via MPU6050.
-          Mahony AHRS para estimativa de atitude, dual PID para
-          correção de roll angle e yaw rate.
-
+          %span.section-num= zeph_num
+          = zeph_title
+        %p.lead= zeph_lead
         %table.specs
           %tr
-            %td> Sensor
-            %td> MPU6050 (GY-521)
+            %td= zeph_sensor_label
+            %td= zeph_sensor_val
           %tr
-            %td> Interface
-            %td> I2C directo (GPIO4/5)
+            %td= zeph_interface_label
+            %td= zeph_interface_val
           %tr
-            %td> AHRS
-            %td> Mahony (registo a registo, ~1kHz)
+            %td= zeph_ahrs_label
+            %td= zeph_ahrs_val
           %tr
-            %td> PID
-            %td> Duplo: roll angle + yaw rate
+            %td= zeph_pid_label
+            %td= zeph_pid_val
           %tr
-            %td> Output
-            %td> Correção ao leme de crista
+            %td= zeph_output_label
+            %td= zeph_output_val
           %tr
-            %td RAM
-            %td.value 62%
+            %td= zeph_ram_label
+            %td.value= zeph_ram_val
           %tr
-            %td Flash
-            %td.value 56%
+            %td= zeph_flash_label
+            %td.value= zeph_flash_val
 
       %section.build
         %h2
-          %span.section-num 04
-          Build
+          %span.section-num= build_num
+          = build_title
         %pre
-          %code pio run -e PteronautOS_ESP8285_2400_RX
-
-        %p.compatible
-          Compatível: ExpressLRS TX 2.4GHz · Baudrate: 420000
+          %code= build_line
+        %p.compatible= build_compatible
 
     %footer
-      %p
-        Hermetic firmware · 80MHz · 1MB Flash · Zero dependencies
-      %p.credit
-        Fork do ExpressLRS 4.x · projecto <a href="https://github.com/paraeksperiment">paraeksperiment</a>
+      %p= footer_hermetic
+      %p.credit= footer_credit
 
     :javascript
       const hero = document.querySelector('.hero-content');
