@@ -568,19 +568,19 @@ footer a {
     z-index: 3;
   }
   .hero-content {
-    padding-top: 21em;
+    padding-top: 26em;
   }
   .hero-nemicolopterus {
-    transform: translateY(-2%);
-    background-size: 55em auto;
-    background-position: center 4em;
+    transform: translateY(-6%);
+    background-size: 52em auto;
+    background-position: center 2em;
   }
   .hero-bg {
-    background-size: 70em auto;
-    background-position: center -2em;
+    background-size: 66em auto;
+    background-position: center -4em;
   }
   .headline {
-    background: linear-gradient(to bottom, transparent 0%, transparent 2em, var(--headline-shield) 2em, var(--headline-shield) 55%, transparent 100%);
+    background: linear-gradient(to bottom, transparent 0%, transparent 4em, var(--headline-shield) 4em, var(--headline-shield) 55%, transparent 100%);
   }
   .headline h1 {
     letter-spacing: 0.35em;
@@ -592,16 +592,19 @@ footer a {
 }
 @media (min-width: 1025px) and (max-width: 1399px) {
   .hero-content {
-    padding-top: 25em;
+    padding-top: 30em;
   }
   .hero-nemicolopterus {
-    background-size: 60em auto;
+    background-size: 63em auto;
+    background-position: center 2em;
+    transform: translateY(-6%);
   }
   .hero-bg {
-    background-size: 72em auto;
+    background-size: 74em auto;
+    background-position: center -4em;
   }
   .headline {
-    background: linear-gradient(to bottom, transparent 0%, transparent 2em, var(--headline-shield) 2em, var(--headline-shield) 55%, transparent 100%);
+    background: linear-gradient(to bottom, transparent 0%, transparent 4em, var(--headline-shield) 4em, var(--headline-shield) 55%, transparent 100%);
   }
 }
 @media (min-width: 1400px) {
