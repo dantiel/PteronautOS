@@ -75,7 +75,7 @@ task :server do
   server = WEBrick::HTTPServer.new(
     Port: 8000,
     DocumentRoot: root,
-    BindAddress: "127.0.0.1"
+    BindAddress: "0.0.0.0"
   )
 
   trap("INT") { server.shutdown }
@@ -84,6 +84,7 @@ task :server do
   puts "🌐  PteronautOS docs server"
   puts "   → http://localhost:8000/"
   puts "   → http://localhost:8000/en/"
+  puts "   → LAN access at http://192.168.1.6:8000/"
   puts "   Ctrl+C to stop"
   puts
 
