@@ -8,8 +8,12 @@
 #include <cstdint>
 
 // --- I2C Pins (ESP8285: GPIO4=SDA, GPIO5=SCL) ---
+#ifndef ZEPHYR_I2C_SDA
 #define ZEPHYR_I2C_SDA       4
+#endif
+#ifndef ZEPHYR_I2C_SCL
 #define ZEPHYR_I2C_SCL       5
+#endif
 #define ZEPHYR_I2C_CLOCK     400000    // 400kHz fast mode
 #define ZEPHYR_I2C_TIMEOUT_US 3000     // 3ms I2C read timeout
 

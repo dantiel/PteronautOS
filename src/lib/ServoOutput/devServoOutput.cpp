@@ -287,6 +287,13 @@ static bool initialize()
         {
             pin = UNDEF_PIN;
         }
+#if defined(ZEPHYRUS_ENABLED)
+        // Exclude Zephyrus I2C pins from PWM (reserved for MPU6050 gyro)
+        if (pin != UNDEF_PIN && (pin == ZEPHYR_I2C_SDA || pin == ZEPHYR_I2C_SCL))
+        {
+            pin = UNDEF_PIN;
+        }
+#endif
 #if defined(PLATFORM_ESP32)
         else if (mode == somDShot || mode == somDShot3D)
         {

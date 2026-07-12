@@ -7,6 +7,10 @@
 #include "helpers.h"
 #include "logging.h"
 
+#if defined(ZEPHYRUS_ENABLED)
+#include "../Zephyrus/ZephyrusConfig.h"
+#endif
+
 #if defined(PLATFORM_ESP32)
 #include <mbedtls/md5.h> // for SetBindPhrase()
 #endif
@@ -1283,6 +1287,16 @@ RxConfig::SetDefaults(bool commit)
             {
                 mode = somSDA;
             }
+#if defined(ZEPHYRUS_ENABLED)
+            else if (GPIO_PIN_PWM_OUTPUTS[ch] == ZEPHYR_I2C_SCL)
+            {
+                mode = somSCL;
+            }
+            else if (GPIO_PIN_PWM_OUTPUTS[ch] == ZEPHYR_I2C_SDA)
+            {
+                mode = somSDA;
+            }
+#endif
             else if ((GPIO_PIN_RCSIGNAL_RX == U0RXD_GPIO_NUM && GPIO_PIN_PWM_OUTPUTS[ch] == U0RXD_GPIO_NUM) ||
                      (GPIO_PIN_RCSIGNAL_TX == U0TXD_GPIO_NUM && GPIO_PIN_PWM_OUTPUTS[ch] == U0TXD_GPIO_NUM))
             {
