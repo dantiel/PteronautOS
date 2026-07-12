@@ -595,6 +595,21 @@ footer
     font-size: clamp(1.2rem, 1.8vw, 1.4rem)
     width: 6em
 
+// Mid-size — laptops & iPad landscape (1025–1399px)
+// Text stays under the creature but pushed lower for clearance
+@media (min-width: 1025px) and (max-width: 1399px)
+  .hero-content
+    padding-top: 25em
+
+  .hero-nemicolopterus
+    background-size: 60em auto
+
+  .hero-bg
+    background-size: 72em auto
+
+  .headline
+    background: linear-gradient(to bottom, transparent 0%, transparent 2em, var(--headline-shield) 2em, var(--headline-shield) 55%, transparent 100%)
+
 // Large desktop — expansive hero
 @media (min-width: 1400px)
   .hero-nemicolopterus

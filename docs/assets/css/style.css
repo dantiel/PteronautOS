@@ -590,6 +590,20 @@ footer a {
     width: 6em;
   }
 }
+@media (min-width: 1025px) and (max-width: 1399px) {
+  .hero-content {
+    padding-top: 25em;
+  }
+  .hero-nemicolopterus {
+    background-size: 60em auto;
+  }
+  .hero-bg {
+    background-size: 72em auto;
+  }
+  .headline {
+    background: linear-gradient(to bottom, transparent 0%, transparent 2em, var(--headline-shield) 2em, var(--headline-shield) 55%, transparent 100%);
+  }
+}
 @media (min-width: 1400px) {
   .hero-nemicolopterus {
     background: url("../images/hero-nemicolopterus.png") center center/69em auto no-repeat;
