@@ -9,3 +9,8 @@ import '../pages/continuous-wave.js'
 // FEATURE:HAS_LR1121
 import '../pages/lr1121-updater.js'
 // /FEATURE:HAS_LR1121
+
+// FEATURE:PTERONAUTOS
+import '../pages/zephyrus-panel.js'
+import '../pages/servo-panel.js'
+// /FEATURE:PTERONAUTOS

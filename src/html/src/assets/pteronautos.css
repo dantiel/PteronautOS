@@ -1,0 +1,163 @@
+/* PteronautOS Theme — Fossil Palette Overrides */
+/* Charcoal + Dark Amber/Gold on fossil tones */
+
+/* Header gradient — dark amber/copper */
+.elrs-header {
+    background-color: #2a1f0a !important;
+    background-image: linear-gradient(45deg, #b8860b 5%, #8b6914 30%, #5c3d0e) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Body — dark charcoal background */
+body {
+    background-color: #1a1a1a !important;
+    color: #ccc !important;
+}
+
+/* Sidedrawer — dark theme */
+#sidedrawer {
+    background-color: #222 !important;
+    color: #ccc !important;
+}
+#sidedrawer strong:hover {
+    background-color: #3a3020 !important;
+}
+#sidedrawer a {
+    color: #ccc !important;
+}
+#sidedrawer a:hover {
+    background-color: #3a3020 !important;
+}
+#sidedrawer a.active {
+    background-color: #3a3020 !important;
+    color: #d4a017 !important;
+}
+#sidedrawer a.active::after {
+    border-color: transparent #d4a017 transparent transparent !important;
+}
+
+/* Panels — dark card style */
+.mui-panel {
+    background-color: #2a2a2a !important;
+    color: #ccc !important;
+}
+.mui-table {
+    color: #ccc !important;
+}
+.mui-table--bordered {
+    border-color: #444 !important;
+}
+.mui-table--bordered > tbody > tr > td,
+.mui-table--bordered > tbody > tr > th {
+    border-top-color: #444 !important;
+}
+
+/* Links — amber */
+a {
+    color: #d4a017 !important;
+}
+
+/* Buttons — amber accent */
+.mui-btn--primary {
+    background-color: #8b6914 !important;
+    border-color: #8b6914 !important;
+}
+.mui-btn--primary:hover {
+    background-color: #a07a18 !important;
+}
+
+/* Footer */
+#footer {
+    background-color: #5c3d0e !important;
+}
+
+/* Loader spinner — amber/copper tones */
+.loader {
+    border-color: rgba(184, 134, 11, 0.18) !important;
+    border-top-color: #b8860b !important;
+    border-right-color: #8b6914 !important;
+}
+.loader::after {
+    border-bottom-color: #d4a017 !important;
+}
+
+/* Alert wizard header — fossil amber gradient */
+.alert-frame.wizard .alert-header {
+    background: linear-gradient(45deg, #b8860b 5%, #8b6914 30%, #5c3d0e) !important;
+}
+
+/* Loading overlay panel */
+.elrs-loading-panel {
+    background: rgba(34, 34, 34, 0.92) !important;
+    color: #d4a017 !important;
+}
+
+/* Drop zone */
+.drop-zone {
+    color: #888 !important;
+    border-color: #888 !important;
+}
+
+/* Inputs / selects */
+input, select, textarea {
+    background-color: #333 !important;
+    color: #ccc !important;
+    border-color: #555 !important;
+}
+
+/* Divider */
+.mui-divider {
+    background-color: #444 !important;
+}
+
+/* Brand area */
+.elrs-brand {
+    color: #d4a017 !important;
+}
+
+/* Form styles overrides */
+.mui-form legend {
+    color: #d4a017 !important;
+}
+
+/* Slider styling for PteronautOS panels */
+input[type="range"] {
+    accent-color: #b8860b;
+}
+
+/* Badge styling */
+.badge {
+    background-color: #b8860b !important;
+}
+
+/* PteronautOS panel title accent */
+.mui--text-title {
+    color: #d4a017 !important;
+}
+
+/* AI horizon indicator */
+.pteronautos-horizon {
+    background: linear-gradient(180deg, #1a3a5c 0%, #8b6914 100%);
+    border: 2px solid #b8860b;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ASCII art in footer */
+.pteronautos-glyph {
+    font-family: monospace;
+    font-size: 9px;
+    line-height: 1.1;
+    color: #d4a017;
+    white-space: pre;
+    text-align: center;
+    opacity: 0.6;
+}
+
+/* Footer height override for ASCII art */
+#footer {
+    height: auto !important;
+    min-height: var(--footer-height);
+    padding: 2px 6px !important;
+}

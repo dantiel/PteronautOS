@@ -23,6 +23,10 @@ class InfoPanel extends LitElement {
                     <tr><td><b>Firmware</b></td><td>${elrsState.settings.target}</td></tr>
                     <tr><td><b>Radio</b></td><td>${elrsState.settings['radio-type']}</td></tr>
                     <tr><td><b>Domain</b></td><td>${formatBand()}</td></tr>
+                    <!-- FEATURE:PTERONAUTOS -->
+                    <tr><td><b>Ornithopter Mode</b></td><td style="color:#d4a017;">Active</td></tr>
+                    <tr><td><b>Zephyrus Gyro</b></td><td>${elrsState.settings?.zephyrus_attached !== false ? 'Connected (MPU6050)' : 'Not Detected'}</td></tr>
+                    <!-- /FEATURE:PTERONAUTOS -->
                     <tr><td><b>Binding UID</b></td><td>${elrsState.config.uid.toString()}</td></tr>
                     <tr><td><b>WiFi State</b></td><td>${formatWifiRssi()}</td></tr>
                     </tbody>

@@ -10,6 +10,10 @@ import '../pages/models-panel.js'
 import '../pages/buttons-panel.js'
 // /FEATURE:IS_TX
 
+// FEATURE:PTERONAUTOS
+import '../pages/ornithopter-panel.js'
+// /FEATURE:PTERONAUTOS
+
 // FEATURE:NOT IS_TX
 import '../pages/rx-options-panel.js'
 import '../pages/connections-panel.js'

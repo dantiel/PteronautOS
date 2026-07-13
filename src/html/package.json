@@ -27,7 +27,8 @@
     "build:sx128x-rx-8285": "npm run check:syntax && npm run check:lint && npm run clean && cross-env ELRS_WEB_HEADER_OUT=headers/web-sx128x-rx-8285.h VITE_FEATURE_IS_TX=false VITE_FEATURE_HAS_SX128X=true VITE_FEATURE_IS_8285=true vite build",
     "build:sx127x-tx-8285": "npm run check:syntax && npm run check:lint && npm run clean && cross-env ELRS_WEB_HEADER_OUT=headers/web-sx127x-tx-8285.h VITE_FEATURE_IS_TX=true VITE_FEATURE_HAS_SX127X=true VITE_FEATURE_IS_8285=true vite build",
     "build:sx127x-rx-8285": "npm run check:syntax && npm run check:lint && npm run clean && cross-env ELRS_WEB_HEADER_OUT=headers/web-sx127x-rx-8285.h VITE_FEATURE_IS_TX=false VITE_FEATURE_HAS_SX127X=true VITE_FEATURE_IS_8285=true vite build",
-    "build:all": "npm run build:lr1121-tx && npm run build:lr1121-rx && npm run build:sx128x-tx && npm run build:sx128x-rx && npm run build:sx127x-tx && npm run build:sx127x-rx && npm run build:sx128x-tx-8285 && npm run build:sx128x-rx-8285 && npm run build:sx127x-tx-8285 && npm run build:sx127x-rx-8285",
+    "build:pteronautos": "npm run check:syntax && npm run check:lint && npm run clean && cross-env ELRS_WEB_HEADER_OUT=headers/web-pteronautos-rx-8285.h VITE_FEATURE_IS_TX=false VITE_FEATURE_HAS_SX128X=true VITE_FEATURE_IS_8285=true VITE_FEATURE_PTERONAUTOS=true vite build",
+    "build:all": "npm run build:lr1121-tx && npm run build:lr1121-rx && npm run build:sx128x-tx && npm run build:sx128x-rx && npm run build:sx127x-tx && npm run build:sx127x-rx && npm run build:sx128x-tx-8285 && npm run build:sx128x-rx-8285 && npm run build:sx127x-tx-8285 && npm run build:sx127x-rx-8285 && npm run build:pteronautos",
     "preview": "vite preview"
   },
   "dependencies": {
