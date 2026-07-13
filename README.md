@@ -30,6 +30,13 @@ pio run -e PteronautOS_ESP8285_2400_RX
 | RAM | 50,856 / 81,920 (62.1%) | 31,064 bytes |
 | Flash | 553,272 / 991,216 (55.8%) | 437,944 bytes |
 
+## Hardware
+
+| Guide | Scope |
+|-------|-------|
+| [HARDWARE.md](HARDWARE.md) | Complete wiring guide — PWMP7 v1.1 pin mappings, GY-521 I²C wiring, voltage tables, servo compatibility, flash workflow |
+| [ELRS PWM7 Reference](docs/en/hardware/elrs-pwm7-esp8285.md) | Generic ELRS PWM7 board specs and pin reference |
+
 ## Architecture
 
 ```

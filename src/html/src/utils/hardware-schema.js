@@ -1068,14 +1068,14 @@ const HARDWARE_SCHEMA = [
                 label: 'SCL pin',
                 type: 'uint',
                 icon: 'output',
-                desc: 'I2C clock — GPIO2 on PWMP7 (connected to MPU6050 SCL)'
+                desc: 'I2C clock — GPIO3 (CH3 breakout) on PWMP7 v1.1 / GPIO2 on v1.0'
             },
             {
                 id: 'i2c_sda',
                 label: 'SDA pin',
                 type: 'uint',
                 icon: 'input-output',
-                desc: 'I2C data — GPIO5 on PWMP7 (connected to MPU6050 SDA)'
+                desc: 'I2C data — GPIO1 (CH2 breakout) on PWMP7 v1.1 / GPIO5 on v1.0'
             },
         ]
     },

@@ -2,6 +2,8 @@
 
 > *Hardware reference for the Generic 2400 PWMP7 (DIY_2400_RX_PWMPEX) ESP8285 receiver running PteronautOS with Zephyrus MPU6050 gyro stabilization.*
 
+> ⚠️ **PCB revision matters.** This guide covers v1.0 boards (GPIO2/GPIO5 exposed). For **v1.1 boards** where GPIO2/GPIO5 are not broken out, see [HARDWARE.md](../../../HARDWARE.md#1-generic-2400-pwmp7-v11) — the v1.1 uses CH2/CH3 (GPIO1/GPIO3) for I²C.
+
 ---
 
 ## 1. Overview
@@ -46,7 +48,9 @@ This guide covers pin mapping, I2C gyro integration, build configuration, and cr
 ## 3. MPU6050 I2C Pin Resolution
 
 ### The Conflict
+The PWMP7 has **no dedicated I2C header**. This guide covers the **v1.0** resolution (GPIO2/GPIO5 repurposed from PWM). For v1.1 boards where GPIO2/GPIO5 are not exposed, see [HARDWARE.md](../../../HARDWARE.md).
 
+The default Zephyrus I2C pins (GPIO4=SDA, GPIO5=SCL) conflict directly with:
 The PWMP7 has **no dedicated I2C header**. The default Zephyrus I2C pins (GPIO4=SDA, GPIO5=SCL) conflict directly with:
 
 - **GPIO 4** → SX1280 DIO1 (radio busy interrupt — **non-negotiable**)

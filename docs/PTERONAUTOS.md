@@ -40,12 +40,10 @@
                                                └────────────────┘                 │
                                                                                   │
                                   GPIO0 ──── Left Wing Servo  ←────────────────────┘
-                                  GPIO1 ──── Right Wing Servo ←────────────────────┘
-                                  GPIO3 ──── Crest Rudder     ←────────────────────┘
+                                  GPIO1 ──── Right Wing Servo + I²C SDA (MPU6050)
+                                  GPIO3 ──── Crest Rudder     + I²C SCL (MPU6050)
                                   GPIO9 ──── Aux 4
                                   GPIO10 ─── Aux 5
-                                  GPIO2 ──── I2C SCL (MPU6050)
-                                  GPIO5 ──── I2C SDA (MPU6050)
                                   GPIO16 ─── LED (digital)
 ```
 
@@ -71,13 +69,15 @@
 
 ## 2. Hardware — PWMP7 Receiver
 
+> 📘 **Full board-specific guide:** See [HARDWARE.md](../../HARDWARE.md) for v1.0/v1.1 differences, wiring diagrams, voltage specs, servo compatibility, and photos.
+
 ### Target Board: Generic 2400 PWMP7
 
 | Property | Value |
 |----------|-------|
 | **MCU** | ESP8285 @ 80 MHz, 1 MB Flash |
 | **Radio** | SX1280 (2.4 GHz) |
-| **PWM outputs** | 7 native → 5 usable with I2C gyro |
+| **PWM outputs** | 5 usable (3 for ornithopter + 2 aux) |
 | **Build target** | `PteronautOS_ESP8285_2400_RX` |
 | **Hardware JSON** | `src/hardware/RX/Generic 2400 PWMP7.json` |
 
@@ -86,11 +86,11 @@
 | GPIO | PWMP7 Function | PteronautOS Role | Notes |
 |------|---------------|------------------|-------|
 | **0** | PWM Ch1 + Button | Left wing servo + Button | Shared OK |
-| **1** | PWM Ch2 + UART TX | Right wing servo + Serial TX | Shared OK |
-| **2** | PWM Ch7 | **I2C SCL** (MPU6050) | Repurposed — PWM lost |
-| **3** | PWM Ch3 + UART RX | Crest rudder servo + Serial RX | Shared OK |
+| **1** | PWM Ch2 + UART TX | Right wing servo + **I²C SDA** + Serial TX | Shared OK |
+| **2** | *(not exposed on v1.1)* | — | N/A |
+| **3** | PWM Ch3 + UART RX | Crest rudder servo + **I²C SCL** + Serial RX | Shared OK |
 | **4** | SX1280 DIO1 (IRQ) | Radio interrupt | **Hard-reserved** |
-| **5** | PWM Ch6 | **I2C SDA** (MPU6050) | Repurposed — PWM lost |
+| **5** | *(not exposed on v1.1)* | — | N/A |
 | **9** | PWM Ch4 | Aux servo | Free |
 | **10** | PWM Ch5 | Aux servo | Free |
 | **12** | SPI MISO | Radio bus | Hard-reserved |
@@ -103,15 +103,17 @@
 ### MPU6050 Wiring (GY-521 Breakout)
 
 ```
-GY-521          PWMP7
-------          -----
-VCC  ─────────  3.3V
-GND  ─────────  GND
-SDA  ─────────  GPIO 5  (PWM Ch6 pad)
-SCL  ─────────  GPIO 2  (PWM Ch7 pad)
+GY-521          PWMP7 v1.1
+------          -----------
+VCC  ─────────  + (5V rail)
+GND  ─────────  - (GND rail)
+SDA  ─────────  CH2 (GPIO1)
+SCL  ─────────  CH3 (GPIO3)
 ```
 
-The GY-521 includes on-board 4.7kΩ I2C pull-up resistors. **No external resistors needed.**
+**Four wires total.** The GY-521 has its own onboard AMS1117-3.3V regulator — feed it 5V from the main rail, it generates 3.3V internally. Onboard 4.7kΩ I²C pull-up resistors included. **No external resistors needed.**
+
+> ⚠️ **v1.1 board note:** CH2/CH3 are shared with the FTDI header. Unplug the MPU to flash, replug to fly. See [HARDWARE.md](../../HARDWARE.md) for full board-specific details.
 
 ### Boot Safety — Active SCL Probe
 
@@ -417,9 +419,11 @@ When built without `-D ORNITHOPTER_MODE=1`, all functions inline to **nothing** 
 -D PTERONAUTOS=1           # Project identity flag
 -D ORNITHOPTER_MODE=1      # Enable Ornithopter module
 -D ZEPHYRUS_ENABLED=1      # Enable Zephyrus gyro module
--D ZEPHYR_I2C_SDA=5        # I2C SDA pin (GPIO5, was PWM Ch6)
--D ZEPHYR_I2C_SCL=2        # I2C SCL pin (GPIO2, was PWM Ch7)
+-D ZEPHYR_I2C_SDA=1        # I2C SDA pin (GPIO1 → CH2 breakout, v1.1)
+-D ZEPHYR_I2C_SCL=3        # I2C SCL pin (GPIO3 → CH3 breakout, v1.1)
 ```
+
+> **For v1.0 boards** (GPIO2/GPIO5 exposed): use `-D ZEPHYR_I2C_SDA=5 -D ZEPHYR_I2C_SCL=2`.
 
 ### Key Tuning Parameters
 
@@ -437,7 +441,7 @@ All in `OrnithopterConfig.h` and `ZephyrusConfig.h`. See sections 4 and 5 above 
 }
 ```
 
-The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=5` and `-D ZEPHYR_I2C_SCL=2`. The hardware JSON retains stock ELRS PWM output definitions for upstream compatibility.
+The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=1` and `-D ZEPHYR_I2C_SCL=3` (v1.1, using CH2/CH3 breakouts). For v1.0 boards with exposed GPIO2/GPIO5 pads, use `SDA=5, SCL=2`. The hardware JSON retains stock ELRS PWM output definitions for upstream compatibility.
 
 ---
 
@@ -455,7 +459,7 @@ The PteronautOS WebUI is a feature-gated overlay on the standard ExpressLRS web 
 | **Zephyrus** | MPU6050 connection status, artificial horizon (CSS), roll/yaw PID slider controls, calibration trigger |
 | **Servo** | 5-channel PWM table (GPIO 0,1,3,9,10), center/min/max/failsafe per channel |
 | **Info** | Ornithopter Mode + Zephyrus Gyro status rows |
-| **Hardware Schema** | I2C bus (GPIO2=SCL, GPIO5=SDA) visualization |
+| **Hardware Schema** | I2C bus (GPIO1=SDA, GPIO3=SCL) visualization |
 
 ### Theme
 

@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-// --- I2C Pins (PWMP7: GPIO5=SDA, GPIO2=SCL) — overridden by build_flags ---
+// --- I2C Pins (PWMP7: GPIO1=SDA, GPIO3=SCL on CH2/CH3 breakout) — overridden by build_flags ---
 #ifndef ZEPHYR_I2C_SDA
 #define ZEPHYR_I2C_SDA       4
 #endif

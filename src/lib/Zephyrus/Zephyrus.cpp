@@ -225,12 +225,10 @@ void Zephyrus::begin() {
 
     #if ZEPHYR_I2C_PRE_DETECT
     // Active probe on SCL line to detect external I2C pull-up (MPU6050).
-    // GPIO2 has an internal pull-up (boot mode) that would defeat a passive
-    // read — the pin always looks HIGH. Instead, we DRIVE the pin LOW,
-    // release to high-impedance, then read.
+    // Drives SCL LOW to discharge bus, releases to high-Z, then reads.
     //
-    // Without MPU: no external 4.7kΩ → pin stays LOW (floating/leakage) or
-    //              is held LOW by PWM pull-down → detection correct.
+    // Without MPU: no external 4.7kΩ → pin stays LOW (floating or pulled
+    //              by UART RX idle) → detection correct.
     // With    MPU: 4.7kΩ to VCC overcomes float → pin rises HIGH.
     //
     // Cost: ~100µs. Only fires once at boot. Prevents ESP8266 software I2C
