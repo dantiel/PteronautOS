@@ -35,6 +35,9 @@
 #include "devRXLUA.h"
 #include "devServoOutput.h"
 #include "devWIFI.h"
+#ifdef ZEPHYRUS_ENABLED
+#include "../Zephyrus/ZephyrusFilter.h"
+#endif
 #include "RXEndpoint.h"
 #include "RXOTAConnector.h"
 #include "rx-serial/devSerialIO.h"
@@ -2133,6 +2136,33 @@ void loop()
     {
         DataDlSender.SetDataToTransmit(DataDlBuffer, nextPlayloadSize);
     }
+
+#ifdef ZEPHYRUS_ENABLED
+    // Inject PteronautOS attitude telemetry (CRSF_FRAMETYPE_ATTITUDE) at ~10Hz
+    // Sends live pitch/roll/yaw from Zephyrus gyro to EdgeTX telemetry screen
+    {
+        static uint32_t lastAttitudeTlm = 0;
+        static GENERIC_CRC8 crsfCrc(CRSF_CRC_POLY);
+        if (!DataDlSender.IsActive() && zephyrus.enabled
+            && connectionState == connected
+            && (now - lastAttitudeTlm > 100000)) // every 100ms
+        {
+            CRSF_MK_FRAME_T(crsf_sensor_attitude_t) attitudeFrame;
+            attitudeFrame.h.sync_byte = CRSF_SYNC_BYTE;
+            attitudeFrame.h.frame_size = CRSF_FRAME_SIZE(sizeof(crsf_sensor_attitude_t));
+            attitudeFrame.h.type = CRSF_FRAMETYPE_ATTITUDE;
+            // CRSF attitude: radians * 10000 (deci-radians * 100)
+            attitudeFrame.p.pitch = (int16_t)(zephyrus.pitchDeg * 0.0174533f * 10000.0f);
+            attitudeFrame.p.roll  = (int16_t)(zephyrus.rollDeg  * 0.0174533f * 10000.0f);
+            attitudeFrame.p.yaw   = (int16_t)(zephyrus.yawRate * 0.0174533f * 10000.0f);
+            // CRC over type + payload (7 bytes)
+            attitudeFrame.crc = crsfCrc.calc((const uint8_t *)&attitudeFrame.h.type,
+                                             sizeof(crsf_sensor_attitude_t) + 1);
+            DataDlSender.SetDataToTransmit((uint8_t *)&attitudeFrame, sizeof(attitudeFrame));
+            lastAttitudeTlm = now;
+        }
+    }
+#endif
 
     updateTelemetryBurst();
     updateBindingMode(now);

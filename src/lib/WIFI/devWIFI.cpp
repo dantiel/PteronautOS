@@ -36,6 +36,14 @@
 #include "helpers.h"
 #include "devButton.h"
 #include "devAnalogVbat.h"
+
+#ifdef ZEPHYRUS_ENABLED
+#include "../Zephyrus/ZephyrusFilter.h"
+#endif
+#ifdef ORNITHOPTER_MODE
+#include "../Ornithopter/OrnithopterFilter.h"
+#endif
+
 #if defined(TARGET_RX)
 #include "VbatCalibration.h"
 #endif
@@ -530,6 +538,57 @@ static void GetConfiguration(AsyncWebServerRequest *request)
 
   response->setLength();
   request->send(response);
+}
+
+static void GetPteronautosState(AsyncWebServerRequest *request)
+{
+    auto *response = new AsyncJsonResponse();
+    const auto root = response->getRoot();
+
+    // Zephyrus gyro state
+#ifdef ZEPHYRUS_ENABLED
+    {
+        auto zeph = root["zephyrus"].to<JsonObject>();
+        zeph["enabled"] = zephyrus.enabled;
+        zeph["calibrated"] = zephyrus.calibrated;
+        zeph["roll_deg"] = zephyrus.rollDeg;
+        zeph["pitch_deg"] = zephyrus.pitchDeg;
+        zeph["yaw_rate"] = zephyrus.yawRate;
+        zeph["roll_correction"] = zephyrus.rollCorrection;
+        zeph["yaw_correction"] = zephyrus.yawCorrection;
+        zeph["rudder_correction"] = zephyrus.rudderCorrection;
+    }
+#else
+    {
+        auto zeph = root["zephyrus"].to<JsonObject>();
+        zeph["enabled"] = false;
+    }
+#endif
+
+    // Ornithopter state
+#ifdef ORNITHOPTER_MODE
+    {
+        auto orni = root["ornithopter"].to<JsonObject>();
+        orni["enabled"] = ornithopter.enabled;
+        orni["link_up"] = ornithopter.linkUp;
+        orni["servo_left_us"] = ornithopter.servoLeftUs;
+        orni["servo_right_us"] = ornithopter.servoRightUs;
+        orni["servo_rudder_us"] = ornithopter.servoRudderUs;
+        orni["voice_throttle"] = ornithopter.voiceThrottle;
+        orni["voice_cadence"] = ornithopter.voiceCadence;
+        orni["voice_aileron"] = ornithopter.voiceAileron;
+        orni["voice_elevator"] = ornithopter.voiceElevator;
+        orni["voice_rudder"] = ornithopter.voiceRudder;
+    }
+#else
+    {
+        auto orni = root["ornithopter"].to<JsonObject>();
+        orni["enabled"] = false;
+    }
+#endif
+
+    response->setLength();
+    request->send(response);
 }
 
 #if defined(TARGET_TX)
@@ -1211,6 +1270,7 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
+  server.on("/pteronautos/state", GetPteronautosState);
   server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
