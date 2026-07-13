@@ -18,6 +18,7 @@ This guide covers pin mapping, I2C gyro integration, build configuration, and cr
 | **PteronautOS Target** | `PteronautOS_ESP8285_2400_RX` |
 | **Legacy ELRS Target** | `DIY_2400_RX_PWMPEX` |
 | **Hardware JSON** | `src/hardware/RX/Generic 2400 PWMP7.json` |
+| **First Install** | ⚠️ UART only — Wi-Fi blocked (see §6) |
 
 ---
 
@@ -130,27 +131,81 @@ pio run -e PteronautOS_ESP8285_2400_RX
 
 ## 6. Flashing
 
-### Method 1: WiFi (Recommended)
+### ⚠️ First Install: UART Required
+
+**Wi-Fi first-install from factory ExpressLRS 3.x will fail with `ERROR[4]: Not Enough Space`.** This is a fundamental ESP8266 limitation, not a bug:
+
+- The ESP8266 `Updater` class requires **both** old and new firmware to coexist in flash during the update
+- PteronautOS firmware (≈557KB) + stock ELRS 3.2.0 (≈480KB) = 1,037KB → exceeds the 995KB sketch partition
+- UART flashing erases the entire chip first, so no space conflict occurs
+
+**After the initial UART flash, all subsequent updates work via Wi-Fi** — PteronautOS-to-PteronautOS fits within the partition.
+
+#### UART Flashing Procedure
+
+**What you need:**
+- USB-to-UART adapter with **3.3V logic** (CP2102, CH340G, FT232, etc.)
+- **Do not use 5V** adapters — ESP8285 GPIO is not 5V-tolerant
+
+**Wiring:**
+
+```
+USB-UART          PWMP7 Receiver
+--------          --------------
+TX     ─────────  RX  (GPIO3)
+RX     ─────────  TX  (GPIO1)
+GND    ─────────  GND
+                  3.3V ← power separately
+```
+
+> ⚠️ **Power the receiver from its own 5V supply** (BEC or battery). Do **not** power it from the USB-UART adapter's 3.3V pin — most adapters cannot supply enough current for the radio.
+
+**Enter bootloader mode:**
+1. Hold the **button** (GPIO0 to GND)
+2. Power on the receiver
+3. Release the button after 1–2 seconds
+4. The LED (if still present) may glow dimly or stay off — this is normal
+
+**Flash with PlatformIO:**
+
+```bash
+cd src
+pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial-XXXX
+```
+
+**Or flash with esptool.py:**
+
+```bash
+esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 \
+  write_flash 0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+```
+
+**Port examples by OS:**
+
+| OS | Port Pattern |
+|----|-------------|
+| macOS | `/dev/cu.usbserial-*` or `/dev/cu.SLAB_USBtoUART` |
+| Linux | `/dev/ttyUSB0` |
+| Windows | `COM3` (check Device Manager → Ports) |
+
+> 💡 **Save your firmware.bin** to a safe location before cleaning the build directory — PlatformIO's `pio run -t clean` will delete it.
+
+### Method 2: WiFi Updates (Subsequent Only)
+
+Once PteronautOS is installed via UART, Wi-Fi updates work normally:
 
 1. Power the receiver; it enters WiFi AP mode if no transmitter is connected
 2. Connect to `ExpressLRS RX` WiFi network (password: `expresslrs`)
 3. Navigate to `http://10.0.0.1`
 4. Upload `firmware.bin` from `.pio/build/PteronautOS_ESP8285_2400_RX/`
 
-### Method 2: USB-UART
-
-1. Connect USB-UART to GPIO1 (TX) / GPIO3 (RX) on the receiver
-2. Hold GPIO0 to GND during power-up for bootloader mode
-3. Flash with `esptool.py` or PlatformIO upload
-
-```bash
-cd src
-pio run -e PteronautOS_ESP8285_2400_RX -t upload
-```
+> ✅ **Verified working** on the PWMP7. All PteronautOS-to-PteronautOS updates succeed via Wi-Fi.
 
 ### Cross-Flash from ELRS 3.x
 
 If the receiver currently runs ExpressLRS (DIY_2400_RX_PWMPEX), flashing PteronautOS will trigger an EEPROM reset due to `flash_discriminator` mismatch. All configuration will reset to defaults — this is **correct and expected behavior**.
+
+**Remember:** cross-flash must be done via UART. Wi-Fi cross-flash from ELRS 3.x → PteronautOS fails with `ERROR[4]: Not Enough Space` due to flash partition constraints described above.
 
 ---
 
@@ -240,6 +295,7 @@ All failsafe paths respect the hermetic principle: *the wings center, the rudder
 | **No I2C pull-up resistors** | May need external 4.7kΩ pull-ups on SDA/SCL | Add to GY-521 breakout |
 | **62% RAM usage** | Limited headroom for future features | Stay within hermetic 65% limit |
 | **Single UART** | Cannot use both serial RX and debug simultaneously | Disable debug for PWM3 serial use |
+| **Wi-Fi first-install blocked** | `ERROR[4]: Not Enough Space` when cross-flashing from ELRS 3.x via Wi-Fi | Use UART for first install; all subsequent updates via Wi-Fi work |
 
 ---
 
