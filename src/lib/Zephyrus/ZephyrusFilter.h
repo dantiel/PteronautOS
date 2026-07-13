@@ -19,6 +19,7 @@
 
 extern Zephyrus zephyrus;
 
+static inline void zephyrusBegin()    { zephyrus.begin(); }
 static inline void zephyrusUpdate() {
     zephyrus.update(micros());
     ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;
@@ -28,6 +29,7 @@ static inline void zephyrusOnLinkUp()   { zephyrus.onLinkUp(); }
 static inline void zephyrusOnLinkDown() { zephyrus.onLinkDown(); }
 
 #else
+static inline void zephyrusBegin() {}
 static inline void zephyrusUpdate() {}
 static inline void zephyrusOnLinkUp() {}
 static inline void zephyrusOnLinkDown() {}

@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-// --- I2C Pins (ESP8285: GPIO4=SDA, GPIO5=SCL) ---
+// --- I2C Pins (PWMP7: GPIO5=SDA, GPIO2=SCL) — overridden by build_flags ---
 #ifndef ZEPHYR_I2C_SDA
 #define ZEPHYR_I2C_SDA       4
 #endif

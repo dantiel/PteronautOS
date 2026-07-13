@@ -2031,6 +2031,7 @@ void setup()
 
         devicesRegister(ui_devices, ARRAY_SIZE(ui_devices));
         devicesInit();
+        zephyrusBegin();  // I2C probe + MPU6050 init (no-op if MPU absent)
 
         setupBindingFromConfig();
 
