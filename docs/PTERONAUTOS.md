@@ -621,4 +621,66 @@ PteronautOS/
 
 ---
 
+## 13. Telemetry & Data
+
+### CRSF Attitude Telemetry (to TX)
+
+When `ZEPHYRUS_ENABLED=1` and the RC link is active, `rx_main.cpp` injects
+`CRSF_FRAMETYPE_ATTITUDE` frames every 100ms into the OTA downlink. EdgeTX/OpenTX
+natively displays these as a horizon indicator on the telemetry screen.
+
+| Field | Units | Source |
+|-------|-------|--------|
+| Pitch | radians × 10000 | `zephyrus.pitchDeg` → radians |
+| Roll | radians × 10000 | `zephyrus.rollDeg` → radians |
+| Yaw | radians × 10000 | `zephyrus.yawRate` (°/s) → rad/s |
+
+- Requires: connected RC link (no telemetry in WiFi mode)
+- Rate: ~10Hz (every 100ms, throttled by DataDlSender availability)
+- CRC: DVB-S2 (polynomial 0xD5) via `GENERIC_CRC8`
+
+### WebUI Live State Endpoint
+
+`GET http://10.0.0.1/pteronautos/state` returns live JSON with:
+
+```json
+{
+  "zephyrus": {
+    "enabled": true,
+    "calibrated": true,
+    "roll_deg": 1.5,
+    "pitch_deg": -3.2,
+    "yaw_rate": 0.8,
+    "roll_correction": 12.4,
+    "yaw_correction": -5.1,
+    "rudder_correction": 7.3
+  },
+  "ornithopter": {
+    "enabled": true,
+    "link_up": true,
+    "servo_left_us": 1520,
+    "servo_right_us": 1480,
+    "servo_rudder_us": 1507,
+    "voice_throttle": 1200,
+    "voice_cadence": 992,
+    "voice_aileron": 992,
+    "voice_elevator": 992,
+    "voice_rudder": 992
+  }
+}
+```
+
+- When Zephyrus/Ornithopter are disabled, their `enabled` field is `false`
+- All values are live (read from global `zephyrus` / `ornithopter` objects)
+- Accessible from any browser on the WiFi network, no auth required
+- Used by the branded WebUI panels for live data display (when npm build is active)
+
+### Planned: CRSF Parameter Protocol
+
+Future work will register Ornithopter/Zephyrus parameters via
+`CRSF_FRAMETYPE_PARAMETER_SETTINGS_ENTRY` / `PARAMETER_READ` / `PARAMETER_WRITE`,
+enabling real-time PID/waveform tuning from EdgeTX LUA scripts and the WebUI.
+
+---
+
 *PteronautOS — Fly Natural. Control Precise.*
