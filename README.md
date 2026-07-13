@@ -36,6 +36,7 @@ pio run -e PteronautOS_ESP8285_2400_RX
 |-------|-------|
 | [HARDWARE.md](HARDWARE.md) | Complete wiring guide — PWMP7 v1.1 pin mappings, GY-521 I²C wiring, voltage tables, servo compatibility, flash workflow |
 | [ELRS PWM7 Reference](docs/en/hardware/elrs-pwm7-esp8285.md) | Generic ELRS PWM7 board specs and pin reference |
+| [PteronautOS.md](docs/PTERONAUTOS.md) | Main project documentation — architecture, modules, build system, full pin mappings |
 
 ## Architecture
 
