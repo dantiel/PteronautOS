@@ -222,6 +222,22 @@ bool Zephyrus::_mpuReadSensors() {
 // ---------------------------------------------------------------------------
 void Zephyrus::begin() {
     _begun = true;
+
+    #if ZEPHYR_I2C_PRE_DETECT
+    // GPIO probe on SCL line: if MPU6050 is physically absent, its 4.7kΩ
+    // pull-up is missing and the PWM pull-down dominates → pin reads LOW.
+    // Skipping Wire.begin() prevents an I2C bit-bang hang (ESP8266 software
+    // I2C loops forever waiting for SCL to go high, triggering watchdog reset).
+    // Cost: ~2ms delay. Only fires once at boot.
+    pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
+    delay(2);   // Stabilization — let the pull-up/pull-down settle
+    if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
+        _mpuPresent = false;
+        enabled = false;
+        return; // MPU not connected — don't touch I2C at all
+    }
+    #endif
+
     Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
     Wire.setClock(ZEPHYR_I2C_CLOCK);
 

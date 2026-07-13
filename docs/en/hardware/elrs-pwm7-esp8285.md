@@ -78,6 +78,12 @@ SCL  ─────────  GPIO 2  (PWM Ch7 pad)
 
 > ⚠️ **Verify your PCB**: The GPIO 2 and GPIO 5 pads must be physically accessible on your specific PWMP7 board. Most layouts expose all PWM channel pads.
 
+### MPU-Absent Boot (Pre-Detect)
+
+The firmware probes GPIO2 (SCL) **before** initializing I2C. If the MPU6050 is physically disconnected, its 4.7kΩ pull-up is absent — the pin reads LOW and Zephyrus skips I2C entirely, avoiding the boot-loop hang. The receiver boots normally with Zephyrus in `enabled=false` state.
+
+> **This means you can flash first, wire the MPU later.** When you connect the MPU, its pull-up registers on the next boot, I2C initializes, and gyro stabilization activates automatically. No firmware rebuild needed.
+
 ---
 
 ## 4. PWM Output Channels (Post-Zephyrus)

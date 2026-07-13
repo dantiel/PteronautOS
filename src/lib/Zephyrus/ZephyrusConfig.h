@@ -17,6 +17,14 @@
 #define ZEPHYR_I2C_CLOCK     400000    // 400kHz fast mode
 #define ZEPHYR_I2C_TIMEOUT_US 3000     // 3ms I2C read timeout
 
+// --- GPIO Pre-Detect: probe SCL line before I2C init to avoid boot loop when MPU absent ---
+// When defined, begin() reads SCL as INPUT_PULLUP before calling Wire.begin().
+// MPU breakout's 4.7kΩ pull-up → HIGH (proceed). Float/pull-down → LOW (skip I2C safely).
+// Undefine if using external level shifters or non-standard pull-ups that defeat detection.
+#ifndef ZEPHYR_I2C_PRE_DETECT
+  #define ZEPHYR_I2C_PRE_DETECT 1
+#endif
+
 // --- MPU6050 I2C Address ---
 #define ZEPHYR_MPU_ADDR      0x68
 
