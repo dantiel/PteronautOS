@@ -158,7 +158,9 @@ GND    ─────────  GND
                   3.3V ← power separately
 ```
 
-> ⚠️ **Power the receiver from its own 5V supply** (BEC or battery). Do **not** power it from the USB-UART adapter's 3.3V pin — most adapters cannot supply enough current for the radio.
+![PWMP7 receiver wired to FTDI adapter for UART flashing](../../assets/images/pwm7-wiring.jpg)
+
+> ⚠️ **Power the receiver from its own 5V supply**
 
 **Enter bootloader mode:**
 1. Hold the **button** (GPIO0 to GND)
