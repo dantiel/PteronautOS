@@ -48,7 +48,7 @@ def appendToFirmware(firmware_file, product_name, lua_name, defines, config, lay
         try:
             with open(layout_file) as h:
                 hardware = json.load(h)
-                if 'overlay' in config:
+                if config is not None and 'overlay' in config:
                     hardware.update(config['overlay'])
                 if rx_as_tx is not None:
                     if 'serial_rx' not in hardware or 'serial_tx' not in hardware:
@@ -217,13 +217,27 @@ def appendConfiguration(source, target, env):
     target_name = env.get('PIOENV', '')
     device_name = env.get('DEVICE_NAME', None)
     config = env.GetProjectOption('board_config', None)
-    if 'Unified_' not in target_name and config is None:
+    if 'Unified_' not in target_name and 'PteronautOS' not in target_name and config is None:
         return
 
     defines = json.JSONEncoder().encode(env['OPTIONS_JSON'])
 
     with open(str(target[0]), "r+b") as firmware_file:
-        doConfiguration(firmware_file, defines, config, target_name, device_name, None)
+        if 'PteronautOS' in target_name:
+            # PteronautOS — embed PWMP7 hardware definition directly
+            hw_file = 'hardware/RX/Generic 2400 PWMP7.json'
+            appendToFirmware(
+                firmware_file,
+                "PteronautOS PWMP7",
+                "PWMP7 RX",
+                defines,
+                None,           # config not needed
+                hw_file,        # layout_file
+                None            # rx_as_tx not needed
+            )
+            print("PteronautOS: embedded PWMP7 hardware definition")
+        else:
+            doConfiguration(firmware_file, defines, config, target_name, device_name, None)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Configure Unified Firmware")
