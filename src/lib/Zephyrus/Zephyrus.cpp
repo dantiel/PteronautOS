@@ -224,13 +224,23 @@ void Zephyrus::begin() {
     _begun = true;
 
     #if ZEPHYR_I2C_PRE_DETECT
-    // GPIO probe on SCL line: if MPU6050 is physically absent, its 4.7kΩ
-    // pull-up is missing and the PWM pull-down dominates → pin reads LOW.
-    // Skipping Wire.begin() prevents an I2C bit-bang hang (ESP8266 software
-    // I2C loops forever waiting for SCL to go high, triggering watchdog reset).
-    // Cost: ~2ms delay. Only fires once at boot.
-    pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
-    delay(2);   // Stabilization — let the pull-up/pull-down settle
+    // Active probe on SCL line to detect external I2C pull-up (MPU6050).
+    // GPIO2 has an internal pull-up (boot mode) that would defeat a passive
+    // read — the pin always looks HIGH. Instead, we DRIVE the pin LOW,
+    // release to high-impedance, then read.
+    //
+    // Without MPU: no external 4.7kΩ → pin stays LOW (floating/leakage) or
+    //              is held LOW by PWM pull-down → detection correct.
+    // With    MPU: 4.7kΩ to VCC overcomes float → pin rises HIGH.
+    //
+    // Cost: ~100µs. Only fires once at boot. Prevents ESP8266 software I2C
+    // hang (core_esp8266_si2c.cpp WAIT_CLOCK_HIGH spins forever when SCL
+    // can't rise, triggering watchdog reset).
+    digitalWrite(ZEPHYR_I2C_SCL, LOW);
+    pinMode(ZEPHYR_I2C_SCL, OUTPUT);     // discharge bus capacitance
+    delayMicroseconds(5);
+    pinMode(ZEPHYR_I2C_SCL, INPUT);      // release — high-Z, no internal pull-up
+    delayMicroseconds(50);               // wait for external pull-up to raise line
     if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
         _mpuPresent = false;
         enabled = false;
