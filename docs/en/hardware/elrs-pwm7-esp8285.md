@@ -14,7 +14,7 @@ This guide covers pin mapping, I2C gyro integration, build configuration, and cr
 |---|---|
 | **MCU** | ESP8285 @ 80MHz, 1MB Flash |
 | **Radio** | SX1280 (2.4GHz) |
-| **PWM Outputs** | 7 native → **6 usable** with Zephyrus gyro |
+| **PWM Outputs** | 7 native → **5 usable** with Zephyrus gyro |
 | **PteronautOS Target** | `PteronautOS_ESP8285_2400_RX` |
 | **Legacy ELRS Target** | `DIY_2400_RX_PWMPEX` |
 | **Hardware JSON** | `src/hardware/RX/Generic 2400 PWMP7.json` |
@@ -28,7 +28,7 @@ This guide covers pin mapping, I2C gyro integration, build configuration, and cr
 |---|---|---|---|
 | **0** | PWM Ch1 + Button | PWM Ch1 + Button | ✅ Shared OK |
 | **1** | PWM Ch2 + UART TX | PWM Ch2 + Serial TX | ✅ Shared OK |
-| **2** | PWM Ch7 | PWM Ch6 | ✅ Free |
+| **2** | ~~PWM Ch7~~ | **I2C SCL** (MPU6050) | ⚡ Repurposed |
 | **3** | PWM Ch3 + UART RX | PWM Ch3 + Serial RX | ✅ Shared OK |
 | **4** | **SX1280 DIO1** (IRQ) | **SX1280 DIO1** | 🔒 Hard-reserved (radio) |
 | **5** | ~~PWM Ch6~~ | **I2C SDA** (MPU6050) | ⚡ Repurposed |
@@ -38,7 +38,7 @@ This guide covers pin mapping, I2C gyro integration, build configuration, and cr
 | **13** | SPI MOSI | SPI MOSI | 🔒 Radio bus |
 | **14** | SPI SCK | SPI SCK | 🔒 Radio bus |
 | **15** | SPI NSS | SPI NSS | 🔒 Radio bus |
-| **16** | ~~LED~~ | **I2C SCL** (MPU6050) | ⚡ Repurposed |
+| **16** | ~~LED~~ | LED (free, non-PWM) | ✅ Reclaimed |
 | **17** | VBAT ADC | VBAT ADC | ✅ Free |
 
 ---
@@ -57,9 +57,11 @@ The PWMP7 has **no dedicated I2C header**. The default Zephyrus I2C pins (GPIO4=
 | Signal | GPIO | Original Function | Status |
 |---|---|---|---|
 | **I2C SDA** | GPIO 5 | PWM Ch6 | Repurposed (PWM lost) |
-| **I2C SCL** | GPIO 16 | LED | Repurposed (LED lost) |
+| **I2C SCL** | GPIO 2 | PWM Ch7 | Repurposed (PWM lost) |
 
-**Cost:** 7 → 6 PWM outputs, no onboard LED. Both are acceptable tradeoffs for gyro stabilization.
+> **Why not GPIO16?** The ESP8266 software I2C library writes directly to GPIO registers that only address GPIO0–15. GPIO16 lives on the RTC register domain and cannot be toggled for I2C — `Wire.begin(5, 16)` silently hangs the bus, triggering a watchdog reset boot loop.
+
+**Cost:** 7 → 5 PWM outputs, LED reclaimed on GPIO16 (digital on/off only — no hardware PWM timer for GPIO16). The 3-servo ornithopter still has 2 spare channels.
 
 ### Wiring the MPU6050 (GY-521)
 
@@ -69,16 +71,18 @@ GY-521          PWMP7 Receiver
 VCC  ─────────  3.3V
 GND  ─────────  GND
 SDA  ─────────  GPIO 5  (PWM Ch6 pad)
-SCL  ─────────  GPIO 16 (LED pad)
+SCL  ─────────  GPIO 2  (PWM Ch7 pad)
 ```
 
-> ⚠️ **Verify your PCB**: The GPIO 5 and GPIO 16 pads must be physically accessible on your specific PWMP7 board. Some PCB layouts route GPIO 16 only to the LED and may not expose it as a solder pad.
+> ⚠️ **GPIO2 boot constraint**: GPIO2 must be HIGH during ESP8266 boot. The I2C pull-up resistor (4.7k to 3.3V) satisfies this automatically — but ensure the MPU6050 does not actively pull GPIO2 low at power-up. If boot fails, temporarily disconnect SCL, power up, then reconnect.
+
+> ⚠️ **Verify your PCB**: The GPIO 2 and GPIO 5 pads must be physically accessible on your specific PWMP7 board. Most layouts expose all PWM channel pads.
 
 ---
 
 ## 4. PWM Output Channels (Post-Zephyrus)
 
-After I2C pin reassignment, **6 PWM outputs** remain:
+After I2C pin reassignment, **5 PWM outputs** remain:
 
 | Logical Channel | GPIO | Original | Usage |
 |---|---|---|---|
@@ -87,9 +91,8 @@ After I2C pin reassignment, **6 PWM outputs** remain:
 | **Ch3** | 3 | PWM3 | Crest rudder servo |
 | Ch4 | 9 | PWM4 | Aux / spare |
 | Ch5 | 10 | PWM5 | Aux / spare |
-| Ch6 | 2 | PWM7 | Aux / spare |
 
-> With 3 servos for the ornithopter (L-wing, R-wing, crest rudder), there are still 3 spare PWM channels. The 2:1 overhead ratio satisfies the hermetic mandate of grace in redundancy.
+> With 3 servos for the ornithopter (L-wing, R-wing, crest rudder), there are still 2 spare PWM channels. The LED on GPIO16 is reclaimed for status indication (digital on/off only — no hardware PWM available on RTC-domain GPIO16).
 
 ---
 
@@ -105,13 +108,13 @@ build_flags =
     -D PTERONAUTOS=1
     -D ZEPHYRUS_ENABLED=1
     -D ZEPHYR_I2C_SDA=5
-    -D ZEPHYR_I2C_SCL=16
+    -D ZEPHYR_I2C_SCL=2
     -include target/Unified_ESP_RX.h
     -Ilib/Ornithopter
     -Ilib/Zephyrus
 ```
 
-The `-D ZEPHYR_I2C_SDA=5` and `-D ZEPHYR_I2C_SCL=16` flags override the default I2C pins (GPIO4/5) defined in `ZephyrusConfig.h`. The `#ifndef` guards in that header ensure these build-time overrides take precedence.
+The `-D ZEPHYR_I2C_SDA=5` and `-D ZEPHYR_I2C_SCL=2` flags override the default I2C pins (GPIO4/5) defined in `ZephyrusConfig.h`. The `#ifndef` guards in that header ensure these build-time overrides take precedence. GPIO16 cannot be used for I2C on ESP8266 — it's on the RTC register domain and the software I2C library can't toggle it.
 
 ### Compile
 
@@ -143,6 +146,20 @@ pio run -e PteronautOS_ESP8285_2400_RX
 
 #### UART Flashing Procedure
 
+⚠️ **CRITICAL: Full chip erase required on first install.** The factory ELRS 3.2.0 `hardware.json` survives in the LittleFS partition (0xF3000–0xFB000) when you only write `firmware.bin`. The ghost config defines `"led": 16` and old PWM assignments that conflict with PteronautOS. **Always erase first:**
+
+```bash
+esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 erase_flash
+```
+
+Then write the new firmware:
+```bash
+esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 \
+  write_flash 0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+```
+
+> ℹ️ After erase, the hardware config starts blank. You must **upload a hardware.json via the web UI** at `http://10.0.0.1/hardware.html` to enable PWM outputs. See §8 for the stock PWMP7 hardware JSON.
+
 **What you need:**
 - USB-to-UART adapter with **3.3V logic** (CP2102, CH340G, FT232, etc.)
 - **Do not use 5V** adapters — ESP8285 GPIO is not 5V-tolerant
@@ -166,20 +183,13 @@ GND    ─────────  GND
 1. Hold the **button** (GPIO0 to GND)
 2. Power on the receiver
 3. Release the button after 1–2 seconds
-4. The LED (if still present) may glow dimly or stay off — this is normal
+4. The LED may glow dimly or stay off — this is normal
 
-**Flash with PlatformIO:**
+**Flash with PlatformIO (includes auto-erase):**
 
 ```bash
 cd src
 pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial-XXXX
-```
-
-**Or flash with esptool.py:**
-
-```bash
-esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 \
-  write_flash 0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
 ```
 
 **Port examples by OS:**
@@ -216,7 +226,7 @@ If the receiver currently runs ExpressLRS (DIY_2400_RX_PWMPEX), flashing Pterona
 After flashing, connect to the receiver's WiFi AP and navigate to `http://10.0.0.1`. The web UI retains full ELRS compatibility:
 
 - **PWM Output Modes**: Configure each channel (50Hz, 100Hz, 160Hz, On/Off, etc.)
-- **Channel 5 (GPIO5) and Channel 7 (GPIO16)**: Will appear as `Serial SCL` / `Serial SDA` respectively — Zephyrus I2C pins are automatically excluded from PWM
+- **Channel 6 (GPIO5) and Channel 7 (GPIO2)**: Will appear as `Serial SDA` / `Serial SCL` respectively — Zephyrus I2C pins are automatically excluded from PWM, leaving 5 usable outputs
 - **Binding Phrase**: Set from web UI or via Lua script
 - **Model Match**: Full support retained
 
@@ -241,10 +251,10 @@ The SX1280 DIO1 (GPIO4) is used for TX_DONE/RX_DONE interrupts — essential for
 
 | Function | GPIO | Status with Zephyrus |
 |---|---|---|
-| **LED** | ~~16~~ | ❌ Repurposed for I2C SCL |
+| **LED** | 16 | ✅ Reclaimed (digital on/off only) |
 | **Button** | 0 | ✅ Functional (shared with PWM Ch1) |
 
-With the LED pin repurposed for I2C, the receiver has **no visual status indicator** during operation. Use the web UI or Lua script telemetry for link status. The button on GPIO0 remains functional for binding and WiFi mode entry.
+The LED on GPIO16 is now available for status indication. However, GPIO16 on ESP8266 can only be used as a simple digital output — no hardware PWM and no internal pull-up. The LED will work for the standard ExpressLRS blink patterns (link status, WiFi mode, binding).
 
 ---
 
@@ -292,12 +302,14 @@ All failsafe paths respect the hermetic principle: *the wings center, the rudder
 
 | Issue | Impact | Mitigation |
 |---|---|---|
-| **No onboard LED** | No visual link status | Use CRSF telemetry / Lua script |
-| **GPIO 5 & 16 must be accessible** | Some PCB revisions may not expose pads | Verify before soldering |
-| **No I2C pull-up resistors** | May need external 4.7kΩ pull-ups on SDA/SCL | Add to GY-521 breakout |
+| **GPIO2 boot constraint** | SCL must be HIGH during ESP8266 boot | I2C pull-up (4.7k→3.3V) handles this; if boot fails, disconnect SCL temporarily |
+| **GPIO 2 & 5 must be accessible** | Some PCB revisions may not expose pads | Verify before soldering; most PWMP7 boards break out all PWM channels |
+| **No I2C pull-up resistors** | May need external 4.7kΩ pull-ups on SDA/SCL | Add to GY-521 breakout or solder directly |
+| **LED on GPIO16 = digital only** | No PWM dimming, no internal pull-up | Standard ELRS blink patterns work; just no brightness control |
 | **62% RAM usage** | Limited headroom for future features | Stay within hermetic 65% limit |
 | **Single UART** | Cannot use both serial RX and debug simultaneously | Disable debug for PWM3 serial use |
 | **Wi-Fi first-install blocked** | `ERROR[4]: Not Enough Space` when cross-flashing from ELRS 3.x via Wi-Fi | Use UART for first install; all subsequent updates via Wi-Fi work |
+| **Full chip erase required** | Factory hardware.json survives `write_flash` if not erased first | Always `erase_flash` before first PteronautOS install |
 
 ---
 
