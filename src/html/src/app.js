@@ -83,6 +83,7 @@ export class App extends LitElement {
                             <!-- FEATURE:PTERONAUTOS -->
                             <li><a id="menu-zephyrus" href="#zephyrus">🧭 Zephyrus Gyro</a></li>
                             <li><a id="menu-servo" href="#servo">⚙️ Servo Output</a></li>
+                            <li><a id="menu-debug" href="#debug">🛠️ Debug Console</a></li>
                             <!-- /FEATURE:PTERONAUTOS -->
                             <!-- FEATURE:NOT IS_TX -->
                             ${elrsState.settings?.voltage_source_count > 0 ? html`
@@ -256,6 +257,8 @@ export class App extends LitElement {
                 return html`<zephyrus-panel></zephyrus-panel>`
             case 'servo':
                 return html`<servo-panel></servo-panel>`
+            case 'debug':
+                return html`<debug-console-panel></debug-console-panel>`
             // /FEATURE:PTERONAUTOS
             default:
                 return null
@@ -292,7 +295,7 @@ export class App extends LitElement {
         if (['ornithopter'].includes(route)) {
             return this.loadGeneralGroup()
         }
-        if (['hardware', 'voltage', 'cw', 'lr1121', 'zephyrus', 'servo'].includes(route)) {
+        if (['hardware', 'voltage', 'cw', 'lr1121', 'zephyrus', 'servo', 'debug'].includes(route)) {
             return this.loadAdvancedGroup()
         }
         return Promise.resolve()

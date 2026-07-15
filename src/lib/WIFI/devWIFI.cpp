@@ -54,6 +54,23 @@
 #include "WebContent.h"
 
 #include "config.h"
+// --- PteronautOS Web Debug Ring Buffer ---
+#define PTERO_LOG_SIZE 32
+#define PTERO_LOG_LEN  96
+
+static char pteroLogBuf[PTERO_LOG_SIZE][PTERO_LOG_LEN];
+static uint8_t pteroLogHead = 0;
+static uint8_t pteroLogCount = 0;
+
+void pteroLog(const char *fmt, ...) {
+    char *entry = pteroLogBuf[pteroLogHead];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(entry, PTERO_LOG_LEN, fmt, args);
+    va_end(args);
+    pteroLogHead = (pteroLogHead + 1) % PTERO_LOG_SIZE;
+    if (pteroLogCount < PTERO_LOG_SIZE) pteroLogCount++;
+}
 
 #if defined(RADIO_LR1121)
 #include "lr1121.h"
@@ -540,15 +557,151 @@ static void GetConfiguration(AsyncWebServerRequest *request)
   request->send(response);
 }
 
+static void GetPteronautosDebug(AsyncWebServerRequest *request)
+{
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+    root["firmware"] = "PteronautOS";
+
+    JsonArray logs = root["log"].to<JsonArray>();
+    uint8_t start = (pteroLogCount < PTERO_LOG_SIZE) ? 0
+                   : pteroLogHead;
+    for (uint8_t i = 0; i < pteroLogCount; i++) {
+        uint8_t idx = (start + i) % PTERO_LOG_SIZE;
+        logs.add(pteroLogBuf[idx]);
+    }
+
+    response->setLength();
+    request->send(response);
+}
+
+#ifdef ZEPHYRUS_ENABLED
+#include <Wire.h>
+#endif
+
+static void GetPteronautosI2cScan(AsyncWebServerRequest *request)
+{
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    root["firmware"] = "PteronautOS";
+
+#ifdef ZEPHYRUS_ENABLED
+    // --- Pin diagnostics ---
+    root["i2c_sda_pin"] = ZEPHYR_I2C_SDA;
+    root["i2c_scl_pin"] = ZEPHYR_I2C_SCL;
+
+    // Read raw GPIO state before touching I2C
+    pinMode(ZEPHYR_I2C_SDA, INPUT);
+    pinMode(ZEPHYR_I2C_SCL, INPUT);
+    int sdaBefore = digitalRead(ZEPHYR_I2C_SDA);
+    int sclBefore = digitalRead(ZEPHYR_I2C_SCL);
+    root["sda_raw_before"] = sdaBefore;
+    root["scl_raw_before"] = sclBefore;
+
+    // Now init I2C and scan
+    Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
+    Wire.setClock(100000);
+    delay(5);
+
+    JsonArray devices = root["devices"].to<JsonArray>();
+    JsonArray errors  = root["errors"].to<JsonArray>();
+    uint8_t found = 0;
+
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        uint8_t err = Wire.endTransmission();
+        if (err == 0) {
+            char hex[8];
+            snprintf(hex, sizeof(hex), "0x%02X", addr);
+            devices.add(hex);
+            found++;
+        } else if (err == 2) {
+            // NACK on address — expected for empty addresses, log only first few
+            if (addr <= 5 || (addr >= 0x66 && addr <= 0x6A)) {
+                char buf[32];
+                snprintf(buf, sizeof(buf), "0x%02X:NACK", addr);
+                errors.add(buf);
+            }
+        }
+    }
+
+    root["found"] = found;
+
+    // Post-scan GPIO read
+    int sdaAfter = digitalRead(ZEPHYR_I2C_SDA);
+    int sclAfter = digitalRead(ZEPHYR_I2C_SCL);
+    root["sda_raw_after"] = sdaAfter;
+    root["scl_raw_after"] = sclAfter;
+
+    // Diagnostic summary
+    if (found == 0 && sdaBefore == 0 && sclBefore == 0) {
+        root["diagnosis"] = "BOTH pins LOW — check GY-521 VCC/GND or pull-up resistors";
+    } else if (found == 0 && sdaBefore == 0) {
+        root["diagnosis"] = "SDA LOW — SDA wire loose, shorted, or missing pull-up";
+    } else if (found == 0 && sclBefore == 0) {
+        root["diagnosis"] = "SCL LOW — SCL wire loose, shorted, or missing pull-up";
+    } else if (found == 0) {
+        root["diagnosis"] = "Pins HIGH but no devices — check SDA/SCL not swapped, MPU address (0x68), or faulty GY-521";
+    } else if (found > 0) {
+        root["diagnosis"] = "OK";
+    }
+#else
+    root["found"] = 0;
+    root["error"] = "Zephyrus not compiled (ZEPHYRUS_ENABLED=0)";
+#endif
+
+    response->setLength();
+    request->send(response);
+}
+
+static void GetPteronautosSystem(AsyncWebServerRequest *request)
+{
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    root["firmware"] = "PteronautOS";
+    root["version"] = "0.1.0";
+    root["build_date"] = __DATE__;
+    root["build_time"] = __TIME__;
+    root["uptime_ms"] = millis();
+
+#if defined(PLATFORM_ESP8266)
+    root["free_heap"] = ESP.getFreeHeap();
+    root["cpu_freq_mhz"] = 80;
+#elif defined(PLATFORM_ESP32)
+    root["free_heap"] = ESP.getFreeHeap();
+    root["cpu_freq_mhz"] = 240;
+#endif
+
+    root["wifi_rssi"] = WiFi.RSSI();
+    root["wifi_channel"] = WiFi.channel();
+    root["wifi_mode"] = (WiFi.getMode() == WIFI_AP) ? "AP" : "STA";
+
+    // Flash size
+#if defined(PLATFORM_ESP8266)
+    root["flash_size_kb"] = ESP.getFlashChipSize() / 1024;
+    root["flash_speed_mhz"] = ESP.getFlashChipSpeed() / 1000000;
+#endif
+
+    response->setLength();
+    request->send(response);
+}
+
 static void GetPteronautosState(AsyncWebServerRequest *request)
 {
     auto *response = new AsyncJsonResponse();
-    const auto root = response->getRoot();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    // System info
+    root["firmware"] = "PteronautOS";
+    root["version"] = "0.1.0";
+    root["uptime_ms"] = millis();
 
     // Zephyrus gyro state
 #ifdef ZEPHYRUS_ENABLED
     {
-        auto zeph = root["zephyrus"].to<JsonObject>();
+        JsonObject zeph = root["zephyrus"].to<JsonObject>();
         zeph["enabled"] = zephyrus.enabled;
         zeph["calibrated"] = zephyrus.calibrated;
         zeph["roll_deg"] = zephyrus.rollDeg;
@@ -560,7 +713,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     }
 #else
     {
-        auto zeph = root["zephyrus"].to<JsonObject>();
+        JsonObject zeph = root["zephyrus"].to<JsonObject>();
         zeph["enabled"] = false;
     }
 #endif
@@ -568,7 +721,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     // Ornithopter state
 #ifdef ORNITHOPTER_MODE
     {
-        auto orni = root["ornithopter"].to<JsonObject>();
+        JsonObject orni = root["ornithopter"].to<JsonObject>();
         orni["enabled"] = ornithopter.enabled;
         orni["link_up"] = ornithopter.linkUp;
         orni["servo_left_us"] = ornithopter.servoLeftUs;
@@ -582,11 +735,21 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     }
 #else
     {
-        auto orni = root["ornithopter"].to<JsonObject>();
+        JsonObject orni = root["ornithopter"].to<JsonObject>();
         orni["enabled"] = false;
     }
 #endif
 
+    response->setLength();
+    request->send(response);
+}
+
+static void GetPteronautosPing(AsyncWebServerRequest *request)
+{
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+    root["ok"] = true;
+    root["firmware"] = "PteronautOS";
     response->setLength();
     request->send(response);
 }
@@ -1270,7 +1433,12 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
-  server.on("/pteronautos/state", GetPteronautosState);
+  server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
+  server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);
+  server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
+  server.on("/pteronautos/debug", HTTP_GET, GetPteronautosDebug);
+  server.on("/pteronautos/i2cscan", HTTP_GET, GetPteronautosI2cScan);
+  server.on("/pteronautos/system", HTTP_GET, GetPteronautosSystem);
   server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
@@ -1301,6 +1469,7 @@ static void startServices()
   server.onNotFound(WebUpdateHandleNotFound);
 
   server.begin();
+  pteroLog("PteronautOS v0.1.0 — WebUI ready, listen on all endpoints");
 
   dnsServer.start(DNS_PORT, "*", ipAddress);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);

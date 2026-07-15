@@ -92,4 +92,13 @@ void debugFreeInitLogger();
   #define DBGVLN(...)
 #endif
 
+// --- PteronautOS Web-accessible debug log (ring buffer, defined in devWIFI.cpp) ---
+#ifdef __cplusplus
+extern "C" {
+#endif
+void pteroLog(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+#ifdef __cplusplus
+}
+#endif
+
 #endif

@@ -8,6 +8,8 @@
 
 #include "Zephyrus.h"
 
+extern "C" void pteroLog(const char *fmt, ...);
+
 #ifdef UNIT_TEST
   #include <stdint.h>
   #include <math.h>
@@ -156,6 +158,7 @@ bool Zephyrus::_mpuInit() {
     // Verify presence
     uint8_t who = _mpuRead(MPU_REG_WHO_AM_I);
     if (who != MPU_WHO_AM_I_VALUE) {
+        pteroLog("Zephyrus: WHO_AM_I=0x%02X expected 0x%02X — MPU6050 absent", who, MPU_WHO_AM_I_VALUE);
         return false;
     }
 
@@ -240,6 +243,7 @@ void Zephyrus::begin() {
     pinMode(ZEPHYR_I2C_SCL, INPUT);      // release — high-Z, no internal pull-up
     delayMicroseconds(50);               // wait for external pull-up to raise line
     if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
+        pteroLog("Zephyrus: I2C pre-detect FAIL — SCL LOW, no MPU connected");
         _mpuPresent = false;
         enabled = false;
         return; // MPU not connected — don't touch I2C at all
@@ -248,14 +252,17 @@ void Zephyrus::begin() {
 
     Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
     Wire.setClock(ZEPHYR_I2C_CLOCK);
+    pteroLog("Zephyrus: I2C pre-detect OK — probing MPU at 0x%02X...", ZEPHYR_MPU_ADDR);
 
     _mpuPresent = _mpuInit();
     if (!_mpuPresent) {
+        pteroLog("Zephyrus: MPU6050 init FAILED — not found at 0x%02X", ZEPHYR_MPU_ADDR);
         enabled = false;
         return;
     }
 
     enabled = true;
+    pteroLog("Zephyrus: MPU6050 found at 0x%02X — ENABLED, starting calibration", ZEPHYR_MPU_ADDR);
     _calibrating = true;
     _calibCount = 0;
     _calibStable = 0;

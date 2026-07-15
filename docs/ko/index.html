@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir='ltr' lang='ja'>
+<html dir='ltr' lang='ko'>
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
@@ -15,9 +15,11 @@
 <div class='hero-overlay'></div>
 <nav>
 <a class='home-link' href='#' onclick='majesticScroll(); return false;' title='Scroll to top — PteronautOS'>↑</a>
-<a href='#essence'>本質</a>
-<a href='#architecture'>構造</a>
-<a href='#zephyrus'>ゼピュロス</a>
+<a href='#essence'>본질</a>
+<a href='#architecture'>구조</a>
+<a href='#zephyrus'>제피로스</a>
+<a class='gh-link' href='https://github.com/dantiel/PteronautOS' target='_blank' title='GitHub'>GitHub</a>
+<a class='gh-link' href='https://github.com/dantiel/PteronautOS/blob/master/docs/en/hardware/elrs-pwm7-esp8285.md' target='_blank' title='ELRS PWM7 Hardware Guide'>HARDWARE</a>
 <div class='lang-switch'>
 <a class='' href='../en/'>EN</a>
 <a class='' href='../'>PT</a>
@@ -25,7 +27,7 @@
 <a class='' href='../fr/'>FR</a>
 <a class='' href='../de/'>DE</a>
 <a class='' href='../ru/'>RU</a>
-<a class='active' href='.'>日本語</a>
+<a class='active' href='.'>한국어</a>
 <a class='' href='../zh/'>中文</a>
 <a class='' href='../ar/'>عربي</a>
 <a class='' href='../hi/'>हिन्दी</a>
@@ -36,10 +38,10 @@
 <div class='headline'>
 <h1><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
 </h1>
-<p class='subhead'>自然に飛べ。精密に制御せよ。</p>
-<p class='greeting'>ようこそ、プテロノート。</p>
+<p class='subhead'>자연스럽게 날아라. 정밀하게 제어하라.</p>
+<p class='greeting'>환영합니다, 프테로노트.</p>
 <pre class='glyph'>     ___&#x000A;    /    \___&#x000A;   /  _     o\___&#x000A;  /  /  \___  /    \&#x000A; |  /   \     \/  _  \&#x000A; | /     \    /  / \  |&#x000A;  \_____/\/  /   \  |&#x000A;        /\___/     \ |&#x000A;       /&#x000A;</pre>
-<p class='version'>ESP8285 · CRSFプロトコル</p>
+<p class='version'>ESP8285 · CRSF 프로토콜</p>
 </div>
 </div>
 </div>
@@ -47,26 +49,26 @@
 <section id='essence'>
 <h2>
 <span class='section-num'>01</span>
-本質
+본질
 </h2>
-<p class='lead'>PteronautOSは<strong>ExpressLRSを基盤として</strong>、オーニソプター用フライトコントローラーに進化させたものです。</p>
-<p>クアッドではありません — モーターもESCもBetaflightもなし。動作は<strong>波形</strong>によって生成され、2つの翼サーボとクレストラダーサーボを駆動します。</p>
+<p class='lead'>PteronautOS는 <strong>ExpressLRS를 기반으로</strong> 오니톱터용 비행 컨트롤러로 진화했습니다.</p>
+<p>쿠드가 아닙니다 — 모터도, ESC도, Betaflight도 없습니다. 움직임은 <strong>파형</strong>에 의해 생성되며, 두 개의 날개 서보와 크레스트 러더 서보를 구동합니다.</p>
 <div class='highlight'>
-<code>CRSF（無線）→ rx_main → Ornithopter → 波形 → PWMサーボ</code>
+<code>CRSF (무선) → rx_main → Ornithopter → 파형 → PWM 서보</code>
 </div>
 </section>
 <section id='architecture'>
 <h2>
 <span class='section-num'>02</span>
-構造
+구조
 </h2>
 <dl class='grid'>
 <dt>Ornithopter</dt>
-<dd>ミキサー、波形生成、チャンネルフィルタリング</dd>
+<dd>뱁서, 파형 생성, 채널 필터링</dd>
 <dt>Zephyrus</dt>
-<dd>MPU6050ジャイロ + Mahony AHRS + デュアルPID</dd>
+<dd>MPU6050 자이로 + Mahony AHRS + 듀얼 PID</dd>
 <dt>ServoOutput</dt>
-<dd>CRSFティックに同期したPWM</dd>
+<dd>CRSF 틱에 동기화된 PWM</dd>
 <dt>Target</dt>
 <dd>ESP8285 2400MHz RX</dd>
 </dl>
@@ -74,29 +76,29 @@
 <section id='zephyrus'>
 <h2>
 <span class='section-num'>03</span>
-ゼピュロス ジャイロモジュール
+제피로스 자이로 모듈
 </h2>
-<p class='lead'>MPU6050による頭部クレストラダーの安定化。Mahony AHRSで姿勢推定、デュアルPIDでロール角とヨーレートを補正。</p>
+<p class='lead'>MPU6050을 통한 두부 크레스트 러더 안정화. Mahony AHRS로 자세 추정, 듀얼 PID로 롤 각도와 요 레이트 보정.</p>
 <table class='specs'>
 <tr>
-<td>センサー</td>
+<td>센서</td>
 <td>MPU6050 (GY-521)</td>
 </tr>
 <tr>
-<td>インターフェース</td>
-<td>直接I2C（GPIO1/GPIO3, v1.1）</td>
+<td>인터페이스</td>
+<td>직접 I2C (GPIO4/5)</td>
 </tr>
 <tr>
 <td>AHRS</td>
-<td>Mahony（レジスタレベル、約1kHz）</td>
+<td>Mahony (레지스터 레벨, ~1kHz)</td>
 </tr>
 <tr>
 <td>PID</td>
-<td>デュアル：ロール角 + ヨーレート</td>
+<td>듀얼: 롤 각도 + 요 레이트</td>
 </tr>
 <tr>
-<td>出力</td>
-<td>クレストラダー補正</td>
+<td>출력</td>
+<td>크레스트 러더 보정</td>
 </tr>
 <tr>
 <td>RAM</td>
@@ -108,22 +110,21 @@
 </tr>
 </table>
 <p class='doc-link'>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md'>完全なドキュメント →</a>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md'>전체 문서 →</a>
 </p>
 </section>
 <section class='build'>
 <h2>
 <span class='section-num'>04</span>
-ビルド
+빌드
 </h2>
 <pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
-<p class='compatible'>互換性: ExpressLRS TX 2.4GHz · Baudrate: 420000</p>
+<p class='compatible'>호환: ExpressLRS TX 2.4GHz · 보레이트: 420000</p>
 </section>
 </main>
 <footer>
-<p><a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a> · <a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Documentation</a> · <a href='../en/hardware/elrs-pwm7-esp8285' target='_blank'>Hardware</a></p>
-<p>密閉型ファームウェア · 80MHz · 1MB Flash · 依存関係なし</p>
-<p class='credit'>ExpressLRS 4.x 基盤</p>
+<p>밀폐형 펌웨어 · 80MHz · 1MB Flash · 의존성 없음</p>
+<p class='credit'>ExpressLRS 4.x 기반</p>
 </footer>
 <button aria-label='Scroll to top' class='scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})'></button>
 <script>

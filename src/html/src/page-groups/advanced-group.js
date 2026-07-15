@@ -13,4 +13,5 @@ import '../pages/lr1121-updater.js'
 // FEATURE:PTERONAUTOS
 import '../pages/zephyrus-panel.js'
 import '../pages/servo-panel.js'
+import '../pages/debug-console-panel.js'
 // /FEATURE:PTERONAUTOS

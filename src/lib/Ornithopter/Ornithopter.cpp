@@ -10,6 +10,7 @@
 
 Ornithopter ornithopter;
 
+extern "C" void pteroLog(const char *fmt, ...);
 Ornithopter::Ornithopter()
   : enabled(true)
   , linkUp(false)
@@ -26,7 +27,9 @@ Ornithopter::Ornithopter()
   , gyroRudderCorrection(0.0f)
 #endif
   , _lastUpdateUs(0)
-{}
+{
+    pteroLog("Ornithopter: initialized — 3-servo waveform mixer ready");
+}
 
 void Ornithopter::onLinkUp()   { linkUp = true; }
 void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }

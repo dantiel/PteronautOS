@@ -1,44 +1,93 @@
 import {html, LitElement} from 'lit'
 import {customElement, state} from 'lit/decorators.js'
-import {elrsState} from '../utils/state.js'
 
 /**
- * Servo Output Panel — PWM channel monitor, center/range config, failsafe.
+ * Servo Output Panel — Live PWM monitor via /pteronautos/state.
  *
  * FEATURE:PTERONAUTOS
- * Displays servo PWM output channels with center pulse width (default 1500µs),
- * range (1000-2000µs), failsafe position, and endpoint calibration.
- * Test button is a placeholder — firmware command not yet implemented.
+ * Polls firmware state endpoint for live servo PWM values from Ornithopter.
+ * Shows 5-channel PWMP7 table with real-time current values.
  */
 @customElement('servo-panel')
 class ServoPanel extends LitElement {
-    @state() accessor servoTestActive = false
+    @state() accessor servoLeftUs = 1500
+    @state() accessor servoRightUs = 1500
+    @state() accessor servoRudderUs = 1500
+    @state() accessor linkUp = false
+    @state() accessor pollError = false
+    @state() accessor _interval = null
 
     createRenderRoot() {
         return this
     }
 
+    connectedCallback() {
+        super.connectedCallback()
+        this._poll()
+        this._interval = setInterval(() => this._poll(), 500)
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback()
+        if (this._interval) {
+            clearInterval(this._interval)
+            this._interval = null
+        }
+    }
+
+    async _poll() {
+        try {
+            const resp = await fetch('/pteronautos/state')
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+            const data = await resp.json()
+            this.pollError = false
+            if (data.ornithopter) {
+                this.linkUp = !!data.ornithopter.link_up
+                this.servoLeftUs = Number(data.ornithopter.servo_left_us) || 1500
+                this.servoRightUs = Number(data.ornithopter.servo_right_us) || 1500
+                this.servoRudderUs = Number(data.ornithopter.servo_rudder_us) || 1500
+            }
+        } catch (e) {
+            this.pollError = true
+        }
+    }
+
+    _liveUs(chName) {
+        if (this.pollError) return '—'
+        switch(chName) {
+            case 'Left Wing': return this.servoLeftUs
+            case 'Right Wing': return this.servoRightUs
+            case 'Crest Rudder': return this.servoRudderUs
+            default: return 1500
+        }
+    }
+
     _servoChannels() {
-        // PWMP7: 5 PWM outputs [0,1,3,9,10]
-        // Ornithopter uses first 3 channels: Left Wing, Right Wing, Crest Rudder
         return [
-            {ch: 1, name: 'Left Wing',    pin: 0,  center: 1500, min: 1000, max: 2000, current: 1500},
-            {ch: 2, name: 'Right Wing',   pin: 1,  center: 1500, min: 1000, max: 2000, current: 1500},
-            {ch: 3, name: 'Crest Rudder', pin: 3,  center: 1500, min: 1000, max: 2000, current: 1500},
-            {ch: 4, name: 'AUX 4',        pin: 9,  center: 1500, min: 1000, max: 2000, current: 1500},
-            {ch: 5, name: 'AUX 5',        pin: 10, center: 1500, min: 1000, max: 2000, current: 1500},
+            {ch: 1, name: 'Left Wing',    pin: 0,  center: 1500, min: 1000, max: 2000},
+            {ch: 2, name: 'Right Wing',   pin: 1,  center: 1500, min: 1000, max: 2000},
+            {ch: 3, name: 'Crest Rudder', pin: 3,  center: 1500, min: 1000, max: 2000},
+            {ch: 4, name: 'AUX 4',        pin: 9,  center: 1500, min: 1000, max: 2000},
+            {ch: 5, name: 'AUX 5',        pin: 10, center: 1500, min: 1000, max: 2000},
         ]
     }
 
     render() {
+        const statusColor = this.pollError ? '#c84'
+            : this.linkUp ? '#2d8'
+            : '#888'
+        const statusText = this.pollError ? 'API OFFLINE'
+            : this.linkUp ? 'RC LINK ACTIVE — PWM Live'
+            : 'PWMP7 — 5 PWM Outputs (No Link)'
+
         return html`
             <div class="mui-panel mui--text-title">
                 ⚙️ Servo Output
             </div>
 
             <div class="mui-panel">
-                <div class="badge" style="background-color: #888; display:inline-block; padding:4px 12px;">
-                    PWMP7 — 5 PWM Outputs
+                <div class="badge" style="background-color: ${statusColor}; display:inline-block; padding:4px 12px; border-radius:3px;">
+                    ${statusText}
                 </div>
                 <br><br>
                 <div class="pwmtbl" style="overflow-x:auto;">
@@ -56,7 +105,10 @@ class ServoPanel extends LitElement {
                             </tr>
                         </thead>
                         <tbody>
-                            ${this._servoChannels().map(s => html`
+                            ${this._servoChannels().map(s => {
+                                const live = this._liveUs(s.name)
+                                const changed = live !== 1500
+                                return html`
                                 <tr>
                                     <td>${s.ch}</td>
                                     <td><b>${s.name}</b></td>
@@ -65,28 +117,32 @@ class ServoPanel extends LitElement {
                                     <td>${s.min}µs</td>
                                     <td>${s.max}µs</td>
                                     <td>${s.center}µs</td>
-                                    <td style="color:#d4a017;">${s.current}µs</td>
+                                    <td style="color:${changed ? '#d4a017' : '#888'}; font-family:monospace;">
+                                        ${live}µs
+                                    </td>
                                 </tr>
-                            `)}
+                                `
+                            })}
                         </tbody>
                     </table>
                 </div>
                 <br>
                 <small style="color:#888;">
-                    Current values shown at neutral (1500µs). Live values update during RC link.
+                    ${this.linkUp
+                        ? 'Live PWM values updating from ornithopter mixer.'
+                        : 'Current values shown at neutral (1500µs). Live values update during RC link.'}
                 </small>
             </div>
 
             <!-- Servo Test -->
             <div class="mui-panel" style="text-align:center;">
-                <button class="mui-btn mui-btn--primary" disabled
-                        @click=${this._onServoTest}>
+                <button class="mui-btn mui-btn--primary" disabled>
                     🔄 Sweep All Servos
                 </button>
                 <br>
                 <small style="color:#888;">
                     Sweeps all 5 servo channels from min to max endpoints.<br>
-                    <em>Available when RC link is active — Coming Soon</em>
+                    <em>Coming Soon — Firmware command interface required</em>
                 </small>
             </div>
 
@@ -117,10 +173,6 @@ class ServoPanel extends LitElement {
                 </table>
             </div>
         `
-    }
-
-    _onServoTest() {
-        this.servoTestActive = !this.servoTestActive
     }
 }
 

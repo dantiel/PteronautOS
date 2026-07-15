@@ -3,8 +3,8 @@ require "rake/clean"
 require "json"
 require "haml"
 
-LANGS = %w[pt en ru es de ja zh ar hi fr]
-SUBFOLDERS = %w[en ru es de ja zh ar hi fr]
+LANGS = %w[pt en ru es de ko zh ar hi fr]
+SUBFOLDERS = %w[en ru es de ko zh ar hi fr]
 
 CLOBBER.include("index.html", *SUBFOLDERS.map { |d| "#{d}/index.html" }, "assets/css/style.css")
 
