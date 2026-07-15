@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ELRS PWM7 Receiver — PteronautOS Hardware Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0d0d;
+      color: #ccc;
+      font-family: 'Turret Road', monospace;
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #d4a017; margin: 2rem 0 0.75rem; letter-spacing: 0.03em; }
+    h1:first-child { margin-top: 0; }
+    h2 { font-size: 1.35rem; font-weight: 600; color: #b8860b; margin: 2.2rem 0 0.6rem; border-bottom: 1px solid #333; padding-bottom: 0.35rem; }
+    h3 { font-size: 1.1rem; font-weight: 500; color: #c4952e; margin: 1.5rem 0 0.4rem; }
+    p { margin: 0.6rem 0; }
+    a { color: #d4a017; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    blockquote {
+      border-left: 3px solid #b8860b;
+      padding: 0.4rem 0 0.4rem 1.2rem;
+      margin: 1rem 0;
+      color: #999;
+      font-style: italic;
+    }
+    code {
+      background: #1a1a1a;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+      color: #e0c070;
+    }
+    pre {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    pre code { background: none; padding: 0; color: #bbb; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th { background: #1a1a1a; color: #d4a017; font-weight: 600; }
+    tr:nth-child(even) td { background: #111; }
+    hr { border: none; border-top: 1px solid #333; margin: 2rem 0; }
+    ul, ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+    li { margin: 0.25rem 0; }
+    img { max-width: 100%; border-radius: 4px; margin: 1rem 0; }
+    strong { color: #e0d0a0; }
+    em { color: #c0b080; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 2rem;
+      font-size: 0.85rem;
+      color: #888;
+    }
+    .back-link:hover { color: #d4a017; }
+  </style>
+</head>
+<body>
+  <a href="../" class="back-link">← ↑</a>
+  <h1 id="elrs-pwm7-receiver-pteronautos-compatibility-guide">ELRS PWM7 Receiver — PteronautOS Compatibility Guide</h1>
+
+<blockquote>
+<p><em>Hardware reference for the Generic 2400 PWMP7 (DIY<u>2400</u>RX_PWMPEX) ESP8285 receiver running PteronautOS with Zephyrus MPU6050 gyro stabilization.</em></p>
+
+<p>⚠️ <strong>PCB revision matters.</strong> This guide covers v1.0 boards (GPIO2/GPIO5 exposed). For <strong>v1.1 boards</strong> where GPIO2/GPIO5 are not broken out, see <a href="../../../HARDWARE.md#1-generic-2400-pwmp7-v11">HARDWARE.md</a> — the v1.1 uses CH2/CH3 (GPIO1/GPIO3) for I²C.</p>
+</blockquote>
+
+<hr>
+
+<h2 id="1-overview">1. Overview</h2>
+
+<p>The <strong>PWM7</strong> is a DIY ESP8285-based ExpressLRS receiver using the SX1280 2.4GHz radio. It provides <strong>7 PWM outputs</strong> on a compact PCB, making it the recommended base hardware for servo-driven ornithopters running PteronautOS.</p>
+
+<p>This guide covers pin mapping, I2C gyro integration, build configuration, and cross-flash procedure from stock ELRS 3.x firmware.</p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>MCU</strong></td>
+<td>ESP8285 @ 80MHz, 1MB Flash</td>
+</tr>
+<tr>
+<td><strong>Radio</strong></td>
+<td>SX1280 (2.4GHz)</td>
+</tr>
+<tr>
+<td><strong>PWM Outputs</strong></td>
+<td>7 native → <strong>5 usable</strong> with Zephyrus gyro</td>
+</tr>
+<tr>
+<td><strong>PteronautOS Target</strong></td>
+<td><code>PteronautOS_ESP8285_2400_RX</code></td>
+</tr>
+<tr>
+<td><strong>Legacy ELRS Target</strong></td>
+<td><code>DIY_2400_RX_PWMPEX</code></td>
+</tr>
+<tr>
+<td><strong>Hardware JSON</strong></td>
+<td><code>src/hardware/RX/Generic 2400 PWMP7.json</code></td>
+</tr>
+<tr>
+<td><strong>First Install</strong></td>
+<td>⚠️ UART only — Wi-Fi blocked (see §6)</td>
+</tr>
+</tbody></table>
+
+<hr>
+
+<h2 id="2-full-gpio-pin-map">2. Full GPIO Pin Map</h2>
+
+<table><thead>
+<tr>
+<th>GPIO</th>
+<th>PWMP7 Function</th>
+<th>PteronautOS Role</th>
+<th>Conflict?</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>0</strong></td>
+<td>PWM Ch1 + Button</td>
+<td>PWM Ch1 + Button</td>
+<td>✅ Shared OK</td>
+</tr>
+<tr>
+<td><strong>1</strong></td>
+<td>PWM Ch2 + UART TX</td>
+<td>PWM Ch2 + Serial TX</td>
+<td>✅ Shared OK</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><del>PWM Ch7</del></td>
+<td><strong>I2C SCL</strong> (MPU6050)</td>
+<td>⚡ Repurposed</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>PWM Ch3 + UART RX</td>
+<td>PWM Ch3 + Serial RX</td>
+<td>✅ Shared OK</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>SX1280 DIO1</strong> (IRQ)</td>
+<td><strong>SX1280 DIO1</strong></td>
+<td>🔒 Hard-reserved (radio)</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><del>PWM Ch6</del></td>
+<td><strong>I2C SDA</strong> (MPU6050)</td>
+<td>⚡ Repurposed</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td>PWM Ch4</td>
+<td>PWM Ch4</td>
+<td>✅ Free</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td>PWM Ch5</td>
+<td>PWM Ch5</td>
+<td>✅ Free</td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td>SPI MISO</td>
+<td>SPI MISO</td>
+<td>🔒 Radio bus</td>
+</tr>
+<tr>
+<td><strong>13</strong></td>
+<td>SPI MOSI</td>
+<td>SPI MOSI</td>
+<td>🔒 Radio bus</td>
+</tr>
+<tr>
+<td><strong>14</strong></td>
+<td>SPI SCK</td>
+<td>SPI SCK</td>
+<td>🔒 Radio bus</td>
+</tr>
+<tr>
+<td><strong>15</strong></td>
+<td>SPI NSS</td>
+<td>SPI NSS</td>
+<td>🔒 Radio bus</td>
+</tr>
+<tr>
+<td><strong>16</strong></td>
+<td><del>LED</del></td>
+<td>LED (free, non-PWM)</td>
+<td>✅ Reclaimed</td>
+</tr>
+<tr>
+<td><strong>17</strong></td>
+<td>VBAT ADC</td>
+<td>VBAT ADC</td>
+<td>✅ Free</td>
+</tr>
+</tbody></table>
+
+<hr>
+
+<h2 id="3-mpu6050-i2c-pin-resolution">3. MPU6050 I2C Pin Resolution</h2>
+
+<h3 id="the-conflict">The Conflict</h3>
+
+<p>The PWMP7 has <strong>no dedicated I2C header</strong>. This guide covers the <strong>v1.0</strong> resolution (GPIO2/GPIO5 repurposed from PWM). For v1.1 boards where GPIO2/GPIO5 are not exposed, see <a href="../../../HARDWARE.md">HARDWARE.md</a>.</p>
+
+<p>The default Zephyrus I2C pins (GPIO4=SDA, GPIO5=SCL) conflict directly with:
+The PWMP7 has <strong>no dedicated I2C header</strong>. The default Zephyrus I2C pins (GPIO4=SDA, GPIO5=SCL) conflict directly with:</p>
+
+<ul>
+<li><strong>GPIO 4</strong> → SX1280 DIO1 (radio busy interrupt — <strong>non-negotiable</strong>)</li>
+<li><strong>GPIO 5</strong> → PWM Channel 6 (output — sacrificial)</li>
+</ul>
+
+<h3 id="the-resolution">The Resolution</h3>
+
+<table><thead>
+<tr>
+<th>Signal</th>
+<th>GPIO</th>
+<th>Original Function</th>
+<th>Status</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>I2C SDA</strong></td>
+<td>GPIO 5</td>
+<td>PWM Ch6</td>
+<td>Repurposed (PWM lost)</td>
+</tr>
+<tr>
+<td><strong>I2C SCL</strong></td>
+<td>GPIO 2</td>
+<td>PWM Ch7</td>
+<td>Repurposed (PWM lost)</td>
+</tr>
+</tbody></table>
+
+<blockquote>
+<p><strong>Why not GPIO16?</strong> The ESP8266 software I2C library writes directly to GPIO registers that only address GPIO0–15. GPIO16 lives on the RTC register domain and cannot be toggled for I2C — <code>Wire.begin(5, 16)</code> silently hangs the bus, triggering a watchdog reset boot loop.</p>
+</blockquote>
+
+<p><strong>Cost:</strong> 7 → 5 PWM outputs, LED reclaimed on GPIO16 (digital on/off only — no hardware PWM timer for GPIO16). The 3-servo ornithopter still has 2 spare channels.</p>
+
+<h3 id="wiring-the-mpu6050-gy-521">Wiring the MPU6050 (GY-521)</h3>
+
+<pre><code>GY-521          PWMP7 Receiver
+------          --------------
+VCC  ─────────  3.3V
+GND  ─────────  GND
+SDA  ─────────  GPIO 5  (PWM Ch6 pad)
+SCL  ─────────  GPIO 2  (PWM Ch7 pad)
+</code></pre>
+
+<blockquote>
+<p>⚠️ <strong>GPIO2 boot constraint</strong>: GPIO2 must be HIGH during ESP8266 boot. The I2C pull-up resistor (4.7k to 3.3V) satisfies this automatically — but ensure the MPU6050 does not actively pull GPIO2 low at power-up. If boot fails, temporarily disconnect SCL, power up, then reconnect.</p>
+
+<p>⚠️ <strong>Verify your PCB</strong>: The GPIO 2 and GPIO 5 pads must be physically accessible on your specific PWMP7 board. Most layouts expose all PWM channel pads.</p>
+</blockquote>
+
+<h3 id="mpu-absent-boot-pre-detect">MPU-Absent Boot (Pre-Detect)</h3>
+
+<p>The firmware probes GPIO2 (SCL) <strong>before</strong> initializing I2C. If the MPU6050 is physically disconnected, its 4.7kΩ pull-up is absent — the pin reads LOW and Zephyrus skips I2C entirely, avoiding the boot-loop hang. The receiver boots normally with Zephyrus in <code>enabled=false</code> state.</p>
+
+<blockquote>
+<p><strong>This means you can flash first, wire the MPU later.</strong> When you connect the MPU, its pull-up registers on the next boot, I2C initializes, and gyro stabilization activates automatically. No firmware rebuild needed.</p>
+</blockquote>
+
+<hr>
+
+<h2 id="4-pwm-output-channels-post-zephyrus">4. PWM Output Channels (Post-Zephyrus)</h2>
+
+<p>After I2C pin reassignment, <strong>5 PWM outputs</strong> remain:</p>
+
+<table><thead>
+<tr>
+<th>Logical Channel</th>
+<th>GPIO</th>
+<th>Original</th>
+<th>Usage</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Ch1</strong></td>
+<td>0</td>
+<td>PWM1</td>
+<td>Left wing servo</td>
+</tr>
+<tr>
+<td><strong>Ch2</strong></td>
+<td>1</td>
+<td>PWM2</td>
+<td>Right wing servo</td>
+</tr>
+<tr>
+<td><strong>Ch3</strong></td>
+<td>3</td>
+<td>PWM3</td>
+<td>Crest rudder servo</td>
+</tr>
+<tr>
+<td>Ch4</td>
+<td>9</td>
+<td>PWM4</td>
+<td>Aux / spare</td>
+</tr>
+<tr>
+<td>Ch5</td>
+<td>10</td>
+<td>PWM5</td>
+<td>Aux / spare</td>
+</tr>
+</tbody></table>
+
+<blockquote>
+<p>With 3 servos for the ornithopter (L-wing, R-wing, crest rudder), there are still 2 spare PWM channels. The LED on GPIO16 is reclaimed for status indication (digital on/off only — no hardware PWM available on RTC-domain GPIO16).</p>
+</blockquote>
+
+<hr>
+
+<h2 id="5-build-configuration">5. Build Configuration</h2>
+
+<h3 id="build-flags-pteronautos-rx-ini">Build Flags (pteronautos-rx.ini)</h3>
+
+<pre><code class="ini">[env_common_pteronautos_rx]
+extends = env_common_8285rx, radio_SX128X
+build_flags =
+    -D ORNITHOPTER_MODE=1
+    -D PTERONAUTOS=1
+    -D ZEPHYRUS_ENABLED=1
+    -D ZEPHYR_I2C_SDA=5
+    -D ZEPHYR_I2C_SCL=2
+    -include target/Unified_ESP_RX.h
+    -Ilib/Ornithopter
+    -Ilib/Zephyrus
+</code></pre>
+
+<p>The <code>-D ZEPHYR_I2C_SDA=5</code> and <code>-D ZEPHYR_I2C_SCL=2</code> flags override the default I2C pins (GPIO4/5) defined in <code>ZephyrusConfig.h</code>. The <code>#ifndef</code> guards in that header ensure these build-time overrides take precedence. GPIO16 cannot be used for I2C on ESP8266 — it&#39;s on the RTC register domain and the software I2C library can&#39;t toggle it.</p>
+
+<h3 id="compile">Compile</h3>
+
+<pre><code class="bash">cd src
+pio run -e PteronautOS_ESP8285_2400_RX
+</code></pre>
+
+<p><strong>Build stats (as of latest):</strong></p>
+
+<table><thead>
+<tr>
+<th>Resource</th>
+<th>Usage</th>
+<th>Limit</th>
+<th>%</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>RAM</strong></td>
+<td>50,864 bytes</td>
+<td>81,920 bytes</td>
+<td>62.1%</td>
+</tr>
+<tr>
+<td><strong>Flash</strong></td>
+<td>553,352 bytes</td>
+<td>991,216 bytes</td>
+<td>55.8%</td>
+</tr>
+</tbody></table>
+
+<hr>
+
+<h2 id="6-flashing">6. Flashing</h2>
+
+<h3 id="first-install-uart-required">⚠️ First Install: UART Required</h3>
+
+<p><strong>Wi-Fi first-install from factory ExpressLRS 3.x will fail with <code>ERROR[4]: Not Enough Space</code>.</strong> This is a fundamental ESP8266 limitation, not a bug:</p>
+
+<ul>
+<li>The ESP8266 <code>Updater</code> class requires <strong>both</strong> old and new firmware to coexist in flash during the update</li>
+<li>PteronautOS firmware (≈557KB) + stock ELRS 3.2.0 (≈480KB) = 1,037KB → exceeds the 995KB sketch partition</li>
+<li>UART flashing erases the entire chip first, so no space conflict occurs</li>
+</ul>
+
+<p><strong>After the initial UART flash, all subsequent updates work via Wi-Fi</strong> — PteronautOS-to-PteronautOS fits within the partition.</p>
+
+<h4 id="uart-flashing-procedure">UART Flashing Procedure</h4>
+
+<p>⚠️ <strong>CRITICAL: Full chip erase required on first install.</strong> The factory ELRS 3.2.0 <code>hardware.json</code> survives in the LittleFS partition (0xF3000–0xFB000) when you only write <code>firmware.bin</code>. The ghost config defines <code>&quot;led&quot;: 16</code> and old PWM assignments that conflict with PteronautOS. <strong>Always erase first:</strong></p>
+
+<pre><code class="bash">esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 erase_flash
+</code></pre>
+
+<p>Then write the new firmware:
+<code>bash
+esptool.py --chip esp8266 --port /dev/cu.usbserial-XXXX --baud 460800 \
+  write_flash 0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+</code></p>
+
+<blockquote>
+<p>ℹ️ After erase, the hardware config starts blank. You must <strong>upload a hardware.json via the web UI</strong> at <code>http://10.0.0.1/hardware.html</code> to enable PWM outputs. See §8 for the stock PWMP7 hardware JSON.</p>
+</blockquote>
+
+<p><strong>What you need:</strong>
+- USB-to-UART adapter with <strong>3.3V logic</strong> (CP2102, CH340G, FT232, etc.)
+- <strong>Do not use 5V</strong> adapters — ESP8285 GPIO is not 5V-tolerant</p>
+
+<p><strong>Wiring:</strong></p>
+
+<pre><code>USB-UART          PWMP7 Receiver
+--------          --------------
+TX     ─────────  RX  (GPIO3)
+RX     ─────────  TX  (GPIO1)
+GND    ─────────  GND
+                  3.3V ← power separately
+</code></pre>
+
+<p><img src="../../assets/images/pwm7-wiring.jpg" alt="PWMP7 receiver wired to FTDI adapter for UART flashing"></p>
+
+<blockquote>
+<p>⚠️ <strong>Power the receiver from its own 5V supply</strong></p>
+</blockquote>
+
+<p><strong>Enter bootloader mode:</strong>
+1. Hold the <strong>button</strong> (GPIO0 to GND)
+2. Power on the receiver
+3. Release the button after 1–2 seconds
+4. The LED may glow dimly or stay off — this is normal</p>
+
+<p><strong>Flash with PlatformIO (includes auto-erase):</strong></p>
+
+<pre><code class="bash">cd src
+pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial-XXXX
+</code></pre>
+
+<p><strong>Port examples by OS:</strong></p>
+
+<table><thead>
+<tr>
+<th>OS</th>
+<th>Port Pattern</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>macOS</td>
+<td><code>/dev/cu.usbserial-*</code> or <code>/dev/cu.SLAB_USBtoUART</code></td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>/dev/ttyUSB0</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>COM3</code> (check Device Manager → Ports)</td>
+</tr>
+</tbody></table>
+
+<blockquote>
+<p>💡 <strong>Save your firmware.bin</strong> to a safe location before cleaning the build directory — PlatformIO&#39;s <code>pio run -t clean</code> will delete it.</p>
+</blockquote>
+
+<h3 id="method-2-wifi-updates-subsequent-only">Method 2: WiFi Updates (Subsequent Only)</h3>
+
+<p>Once PteronautOS is installed via UART, Wi-Fi updates work normally:</p>
+
+<ol>
+<li>Power the receiver; it enters WiFi AP mode if no transmitter is connected</li>
+<li>Connect to <code>ExpressLRS RX</code> WiFi network (password: <code>expresslrs</code>)</li>
+<li>Navigate to <code>http://10.0.0.1</code></li>
+<li>Upload <code>firmware.bin</code> from <code>.pio/build/PteronautOS_ESP8285_2400_RX/</code></li>
+</ol>
+
+<blockquote>
+<p>✅ <strong>Verified working</strong> on the PWMP7. All PteronautOS-to-PteronautOS updates succeed via Wi-Fi.</p>
+</blockquote>
+
+<h3 id="cross-flash-from-elrs-3-x">Cross-Flash from ELRS 3.x</h3>
+
+<p>If the receiver currently runs ExpressLRS (DIY<u>2400</u>RX<u>PWMPEX), flashing PteronautOS will trigger an EEPROM reset due to `flash</u>discriminator` mismatch. All configuration will reset to defaults — this is <strong>correct and expected behavior</strong>.</p>
+
+<p><strong>Remember:</strong> cross-flash must be done via UART. Wi-Fi cross-flash from ELRS 3.x → PteronautOS fails with <code>ERROR[4]: Not Enough Space</code> due to flash partition constraints described above.</p>
+
+<hr>
+
+<h2 id="7-web-ui-configuration">7. Web UI Configuration</h2>
+
+<p>After flashing, connect to the receiver&#39;s WiFi AP and navigate to <code>http://10.0.0.1</code>. The web UI retains full ELRS compatibility:</p>
+
+<ul>
+<li><strong>PWM Output Modes</strong>: Configure each channel (50Hz, 100Hz, 160Hz, On/Off, etc.)</li>
+<li><strong>Channel 6 (GPIO5) and Channel 7 (GPIO2)</strong>: Will appear as <code>Serial SDA</code> / <code>Serial SCL</code> respectively — Zephyrus I2C pins are automatically excluded from PWM, leaving 5 usable outputs</li>
+<li><strong>Binding Phrase</strong>: Set from web UI or via Lua script</li>
+<li><strong>Model Match</strong>: Full support retained</li>
+</ul>
+
+<hr>
+
+<h2 id="8-sx1280-radio">8. SX1280 Radio</h2>
+
+<table><thead>
+<tr>
+<th>Signal</th>
+<th>GPIO</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>NSS</strong></td>
+<td>15</td>
+<td>SPI chip select</td>
+</tr>
+<tr>
+<td><strong>SCK</strong></td>
+<td>14</td>
+<td>SPI clock</td>
+</tr>
+<tr>
+<td><strong>MOSI</strong></td>
+<td>13</td>
+<td>SPI data out</td>
+</tr>
+<tr>
+<td><strong>MISO</strong></td>
+<td>12</td>
+<td>SPI data in</td>
+</tr>
+<tr>
+<td><strong>BUSY/DIO1</strong></td>
+<td>4</td>
+<td><strong>Hard-reserved</strong> — do not repurpose</td>
+</tr>
+<tr>
+<td><strong>RST</strong></td>
+<td>—</td>
+<td>Shared with ESP8285 reset</td>
+</tr>
+</tbody></table>
+
+<p>The SX1280 DIO1 (GPIO4) is used for TX<u>DONE/RX</u>DONE interrupts — essential for packet timing. It is <strong>not available</strong> for any other function.</p>
+
+<hr>
+
+<h2 id="9-led-button">9. LED &amp; Button</h2>
+
+<table><thead>
+<tr>
+<th>Function</th>
+<th>GPIO</th>
+<th>Status with Zephyrus</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>LED</strong></td>
+<td>16</td>
+<td>✅ Reclaimed (digital on/off only)</td>
+</tr>
+<tr>
+<td><strong>Button</strong></td>
+<td>0</td>
+<td>✅ Functional (shared with PWM Ch1)</td>
+</tr>
+</tbody></table>
+
+<p>The LED on GPIO16 is now available for status indication. However, GPIO16 on ESP8266 can only be used as a simple digital output — no hardware PWM and no internal pull-up. The LED will work for the standard ExpressLRS blink patterns (link status, WiFi mode, binding).</p>
+
+<hr>
+
+<h2 id="10-vbat-voltage-monitoring">10. VBAT / Voltage Monitoring</h2>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>ADC Pin</strong></td>
+<td>GPIO 17 (TOUT)</td>
+</tr>
+<tr>
+<td><strong>Scale</strong></td>
+<td>310</td>
+</tr>
+<tr>
+<td><strong>Offset</strong></td>
+<td>12</td>
+</tr>
+<tr>
+<td><strong>Calibration Range</strong></td>
+<td>3.5V – 25.2V</td>
+</tr>
+</tbody></table>
+
+<p>VBAT monitoring is retained from the stock ELRS configuration. The analog divider network on the PWMP7 PCB remains unchanged.</p>
+
+<hr>
+
+<h2 id="11-pwm-safety-guards">11. PWM Safety Guards</h2>
+
+<p>PteronautOS implements three layers of I2C pin protection:</p>
+
+<table><thead>
+<tr>
+<th>Layer</th>
+<th>Mechanism</th>
+<th>Location</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Compile-time</strong></td>
+<td><code>#ifndef</code> guards on I2C pin defines</td>
+<td><code>ZephyrusConfig.h</code></td>
+</tr>
+<tr>
+<td><strong>PWM init</strong></td>
+<td>Hardware exclusion of I2C pins from PWM</td>
+<td><code>devServoOutput.cpp</code></td>
+</tr>
+<tr>
+<td><strong>Config defaults</strong></td>
+<td>I2C pins default to <code>somSCL</code>/<code>somSDA</code> mode</td>
+<td><code>config.cpp</code></td>
+</tr>
+</tbody></table>
+
+<p>These guards ensure that even if the web UI configuration is accidentally changed, the I2C pins will never be driven as PWM outputs — preventing electrical contention with the MPU6050.</p>
+
+<hr>
+
+<h2 id="12-failsafe-behavior">12. Failsafe Behavior</h2>
+
+<table><thead>
+<tr>
+<th>Condition</th>
+<th>Servo Response</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Link lost</strong></td>
+<td>All PWM channels center to 1500µs</td>
+</tr>
+<tr>
+<td><strong>MPU6050 failure</strong></td>
+<td>Zephyrus disengages — rudder stays neutral</td>
+</tr>
+<tr>
+<td><strong>I2C bus hang</strong></td>
+<td>Timeout + decay — Zephyrus self-deactivates</td>
+</tr>
+<tr>
+<td><strong>EEPROM corruption</strong></td>
+<td>Defaults loaded — safe centering</td>
+</tr>
+</tbody></table>
+
+<p>All failsafe paths respect the hermetic principle: <em>the wings center, the rudder centers, the craft glides.</em></p>
+
+<hr>
+
+<h2 id="13-known-limitations">13. Known Limitations</h2>
+
+<table><thead>
+<tr>
+<th>Issue</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>GPIO2 boot constraint</strong></td>
+<td>SCL must be HIGH during ESP8266 boot</td>
+<td>I2C pull-up (4.7k→3.3V) handles this; if boot fails, disconnect SCL temporarily</td>
+</tr>
+<tr>
+<td><strong>GPIO 2 &amp; 5 must be accessible</strong></td>
+<td>Some PCB revisions may not expose pads</td>
+<td>Verify before soldering; most PWMP7 boards break out all PWM channels</td>
+</tr>
+<tr>
+<td><strong>No I2C pull-up resistors</strong></td>
+<td>May need external 4.7kΩ pull-ups on SDA/SCL</td>
+<td>Add to GY-521 breakout or solder directly</td>
+</tr>
+<tr>
+<td><strong>LED on GPIO16 = digital only</strong></td>
+<td>No PWM dimming, no internal pull-up</td>
+<td>Standard ELRS blink patterns work; just no brightness control</td>
+</tr>
+<tr>
+<td><strong>62% RAM usage</strong></td>
+<td>Limited headroom for future features</td>
+<td>Stay within hermetic 65% limit</td>
+</tr>
+<tr>
+<td><strong>Single UART</strong></td>
+<td>Cannot use both serial RX and debug simultaneously</td>
+<td>Disable debug for PWM3 serial use</td>
+</tr>
+<tr>
+<td><strong>Wi-Fi first-install blocked</strong></td>
+<td><code>ERROR[4]: Not Enough Space</code> when cross-flashing from ELRS 3.x via Wi-Fi</td>
+<td>Use UART for first install; all subsequent updates via Wi-Fi work</td>
+</tr>
+<tr>
+<td><strong>Full chip erase required</strong></td>
+<td>Factory hardware.json survives <code>write_flash</code> if not erased first</td>
+<td>Always <code>erase_flash</code> before first PteronautOS install</td>
+</tr>
+</tbody></table>
+
+<hr>
+
+<h2 id="14-reference-stock-pwmp7-hardware-json">14. Reference: Stock PWMP7 Hardware JSON</h2>
+
+<pre><code class="json">{
+    &quot;radio_dio1&quot;: 4,
+    &quot;radio_miso&quot;: 12,
+    &quot;radio_mosi&quot;: 13,
+    &quot;radio_nss&quot;: 15,
+    &quot;radio_sck&quot;: 14,
+    &quot;power_min&quot;: 0,
+    &quot;power_high&quot;: 0,
+    &quot;power_max&quot;: 0,
+    &quot;power_default&quot;: 0,
+    &quot;power_control&quot;: 0,
+    &quot;power_values&quot;: [13],
+    &quot;power_lna_gain&quot;: 0,
+    &quot;led&quot;: 16,
+    &quot;pwm_outputs&quot;: [0, 1, 3, 9, 10, 5, 2],
+    &quot;vbat&quot;: 17,
+    &quot;vbat_offset&quot;: 12,
+    &quot;vbat_scale&quot;: 310,
+    &quot;vbat_cal_min&quot;: 3500,
+    &quot;vbat_cal_max&quot;: 25200
+}
+</code></pre>
+
+<p>This configuration is preserved unchanged. The I2C pin reassignment happens at the <strong>firmware level</strong> via build flags — the hardware JSON remains stock ELRS for upstream compatibility.</p>
+
+<hr>
+
+<p><em>PteronautOS — Fly Natural. Control Precise.</em></p>
+
+</body>
+</html>

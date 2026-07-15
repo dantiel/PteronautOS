@@ -70,5 +70,5 @@
   "footer_hermetic": "밀폐형 펌웨어 · 80MHz · 1MB Flash · 의존성 없음",
   "footer_credit": "ExpressLRS 4.x 기반",
   "nav_github": "GitHub",
-  "footer_resources": "<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a> · <a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Documentation</a> · <a href='../en/hardware/elrs-pwm7-esp8285' target='_blank'>Hardware</a>"
+  "footer_resources": "<a href=\"https://github.com/dantiel/PteronautOS\" target=\"_blank\">GitHub</a> · <a href=\"https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md\" target=\"_blank\">Documentation</a> · <a href=\"../en/hardware/\" target=\"_blank\">Hardware</a>"
 }
