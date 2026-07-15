@@ -23,7 +23,7 @@
   "lang_class_fr": "",
   "asset_prefix": "..",
   "title": "PteronautOS",
-  "nav_home": "\u2191",
+  "nav_home": "↑",
   "nav_essence": "सार",
   "nav_architecture": "संरचना",
   "nav_zephyrus": "ज़ेफ़िरस",
@@ -69,5 +69,6 @@
   "build_compatible": "संगत: ExpressLRS TX 2.4GHz · बॉड दर: 420000",
   "footer_hermetic": "हर्मेटिक फ़र्मवेयर · 80MHz · 1MB Flash · शून्य निर्भरताएँ",
   "footer_credit": "ExpressLRS 4.x पर निर्मित",
-  "nav_github": "GitHub"
+  "nav_github": "GitHub",
+  "footer_resources": "<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a> · <a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Documentation</a> · <a href='../en/hardware/elrs-pwm7-esp8285' target='_blank'>Hardware</a>"
 }
