@@ -51,7 +51,7 @@
   "zeph_sensor_label": "传感器",
   "zeph_sensor_val": "MPU6050 (GY-521)",
   "zeph_interface_label": "接口",
-  "zeph_interface_val": "直接I2C（GPIO4/5）",
+  "zeph_interface_val": "直接I2C（GPIO1/GPIO3）",
   "zeph_ahrs_label": "AHRS",
   "zeph_ahrs_val": "Mahony（寄存器级，约1kHz）",
   "zeph_pid_label": "PID",

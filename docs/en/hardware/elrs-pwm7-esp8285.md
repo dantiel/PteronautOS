@@ -4,6 +4,17 @@
 
 > ⚠️ **PCB revision matters.** This guide covers v1.0 boards (GPIO2/GPIO5 exposed). For **v1.1 boards** where GPIO2/GPIO5 are not broken out, see [HARDWARE.md](../../../HARDWARE.md#1-generic-2400-pwmp7-v11) — the v1.1 uses CH2/CH3 (GPIO1/GPIO3) for I²C.
 
+### 🔌 I²C Pin Version Table
+
+> **Which pins do I wire the GY-521 to?** Look at your board and match:
+
+| Board Version | Identifier | I²C SDA | I²C SCL | Where to solder |
+|---------------|-----------|---------|---------|-----------------|
+| **v1.0** | GPIO2 & GPIO5 pads exposed | **GPIO5** | **GPIO2** | Solder directly to GPIO2/GPIO5 pads |
+| **v1.1** | GPIO2 & GPIO5 NOT exposed | **GPIO1** (CH2) | **GPIO3** (CH3) | Use CH2/CH3 breakout pins |
+
+> 🚨 **Common trap:** The v1.0 doc says "PWM Ch6" and "PWM Ch7" — these are old PWM channel numbers (GPIO2/GPIO5), **not** the silkscreen labels CH6/CH7 (which are GPIO12/GPIO13 on v1.1). If you wired to the CH6/CH7 breakouts, you're on the wrong pins.
+
 ---
 
 ## 1. Overview
