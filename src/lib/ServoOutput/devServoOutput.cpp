@@ -220,16 +220,17 @@ void servoCurrentToFailsafeConfig()
 static void servosUpdate(unsigned long now)
 {
     PWM.feedWatchdog();
+
+#ifdef ZEPHYRUS_ENABLED
+    // Always run gyro — calibration + live data even without RC link
+    zephyrusUpdate();
+#endif
+
     if (connectionState != connected || !connectionHasModelMatch || !teamraceHasModelMatch)
     {
         servosEnterFailsafe();
         return;
     }
-
-#ifdef ZEPHYRUS_ENABLED
-    // Run gyro stabilization before ornithopter to set gyroRudderCorrection
-    zephyrusUpdate();
-#endif
 
 #ifdef ORNITHOPTER_MODE
     // Advance flapping oscillator and write wing + rudder servos on every tick

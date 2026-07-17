@@ -33,6 +33,11 @@ public:
     void update(uint32_t nowUs);  // Read sensors, run AHRS+PID, compute correction
     void onLinkUp();        // Reset integrators on arm
     void onLinkDown();      // Disable stabilization on disarm
+    void forceCalibrate();  // Reset bias + restart calibration on demand
+
+    // Calibration progress (readable from WebUI state endpoint)
+    int    _calibCount;     // Samples accumulated so far
+    bool   _calibrating;    // True during calibration phase
 
 private:
     // --- MPU6050 Register-Level Driver ---
@@ -75,8 +80,6 @@ private:
     void  _pidReset(PidState &s);
 
     // --- Auto-Calibration ---
-    bool   _calibrating;
-    int    _calibCount;
     int    _calibStable;
     float  _calibSum[3];
     float  _calibSumSq[3];   // For variance check

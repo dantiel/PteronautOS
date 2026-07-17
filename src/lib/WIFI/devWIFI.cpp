@@ -704,6 +704,8 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
         JsonObject zeph = root["zephyrus"].to<JsonObject>();
         zeph["enabled"] = zephyrus.enabled;
         zeph["calibrated"] = zephyrus.calibrated;
+        zeph["calibrating"] = zephyrus._calibrating;
+        zeph["calib_samples"] = zephyrus._calibCount;
         zeph["roll_deg"] = zephyrus.rollDeg;
         zeph["pitch_deg"] = zephyrus.pitchDeg;
         zeph["yaw_rate"] = zephyrus.yawRate;
@@ -740,6 +742,19 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     }
 #endif
 
+    response->setLength();
+    request->send(response);
+}
+
+static void PostPteronautosCalibrate(AsyncWebServerRequest *request)
+{
+#ifdef ZEPHYRUS_ENABLED
+    zephyrus.forceCalibrate();
+#endif
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+    root["ok"] = true;
+    root["message"] = "Calibration started — keep aircraft still for 0.5s";
     response->setLength();
     request->send(response);
 }
@@ -1433,6 +1448,7 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
+  server.on("/pteronautos/calibrate", HTTP_POST, PostPteronautosCalibrate);
   server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
   server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);

@@ -306,19 +306,16 @@ void Zephyrus::_calibrationStep() {
     float gy = (float)_gyroRaw[1] / _gyroScale - _gyroBias[1];
     float gz = (float)_gyroRaw[2] / _gyroScale - _gyroBias[2];
 
-    // Stability check — reject if any axis differs by >2°/s from previous
+    // Stability check — reject if any axis differs by >6°/s from previous.
+    // Only resets _calibStable (not _calibCount) so the MAX_SAMPLES timeout
+    // can still fire. Previously resetting _calibCount to 0 made the timeout
+    // unreachable under any vibration — calibration ran forever.
     if (_calibCount > 0) {
         float dgx = gx - _prevGyro[0];
         float dgy = gy - _prevGyro[1];
         float dgz = gz - _prevGyro[2];
-        if (fabsf(dgx) > 2.0f || fabsf(dgy) > 2.0f || fabsf(dgz) > 2.0f) {
-            _calibStable = 0;  // Reset stable counter on disturbance
-            // Also reset the running sums to get a clean set
-            _calibCount = 0;
-            for (int i = 0; i < 3; i++) {
-                _calibSum[i] = 0.0f;
-                _calibSumSq[i] = 0.0f;
-            }
+        if (fabsf(dgx) > 6.0f || fabsf(dgy) > 6.0f || fabsf(dgz) > 6.0f) {
+            _calibStable = 0;
         } else {
             _calibStable++;
         }
@@ -340,8 +337,21 @@ void Zephyrus::_calibrationStep() {
     }
     _calibCount++;
 
-    // Timeout: if too many samples without stability, accept what we have
+    // Timeout: regardless of stability, after MAX_SAMPLES accept whatever bias we have
     if (_calibCount >= ZEPHYR_CALIB_MAX_SAMPLES) {
+        float n = (float)_calibCount;
+        for (int i = 0; i < 3; i++) {
+            _gyroBias[i] = _calibSum[i] / n;
+        }
+        _calibrating = false;
+        calibrated = true;
+        _lastAhrsUs = micros();
+        pteroLog("Zephyrus: calibration timeout — bias accepted after %d samples", _calibCount);
+        return;
+    }
+
+    // Early completion: enough samples + enough consecutive stable reads
+    if (_calibCount >= ZEPHYR_CALIB_SAMPLES && _calibStable >= ZEPHYR_CALIB_STABLE_COUNT) {
         float n = (float)_calibCount;
         for (int i = 0; i < 3; i++) {
             float mean     = _calibSum[i] / n;
@@ -354,26 +364,26 @@ void Zephyrus::_calibrationStep() {
         _calibrating = false;
         calibrated = true;
         _lastAhrsUs = micros();
-        return;
+        pteroLog("Zephyrus: calibration complete — stable after %d samples", _calibCount);
     }
+}
 
-    if (_calibCount >= ZEPHYR_CALIB_SAMPLES && _calibStable >= ZEPHYR_CALIB_STABLE_COUNT) {
-        // Compute mean and variance
-        float n = (float)_calibCount;
-        for (int i = 0; i < 3; i++) {
-            float mean     = _calibSum[i] / n;
-            float meanSq   = _calibSumSq[i] / n;
-            float variance = meanSq - mean * mean;
-            if (variance < ZEPHYR_CALIB_VARIANCE_MAX) {
-                _gyroBias[i] = mean;
-            }
-            // else: bias stays at 0 for this axis (already zero from constructor)
-        }
-
-        _calibrating = false;
-        calibrated = true;
-        _lastAhrsUs = micros();  // Prime AHRS timestamp for first real update
+// ---------------------------------------------------------------------------
+//  Public: forceCalibrate() — reset bias + restart calibration on demand
+// ---------------------------------------------------------------------------
+void Zephyrus::forceCalibrate() {
+    if (!enabled) return;
+    for (int i = 0; i < 3; i++) {
+        _gyroBias[i]   = 0.0f;
+        _calibSum[i]   = 0.0f;
+        _calibSumSq[i] = 0.0f;
+        _prevGyro[i]   = 0.0f;
     }
+    _calibCount  = 0;
+    _calibStable = 0;
+    _calibrating = true;
+    calibrated   = false;
+    pteroLog("Zephyrus: force recalibrate — bias zeroed, restarting");
 }
 
 // ---------------------------------------------------------------------------
@@ -381,6 +391,44 @@ void Zephyrus::_calibrationStep() {
 //  Reference: S. O. H. Madgwick, "An efficient orientation filter..."
 //  Adapted for PteronautOS: accel corrects roll/pitch, gyro Z for yaw rate
 // ---------------------------------------------------------------------------
+
+// Board rotation helper — remaps MPU-native axes to aircraft frame
+// Compile-time constant ZEPHYR_BOARD_ROTATION selects the transform.
+// When 0 (default): no-op, compiled out by optimizer.
+static void _applyBoardRotation(float &gx, float &gy, float &gz,
+                                float &ax, float &ay, float &az) {
+#if ZEPHYR_BOARD_ROTATION != 0
+    float tmp;
+    switch (ZEPHYR_BOARD_ROTATION) {
+    case 1: // YAW_90: X→right(Y), Y→fwd(X), Z unchanged
+        tmp = gx; gx = gy; gy = -tmp;  // gyro
+        tmp = ax; ax = ay; ay = -tmp;  // accel
+        break;
+    case 2: // YAW_180: X→back(-X), Y→right(-Y), Z unchanged
+        gx = -gx; gy = -gy;
+        ax = -ax; ay = -ay;
+        break;
+    case 3: // YAW_270: X→left(-Y), Y→back(-X), Z unchanged
+        tmp = gx; gx = -gy; gy = tmp;
+        tmp = ax; ax = -ay; ay = tmp;
+        break;
+    case 4: // UPSIDE_DOWN: X→fwd(X), Y→right(-Y), Z→down(-Z)
+        gy = -gy; gz = -gz;
+        ay = -ay; az = -az;
+        break;
+    case 5: // VERT_FWD: X→fwd(X), Y→up(Z), Z→right(-Y)
+        tmp = gy; gy = gz; gz = -tmp;
+        tmp = ay; ay = az; az = -tmp;
+        break;
+    case 6: // VERT_RIGHT: X→right(Y), Y→up(Z), Z→back(-X)
+        tmp = gx; gx = gy; gy = gz; gz = -tmp;
+        tmp = ax; ax = ay; ay = az; az = -tmp;
+        break;
+    default: break;
+    }
+#endif
+}
+
 void Zephyrus::_mahonyUpdate(float gx, float gy, float gz,
                               float ax, float ay, float az,
                               float dt) {
@@ -551,7 +599,7 @@ void Zephyrus::update(uint32_t nowUs) {
     float dt = (float)(nowUs - _lastAhrsUs) * 1e-6f;
     _lastAhrsUs = nowUs;
 
-    // Convert raw to physical units
+    // Convert raw to physical units (MPU-native axes, bias-corrected)
     float gx = (float)_gyroRaw[0] / _gyroScale - _gyroBias[0];  // °/s
     float gy = (float)_gyroRaw[1] / _gyroScale - _gyroBias[1];
     float gz = (float)_gyroRaw[2] / _gyroScale - _gyroBias[2];
@@ -559,6 +607,10 @@ void Zephyrus::update(uint32_t nowUs) {
     float ax = (float)_accelRaw[0] / _accelScale;  // g
     float ay = (float)_accelRaw[1] / _accelScale;
     float az = (float)_accelRaw[2] / _accelScale;
+
+    // Apply board rotation: remap MPU axes → aircraft axes
+    // (compiled out when ZEPHYR_BOARD_ROTATION == 0)
+    _applyBoardRotation(gx, gy, gz, ax, ay, az);
 
     // Run Mahony AHRS
     _mahonyUpdate(gx, gy, gz, ax, ay, az, dt);

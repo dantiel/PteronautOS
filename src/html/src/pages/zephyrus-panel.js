@@ -13,6 +13,8 @@ import {customElement, state} from 'lit/decorators.js'
 class ZephyrusPanel extends LitElement {
     @state() accessor gyroEnabled = false
     @state() accessor gyroCalibrated = false
+    @state() accessor _calibrating = false
+    @state() accessor calibSamples = 0
     @state() accessor rollDeg = 0
     @state() accessor pitchDeg = 0
     @state() accessor yawRate = 0
@@ -30,7 +32,7 @@ class ZephyrusPanel extends LitElement {
     connectedCallback() {
         super.connectedCallback()
         this._poll()
-        this._interval = setInterval(() => this._poll(), 500)
+        this._interval = setInterval(() => this._poll(), 200)
     }
 
     disconnectedCallback() {
@@ -51,6 +53,8 @@ class ZephyrusPanel extends LitElement {
             if (data.zephyrus) {
                 this.gyroEnabled = !!data.zephyrus.enabled
                 this.gyroCalibrated = !!data.zephyrus.calibrated
+                this._calibrating = !!data.zephyrus.calibrating
+                this.calibSamples = Number(data.zephyrus.calib_samples) || 0
                 this.rollDeg = Number(data.zephyrus.roll_deg) || 0
                 this.pitchDeg = Number(data.zephyrus.pitch_deg) || 0
                 this.yawRate = Number(data.zephyrus.yaw_rate) || 0
@@ -63,10 +67,22 @@ class ZephyrusPanel extends LitElement {
         }
     }
 
+    async _doCalibrate() {
+        try {
+            const resp = await fetch('/pteronautos/calibrate', {method: 'POST'})
+            if (resp.ok) {
+                this._calibrating = true
+                this.calibSamples = 0
+            }
+        } catch (e) {
+            // endpoint might 404 on old firmware — silently ignore
+        }
+    }
+
     _horizonStyle() {
         const rollClamped = Math.max(-45, Math.min(45, this.rollDeg))
         const pitchPx = Math.max(-40, Math.min(40, this.pitchDeg * 2))
-        return `transform: rotate(${rollClamped}deg) translateY(${pitchPx}px)`
+        return `transform: rotate(${rollClamped}deg) translateY(${pitchPx}px); `
     }
 
     render() {
@@ -168,13 +184,19 @@ class ZephyrusPanel extends LitElement {
 
             <!-- Calibrate Button -->
             <div class="mui-panel" style="text-align:center;">
-                <button class="mui-btn mui-btn--primary" ?disabled=${!this.gyroEnabled}>
-                    Calibrate Gyro
+                <button class="mui-btn mui-btn--primary"
+                    ?disabled=${!this.gyroEnabled || this._calibrating}
+                    @click=${this._doCalibrate}>
+                    ${this._calibrating ? 'Calibrating...' : 'Calibrate Gyro'}
                 </button>
+                ${this._calibrating ? html`
+                <br><small style="color:#da0;">Sampling: ${this.calibSamples} / 500</small>
+                ` : ''}
                 <br>
                 <small style="color:#888;">
                     ${this.gyroEnabled
-                        ? 'Place aircraft level and press to calibrate'
+                        ? (this._calibrating ? 'Hold aircraft still — auto-completes in ~5s'
+                           : 'Place aircraft level and press to calibrate')
                         : 'Available when gyro is detected'}
                 </small>
             </div>

@@ -32,7 +32,7 @@
 #define ZEPHYR_ACCEL_SCALE   2         // ±2g → 16384 LSB/g
 #define ZEPHYR_GYRO_SCALE    250       // ±250°/s → 131 LSB/(°/s)
 
-// --- DLPF Bandwidth (MPU6050 DLPF_CFG=3 → 44Hz accel, 42Hz gyro) ---
+// --- DLPF Bandwidth (MPU6050 DLPF_CFG=3 → 42Hz accel, 42Hz gyro) ---
 #define ZEPHYR_DLPF_CFG      3
 
 // --- Sample Rate Divider (1kHz / (1 + div)) ---
@@ -58,6 +58,21 @@
 #define ZEPHYR_RUDDER_ROLL_GAIN  2.5f  // µs per degree of roll correction
 #define ZEPHYR_RUDDER_YAW_GAIN   1.5f  // µs per °/s of yaw rate correction
 #define ZEPHYR_RUDDER_CLAMP_US   200   // Hard clamp on gyro correction (±µs)
+
+// --- Board Mounting Rotation ---
+// How the MPU6050 is physically mounted in the aircraft.
+// Selects axis remapping and sign flipping before AHRS.
+//   0 = DEFAULT     GY-521 flat, pins forward, chip up    X→fwd  Y→left  Z→up
+//   1 = YAW_90      rotated 90° clockwise (pins right)    X→right Y→fwd   Z→up
+//   2 = YAW_180     rotated 180° (pins backward)          X→back  Y→right Z→up
+//   3 = YAW_270     rotated 270° (pins left)              X→left  Y→back  Z→up
+//   4 = UPSIDE_DOWN flipped over (pins fwd, chip down)    X→fwd   Y→right Z→down
+//   5 = VERT_FWD    mounted vertically, pins forward      X→fwd   Y→up    Z→right
+//   6 = VERT_RIGHT  mounted vertically, pins right        X→right Y→up    Z→back
+// Default: 0 (GY-521 flat, pins toward nose)
+#ifndef ZEPHYR_BOARD_ROTATION
+  #define ZEPHYR_BOARD_ROTATION 0
+#endif
 
 // --- Calibration ---
 #define ZEPHYR_CALIB_SAMPLES      200   // Gyro bias sample count
