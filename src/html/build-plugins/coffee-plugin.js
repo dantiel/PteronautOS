@@ -8,19 +8,16 @@ import { compile } from 'coffeescript';
 /**
  * Convert CJS `module.exports = {...}` and `module.exports.foo =` to ESM.
  * Uses a `__exports` proxy object to handle cross-references within the module,
- * then destructure-exports all keys at the end.
+ * then exports all keys without redeclaring existing `var` bindings (rolldown-safe).
  */
 function cjsToEsm(code) {
-  // Track all export names from both the object literal and .foo = assignments
+  // Collect all export names (both from object literal and .foo = assignments)
   const names = [];
 
   // module.exports = { a, b: c, ... }  →  const __exports = { a, b: c, ... }
-  // Extract keys for later export
   code = code.replace(
     /module\.exports\s*=\s*\{/g,
-    (match) => {
-      return 'const __exports = {';
-    }
+    () => 'const __exports = {'
   );
 
   // module.exports.foo = expr  →  __exports.foo = expr (track name)
@@ -39,9 +36,7 @@ function cjsToEsm(code) {
   const objMatch = code.match(/const __exports = \{([^}]*)\}/s);
   if (objMatch) {
     let body = objMatch[1];
-    // Strip comments (both // and /* */) before parsing
     body = body.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
-    // Split on commas respecting nesting depth
     const parts = [];
     let depth = 0, start = 0;
     for (let i = 0; i < body.length; i++) {
@@ -62,9 +57,33 @@ function cjsToEsm(code) {
     }
   }
 
-  // Append destructure export
-  if (names.length > 0) {
-    code += `\nexport const { ${names.join(', ')} } = __exports`;
+  // Find names already declared with `var` (CoffeeScript hoists all at top)
+  const varNames = [];
+  const varMatch = code.match(/^var\s+([^;]+);/m);
+  if (varMatch) {
+    varMatch[1].split(',').forEach(s => {
+      const n = s.trim();
+      if (n) varNames.push(n);
+    });
+  }
+
+  // Split export names into: already-declared (re-export) vs new (need const)
+  const reExports = [];
+  const newExports = [];
+  for (const n of names) {
+    if (varNames.includes(n)) {
+      reExports.push(n);
+    } else {
+      newExports.push(n);
+    }
+  }
+
+  // Generate export statements (rolldown-safe: no redeclaration)
+  if (reExports.length > 0) {
+    code += `\nexport { ${reExports.join(', ')} }`;
+  }
+  for (const n of newExports) {
+    code += `\nexport const ${n} = __exports.${n}`;
   }
 
   return code;
