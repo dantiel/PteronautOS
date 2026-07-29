@@ -11,7 +11,7 @@ import '../pages/lr1121-updater.js'
 // /FEATURE:HAS_LR1121
 
 // FEATURE:PTERONAUTOS
-import '../pages/zephyrus-panel.js'
-import '../pages/servo-panel.js'
+import '../pages/zephyrus-panel.coffee'
+import '../pages/servo-panel.coffee'
 import '../pages/debug-console-panel.js'
 // /FEATURE:PTERONAUTOS

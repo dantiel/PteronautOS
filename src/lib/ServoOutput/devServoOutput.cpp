@@ -233,13 +233,11 @@ static void servosUpdate(unsigned long now)
     }
 
 #ifdef ORNITHOPTER_MODE
-    // Advance flapping oscillator and write wing + rudder servos on every tick
+    // Advance mixer and write servo outputs on every tick
     ornithopterUpdate();
     if (initialized)
     {
-        servoWrite(ORNITHOPTER_SERVO_LEFT,   0); // value ignored by filter
-        servoWrite(ORNITHOPTER_SERVO_RIGHT,  0);
-        servoWrite(ORNITHOPTER_SERVO_RUDDER, 0);
+        orniInitWrite(&servoWrite);  // profile-driven: writes 0 to all managed PWM indices
     }
 #endif
 

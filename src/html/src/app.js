@@ -5,6 +5,7 @@ import {initMuiSelect} from './utils/select.js'
 import {elrsState, formatBand} from './utils/state.js'
 import {overlay} from './utils/overlay.js'
 import './components/elrs-footer.js'
+import {i18n} from './utils/i18n-loader.js'
 
 import './pages/info-panel.js'
 import {hideLoadingOverlay, loadJSON, showConfirm, showLoadingOverlay} from "./utils/feedback.js"
@@ -34,6 +35,23 @@ export class App extends LitElement {
         this.renderRoute = this.renderRoute.bind(this)
         this.showSidedrawer = this.showSidedrawer.bind(this)
         this.hideSidedrawer = this.hideSidedrawer.bind(this)
+        this._onLocaleChange = () => this.requestUpdate()
+        window.addEventListener('locale-changed', this._onLocaleChange)
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback()
+        if (this._onLocaleChange) {
+            window.removeEventListener('locale-changed', this._onLocaleChange)
+        }
+    }
+
+    _t(key, params = {}) {
+        return i18n.t(key, params)
+    }
+
+    _onLangSelect(e) {
+        i18n.setLocale(e.target.value)
     }
 
     createRenderRoot() {
@@ -43,11 +61,22 @@ export class App extends LitElement {
     render() {
         return html`
             <div id="sidedrawer" class="mui--no-user-select">
-                <div id="sidedrawer-brand" class="mui--appbar-line-height elrs-brand">
-                    <svg viewBox="0 0 64 64" width="56px" height="56px">
-                        <path fill="#d4a017" d="M32 8 L8 56 L24 52 L20 60 L32 46 L44 60 L40 52 L56 56 Z M32 16 L18 46 L28 44 L32 38 L36 44 L46 46 Z"/>
-                    </svg>
-                    <span class="mui--text-headline elrs-brand-title">PTERONAUT OS</span>
+                <div id="sidedrawer-brand" class="mui--appbar-line-height pto-brand">
+                    <div class="pto-brand-headline">
+                        <span class="pto-brand-pteronaut">${this._t('app.brand.pteronaut')}</span><span class="pto-brand-os">${this._t('app.brand.os')}</span>
+                    </div>
+                    <div class="pto-brand-tagline">${this._t('app.brand.tagline')}</div>
+                    <pre class="pto-brand-glyph">
+                   ___
+                  /    \___
+                 /  _     o\___
+                /  /  \___  /    \
+               |  /   \     \/  _  \
+               | /     \    /  / \  |
+                \_____/\/  /   \  |
+                      /\___/     \ |
+                     /
+                    </pre>
                 </div>
                 <div class="mui-divider"></div>
                 <ul>
@@ -109,8 +138,15 @@ export class App extends LitElement {
                     <div class="elrs-header-meta">
                         <div id="product_name">${elrsState.settings?.product_name}</div>
                         <div>
-                            <b>Firmware Rev. </b>${elrsState.settings?.version} ${formatBand()}
+                            <b>${this._t('app.header.firmware_rev')} </b>${elrsState.settings?.version} ${formatBand()}
                         </div>
+                    </div>
+                    <div style="margin-left:auto;padding-right:12px;">
+                        <select @change="${this._onLangSelect}" style="background:#1c1c22;color:#ccc;border:1px solid #333;border-radius:3px;padding:4px 8px;font-size:12px;cursor:pointer;">
+                            ${i18n.availableLocales.map(loc => html`
+                                <option value="${loc.code}" ?selected="${i18n.locale === loc.code}">${loc.nativeName}</option>
+                            `)}
+                        </select>
                     </div>
                 </div>
             </header>
@@ -205,7 +241,8 @@ export class App extends LitElement {
             const links = this.sideDrawer.querySelectorAll('a[href^="#"]')
             links.forEach(a => a.classList.remove('active'))
         }
-        const id = 'menu-' +route
+        const cleanRoute = route.replace(/^\/+/, '')
+        const id = 'menu-' +cleanRoute
         const el = id ? (this.querySelector(`#${id}`) || document.getElementById(id)) : null
         if (el) el.classList.add('active')
     }
@@ -358,7 +395,7 @@ export class App extends LitElement {
 
     // Route navigation orchestration
     renderRoute() {
-        const route = (location.hash || '#info').replace('#', '')
+        const route = (location.hash || '#info').replace('#', '').replace(/^\/+/, '')
         if (this.currentRoute && route === this.currentRoute) {
             this.setActiveMenu(route)
             return Promise.resolve()

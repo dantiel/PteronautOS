@@ -1,0 +1,69 @@
+.mui-panel.mui--text-title= self._t('servo.panel.title')
+
+.mui-panel
+  .badge{style: self._badgeStyle()}
+    = self._statusText()
+  %br
+  %br
+  .pwmtbl{style: "overflow-x:auto;"}
+    %table.mui-table.mui-table--bordered
+      %thead
+        %tr
+          %th= self._t('servo.table.ch')
+          %th= self._t('servo.table.name')
+          %th= self._t('servo.table.pin')
+          %th= self._t('servo.table.center')
+          %th= self._t('servo.table.min')
+          %th= self._t('servo.table.max')
+          %th= self._t('servo.table.failsafe')
+          %th= self._t('servo.table.current')
+      %tbody
+        - for ch of self._servoChannels()
+          %tr
+            %td= ch.ch
+            %td
+              %b= ch.name
+            %td= ch.pinLabel
+            %td= ch.centerLabel
+            %td= ch.minLabel
+            %td= ch.maxLabel
+            %td= ch.failsafeLabel
+            %td{style: self._liveStyle(ch)}
+              = self._liveLabel(ch)
+  %br
+  %small{style: "color:#888;"}
+    = self._footerText()
+
+.mui-panel{style: "text-align:center;"}
+  %button.mui-btn.mui-btn--primary{@click: self._doSweep}
+    = self._sweepLabel()
+  - if self._sweeping
+    %br
+    %small{style: "color:#da0;"}= self._sweepProgress()
+  %br
+  %small{style: "color:#888;"}
+    = self._t('servo.sweep.hint')
+    %br
+    %em= self._t('servo.sweep.auto_stop')
+
+.mui-panel
+  .mui--text-title{style: "font-size:16px;"}= self._t('servo.failsafe.title')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('servo.failsafe.mode')
+        %td
+          %select.mui-select{@change: self._onSelect('failsafeMode')}
+            - for opt of self._failsafeOptions()
+              %option{value: opt.val, ?selected: self.failsafeMode is opt.val}
+                = opt.label
+      %tr
+        %td
+          %b= self._t('servo.failsafe.delay')
+        %td
+          %input{type: "range", min: "100", max: "2000", value: self.failsafeDelay, @input: self._onSlider('failsafeDelay'), style: "width:150px;"}
+          = self.failsafeDelay
+          |  ms
+          %br
+          %small{style: "color:#888;"}= self._t('servo.failsafe.delay_desc')

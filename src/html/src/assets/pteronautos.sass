@@ -1,0 +1,596 @@
+// ═══════════════════════════════════════════════════════════════
+// PTERONAUTOS WEBUI — Design aligned with pteronautos.com/docs
+// Turret Road • Monochrome • 3D shadows • Technical elegance
+// ═══════════════════════════════════════════════════════════════
+
+// ═══ Typography ═══
+$turret: 'Turret Road', monospace
+
+// ═══ Palette (from docs: black/white/grey monochrome) ═══
+$black:     #000
+$white:     #fff
+$grey-900:  #111
+$grey-800:  #222
+$grey-700:  #333
+$grey-600:  #444
+$grey-500:  #555
+$grey-400:  #666
+$grey-300:  #888
+$grey-200:  #999
+$grey-100:  #ccc
+$ok:        #2d8
+$warn:      #da0
+$err:       #c44
+$info:      #48a
+
+// ═══ Mixins ═══
+=glass
+  background: rgba(0, 0, 0, 0.85) !important
+  backdrop-filter: blur(8px)
+  -webkit-backdrop-filter: blur(8px)
+  border: 1px solid rgba(255, 255, 255, 0.08) !important
+
+=transition($prop: all, $dur: 200ms)
+  transition: $prop $dur cubic-bezier(0.4, 0, 0.2, 1)
+
+=text-shadow-3d
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 2px 0 rgba(0, 0, 0, 0.5), 0 3px 2px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.3)
+
+// ═══ Root Variables ═══
+:root
+  --bg:        #{$black}
+  --text:      #{$white}
+  --text-dim:  #{$grey-500}
+  --accent:    #{$grey-100}
+  --mut:       #{$grey-600}
+  --dim:       #{$grey-700}
+  --border:    #{$grey-700}
+  --surface:   #{$grey-900}
+  --card:      #{$grey-900}
+  --card-hi:   #{$grey-800}
+  --radius:    4px
+  --glow:      0 0 20px rgba(255, 255, 255, 0.06)
+  --ease:      cubic-bezier(0.4, 0, 0.2, 1)
+
+// ═══ Base ═══
+body
+  background: var(--bg) !important
+  color: var(--text) !important
+  font-family: $turret
+  font-weight: 400
+  letter-spacing: 0.03em
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+
+// ═══ Header ═══
+.elrs-header
+  background: var(--surface) !important
+  border-bottom: 1px solid var(--dim) !important
+  color: var(--text) !important
+  +text-shadow-3d
+  letter-spacing: 0.15em
+
+  .elrs-header-meta
+    font-family: $turret
+    font-weight: 400
+    letter-spacing: 0.05em
+    font-size: 11px
+    color: var(--mut)
+
+    #product_name
+      font-family: $turret
+      font-weight: 500
+      letter-spacing: 0.12em
+      text-transform: uppercase
+      font-size: 12px
+      color: var(--accent)
+
+  .elrs-brand-title
+    font-family: $turret
+    font-weight: 700
+    letter-spacing: 0.25em
+    text-transform: uppercase
+    color: var(--white) !important
+    +text-shadow-3d
+    background: none !important
+    -webkit-text-fill-color: unset !important
+    -webkit-background-clip: unset !important
+
+// ═══════════════════════════════════════════════════════════════
+// ═ PteronautOS Typographic Brand (Sidedrawer)
+// ═══════════════════════════════════════════════════════════════
+.pto-brand
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding: 18px 12px 10px
+  min-height: 160px
+  user-select: none
+
+  &-headline
+    line-height: 1
+    margin-bottom: 4px
+
+  &-pteronaut
+    font-family: $turret
+    font-weight: 800
+    font-size: 22px
+    letter-spacing: 0.22em
+    color: var(--text)
+    +text-shadow-3d
+
+  &-os
+    font-family: $turret
+    font-weight: 300
+    font-size: 22px
+    letter-spacing: 0.35em
+    color: var(--mut)
+    margin-left: 2px
+    +text-shadow-3d
+
+  &-tagline
+    font-family: $turret
+    font-weight: 400
+    font-size: 9px
+    letter-spacing: 0.25em
+    text-transform: uppercase
+    color: var(--mut)
+    margin-top: 3px
+
+  &-glyph
+    font-family: $turret
+    font-weight: 400
+    font-size: 7px
+    line-height: 1.05
+    color: var(--dim)
+    white-space: pre
+    text-align: center
+    margin-top: 8px
+    opacity: 0.5
+
+
+// ═══ Sidedrawer ═══
+#sidedrawer
+  background: var(--surface) !important
+  color: var(--text-dim) !important
+  border-right: 1px solid var(--dim) !important
+
+  strong
+    color: var(--mut) !important
+    font-family: $turret
+    font-size: 10px
+    font-weight: 500
+    letter-spacing: 2px
+    text-transform: uppercase
+
+    &:hover
+      background: none !important
+
+  a
+    color: var(--mut) !important
+    font-family: $turret
+    font-weight: 400
+    letter-spacing: 0.08em
+    +transition(all, 120ms)
+    border-radius: var(--radius)
+    margin: 1px 8px
+
+    &:hover
+      background: var(--card-hi) !important
+      color: var(--accent) !important
+
+    &.active
+      background: rgba(255, 255, 255, 0.05) !important
+      color: var(--text) !important
+      font-weight: 500
+      box-shadow: inset 2px 0 0 var(--accent)
+      +text-shadow-3d
+
+      &::after
+        border-color: transparent var(--accent) transparent transparent !important
+
+// ═══ Cards / Panels ═══
+.mui-panel
+  background: var(--card) !important
+  color: var(--text) !important
+  border: 1px solid var(--border) !important
+  border-radius: var(--radius) !important
+  +transition((border-color, box-shadow))
+
+  &:hover
+    border-color: var(--mut) !important
+
+  &.mui--text-title
+    background: var(--card-hi) !important
+    border-color: var(--dim) !important
+    font-family: $turret
+    font-weight: 700
+    letter-spacing: 0.15em
+    text-transform: uppercase
+
+.mui--text-title
+  color: var(--text) !important
+  font-family: $turret
+  font-weight: 500
+  letter-spacing: 0.1em
+
+// ═══ Tables ═══
+.mui-table
+  color: var(--text) !important
+  font-family: $turret
+
+  &--bordered
+    border-color: var(--dim) !important
+
+    > tbody > tr
+      > td, > th
+        border-top-color: var(--dim) !important
+        padding: 8px 12px !important
+
+      &:hover
+        background: var(--card-hi) !important
+
+  thead th
+    color: var(--mut) !important
+    font-family: $turret
+    font-size: 9px
+    font-weight: 500
+    letter-spacing: 2px
+    text-transform: uppercase
+    
+  small.label
+    padding: 0.7em
+    opacity: 0.5
+    
+
+// ═══ Links ═══
+a
+  color: var(--accent) !important
+  font-family: $turret
+  +transition(color, 120ms)
+
+  &:hover
+    color: var(--text) !important
+
+// ═══ Buttons ═══
+.mui-btn--primary
+  background: var(--mut) !important
+  border: 1px solid var(--accent) !important
+  color: var(--text) !important
+  font-family: $turret
+  font-weight: 500
+  letter-spacing: 1px
+  text-transform: uppercase
+  font-size: 11px
+  border-radius: var(--radius) !important
+  +transition(all, 120ms)
+
+  &:hover
+    background: var(--accent) !important
+    color: var(--bg) !important
+    font-weight: 700
+
+  &:disabled
+    opacity: 0.3
+    box-shadow: none !important
+
+// ═══ Footer ═══
+#footer
+  background: var(--surface) !important
+  border-top: 1px solid var(--dim) !important
+  height: auto !important
+  min-height: var(--footer-height)
+  padding: 2px 6px !important
+
+// ═══ Loader ═══
+.loader
+  border-color: rgba(255, 255, 255, 0.06) !important
+  border-top-color: var(--accent) !important
+  border-right-color: var(--mut) !important
+
+// ═══ Alerts / Wizards ═══
+.alert-frame.wizard .alert-header
+  background: var(--surface) !important
+  border-bottom: 1px solid var(--accent) !important
+  font-family: $turret
+  letter-spacing: 0.1em
+
+// ═══ Loading overlay ═══
+.elrs-loading-panel
+  background: rgba(0, 0, 0, 0.92) !important
+  color: var(--accent) !important
+  font-family: $turret
+
+// ═══ Drop zone ═══
+.drop-zone
+  color: var(--mut) !important
+  border: 2px dashed var(--dim) !important
+  border-radius: var(--radius) !important
+  font-family: $turret
+  +transition(all, 120ms)
+
+  &:hover
+    border-color: var(--accent) !important
+    color: var(--text) !important
+
+// ═══ Inputs ═══
+input, select, textarea
+  background: var(--surface) !important
+  color: var(--text) !important
+  border: 1px solid var(--dim) !important
+  border-radius: 4px !important
+  font-family: $turret
+  +transition((border-color, box-shadow), 120ms)
+  padding: 6px 10px !important
+
+  &:focus
+    border-color: var(--accent) !important
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08) !important
+    outline: none !important
+
+input[type="range"]
+  accent-color: var(--accent)
+  height: 6px
+  background: var(--dim)
+  border-radius: 3px
+  border: none !important
+  padding: 0 !important
+
+// ═══ Dividers ═══
+.mui-divider
+  background-color: var(--dim) !important
+
+// ═══ Brand ═══
+.elrs-brand
+  color: var(--text) !important
+  font-family: $turret
+  letter-spacing: 0.15em
+
+// ═══ Forms ═══
+.mui-form legend
+  color: var(--text) !important
+  font-family: $turret
+  font-weight: 700
+  letter-spacing: 0.15em
+  text-transform: uppercase
+
+// ═══ Badges ═══
+.badge
+  background: var(--card-hi) !important
+  border: 1px solid var(--mut) !important
+  border-radius: 3px !important
+  font-family: $turret
+  font-size: 10px
+  font-weight: 500
+  letter-spacing: 0.08em
+  text-transform: uppercase
+
+// ═══ Scrollbar ═══
+::-webkit-scrollbar
+  width: 5px
+
+  &-track
+    background: var(--bg)
+
+  &-thumb
+    background: var(--dim)
+    border-radius: 3px
+
+    &:hover
+      background: var(--mut)
+
+// ══════════════════════════════════════════════════════
+// PTERONAUTOS-SPECIFIC COMPONENTS
+// ══════════════════════════════════════════════════════
+
+// ═══ Animations ═══
+@keyframes pto-pulse
+  0%, 100%
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3)
+  50%
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0)
+
+@keyframes pto-pulse-ok
+  0%, 100%
+    box-shadow: 0 0 0 0 rgba($ok, 0.4)
+  50%
+    box-shadow: 0 0 0 6px rgba($ok, 0)
+
+@keyframes pto-pulse-err
+  0%, 100%
+    box-shadow: 0 0 0 0 rgba($err, 0.4)
+  50%
+    box-shadow: 0 0 0 6px rgba($err, 0)
+
+@keyframes pto-fade-in
+  from
+    opacity: 0
+    transform: translateY(6px)
+  to
+    opacity: 1
+    transform: translateY(0)
+
+// ═══ Live status dot ═══
+.pto-status-dot
+  display: inline-block
+  width: 8px
+  height: 8px
+  border-radius: 50%
+  margin-right: 6px
+  vertical-align: middle
+
+  &--ok
+    background: $ok
+    animation: pto-pulse-ok 2s ease-in-out infinite
+
+  &--warn
+    background: $warn
+    animation: pto-pulse 2s ease-in-out infinite
+
+  &--err
+    background: $err
+    animation: pto-pulse-err 2s ease-in-out infinite
+
+  &--off
+    background: var(--mut)
+
+// ═══ Glass card variant ═══
+.pto-glass
+  +glass
+
+// ═══ Data bar (live PWM / value) ═══
+.pto-bar
+  height: 8px
+  border-radius: 4px
+  background: var(--dim)
+  position: relative
+  overflow: hidden
+
+  &-fill
+    height: 100%
+    border-radius: 4px
+    transition: width 80ms ease-out
+    background: linear-gradient(90deg, var(--mut), var(--accent), var(--text))
+
+// ═══ Monospace data readout ═══
+.pto-mono
+  font-family: $turret
+  font-weight: 400
+  font-size: 13px
+  color: var(--accent)
+  letter-spacing: 0.06em
+
+// ═══ Panel section title ═══
+.pto-section-title
+  font-family: $turret
+  font-size: 10px
+  font-weight: 500
+  letter-spacing: 2px
+  text-transform: uppercase
+  color: var(--mut)
+  margin-bottom: 10px
+  padding-bottom: 6px
+  border-bottom: 1px solid var(--dim)
+
+// ═══ Artificial Horizon ═══
+.pto-horizon-wrap
+  position: relative
+  width: 200px
+  height: 200px
+  margin: 0 auto
+  border-radius: 50%
+  border: 3px solid var(--accent)
+  box-shadow: var(--glow), inset 0 0 30px rgba(0, 0, 0, 0.5)
+  overflow: hidden
+  background: var(--bg)
+
+// ═══ Value display card ═══
+.pto-value-card
+  text-align: center
+  padding: 12px 8px
+  background: var(--surface)
+  border: 1px solid var(--dim)
+  border-radius: var(--radius)
+
+  .pto-value
+    font-size: 24px
+    font-weight: 700
+    font-family: $turret
+    color: var(--text)
+    letter-spacing: 0.05em
+
+  .pto-label
+    font-family: $turret
+    font-size: 9px
+    font-weight: 500
+    letter-spacing: 2px
+    text-transform: uppercase
+    color: var(--mut)
+    margin-top: 4px
+
+// ═══ ASCII glyph (pterosaur) ═══
+.pteronautos-glyph
+  font-family: $turret
+  font-weight: 400
+  font-size: 9px
+  line-height: 1.1
+  color: var(--accent)
+  white-space: pre
+  text-align: center
+  opacity: 0.35
+
+// ═══ Panel enter animation ═══
+.mui-container-fluid > *
+  animation: pto-fade-in 220ms var(--ease) both
+
+  &:nth-child(2)
+    animation-delay: 40ms
+  &:nth-child(3)
+    animation-delay: 80ms
+  &:nth-child(4)
+    animation-delay: 120ms
+  &:nth-child(5)
+    animation-delay: 160ms
+
+// ═══ Responsive grid helpers ═══
+.pto-grid-2
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 12px
+
+.pto-grid-3
+  display: grid
+  grid-template-columns: 1fr 1fr 1fr
+  gap: 10px
+
+@media (max-width: 480px)
+  .pto-grid-2, .pto-grid-3
+    grid-template-columns: 1fr
+    
+
+.value
+  margin: 0.5em
+  display: inline-block
+  width: 1em
+
+// Zephyrus PID number inputs — compact, sit beside range sliders
+.zephyrus-pid-num
+  width: 52px
+  margin-left: 8px
+  text-align: center
+  background: #111
+  border: 1px solid #333
+  color: #ccc
+  font-family: "Turret Road", monospace
+  font-size: 13px
+  padding: 2px 4px
+  border-radius: 3px
+  -moz-appearance: textfield
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button
+    -webkit-appearance: none
+    margin: 0
+
+// Ornithopter save button
+.ptero-centered
+  text-align: center
+
+.ptero-btn
+  padding: 10px 32px
+  font-family: inherit
+  font-size: 14px
+  background: #222
+  color: #ccc
+  border: 1px solid #444
+  border-radius: 4px
+  cursor: pointer
+  &:hover
+    background: #333
+    border-color: #666
+
+.ptero-muted
+  color: #666
+  font-style: italic
+  
+  

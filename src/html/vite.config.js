@@ -6,6 +6,8 @@ import { cssTreeShakePlugin } from './build-plugins/css-tree-shake-plugin.js'
 import { htmlFeatureBlocksPlugin } from './build-plugins/feature-blocks-plugin.js'
 import { inlineStaticHtmlAssetsPlugin } from './build-plugins/inline-static-html-assets-plugin.js'
 import { viteEsp32HeaderPlugin } from './build-plugins/esp32-header-plugin.js'
+import { hamlLitPlugin } from './build-plugins/haml-lit-plugin.js'
+import { coffeePlugin } from './build-plugins/coffee-plugin.js'
 
 // Simple dev mock server plugin
 import { devMockPlugin } from './dev-plugins/dev-mock-plugin.js'
@@ -18,6 +20,8 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [
+      coffeePlugin(),
+      hamlLitPlugin(),
       htmlFeatureBlocksPlugin(env),
       minifyTemplateLiterals({
         include: ['src/**/*.js'],
@@ -53,11 +57,17 @@ export default defineConfig(({ command, mode }) => {
         plugins: [htmlFeatureBlocksPlugin(env)],
       },
     },
+    resolve: {
+      extensions: ['.coffee', '.js', '.ts', '.jsx', '.tsx', '.json', '.css', '.lithaml'],
+    },
     esbuild: {
       legalComments: 'none'
     },
     build: {
       rolldownOptions: {
+        resolve: {
+          extensions: ['.coffee', '.js', '.ts', '.jsx', '.tsx', '.json', '.css', '.lithaml'],
+        },
         input: {
           app: path.resolve(__dirname, 'index.html'),
         },

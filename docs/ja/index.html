@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Sans+JP:wght@200;300;400;500;700&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../assets/css/style.css' rel='stylesheet'>
+</head>
+<body>
+<div class='hero-bg'></div>
+<div class='hero-nemicolopterus'></div>
+<div class='hero-overlay'></div>
+<nav>
+<a class='home-link' href='#' onclick='majesticScroll(); return false;' title='トップへスクロール — PteronautOS'>↑</a>
+<a href='#essence'>本質</a>
+<a href='#architecture'>アーキテクチャ</a>
+<a href='#zephyrus'>Zephyrus</a>
+<div class='lang-switch'>
+<a href='.'>JA</a>
+<a href='../'>PT</a>
+<a class='' href='../en/'>EN</a>
+<a class='' href='../es/'>ES</a>
+<a class='' href='../fr/'>FR</a>
+<a class='' href='../de/'>DE</a>
+<a class='' href='../ru/'>RU</a>
+<a class='' href='../ko/'>한국어</a>
+<a class='' href='../zh/'>中文</a>
+<a class='' href='../ar/'>عربي</a>
+<a class='' href='../hi/'>हिन्दी</a>
+</div>
+</nav>
+<div id='header'>
+<div class='hero-content'>
+<div class='headline'>
+<h1><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</h1>
+<p class='subhead'>自然に飛べ。正確に制御せよ。</p>
+<p class='greeting'>ようこそ、プテロノート。</p>
+<pre class='glyph'>     ___
+    /    \___
+   /  _     o\___
+  /  /  \___  /    \
+ |  /   \     \/  _  \
+ | /     \    /  / \  |
+  \_____/\/  /   \  |
+        /\___/     \ |
+       /
+</pre>
+<p class='version'>ESP8285 · CRSFプロトコル</p>
+</div>
+</div>
+</div>
+<main>
+<section id='essence'>
+<h2>
+<span class='section-num'>01</span>
+本質
+</h2>
+<p class='lead'>PteronautOSは<strong>ExpressLRSの上に構築</strong>され、オーニソプター用フライトコントローラーへと変貌を遂げた。</p>
+<p>クアッドではない — モーターもESCもBetaflightもない。動作は<strong>波形</strong>によって生成され、二つの翼サーボとクレストラダーサーボを駆動する。</p>
+<div class='highlight'>
+<code>CRSF（無線） → rx_main → Ornithopter → 波形 → PWMサーボ</code>
+</div>
+</section>
+<section id='architecture'>
+<h2>
+<span class='section-num'>02</span>
+アーキテクチャ
+</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>ミキサー、波形生成、チャンネルフィルタリング</dd>
+<dt>Zephyrus</dt>
+<dd>MPU6050ジャイロ + Mahony AHRS + デュアルPID</dd>
+<dt>ServoOutput</dt>
+<dd>CRSFティックに同期したPWM</dd>
+<dt>ターゲット</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
+</section>
+<section id='zephyrus'>
+<h2>
+<span class='section-num'>03</span>
+Zephyrus ジャイロモジュール
+</h2>
+<p class='lead'>MPU6050による頭蓋冠ラダー安定化。Mahony AHRSによる姿勢推定、ロール角とヨーレート補正のためのデュアルPID。</p>
+<table class='specs'>
+<tr>
+<td>センサー</td>
+<td>MPU6050 (GY-521)</td>
+</tr>
+<tr>
+<td>インターフェース</td>
+<td>直接I2C (GPIO1/GPIO3)</td>
+</tr>
+<tr>
+<td>AHRS</td>
+<td>Mahony（レジスタレベル、約1kHz）</td>
+</tr>
+<tr>
+<td>PID</td>
+<td>デュアル：ロール角 + ヨーレート</td>
+</tr>
+<tr>
+<td>出力</td>
+<td>クレストラダー補正</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td class='value'>62%</td>
+</tr>
+<tr>
+<td>Flash</td>
+<td class='value'>56%</td>
+</tr>
+</table>
+<p class='doc-link'>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md'>完全なドキュメント →</a>
+</p>
+</section>
+<section class='build'>
+<h2>
+<span class='section-num'>04</span>
+ビルド
+</h2>
+<pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
+<p class='compatible'>互換：ExpressLRS TX 2.4GHz · ボーレート：420000</p>
+</section>
+</main>
+<footer>
+<p><a href="https://github.com/dantiel/PteronautOS" target="_blank">GitHub</a> · <a href="https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md" target="_blank">ドキュメント</a> · <a href="../en/hardware/" target="_blank">ハードウェア</a></p>
+<p>密閉型ファームウェア · 80MHz · 1MB Flash · ゼロ依存</p>
+<p class='credit'>ExpressLRS 4.x 上に構築</p>
+</footer>
+<button aria-label='トップへスクロール' class='scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})'></button>
+<script>
+  const hero = document.querySelector('.hero-content');
+  const creature = document.querySelector('.hero-nemicolopterus');
+  const overlay = document.querySelector('.hero-overlay');
+  const nav = document.querySelector('nav');
+  const scrollBtn = document.querySelector('.scroll-top');
+
+  function majesticScroll() {
+    const start = window.scrollY;
+    const duration = 1500;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 4);
+      window.scrollTo(0, start * (1 - eased));
+      if (t < 1) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  function tick() {
+    const scroll = window.scrollY;
+    const vh = window.innerHeight;
+    const t = Math.min(scroll / vh, 1);
+
+    hero.style.setProperty('--scroll', t.toFixed(3));
+    hero.style.opacity = 1 - t * 0.6;
+
+    const py = t * 110;
+    creature.style.transform = `translateY(${py}%)`;
+    creature.style.opacity = Math.max(0, 1 - t * 1.4);
+
+    overlay.style.opacity = Math.min(t * 0.85, 0.85);
+
+    nav.classList.toggle('scrolled', scroll > 40);
+
+    scrollBtn.classList.toggle('visible', scroll > vh * 0.6);
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

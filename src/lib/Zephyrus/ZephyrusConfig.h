@@ -40,7 +40,7 @@
 
 // --- Mahony AHRS Complementary Filter Gains ---
 #define ZEPHYR_MAHONY_KP     2.0f      // Proportional gain (accel correction strength)
-#define ZEPHYR_MAHONY_KI     0.0f      // Integral gain (gyro bias drift correction — zero for yaw-rate-only)
+#define ZEPHYR_MAHONY_KI     0.005f    // Integral gain (slow gyro bias drift correction)
 
 // --- PID: Roll Axis (stabilizes roll angle to 0°) ---
 #define ZEPHYR_PID_ROLL_KP   1.2f
@@ -54,10 +54,21 @@
 #define ZEPHYR_PID_YAW_KD    0.10f
 #define ZEPHYR_PID_YAW_IMAX  20.0f     // Integrator anti-windup clamp (°/s)
 
+// --- PID: Pitch Axis (stabilizes pitch angle to 0°) ---
+#define ZEPHYR_PID_PITCH_KP   1.0f
+#define ZEPHYR_PID_PITCH_KI   0.04f
+#define ZEPHYR_PID_PITCH_KD   0.12f
+#define ZEPHYR_PID_PITCH_IMAX 25.0f    // Integrator anti-windup clamp (°)
+
 // --- Crest Rudder Mix: maps PID corrections to µs offset ---
 #define ZEPHYR_RUDDER_ROLL_GAIN  2.5f  // µs per degree of roll correction
 #define ZEPHYR_RUDDER_YAW_GAIN   1.5f  // µs per °/s of yaw rate correction
 #define ZEPHYR_RUDDER_CLAMP_US   200   // Hard clamp on gyro correction (±µs)
+
+// --- Gearbox Leg Servo Mix: maps PID corrections to µs offset ---
+#define ZEPHYR_GEARBOX_ROLL_GAIN  3.0f   // µs per degree roll → leg ailerons
+#define ZEPHYR_GEARBOX_PITCH_GAIN 3.0f   // µs per degree pitch → leg elevons
+#define ZEPHYR_GEARBOX_CLAMP_US   250    // Hard clamp on leg servo correction (±µs)
 
 // --- Board Mounting Rotation ---
 // How the MPU6050 is physically mounted in the aircraft.

@@ -711,7 +711,9 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
         zeph["yaw_rate"] = zephyrus.yawRate;
         zeph["roll_correction"] = zephyrus.rollCorrection;
         zeph["yaw_correction"] = zephyrus.yawCorrection;
+        zeph["pitch_correction"] = zephyrus.pitchCorrection;
         zeph["rudder_correction"] = zephyrus.rudderCorrection;
+        zeph["board_rotation"] = zephyrus.boardRotation;
     }
 #else
     {
@@ -726,9 +728,21 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
         JsonObject orni = root["ornithopter"].to<JsonObject>();
         orni["enabled"] = ornithopter.enabled;
         orni["link_up"] = ornithopter.linkUp;
-        orni["servo_left_us"] = ornithopter.servoLeftUs;
-        orni["servo_right_us"] = ornithopter.servoRightUs;
-        orni["servo_rudder_us"] = ornithopter.servoRudderUs;
+        orni["type"] = PROFILE_IS_GEARBOX ? "gearbox" : "servo";
+        orni["servo_left_wing_us"]  = ornithopter.funcValue(SF_LEFT_WING);
+        orni["servo_right_wing_us"] = ornithopter.funcValue(SF_RIGHT_WING);
+        orni["servo_rudder_us"]     = ornithopter.funcValue(SF_RUDDER);
+        orni["servo_motor_us"]      = ornithopter.funcValue(SF_MOTOR);
+        orni["servo_vtail_left_us"]  = ornithopter.funcValue(SF_VTAIL_LEFT);
+        orni["servo_vtail_right_us"] = ornithopter.funcValue(SF_VTAIL_RIGHT);
+        orni["servo_elevator_us"]    = ornithopter.funcValue(SF_ELEVATOR);
+        orni["servo_back_left_wing_us"]  = ornithopter.funcValue(SF_BACK_LEFT_WING);
+        orni["servo_back_right_wing_us"] = ornithopter.funcValue(SF_BACK_RIGHT_WING);
+#ifdef ZEPHYRUS_ENABLED
+        orni["gyro_rudder_correction_us"]    = ornithopter.gyroRudderCorrection;
+        orni["gyro_aileron_correction_us"]   = ornithopter.gyroAileronCorrection;
+        orni["gyro_elevator_correction_us"]  = ornithopter.gyroElevatorCorrection;
+#endif
         orni["voice_throttle"] = ornithopter.voiceThrottle;
         orni["voice_cadence"] = ornithopter.voiceCadence;
         orni["voice_aileron"] = ornithopter.voiceAileron;
@@ -755,6 +769,28 @@ static void PostPteronautosCalibrate(AsyncWebServerRequest *request)
     JsonObject root = response->getRoot().to<JsonObject>();
     root["ok"] = true;
     root["message"] = "Calibration started — keep aircraft still for 0.5s";
+    response->setLength();
+    request->send(response);
+}
+
+static void PostPteronautosOrientation(AsyncWebServerRequest *request)
+{
+#ifdef ZEPHYRUS_ENABLED
+    if (request->hasParam("rotation", true)) {
+        int rot = request->getParam("rotation", true)->value().toInt();
+        if (rot >= 0 && rot <= 6) {
+            zephyrus.setBoardRotation((uint8_t)rot);
+        }
+    }
+#endif
+    auto *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+    root["ok"] = true;
+#ifdef ZEPHYRUS_ENABLED
+    root["rotation"] = zephyrus.boardRotation;
+#else
+    root["rotation"] = 0;
+#endif
     response->setLength();
     request->send(response);
 }
@@ -1449,6 +1485,7 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
   server.on("/pteronautos/calibrate", HTTP_POST, PostPteronautosCalibrate);
+  server.on("/pteronautos/orientation", HTTP_POST, PostPteronautosOrientation);
   server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
   server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
@@ -1608,7 +1645,13 @@ static void HandleWebUpdate()
 static int start()
 {
   ipAddress.fromString(wifi_ap_address);
+#if defined(PTERONAUTOS)
+  // Baked options may not be parsed yet — never return DURATION_NEVER.
+  int32_t interval = firmwareOptions.wifi_auto_on_interval;
+  return (interval <= 0) ? 5000 : interval;
+#else
   return firmwareOptions.wifi_auto_on_interval;
+#endif
 }
 
 static int event()
@@ -1660,19 +1703,55 @@ static int timeout()
     return DURATION_IMMEDIATELY;
   }
   #elif defined(TARGET_RX)
-  if (firmwareOptions.wifi_auto_on_interval != -1 && !webserverPreventAutoStart && (connectionState == disconnected))
+  #if !defined(PTERONAUTOS)
+  if (!webserverPreventAutoStart && (connectionState == disconnected))
   {
     static bool pastAutoInterval = false;
-    // If InBindingMode then wait at least 60 seconds before going into wifi,
-    // regardless of if .wifi_auto_on_interval is set to less
-    if (!InBindingMode || firmwareOptions.wifi_auto_on_interval >= 60000 || pastAutoInterval)
+    // If InBindingMode then wait at least 60 seconds before going into wifi.
+    if (!InBindingMode || pastAutoInterval)
     {
       setWifiUpdateMode();
       return DURATION_IMMEDIATELY;
     }
     pastAutoInterval = true;
-    return (60000 - firmwareOptions.wifi_auto_on_interval);
+    return 60000;  // wait 60s in binding mode before forcing WiFi
   }
+  #endif
+  #if defined(PTERONAUTOS)
+  // PteronautOS WiFi startup: 30s radio grace period before WiFi.
+  // ESP8285 cannot run WiFi + SX1280 simultaneously — radio gets first chance.
+  if (!wifiStarted)
+  {
+    static uint32_t bootTime = 0;
+    if (bootTime == 0) bootTime = millis();
+
+    // Radio hardware failure → WiFi immediately (no point waiting)
+    if (connectionState > MODE_STATES)
+    {
+      DBGLN("PteroWiFi: radio hw failure, starting WiFi");
+      setWifiUpdateMode();
+      return DURATION_IMMEDIATELY;
+    }
+
+    // Connected → never auto-start WiFi
+    if (connectionState == connected)
+    {
+      return DURATION_NEVER;
+    }
+
+    // 30s grace period: radio listens for TX, WiFi suppressed
+    if (millis() - bootTime < 30000)
+    {
+      return 1000;
+    }
+
+    // Grace period expired, no link → WiFi fallback
+    DBGLN("PteroWiFi: starting after %us (state=%d)",
+          (unsigned int)((millis() - bootTime) / 1000), connectionState);
+    setWifiUpdateMode();
+    return DURATION_IMMEDIATELY;
+  }
+  #endif
   #endif
   return DURATION_NEVER;
 }

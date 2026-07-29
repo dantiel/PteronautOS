@@ -15,6 +15,7 @@ class Zephyrus {
 public:
     bool enabled;           // True if MPU6050 WHO_AM_I matched
     bool calibrated;        // True after bias calibration succeeds
+    uint8_t boardRotation;  // Runtime board orientation (0-6, see ZephyrusConfig.h)
 
     // AHRS outputs (updated each update() call)
     float rollDeg;          // Roll angle in degrees
@@ -24,6 +25,7 @@ public:
     // PID correction outputs
     float rollCorrection;   // Roll PID output magnitude
     float yawCorrection;    // Yaw rate PID output magnitude
+    float pitchCorrection;  // Pitch PID output magnitude
     float rudderCorrection; // Combined rudder offset in µs (clamped)
 
     Zephyrus();
@@ -34,6 +36,7 @@ public:
     void onLinkUp();        // Reset integrators on arm
     void onLinkDown();      // Disable stabilization on disarm
     void forceCalibrate();  // Reset bias + restart calibration on demand
+    void setBoardRotation(uint8_t rot);  // Runtime orientation change
 
     // Calibration progress (readable from WebUI state endpoint)
     int    _calibCount;     // Samples accumulated so far
@@ -64,6 +67,9 @@ private:
                        float ax, float ay, float az,
                        float dt);
     void _mahonyReset();
+    void _applyAccelLevelRef(float &ax, float &ay, float &az);
+    void _applyBoardRotation(float &gx, float &gy, float &gz,
+                             float &ax, float &ay, float &az);
 
     // --- Dual PID Controllers ---
     struct PidState {
@@ -74,16 +80,23 @@ private:
 
     PidState _pidRoll;
     PidState _pidYaw;
+    PidState _pidPitch;
 
     float _pidCompute(PidState &s, float error, float dt,
                       float kp, float ki, float kd, float imax);
     void  _pidReset(PidState &s);
+
+    // --- Accel Level Reference ---
+    float  _accelRefRoll;   // Roll offset from level calibration (rad)
+    float  _accelRefPitch;  // Pitch offset from level calibration (rad)
 
     // --- Auto-Calibration ---
     int    _calibStable;
     float  _calibSum[3];
     float  _calibSumSq[3];   // For variance check
     float  _prevGyro[3];     // Previous sample for stability check
+    float  _accelCalSum[3];  // Accel accumulated during calibration
 
     void _calibrationStep();
+    void _finishCalibration(float n);
 };

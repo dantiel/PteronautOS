@@ -1551,8 +1551,6 @@ static void setupTarget()
 
 static void setupBindingFromConfig()
 {
-    // VolatileBind's only function is to prevent loading the stored UID into RAM
-    // which makes the RX boot into bind mode every time
     if (config.GetIsBound())
     {
         memcpy(UID, config.GetUID(), UID_LEN);

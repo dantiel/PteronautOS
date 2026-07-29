@@ -1,0 +1,237 @@
+.mui-panel.mui--text-title= self._t('ornithopter.panel.title')
+
+- if self.linkUp
+  .mui-panel
+    .mui--text-title{style: "font-size:16px;"}= self._t('ornithopter.crsf.title')
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.throttle')
+          %td= self.voiceThrottle
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.cadence')
+          %td= self.voiceCadence
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.aileron')
+          %td= self.voiceAileron
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.elevator')
+          %td= self.voiceElevator
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.rudder')
+          %td= self.voiceRudder
+
+.mui-panel
+  .mui--text-title{style: "font-size:16px;"}= self._t('ornithopter.kernel.title')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('ornithopter.kernel.kernel')
+        %td
+          %select{@change: self._onKernel, style: "width:100%;padding:8px 10px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;"}
+            - for k of [{v:'servo',l: self._t('ornithopter.kernel.servo_drive')},{v:'gearbox',l: self._t('ornithopter.kernel.gearbox')}]
+              - if k.v == self.kernel
+                %option{value: k.v, selected: ""}= k.l
+              - else
+                %option{value: k.v}= k.l
+      %tr
+        %td
+          %b= self._t('ornithopter.kernel.mixer')
+        %td
+          %select{@change: self._onMixer, style: "width:100%;padding:8px 10px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;"}
+            - for p of self._profilesForKernel()
+              - if p.id == self.profileId
+                %option{value: p.id, selected: ""}= "#{p.label} — #{p.name}"
+              - else
+                %option{value: p.id}= "#{p.label} — #{p.name}"
+      %tr
+        %td
+          %b= self._t('ornithopter.kernel.servo_count')
+        %td= self._servoCount()
+      %tr
+        %td
+          %b= self._t('ornithopter.kernel.servo_map')
+        %td
+          %small= self._servoMapStr()
+
+- if self._isServoProfile()
+  .mui-panel
+    .mui--text-title{style: "font-size:16px;"}= self._t('ornithopter.waveform.title')
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.waveform.stroke_ferocity')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.waveform.stroke_ferocity_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.strokeFerocity, @input: self._onSlider('strokeFerocity'), style: "width:200px;"}
+            %span.value= self.strokeFerocity
+            %small.label= self._strokeLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.waveform.return_ferocity')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.waveform.return_ferocity_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.returnFerocity, @input: self._onSlider('returnFerocity'), style: "width:200px;"}
+            %span.value= self.returnFerocity
+            %small.label= self._returnLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.waveform.glide_angle')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.waveform.glide_angle_desc')
+          %td
+            %input{type: "range", min: "-15", max: "15", value: self.glideAngleDeg, @input: self._onSlider('glideAngleDeg'), style: "width:200px;"}
+            %span.value= self.glideAngleDeg
+            | °
+            %small.label= self._glideAngleLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.waveform.servo_speed')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.waveform.servo_speed_desc')
+          %td
+            %input{type: "range", min: "30", max: "150", value: self.cycleRatingSec, @input: self._onSlider('cycleRatingSec'), style: "width:200px;"}
+            %span.value= self._cycleRatingDisplay()
+
+.mui-panel
+  .mui--text-title{style: "font-size:16px;"}= self._t('ornithopter.mixing.title')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('ornithopter.mixing.aileron_scale')
+          %br
+          %small{style: "color:#888;"}= self._t('ornithopter.mixing.aileron_scale_desc')
+        %td
+          %input{type: "range", min: "0", max: "100", value: self.aileronScale, @input: self._onSlider('aileronScale'), style: "width:200px;"}
+          %span.value= self.aileronScale
+          %
+      %tr
+        %td
+          %b= self._t('ornithopter.mixing.elevator_scale')
+          %br
+          %small{style: "color:#888;"}= self._t('ornithopter.mixing.elevator_scale_desc')
+        %td
+          %input{type: "range", min: "0", max: "100", value: self.elevatorScale, @input: self._onSlider('elevatorScale'), style: "width:200px;"}
+          %span.value= self.elevatorScale
+          %
+  - if self._hasRudder()
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.rudder_yaw')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.rudder_yaw_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.rudderYawWeight, @input: self._onSlider('rudderYawWeight'), style: "width:200px;"}
+            %span.value= self.rudderYawWeight
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.rudder_roll')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.rudder_roll_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.rudderRollWeight, @input: self._onSlider('rudderRollWeight'), style: "width:200px;"}
+            %span.value= self.rudderRollWeight
+            %
+  - if self._hasVtail()
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.elevon_scale')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.elevon_scale_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.elevonScale, @input: self._onSlider('elevonScale'), style: "width:200px;"}
+            %span.value= self.elevonScale
+            %
+  - if self._hasMotor()
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.motor_min')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.motor_min_desc')
+          %td
+            %input{type: "range", min: "900", max: "1200", value: self.motorMinUs, @input: self._onSlider('motorMinUs'), style: "width:200px;"}
+            %span.value= self.motorMinUs
+            |  µs
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.motor_max')
+          %td
+            %input{type: "range", min: "1800", max: "2100", value: self.motorMaxUs, @input: self._onSlider('motorMaxUs'), style: "width:200px;"}
+            %span.value= self.motorMaxUs
+            |  µs
+  - if self._isServoProfile()
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.rudder_ferocity')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.rudder_ferocity_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", value: self.rudderFerocityRange, @input: self._onSlider('rudderFerocityRange'), style: "width:200px;"}
+            %span.value= self.rudderFerocityRange
+            %
+
+- if self._isGearboxProfile()
+  .mui-panel
+    .mui--text-title{style: "font-size:16px;"}
+      = self._t('ornithopter.glide.title')
+      %label{style: "cursor:pointer;"}
+        %input{type: "checkbox", checked: self.glideMode, @change: self._onCheck('glideMode'), style: "width:18px;height:18px;accent-color:#ccc;margin-left:12px;vertical-align:middle;"}
+        %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.glideMode ? self._t('ornithopter.glide.enabled') : self._t('ornithopter.glide.disabled')
+    %small{style: "color:#888;"}= self._t('ornithopter.glide.gearbox_desc')
+    - if self.glideMode
+      %table.mui-table.mui-table--bordered
+        %tbody
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.hall_sensor_pin')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.hall_sensor_pin_desc')
+            %td
+              %select{@change: self._onSelect('hallSensorPin'), style: "width:100%;padding:8px 10px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;"}
+                - for pin of self._freeHallPins()
+                  - if pin == self.hallSensorPin
+                    %option{value: pin, selected: ""}= "GPIO#{pin}"
+                  - else
+                    %option{value: pin}= "GPIO#{pin}"
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.ratchet_throttle')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.ratchet_throttle_desc')
+            %td
+              %input{type: "range", min: "0", max: "100", value: self.ratchetThrottlePct, @input: self._onSlider('ratchetThrottlePct'), style: "width:200px;"}
+              %span.value= self.ratchetThrottlePct
+              %
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.ratchet_timeout')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.ratchet_timeout_desc')
+            %td
+              %input{type: "range", min: "100", max: "2000", step: "50", value: self.ratchetTimeoutMs, @input: self._onSlider('ratchetTimeoutMs'), style: "width:200px;"}
+              %span.value= self.ratchetTimeoutMs
+              |  ms
+
+.mui-panel.ptero-centered
+  %button.ptero-btn{@click: self._saveConfig}= self._t('ornithopter.save')
+  %br
+  %small.ptero-muted= self._t('ornithopter.save_hint')

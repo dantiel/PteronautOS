@@ -34,8 +34,8 @@ export function devMockPlugin() {
     // Basic stub data used by multiple endpoints
     const stubState = {
         settings: {
-            product_name: 'ELRS Mock Device',
-            lua_name: "ELRS+PWM 2400RX",
+            product_name: 'PteronautOS',
+            lua_name: "PTERONAUT 8285RX",
             uidtype: 'Flashed',
             ssid: 'ExpressLRS TX',
             mode: 'AP',
@@ -45,8 +45,8 @@ export function devMockPlugin() {
             has_high_band: true,
             reg_domain_low: 'EU868',
             reg_domain_high: 'CE_LBT',
-            target: "Unified_ESP32_LR1121",
-            version: "25.0.0",
+            target: "PteronautOS_ESP8285_2400_RX",
+            version: "4.5.0-pteronaut",
             "git-commit": "3468759",
             "module-type": FEATURES.IS_TX ? "TX" : "RX",
             "radio-type": FEATURES.HAS_SX128X ? "SX128X" : (FEATURES.HAS_LR1121 ? "LR1121" : "SX127X"),

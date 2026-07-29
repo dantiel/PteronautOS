@@ -6,11 +6,12 @@
 #else
   #include <Arduino.h>
 #endif
-#include <algorithm>  // for std::min/std::max
+#include <algorithm>
 
 Ornithopter ornithopter;
 
 extern "C" void pteroLog(const char *fmt, ...);
+
 Ornithopter::Ornithopter()
   : enabled(true)
   , linkUp(false)
@@ -20,27 +21,35 @@ Ornithopter::Ornithopter()
   , voiceRudderFerocity(172), voiceStrokeFerocity(172)
   , voiceReturnFerocity(172), voiceCadence(992)
   , voiceAltitudeHold(172)
-  , servoLeftUs(ORNI_SERVO_CENTER_US)
-  , servoRightUs(ORNI_SERVO_CENTER_US)
-  , servoRudderUs(ORNI_RUDDER_CENTER_US)
 #ifdef ZEPHYRUS_ENABLED
   , gyroRudderCorrection(0.0f)
+  , gyroAileronCorrection(0.0f)
+  , gyroElevatorCorrection(0.0f)
 #endif
   , _lastUpdateUs(0)
 {
-    pteroLog("Ornithopter: initialized — 3-servo waveform mixer ready");
+    for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
+    if (PROFILE_IS_GEARBOX) {
+        _f[SF_MOTOR] = ORNI_SERVO_MIN_US;  // motor stopped
+    }
+    pteroLog("Ornithopter: profile %d — %u servos, %s kernel",
+             (int)ACTIVE_PROFILE, PROFILE.servoCount,
+             PROFILE_IS_GEARBOX ? "gearbox" : "servo");
 }
 
 void Ornithopter::onLinkUp()   { linkUp = true; }
 void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }
 
 void Ornithopter::enterFailsafe() {
-    servoLeftUs   = ORNI_SERVO_CENTER_US;
-    servoRightUs  = ORNI_SERVO_CENTER_US;
-    servoRudderUs = ORNI_RUDDER_CENTER_US;
-    _osc.reset();
+    for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
+    if (PROFILE_IS_GEARBOX) {
+        _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
+    } else {
+        _osc.reset();
+    }
 }
 
+// ─── Helpers ───────────────────────────────────────────────────────
 float Ornithopter::_crsfToFloat(uint16_t raw, float outMin, float outMax) {
     float t = (float)(raw - 172) / (float)(1811 - 172);
     return outMin + t * (outMax - outMin);
@@ -69,7 +78,10 @@ uint16_t Ornithopter::_clampServo(uint16_t us) {
     return us;
 }
 
-void Ornithopter::_computeMixer() {
+// ═══════════════════════════════════════════════════════════════════
+//  SERVO KERNEL — waveform-driven flapping wings
+// ═══════════════════════════════════════════════════════════════════
+void Ornithopter::_computeServoMixer() {
     float aileronNorm  = _crsfToNorm(voiceAileron);
     float elevatorNorm = _crsfToNorm(voiceElevator);
     float throttleUsF  = (float)voiceThrottle;
@@ -130,38 +142,112 @@ void Ornithopter::_computeMixer() {
         angleRight = (int)((aileronCmd + (float)ORNI_GLIDE_ANGLE_DEG + (float)ORNI_NEUTRAL_ANGLE_DEG + elevatorCmd) * ORNI_ANGULAR_MULTIPLIER);
     }
 
-    // Clamp angles to [0, 180]
     if (angleLeft  < 0) angleLeft  = 0; else if (angleLeft  > 180) angleLeft  = 180;
     if (angleRight < 0) angleRight = 0; else if (angleRight > 180) angleRight = 180;
 
     uint16_t usL = (uint16_t)(ORNI_SERVO_MIN_US + (uint32_t)angleLeft  * (ORNI_SERVO_MAX_US - ORNI_SERVO_MIN_US) / 180);
     uint16_t usR = (uint16_t)(ORNI_SERVO_MIN_US + (uint32_t)angleRight * (ORNI_SERVO_MAX_US - ORNI_SERVO_MIN_US) / 180);
 
-    servoLeftUs  = _clampServo(usL);
-    servoRightUs = _clampServo(usR);
+    _f[SF_LEFT_WING]  = _clampServo(usL);
+    _f[SF_RIGHT_WING] = _clampServo(usR);
 
-    // --- Front Rudder ---
-    float rudderNorm   = _crsfToNorm(voiceRudder);
-    float rudderMix    = rudderNorm + (aileronNorm * ORNI_RUDDER_MIX_SCALE);
+    // ── Tail / back wings (profile-dependent) ──
+    float rudderNorm  = _crsfToNorm(voiceRudder);
+    float rudderMix = (rudderNorm * ORNI_RUDDER_YAW_WEIGHT) + (aileronNorm * ORNI_RUDDER_ROLL_WEIGHT);
     if (rudderMix > 1.0f) rudderMix = 1.0f;
     if (rudderMix < -1.0f) rudderMix = -1.0f;
-    servoRudderUs = (uint16_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
+
+    if (ACTIVE_PROFILE == SERVO_4WING) {
+        // Back wings mirror front wings (same waveform)
+        _f[SF_BACK_LEFT_WING]  = _f[SF_LEFT_WING];
+        _f[SF_BACK_RIGHT_WING] = _f[SF_RIGHT_WING];
+    } else if (PROFILE.servoCount >= 3) {
+        // SERVO_2WING_1RUD: crest/head rudder
+        _f[SF_RUDDER] = (uint16_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
+    #ifdef ZEPHYRUS_ENABLED
+                                   + gyroRudderCorrection
+    #endif
+                                  );
+        _f[SF_RUDDER] = _clampServo(_f[SF_RUDDER]);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GEARBOX KERNEL — CRSF channel → PWM, elevon mixing
+// ═══════════════════════════════════════════════════════════════════
+void Ornithopter::_computeGearboxMixer() {
+    float aileronNorm  = _crsfToNorm(voiceAileron);
+    float elevatorNorm = _crsfToNorm(voiceElevator);
+    float throttleNorm = _crsfToNorm(voiceThrottle);
+    float rudderNorm   = _crsfToNorm(voiceRudder);
+    bool armed = (voiceArm > 992);
+
+    // ── Motor ──
+    float motorF = armed ? ((throttleNorm + 1.0f) * 0.5f) : 0.0f;  // 0..1
+    _f[SF_MOTOR] = (uint16_t)(1000.0f + motorF * 1000.0f);
+    _f[SF_MOTOR] = _clampServo(_f[SF_MOTOR]);
+
+    // ── Rudder ──
+    float rudderMix = (rudderNorm * ORNI_RUDDER_YAW_WEIGHT) + (aileronNorm * ORNI_RUDDER_ROLL_WEIGHT);
+    if (rudderMix > 1.0f) rudderMix = 1.0f;
+    if (rudderMix < -1.0f) rudderMix = -1.0f;
+    _f[SF_RUDDER] = (uint16_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
 #ifdef ZEPHYRUS_ENABLED
                                + gyroRudderCorrection
 #endif
                               );
-    servoRudderUs = _clampServo(servoRudderUs);
+    _f[SF_RUDDER] = _clampServo(_f[SF_RUDDER]);
+
+    // ── Tail surfaces ──
+    {
+        float rollPidUs  = 0.0f;
+        float pitchPidUs = 0.0f;
+    #ifdef ZEPHYRUS_ENABLED
+        rollPidUs  = gyroAileronCorrection;
+        pitchPidUs = gyroElevatorCorrection;
+        if (rollPidUs  > ZEPHYR_GEARBOX_CLAMP_US) rollPidUs  = ZEPHYR_GEARBOX_CLAMP_US;
+        if (rollPidUs  < -ZEPHYR_GEARBOX_CLAMP_US) rollPidUs  = -ZEPHYR_GEARBOX_CLAMP_US;
+        if (pitchPidUs > ZEPHYR_GEARBOX_CLAMP_US) pitchPidUs = ZEPHYR_GEARBOX_CLAMP_US;
+        if (pitchPidUs < -ZEPHYR_GEARBOX_CLAMP_US) pitchPidUs = -ZEPHYR_GEARBOX_CLAMP_US;
+    #endif
+
+        if (ACTIVE_PROFILE == GEARBOX_1ELE_1RUD || ACTIVE_PROFILE == GEARBOX_1MOT_1ELE_1RUD) {
+            // Traditional tail: separate elevator + rudder (no elevon mix)
+            float elev = elevatorNorm;
+            if (elev > 1.0f) elev = 1.0f; else if (elev < -1.0f) elev = -1.0f;
+            _f[SF_ELEVATOR] = (uint16_t)((float)ORNI_SERVO_CENTER_US + elev * 500.0f + pitchPidUs);
+            _f[SF_ELEVATOR] = _clampServo(_f[SF_ELEVATOR]);
+        } else {
+            // VTAIL profiles: elevon mix on V-tail surfaces
+            float elevonScale = 500.0f;
+            float leftMix  = aileronNorm + elevatorNorm;
+            float rightMix = aileronNorm - elevatorNorm;
+            if (leftMix  > 1.0f) leftMix  = 1.0f; else if (leftMix  < -1.0f) leftMix  = -1.0f;
+            if (rightMix > 1.0f) rightMix = 1.0f; else if (rightMix < -1.0f) rightMix = -1.0f;
+
+            _f[SF_VTAIL_LEFT]  = (uint16_t)((float)ORNI_SERVO_CENTER_US + leftMix  * elevonScale
+                                            + rollPidUs + pitchPidUs);
+            _f[SF_VTAIL_RIGHT] = (uint16_t)((float)ORNI_SERVO_CENTER_US + rightMix * elevonScale
+                                            - rollPidUs + pitchPidUs);
+            _f[SF_VTAIL_LEFT]  = _clampServo(_f[SF_VTAIL_LEFT]);
+            _f[SF_VTAIL_RIGHT] = _clampServo(_f[SF_VTAIL_RIGHT]);
+        }
+    }
 }
 
+// ─── Update ────────────────────────────────────────────────────────
 bool Ornithopter::update() {
     if (!enabled) return false;
     _readChannels();
     if (!linkUp) {
-        servoLeftUs   = ORNI_SERVO_CENTER_US;
-        servoRightUs  = ORNI_SERVO_CENTER_US;
-        servoRudderUs = ORNI_RUDDER_CENTER_US;
+        for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
+        if (PROFILE_IS_GEARBOX) _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
         return true;
     }
-    _computeMixer();
+    if (PROFILE_IS_GEARBOX) {
+        _computeGearboxMixer();
+    } else {
+        _computeServoMixer();
+    }
     return true;
 }

@@ -30,15 +30,15 @@
 │  Radio   │ ────────→ │ rx_main  │ ───────────→ │ Ornithopter  │ ────────→ │ ServoOutput  │
 │ (TX16S)  │           │ (ELRS)   │              │ mixer+wave   │           │ PWM 50-160Hz │
 └──────────┘           └──────────┘              └──────┬───────┘           └──────┬───────┘
-                                                       │                          │
-                                                       │ gyroRudderCorrection     │
-                                                       │ (µs offset)              │
-                                               ┌───────┴────────┐                 │
-                                               │   Zephyrus     │                 │
-                                               │ MPU6050+AHRS   │                 │
-                                               │ Roll+Yaw PID   │                 │
-                                               └────────────────┘                 │
-                                                                                  │
+                                                        │                          │
+                                                        │ gyroRudderCorrection     │
+                                                        │ (µs offset)              │
+                                                ┌───────┴────────┐                 │
+                                                │   Zephyrus     │                 │
+                                                │ MPU6050+AHRS   │                 │
+                                                │ Roll+Yaw PID   │                 │
+                                                └────────────────┘                 │
+                                                                                   │
                                   GPIO0 ──── Left Wing Servo  ←────────────────────┘
                                   GPIO1 ──── Right Wing Servo + I²C SDA (MPU6050)
                                   GPIO3 ──── Crest Rudder     + I²C SCL (MPU6050)
@@ -199,6 +199,35 @@ pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial
 | 8 | Cadence | Frequency fine-tune | 172–1811 |
 | 9 | Altitude Hold | (reserved, future) | 172–1811 |
 
+### MixerProfile System
+
+Eight hardware profiles selectable via build flag — one codebase, no `#ifdef`.
+
+| # | Profile | Servos | Kernel | PWM Layout |
+|---|---------|--------|--------|------------|
+| 0 | `SERVO_2WING` | 2 | Waveform | Left wing, right wing |
+| 1 | `SERVO_2WING_1RUD` | 3 | Waveform | Left wing, right wing, crest rudder |
+| 2 | `SERVO_4WING` | 4 | Waveform | Front L/R + back L/R wings (back mirrors front) |
+| 3 | `GEARBOX_2VTAIL_1RUD` | 3 | Gearbox | Head rudder, V-tail L, V-tail R |
+| 4 | `GEARBOX_1MOT_2VTAIL` | 3 | Gearbox | Motor, V-tail L, V-tail R |
+| 5 | `GEARBOX_1MOT_2VTAIL_1RUD` | 4 | Gearbox | Head rudder, motor, V-tail L, V-tail R |
+| 6 | `GEARBOX_1ELE_1RUD` | 2 | Gearbox | Head rudder, elevator (traditional tail) |
+| 7 | `GEARBOX_1MOT_1ELE_1RUD` | 3 | Gearbox | Head rudder, motor, elevator (traditional tail) |
+
+**Build flag:**
+```ini
+# pteronautos-rx.ini → build_flags
+-D MIXER_PROFILE=1   # SERVO_2WING_1RUD (default)
+-D MIXER_PROFILE=5   # GEARBOX_1MOT_2VTAIL_1RUD
+-D MIXER_PROFILE=7   # GEARBOX_1MOT_1ELE_1RUD
+```
+
+Legacy `-D ORNITHOPTER_GEARBOX=1` still maps to profile 5.
+
+**Kernel types:**
+- **Waveform** (`SERVO_*`): Phase-accumulator oscillator → tanh-shaped wing curves
+- **Gearbox** (`GEARBOX_*`): CRSF channels mapped to servo µs with elevon/V-tail/ele+rud mixing
+
 ### Flapping Oscillator
 
 The heart of the wing motion is a phase-accumulator oscillator with asymmetric tanh waveshaping:
@@ -214,7 +243,7 @@ Where `ferocity` switches between `strokeFerocity` (downstroke, rawSin ≥ 0) an
 - **Sharp, powerful downstroke** (high ferocity → near-square wave)
 - **Smooth, gradual upstroke** (low ferocity → near-sine)
 
-### Mixer
+### Waveform Kernel (`SERVO_*` profiles)
 
 ```
 aileronCmd  = aileronNorm  × AILERON_SCALE    (0.04)
@@ -231,7 +260,27 @@ else: (glide)
 
 servoLeftUs   = angleToUs(angleLeft)
 servoRightUs  = angleToUs(angleRight)
+// Head rudder (yaw 65% + roll 35% blend):
+rudderMix     = rudderNorm × 0.65 + aileronNorm × 0.35
 servoRudderUs = RUDDER_CENTER + rudderMix × 500 + gyroRudderCorrection
+// SERVO_4WING: back wings mirror front wings
+```
+
+### Gearbox Kernel (`GEARBOX_*` profiles)
+
+```
+// Motor: throttle 0..1 when armed
+motorUs = 1000 + (throttleNorm+1)/2 × 1000   (armed) else 988
+
+// Head rudder: 65% yaw + 35% roll
+rudderUs = RUDDER_CENTER + (rudderNorm×0.65 + aileronNorm×0.35) × 500
+
+// VTAIL (profile 3,4,5): elevon mix on tail surfaces
+vtailLeft   = CENTER + (aileron+elevator) × 500 + PID_corrections
+vtailRight  = CENTER + (aileron−elevator) × 500 + PID_corrections
+
+// Traditional tail (profile 6,7): separate elevator + rudder
+elevatorUs  = CENTER + elevatorNorm × 500 + pitchPid
 ```
 
 ### Key Constants (OrnithopterConfig.h)
@@ -247,7 +296,8 @@ servoRudderUs = RUDDER_CENTER + rudderMix × 500 + gyroRudderCorrection
 | `FEROCITY_MAX` | 8.0 | Sharp square-like waveform |
 | `AILERON_SCALE` | 0.04 | Roll stick sensitivity |
 | `ELEVATOR_SCALE` | 0.06 | Pitch stick sensitivity |
-| `RUDDER_MIX_SCALE` | 0.25 | Aileron→rudder bleed for coordinated turns |
+| `RUDDER_YAW_WEIGHT` | 0.65 | Head rudder: yaw stick component |
+| `RUDDER_ROLL_WEIGHT` | 0.35 | Head rudder: roll (aileron) component |
 | `CYCLE_RATING` | 0.070 | Cadence responsiveness |
 
 ---
@@ -467,6 +517,25 @@ The PteronautOS WebUI is a feature-gated overlay on the standard ExpressLRS web 
 
 Panels are **decorative** — they render sliders and inputs but do not persist to firmware. Telemetry plumbing for live gyro data, PID tuning, and waveform visualization is planned.
 
+### Internationalization (i18n)
+
+The PteronautOS WebUI ships with full 11-language localization, accessible via a dropdown in the header bar.
+
+**Supported languages**: English, Português, Deutsch, Español, Français, हिन्दी, 日本語, 한국어, Русский, 中文, العربية (RTL).
+
+**Architecture**: A singleton `I18nEngine` (155 lines, `src/utils/i18n.js`) provides `t(key, params)` lookups from a flat `Map<string,string>`. Locale switching dispatches a `locale-changed` CustomEvent — all panels re-render synchronously via Lit's `requestUpdate()`. The engine is framework-agnostic, working identically from CoffeeScript panels, JavaScript LitElements, and LithAML templates.
+
+**Integration**:
+- `PteroElement._t()` method (ptero.coffee:282) inherited by all LithAML panels → `self._t('key')` in templates
+- `i18n.t()` direct import for JS components (app.js, footer, debug-console)
+- 172 translation keys across 8 namespaces (`app`, `ornithopter`, `zephyrus`, `servo`, `debug`, `status`, `footer`, `common`)
+- `{{param}}` interpolation for dynamic values (e.g. `Sweeping… pos {{pos}}%`)
+- RTL support for Arabic via `document.documentElement.dir`
+
+**Performance**: 46,000 translations/sec, ~3µs locale switch, +8 KB gzipped to build output. All 1,892 translated strings pass XSS audit (Lit auto-escapes).
+
+**Maintenance**: New languages require creating `src/locales/XX.js` (172 keys) and adding one import line to `i18n-loader.js`. Full guide: [`docs/WEBUI_I18N.md`](WEBUI_I18N.md).
+
 ### Building the WebUI
 
 ```bash
@@ -611,13 +680,28 @@ PteronautOS/
 │       ├── package.json              # "build:pteronautos" script
 │       ├── features.js               # FEATURE:PTERONAUTOS gate logic
 │       ├── src/
-│       │   ├── app.js               # Router, brand header, logo
+│       │   ├── app.js               # Router, brand header, language selector, i18n init
+│       │   ├── lib/
+│       │   │   └── ptero.coffee     # PteroElement base class + _t() i18n bridge
+│       │   ├── utils/
+│       │   │   ├── i18n.js          # I18nEngine singleton (155 lines)
+│       │   │   └── i18n-loader.js   # Locale import bootstrap
+│       │   ├── locales/
+│       │   │   ├── en.js            # English (base/fallback, 172 keys)
+│       │   │   ├── pt.js, de.js, es.js, fr.js, hi.js
+│       │   │   ├── ja.js, ko.js, ru.js, zh.js, ar.js
+│       │   │   └──                  # 11 locales total, ~117 KB raw
 │       │   ├── pages/
-│       │   │   ├── ornithopter-panel.js
-│       │   │   ├── zephyrus-panel.js
-│       │   │   └── servo-panel.js
-│       │   ├── assets/pteronautos.css # Fossil amber/charcoal theme
-│       │   └── components/elrs-footer.js  # Pterosaur ASCII art
+│       │   │   ├── ornithopter-panel.coffee + .lithaml  # 49 i18n calls
+│       │   │   ├── zephyrus-panel.coffee + .lithaml     # 28 i18n calls
+│       │   │   ├── servo-panel.coffee + .lithaml         # 15 i18n calls
+│       │   │   └── debug-console-panel.js               # i18n via t() import
+│       │   ├── assets/
+│       │   │   ├── pteronautos.sass  # Fossil amber/charcoal theme
+│       │   │   ├── elrs.sass, main.sass, icons.sass
+│       │   │   └── mui.css
+│       │   └── components/
+│       │       └── elrs-footer.js   # Clean text footer (ASCII art removed)
 │       └── build-plugins/
 │           ├── feature-blocks-plugin.js  # Strips non-Pteronautos content
 │           └── esp32-header-plugin.js    # gzip → C header

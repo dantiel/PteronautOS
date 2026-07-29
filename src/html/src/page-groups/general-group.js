@@ -11,7 +11,7 @@ import '../pages/buttons-panel.js'
 // /FEATURE:IS_TX
 
 // FEATURE:PTERONAUTOS
-import '../pages/ornithopter-panel.js'
+import '../pages/ornithopter-panel.coffee'
 // /FEATURE:PTERONAUTOS
 
 // FEATURE:NOT IS_TX

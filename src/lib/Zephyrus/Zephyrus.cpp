@@ -85,13 +85,15 @@ Zephyrus::Zephyrus()
     , _begun(false)
     , calibrated(false)
     , rollDeg(0.0f), pitchDeg(0.0f), yawRate(0.0f)
-    , rollCorrection(0.0f), yawCorrection(0.0f), rudderCorrection(0.0f)
+    , rollCorrection(0.0f), yawCorrection(0.0f), pitchCorrection(0.0f), rudderCorrection(0.0f)
     , _mpuPresent(false)
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
     , _lastAhrsUs(0)
+    , boardRotation(ZEPHYR_BOARD_ROTATION)
     , _calibrating(false)
     , _calibCount(0), _calibStable(0)
+    , _accelRefRoll(0.0f), _accelRefPitch(0.0f)
 {
     _q[0] = 1.0f; _q[1] = 0.0f; _q[2] = 0.0f; _q[3] = 0.0f;
     _integralFB[0] = 0.0f; _integralFB[1] = 0.0f; _integralFB[2] = 0.0f;
@@ -102,6 +104,7 @@ Zephyrus::Zephyrus()
         _calibSum[i] = 0.0f;
         _calibSumSq[i] = 0.0f;
         _prevGyro[i] = 0.0f;
+        _accelCalSum[i] = 0.0f;
     }
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
@@ -274,6 +277,7 @@ void Zephyrus::begin() {
     _mahonyReset();
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
+    _pidReset(_pidPitch);
 }
 
 // ---------------------------------------------------------------------------
@@ -282,6 +286,7 @@ void Zephyrus::begin() {
 void Zephyrus::onLinkUp() {
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
+    _pidReset(_pidPitch);
 }
 
 // ---------------------------------------------------------------------------
@@ -290,9 +295,11 @@ void Zephyrus::onLinkUp() {
 void Zephyrus::onLinkDown() {
     rollCorrection = 0.0f;
     yawCorrection = 0.0f;
+    pitchCorrection = 0.0f;
     rudderCorrection = 0.0f;
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
+    _pidReset(_pidPitch);
 }
 
 // ---------------------------------------------------------------------------
@@ -331,9 +338,16 @@ void Zephyrus::_calibrationStep() {
         (float)_gyroRaw[2] / _gyroScale
     };
 
+    // Accumulate accel for level reference
+    float accel[3] = {
+        (float)_accelRaw[0] / _accelScale,
+        (float)_accelRaw[1] / _accelScale,
+        (float)_accelRaw[2] / _accelScale
+    };
     for (int i = 0; i < 3; i++) {
-        _calibSum[i]   += raw[i];
-        _calibSumSq[i] += raw[i] * raw[i];
+        _calibSum[i]    += raw[i];
+        _calibSumSq[i]  += raw[i] * raw[i];
+        _accelCalSum[i] += accel[i];
     }
     _calibCount++;
 
@@ -343,9 +357,7 @@ void Zephyrus::_calibrationStep() {
         for (int i = 0; i < 3; i++) {
             _gyroBias[i] = _calibSum[i] / n;
         }
-        _calibrating = false;
-        calibrated = true;
-        _lastAhrsUs = micros();
+        _finishCalibration(n);
         pteroLog("Zephyrus: calibration timeout — bias accepted after %d samples", _calibCount);
         return;
     }
@@ -361,11 +373,39 @@ void Zephyrus::_calibrationStep() {
                 _gyroBias[i] = mean;
             }
         }
-        _calibrating = false;
-        calibrated = true;
-        _lastAhrsUs = micros();
+        _finishCalibration(n);
         pteroLog("Zephyrus: calibration complete — stable after %d samples", _calibCount);
     }
+}
+
+// ---------------------------------------------------------------------------
+//  Finish calibration: compute accel level reference from accumulated data
+// ---------------------------------------------------------------------------
+void Zephyrus::_finishCalibration(float n) {
+    _calibrating = false;
+    calibrated   = true;
+    _lastAhrsUs  = micros();
+
+    // Compute level reference from mean accel during calibration
+    float ax = _accelCalSum[0] / n;
+    float ay = _accelCalSum[1] / n;
+    float az = _accelCalSum[2] / n;
+
+    // Compute roll/pitch from accel: standard aerospace (Z-up frame for GY-521 flat)
+    // roll = atan2(ay, az): positive = right wing down
+    // pitch = atan2(-ax, sqrt(ay²+az²)): positive = nose up
+    _accelRefRoll  = atan2f(ay, az);
+    float normYZ   = sqrtf(ay * ay + az * az);
+    _accelRefPitch = atan2f(-ax, normYZ);
+
+    // Reset AHRS quaternion to match calibrated level
+    // Start from identity, then the accel level ref will be subtracted on first update()
+    _mahonyReset();
+    rollDeg  = 0.0f;
+    pitchDeg = 0.0f;
+
+    pteroLog("Zephyrus: level ref — accel roll=%.1f° pitch=%.1f°",
+             _accelRefRoll * 57.29578f, _accelRefPitch * 57.29578f);
 }
 
 // ---------------------------------------------------------------------------
@@ -374,16 +414,30 @@ void Zephyrus::_calibrationStep() {
 void Zephyrus::forceCalibrate() {
     if (!enabled) return;
     for (int i = 0; i < 3; i++) {
-        _gyroBias[i]   = 0.0f;
-        _calibSum[i]   = 0.0f;
-        _calibSumSq[i] = 0.0f;
-        _prevGyro[i]   = 0.0f;
+        _gyroBias[i]    = 0.0f;
+        _calibSum[i]    = 0.0f;
+        _calibSumSq[i]  = 0.0f;
+        _prevGyro[i]    = 0.0f;
+        _accelCalSum[i] = 0.0f;
     }
+    _accelRefRoll  = 0.0f;
+    _accelRefPitch = 0.0f;
     _calibCount  = 0;
     _calibStable = 0;
     _calibrating = true;
     calibrated   = false;
+    _mahonyReset();
     pteroLog("Zephyrus: force recalibrate — bias zeroed, restarting");
+}
+
+// ---------------------------------------------------------------------------
+//  Public: setBoardRotation() — runtime orientation change
+// ---------------------------------------------------------------------------
+void Zephyrus::setBoardRotation(uint8_t rot) {
+    if (rot <= 6) {
+        boardRotation = rot;
+        pteroLog("Zephyrus: board rotation set to %d", rot);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -392,23 +446,23 @@ void Zephyrus::forceCalibrate() {
 //  Adapted for PteronautOS: accel corrects roll/pitch, gyro Z for yaw rate
 // ---------------------------------------------------------------------------
 
-// Board rotation helper — remaps MPU-native axes to aircraft frame
-// Compile-time constant ZEPHYR_BOARD_ROTATION selects the transform.
-// When 0 (default): no-op, compiled out by optimizer.
-static void _applyBoardRotation(float &gx, float &gy, float &gz,
-                                float &ax, float &ay, float &az) {
-#if ZEPHYR_BOARD_ROTATION != 0
+// Board rotation helper — remaps MPU-native axes to aircraft frame.
+// Uses runtime boardRotation field (0=DEFAULT, 1=YAW_90, ..., 6=VERT_RIGHT).
+// When 0: no-op, compiled out (optimizer eliminates identity transform).
+void Zephyrus::_applyBoardRotation(float &gx, float &gy, float &gz,
+                                   float &ax, float &ay, float &az) {
+    if (boardRotation == 0) return;  // DEFAULT — no-op
     float tmp;
-    switch (ZEPHYR_BOARD_ROTATION) {
-    case 1: // YAW_90: X→right(Y), Y→fwd(X), Z unchanged
-        tmp = gx; gx = gy; gy = -tmp;  // gyro
-        tmp = ax; ax = ay; ay = -tmp;  // accel
+    switch (boardRotation) {
+    case 1: // YAW_90: X→right(Y), Y→fwd(-X), Z unchanged
+        tmp = gx; gx = gy; gy = -tmp;
+        tmp = ax; ax = ay; ay = -tmp;
         break;
     case 2: // YAW_180: X→back(-X), Y→right(-Y), Z unchanged
         gx = -gx; gy = -gy;
         ax = -ax; ay = -ay;
         break;
-    case 3: // YAW_270: X→left(-Y), Y→back(-X), Z unchanged
+    case 3: // YAW_270: X→left(-Y), Y→back(X), Z unchanged
         tmp = gx; gx = -gy; gy = tmp;
         tmp = ax; ax = -ay; ay = tmp;
         break;
@@ -426,7 +480,6 @@ static void _applyBoardRotation(float &gx, float &gy, float &gz,
         break;
     default: break;
     }
-#endif
 }
 
 void Zephyrus::_mahonyUpdate(float gx, float gy, float gz,
@@ -571,6 +624,49 @@ static void quatToEuler(const float q[4], float &roll, float &pitch) {
 }
 
 // ---------------------------------------------------------------------------
+//  Accel Level Reference — rotates measured accel so calibrated level reads [0,0,1g]
+//  Uses cross-product rotation from calibrated gravity vector to target [0,0,1].
+// ---------------------------------------------------------------------------
+void Zephyrus::_applyAccelLevelRef(float &ax, float &ay, float &az) {
+    // Compute level quaternion from accel reference (stored as roll/pitch in radians)
+    // This maps the calibrated gravity direction → [0,0,1g]
+    float cr = cosf(-_accelRefRoll * 0.5f);
+    float sr = sinf(-_accelRefRoll * 0.5f);
+    float cp = cosf(-_accelRefPitch * 0.5f);
+    float sp = sinf(-_accelRefPitch * 0.5f);
+
+    // Combined rotation quaternion: q_pitch ⊗ q_roll (applied pitch first, then roll)
+    // q = [cp*cr, -sp*sr, cp*sr, sp*cr]  (simplified from quaternion multiplication)
+    float qw = cp * cr + sp * sr;
+    float qx = sp * cr - cp * sr;
+    float qy = cp * sr + sp * cr;
+    float qz = 0.0f;  // No yaw component in level calibration
+
+    // Rotate accel vector by quaternion: a' = q* ⊗ a ⊗ q
+    // Using: a' = a + 2*[qw*(q×a) + q×(q×a)] — Rodriguez formula via quaternion
+    // Actually simpler: compute rotation matrix from quaternion and apply
+    float xx = qx * qx, yy = qy * qy;
+    float xy = qx * qy, xz = qx * qz, yz = qy * qz;
+    float wx = qw * qx, wy = qw * qy, wz = qw * qz;
+
+    float r11 = 1.0f - 2.0f * (yy + qz*qz);
+    float r12 = 2.0f * (xy - wz);
+    float r13 = 2.0f * (xz + wy);
+    float r21 = 2.0f * (xy + wz);
+    float r22 = 1.0f - 2.0f * (xx + qz*qz);
+    float r23 = 2.0f * (yz - wx);
+    float r31 = 2.0f * (xz - wy);
+    float r32 = 2.0f * (yz + wx);
+    float r33 = 1.0f - 2.0f * (xx + yy);
+
+    float rax = r11 * ax + r12 * ay + r13 * az;
+    float ray = r21 * ax + r22 * ay + r23 * az;
+    float raz = r31 * ax + r32 * ay + r33 * az;
+
+    ax = rax; ay = ray; az = raz;
+}
+
+// ---------------------------------------------------------------------------
 //  Public: update() — Main tick: read sensors, AHRS, PID, compute correction
 // ---------------------------------------------------------------------------
 void Zephyrus::update(uint32_t nowUs) {
@@ -609,8 +705,10 @@ void Zephyrus::update(uint32_t nowUs) {
     float az = (float)_accelRaw[2] / _accelScale;
 
     // Apply board rotation: remap MPU axes → aircraft axes
-    // (compiled out when ZEPHYR_BOARD_ROTATION == 0)
     _applyBoardRotation(gx, gy, gz, ax, ay, az);
+
+    // Apply accel level calibration: rotate so calibrated "level" reads [0,0,1g]
+    _applyAccelLevelRef(ax, ay, az);
 
     // Run Mahony AHRS
     _mahonyUpdate(gx, gy, gz, ax, ay, az, dt);
@@ -635,9 +733,21 @@ void Zephyrus::update(uint32_t nowUs) {
                                  ZEPHYR_PID_YAW_KD,
                                  ZEPHYR_PID_YAW_IMAX);
 
-    // --- Crest rudder correction (µs offset) ---
+    // --- Pitch PID (target: 0°, stabilize pitch) ---
+    pitchCorrection = _pidCompute(_pidPitch, -pitchDeg, dt,
+                                   ZEPHYR_PID_PITCH_KP,
+                                   ZEPHYR_PID_PITCH_KI,
+                                   ZEPHYR_PID_PITCH_KD,
+                                   ZEPHYR_PID_PITCH_IMAX);
+
+#ifdef ORNITHOPTER_GEARBOX
+    // Gearbox: rudder = yaw-only (roll + pitch go to leg servos separately)
+    rudderCorrection = yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
+#else
+    // Servo: crest rudder = roll + yaw combined
     rudderCorrection = rollCorrection * ZEPHYR_RUDDER_ROLL_GAIN
                      + yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
+#endif
 
     // Clamp to ±200µs
     if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US)

@@ -135,7 +135,7 @@ export function htmlFeatureBlocksPlugin(env) {
     },
     transform(code, id) {
       if (!id) return null
-      if (/\.(m?js|css)($|\?)/i.test(id)) {
+      if (/\.(m?js|coffee|css)($|\?)/i.test(id)) {
         const out = processJs(code)
         return out === code ? null : { code: out, map: null }
       }

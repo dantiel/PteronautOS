@@ -254,6 +254,43 @@ static bool options_LoadProductAndDeviceName(EspFlashStream &strmFlash)
     }
 }
 
+#if defined(PLATFORM_ESP8266)
+// ESP.getSketchSize() returns only the first segment size, not the
+// full firmware. Parse the flash image header to find the real end.
+// Mirrors UnifiedConfiguration.py::findFirmwareEnd().
+static uint32_t readFlashUnaligned32(uint32_t flashOfs)
+{
+    uint32_t aligned = flashOfs & ~3;
+    uint32_t offset = flashOfs & 3;
+    uint32_t lo;
+    ESP.flashRead(aligned, &lo, 4);
+    if (offset == 0)
+        return lo;
+    uint32_t hi;
+    ESP.flashRead(aligned + 4, &hi, 4);
+    return (lo >> (offset * 8)) | (hi << ((4 - offset) * 8));
+}
+
+static uint32_t findFirmwareEnd()
+{
+    const uint32_t HDR = 0x1000; // ESP8285 flash image header offset
+    uint32_t w;
+    ESP.flashRead(HDR, &w, 4);
+    uint8_t magic = w & 0xFF;
+    uint8_t segments = (w >> 8) & 0xFF;
+    if (magic != 0xE9 || segments == 0)
+        return ESP.getSketchSize();
+
+    uint32_t pos = HDR + 8; // past 8-byte header
+    for (int i = 0; i < segments; i++)
+    {
+        uint32_t segSize = readFlashUnaligned32(pos + 4);
+        pos += 8 + segSize;
+    }
+    return (pos + 15) & ~15; // 16-byte align
+}
+#endif
+
 bool options_init()
 {
     debugCreateInitLogger();
@@ -272,7 +309,11 @@ bool options_init()
 #endif
 
     EspFlashStream strmFlash;
+#if defined(PLATFORM_ESP8266)
+    strmFlash.setBaseAddress(findFirmwareEnd());
+#else
     strmFlash.setBaseAddress(baseAddr + ESP.getSketchSize());
+#endif
 
     // Product / Device Name
     options_LoadProductAndDeviceName(strmFlash);
@@ -281,7 +322,11 @@ bool options_init()
     // hardware.json
     bool hasHardware = hardware_init(strmFlash);
     // flash location of logo image in RGB565 format
+#if defined(PLATFORM_ESP8266)
+    logo_image = findFirmwareEnd() +
+#else
     logo_image = baseAddr + ESP.getSketchSize() +
+#endif
         ELRSOPTS_PRODUCTNAME_SIZE +
         ELRSOPTS_DEVICENAME_SIZE +
         ELRSOPTS_OPTIONS_SIZE +
