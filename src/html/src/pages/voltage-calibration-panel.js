@@ -1,7 +1,9 @@
 import {html, LitElement} from "lit"
+import {unsafeHTML} from "lit/directives/unsafe-html.js"
 import {customElement, state} from "lit/decorators.js"
 import {post, showAlert, saveJSONWithReboot} from "../utils/feedback.js"
 import {loadHardware, setHardwareState} from "../utils/state.js"
+import {i18n} from "../utils/i18n.js"
 
 // FEATURE:IS_8285
 const VOLTAGE_SOURCE_DEFS = [{id: 'vbat', label: 'VBat'}]
@@ -73,7 +75,7 @@ function adcToMilliVolts(adc, offset, scale) {
 
 function formatMilliVolts(milliVolts) {
     if (milliVolts == null) {
-        return 'unavailable'
+        return i18n.t('elrs.common.voltage_unavailable')
     }
     return `${(milliVolts / 1000).toFixed(2)}V`
 }
@@ -83,9 +85,9 @@ function hasCalibrationRange(source) {
 }
 
 function formatLiveVoltage(liveSample, result, source) {
-    if (!liveSample?.hasReading) return 'voltage unavailable'
+    if (!liveSample?.hasReading) return i18n.t('elrs.common.voltage_unavailable')
     const milliVolts = adcToMilliVolts(liveSample.adcMedian, result?.offset ?? source?.offset, result?.scale ?? source?.scale)
-    return milliVolts === null ? 'voltage unavailable' : formatMilliVolts(milliVolts)
+    return milliVolts === null ? i18n.t('elrs.common.voltage_unavailable') : formatMilliVolts(milliVolts)
 }
 
 class PollingLoop {
@@ -226,11 +228,9 @@ class VoltageCalibrationPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Voltage Calibration</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.voltage.title')}</div>
             <div class="mui-panel">
-                <p>
-                    Calibrate voltage sources and save the calibration results to the hardware configuration <code>hardware.json</code>.
-                </p>
+                <p>${unsafeHTML(i18n.t('elrs.voltage.description'))}</p>
                 ${this.error && !this.selectedSource ? html`<div class="mui-panel error-bg">${this.error}</div>` : ''}
                 ${this._renderSourceSelector()}
             </div>
@@ -240,7 +240,7 @@ class VoltageCalibrationPanel extends LitElement {
 
     _renderSourceSelector() {
         if (this.sources.length === 0) {
-            return html`<p>No voltage sources are defined on this target.</p>`
+            return html`<p>${i18n.t('elrs.voltage.no_sources')}</p>`
         }
         return html`
             ${this.sources.map((source) => html`
@@ -248,16 +248,16 @@ class VoltageCalibrationPanel extends LitElement {
                     <div class="mui--text-title">${source.label}</div>
                     ${hasCalibrationRange(source)
                         ? html`
-                            <div>Range: ${hasCalibrationRange(source)
+                            <div>${i18n.t('elrs.voltage.range')}: ${hasCalibrationRange(source)
                                 ? `${formatMilliVolts(source.calMin)} to ${formatMilliVolts(source.calMax)}`
-                                : 'not configured'}</div>
-                            <div>Reading: ${((reading) => {
-                                if (!reading?.sample) return 'loading...'
-                                if (!reading.sample.hasReading) return 'no reading'
+                                : i18n.t('elrs.common.not_configured')}</div>
+                            <div>${i18n.t('elrs.voltage.reading')}: ${((reading) => {
+                                if (!reading?.sample) return i18n.t('elrs.common.loading')
+                                if (!reading.sample.hasReading) return i18n.t('elrs.common.no_reading')
                                 return formatMilliVolts(reading.milliVolts)
                             })(this.sourceReadings[source.id])}</div>
-                            <button class="mui-btn mui-btn--primary mui-btn--small" @click=${() => this._startWizard(source)}>Calibrate</button>
-                        ` : html`<div class="mui-panel warning-bg">Set cal_min/cal_max in Hardware Layout first.</div>`
+                            <button class="mui-btn mui-btn--primary mui-btn--small" @click=${() => this._startWizard(source)}>${i18n.t('elrs.voltage.calibrate_btn')}</button>
+                        ` : html`<div class="mui-panel warning-bg">${i18n.t('elrs.voltage.set_min_max_hint')}</div>`
                     }
                 </div>
             `)}
@@ -266,13 +266,11 @@ class VoltageCalibrationPanel extends LitElement {
 
     _renderWizard() {
         return html`
-            <div class="alert-wrapper" @click=${this._resetWizard}>
-                <div class="alert-frame wizard" @click=${(e) => e.stopPropagation()}>
-                    <div class="alert-header">
-                            <div class="alert-title-row">
-                                <span class="alert-title-icon icon--symbols icon--symbols--voltage" aria-hidden="true"></span>
-                                <div class="wizard-title mui--text-title">${this.selectedSource?.label} Calibration</div>
-                            </div>
+                                <div class="alert-header">
+                                        <div class="alert-title-row">
+                                            <span class="alert-title-icon icon--symbols icon--symbols--voltage" aria-hidden="true"></span>
+                                            <div class="wizard-title mui--text-title">${i18n.t('elrs.voltage.wizard_title', {source: this.selectedSource?.label})}</div>
+                                        </div>
                         <span class="alert-close" @click=${this._resetWizard}>X</span>
                     </div>
                     <div class="alert-body">
@@ -293,10 +291,10 @@ class VoltageCalibrationPanel extends LitElement {
         return html`
             <div class="mui-panel">
                 <div class="mui--text-title">${title}</div>
-                <p>Set a known voltage near ${formatMilliVolts(targetMv)} and capture it.</p>
+                <p>${i18n.t('elrs.voltage.step_desc', {mv: formatMilliVolts(targetMv)})}</p>
                 <div class="mui-textfield">
                     <input type="number" .value=${value} @input=${setValue} />
-                    <label>Known voltage (mV)</label>
+                    <label>${i18n.t('elrs.voltage.known_voltage')}</label>
                 </div>
                 <button class="mui-btn mui-btn--primary" ?disabled=${this.loading || !value} @click=${capture}>${buttonLabel}</button>
             </div>
@@ -307,39 +305,39 @@ class VoltageCalibrationPanel extends LitElement {
         switch (this.step) {
             case STEP_HIGH:
                 return this._renderPointStep(
-                    '1. High Voltage',
+                    i18n.t('elrs.voltage.step1_title'),
                     this.selectedSource?.calMax,
                     this.highVoltage,
                     (e) => this.highVoltage = e.target.value,
                     this._captureHigh,
-                    'Capture High'
+                    i18n.t('elrs.voltage.capture_high')
                 )
             case STEP_LOW:
                 return this._renderPointStep(
-                    '2. Low Voltage',
+                    i18n.t('elrs.voltage.step2_title'),
                     this.selectedSource?.calMin,
                     this.lowVoltage,
                     (e) => this.lowVoltage = e.target.value,
                     this._captureLow,
-                    'Capture Low'
+                    i18n.t('elrs.voltage.capture_low')
                 )
             case STEP_DISCONNECTED:
                 return html`
                     <div class="mui-panel">
-                        <div class="mui--text-title">3. No Voltage</div>
-                        <p>Disconnect the source and capture the idle reading, or skip if it is always present.</p>
-                        <button class="mui-btn mui-btn--primary" ?disabled=${this.loading} @click=${() => this._captureDisconnected(false)}>Capture</button>
-                        <button class="mui-btn" ?disabled=${this.loading} @click=${() => this._captureDisconnected(true)}>Skip</button>
+                        <div class="mui--text-title">${i18n.t('elrs.voltage.step3_title')}</div>
+                        <p>${i18n.t('elrs.voltage.step3_desc')}</p>
+                        <button class="mui-btn mui-btn--primary" ?disabled=${this.loading} @click=${() => this._captureDisconnected(false)}>${i18n.t('elrs.voltage.capture')}</button>
+                        <button class="mui-btn" ?disabled=${this.loading} @click=${() => this._captureDisconnected(true)}>${i18n.t('elrs.voltage.skip')}</button>
                     </div>
                 `
             case STEP_REVIEW:
                 return html`
                     <div class="mui-panel">
-                        <div class="mui--text-title">4. Review</div>
-                        <p>Offset ${this.result.offset}, scale ${this.result.scale}, no-reading ${this.result.noReading}</p>
-                        <p>Fit error: low ${this.result.lowErrorMv}mV, high ${this.result.highErrorMv}mV</p>
-                        <p>Reconnect or adjust the PSU and confirm the live reading before saving.</p>
-                        <button class="mui-btn mui-btn--primary" @click=${this._save}>Save Calibration</button>
+                        <div class="mui--text-title">${i18n.t('elrs.voltage.step4_title')}</div>
+                        <p>${i18n.t('elrs.voltage.review_offset_scale', {offset: this.result.offset, scale: this.result.scale, noReading: this.result.noReading})}</p>
+                        <p>${i18n.t('elrs.voltage.review_fit_error', {lowErrorMv: this.result.lowErrorMv, highErrorMv: this.result.highErrorMv})}</p>
+                        <p>${i18n.t('elrs.voltage.review_hint')}</p>
+                        <button class="mui-btn mui-btn--primary" @click=${this._save}>${i18n.t('elrs.voltage.save_btn')}</button>
                     </div>
                 `
             default:
@@ -355,7 +353,7 @@ class VoltageCalibrationPanel extends LitElement {
             await this._loadSourceReadings()
             this._startSourceReadingsPolling()
         } catch (_e) {
-            this.error = 'Failed to load voltage sources.'
+            this.error = i18n.t('elrs.voltage.load_error')
         }
     }
 
@@ -470,20 +468,18 @@ class VoltageCalibrationPanel extends LitElement {
         })
         const sample = response?.samples?.[source] ?? null
         if (!sample) {
-            throw new Error('Voltage sample request failed')
+            throw new Error(i18n.t('elrs.voltage.sample_failed'))
         }
         return sample
     }
 
     async _handleSampleFailureThreshold() {
-        this._stopLivePolling()
-        this.sourceReadingsPoller.stop()
-        this.error = 'WiFi communications lost while sampling voltage.'
-        await showAlert(
-            'error',
-            'WiFi Communications Lost',
-            'Voltage sampling failed repeatedly. Check the WiFi connection and try again.'
-        )
+                this.error = i18n.t('elrs.voltage.wifi_lost')
+                await showAlert(
+                    'error',
+                    i18n.t('elrs.voltage.wifi_lost_title'),
+                    i18n.t('elrs.voltage.wifi_lost_msg')
+                )
     }
 
     async _sampleCalibrationCandidates(stage, requestedAttens) {
@@ -513,7 +509,7 @@ class VoltageCalibrationPanel extends LitElement {
         const lowVoltageMv = Number(lowCapture?.voltageMv || 0)
         const highVoltageMv = Number(highCapture?.voltageMv || 0)
         if (highVoltageMv <= lowVoltageMv) {
-            throw new Error('High voltage must be greater than low voltage')
+            throw new Error(i18n.t('elrs.voltage.high_gt_low'))
         }
 
         let supportedMinVoltageMv = Number(this.selectedSource?.calMin || 0)
@@ -559,12 +555,12 @@ class VoltageCalibrationPanel extends LitElement {
         }
 
         if (bestSelectionSpan < ADC_MIN_SPAN || bestCaptureSpan < ADC_MIN_SPAN || bestAtten === null) {
-            throw new Error('No usable attenuation/calibration solution found')
+            throw new Error(i18n.t('elrs.voltage.no_usable_solution'))
         }
 
         const scale = Math.trunc((bestCaptureSpan * 10000) / voltageSpan)
         if (scale <= 0) {
-            throw new Error('No usable calibration')
+            throw new Error(i18n.t('elrs.voltage.no_usable_calibration'))
         }
 
         const offset = Math.trunc(bestLowAdc - ((lowVoltageMv * scale) / 10000))
@@ -642,7 +638,7 @@ class VoltageCalibrationPanel extends LitElement {
         await this._runWizardAction(async () => {
             this.highCapture = await this._sampleCalibrationCandidates(STEP_HIGH, CALIBRATION_ATTENUATIONS)
             if (!this.highCapture.viableAttens.length) {
-                throw new Error('All calibrated attenuations saturated at the high point')
+                throw new Error(i18n.t('elrs.voltage.all_saturated'))
             }
             await this._showStep(STEP_LOW)
         })
@@ -665,13 +661,13 @@ class VoltageCalibrationPanel extends LitElement {
                 [`${selectedSourceId}_noreading`]: this.result.noReading
             }
         } catch (_e) {
-            this.error = 'Failed to load hardware.'
+            this.error = i18n.t('elrs.voltage.hardware_load_error')
             return
         }
 
         return saveJSONWithReboot(
-            'Voltage Calibration Saved',
-            'Voltage Calibration Failed',
+            i18n.t('elrs.voltage.saved'),
+            i18n.t('elrs.voltage.save_failed'),
             '/hardware.json',
             nextHardware,
             () => {

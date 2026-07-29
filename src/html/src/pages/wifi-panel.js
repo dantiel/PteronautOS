@@ -3,6 +3,7 @@ import {customElement, query, state} from "lit/decorators.js"
 import {elrsState} from "../utils/state.js"
 import {postWithFeedback} from "../utils/feedback.js"
 import {autocomplete} from "../utils/autocomplete.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('wifi-panel')
 class WifiPanel extends LitElement {
@@ -53,58 +54,54 @@ class WifiPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">WiFi Configuration</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.wifi.title')}</div>
             <div class="mui-panel">
                 <div class="mui-panel info-bg">
-                    ${elrsState.settings.mode !== 'STA' ? 'Currently in Access-Point mode' : 'Currently connected to home network: ' + elrsState.settings.ssid}
+                    ${elrsState.settings.mode !== 'STA' ? i18n.t('elrs.wifi.ap_mode') : i18n.t('elrs.wifi.connected', {ssid: elrsState.settings.ssid})}
                 </div>
-                <p>
-                    Here you can join a network, and save it as your Home network. When you enable WiFi in range of your
-                    Home network, ExpressLRS will automatically connect to it. In Access Point (AP) mode, the network
-                    name is ExpressLRS TX or ExpressLRS RX with password "expresslrs".
-                </p>
+                <p>${i18n.t('elrs.wifi.help')}</p>
                 <form id="sethome" class="mui-form">
                     <div class="mui-radio">
                         <input id="home" type="radio" name="networktype" value="0" checked @change="${this._handleChange}">
-                        <label for="home">Set new home network</label>
+                        <label for="home">${i18n.t('elrs.wifi.set_home')}</label>
                     </div>
                     <div class="mui-radio">
                         <input id="temp" type="radio" name="networktype" value="1" @change="${this._handleChange}">
-                        <label for="temp">Temporarily connect to a network, retain current home network setting</label>
+                        <label for="temp">${i18n.t('elrs.wifi.temp_connect')}</label>
                     </div>
                     <div class="mui-radio">
                         <input id="ap" type="radio" name="networktype" value="2" @change="${this._handleChange}">
-                        <label for="ap">Temporarily enable "Access Point" mode, retain current home network setting</label>
+                        <label for="ap">${i18n.t('elrs.wifi.temp_ap')}</label>
                     </div>
                     <div class="mui-radio">
                         <input id="forget" type="radio" name="networktype" value="3" @change="${this._handleChange}">
-                        <label for="forget">Forget home network setting, always use "Access Point" mode</label>
+                        <label for="forget">${i18n.t('elrs.wifi.forget')}</label>
                     </div>
                     <br/>
                     <div ?hidden="${this.selectedValue !== '0' && this.selectedValue !== '3'}">
                         <div class="mui-textfield">
-                            <input id="interval" size='3' name='wifi-on-interval' type='number' placeholder="Disabled"
+                            <input id="interval" size='3' name='wifi-on-interval' type='number' placeholder="${i18n.t('elrs.wifi.disabled_placeholder')}"
                                    @input="${(e) => this.wifiOnInterval = this._parseWifiOnInterval(e.target.value)}"
                                    .value="${this.wifiOnInterval?.toString() ?? ''}"
                             />
-                            <label for="interval">WiFi "auto on" interval in seconds (leave blank to disable)</label>
+                            <label for="interval">${i18n.t('elrs.wifi.auto_on_label')}</label>
                         </div>
                     </div>
                     <div id="credentials" ?hidden="${this.selectedValue === '2' || this.selectedValue === '3'}">
                         <div class="autocomplete mui-textfield" style="position:relative;">
                             <div style="display: ${this.showLoader ? 'block' : 'none'};" class="loader"></div>
-                            <input id="ssid" name="network" type="text" placeholder="SSID" autocomplete="off"
+                            <input id="ssid" name="network" type="text" placeholder="${i18n.t('elrs.wifi.ssid_placeholder')}" autocomplete="off"
                                 .value="${this.wifiSsid}"
                                 @input="${(e) => this.wifiSsid = e.target.value}"
                             />
-                            <label for="ssid">WiFi SSID</label>
+                            <label for="ssid">${i18n.t('elrs.wifi.ssid_label')}</label>
                         </div>
                         <div class="mui-textfield">
                             <input id="pwd" size='64' name='password' type=${this.passwordVisible ? 'text' : 'password'}
                                 .value="${this.wifiPassword}"
                                 @input="${(e) => this.wifiPassword = e.target.value}"
                             />
-                            <label for="pwd">WiFi password</label>
+                            <label for="pwd">${i18n.t('elrs.wifi.password_label')}</label>
                             <span
                                 @click=${this._togglePasswordVisibility}
                                 style="position:absolute; right:1px; top:50%;">
@@ -123,13 +120,13 @@ class WifiPanel extends LitElement {
                             </span>
                         </div>
                     </div>
-                    <button class="mui-btn mui-btn--primary" @click="${this._setupNetwork}" ?disabled="${!(this.checkChanged() || this.selectedValue!=='0')}">Save</button>
+                    <button class="mui-btn mui-btn--primary" @click="${this._setupNetwork}" ?disabled="${!(this.checkChanged() || this.selectedValue!=='0')}">${i18n.t('elrs.common.save')}</button>
                 </form>
             </div>
             <div class="mui-panel" ?hidden="${elrsState.settings.mode === 'STA'}">
                 <a id="connect" href="#"
-                   @click="${postWithFeedback('Connect to Home Network', 'An error occurred connecting to the Home network', '/connect', null)}">
-                    Connect to Home network: ${elrsState.options['wifi-ssid']}
+                   @click="${postWithFeedback(i18n.t('elrs.common.connect_to_home', {ssid: elrsState.options['wifi-ssid']}), i18n.t('elrs.common.connect_home_error'), '/connect', null)}">
+                    ${i18n.t('elrs.common.connect_to_home', {ssid: elrsState.options['wifi-ssid']})}
                 </a>
             </div>
         `
@@ -144,7 +141,7 @@ class WifiPanel extends LitElement {
         const self = this
         switch (this.selectedValue) {
             case '0':
-                postWithFeedback('Set Home Network', 'An error occurred setting the home network', '/sethome?save', function () {
+                postWithFeedback(i18n.t('elrs.wifi.set_home_title'), i18n.t('elrs.wifi.set_home_error'), '/sethome?save', function () {
                     return new FormData(self.form)
                 }, function () {
                     elrsState.options = {
@@ -158,15 +155,15 @@ class WifiPanel extends LitElement {
                 })(event)
                 break
             case '1':
-                postWithFeedback('Connect To Network', 'An error occurred connecting to the network', '/sethome', function () {
+                postWithFeedback(i18n.t('elrs.wifi.connect_title'), i18n.t('elrs.wifi.connect_error'), '/sethome', function () {
                     return new FormData(self.form)
                 })(event)
                 break
             case '2':
-                postWithFeedback('Start Access Point', 'An error occurred starting the Access Point', '/access', null)(event)
+                postWithFeedback(i18n.t('elrs.wifi.ap_title'), i18n.t('elrs.wifi.ap_error'), '/access', null)(event)
                 break
             case '3':
-                postWithFeedback('Forget Home Network', 'An error occurred forgetting the home network', '/forget', function () {
+                postWithFeedback(i18n.t('elrs.wifi.forget_title'), i18n.t('elrs.wifi.forget_error'), '/forget', function () {
                     return new FormData(self.form)
                 }, function () {
                     elrsState.options = {

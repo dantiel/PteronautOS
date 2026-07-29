@@ -1,7 +1,9 @@
 import {html, LitElement} from "lit"
+import {unsafeHTML} from "lit/directives/unsafe-html.js"
 import {customElement, query, state} from "lit/decorators.js"
 import {elrsState, saveConfig, saveOptions} from "../utils/state.js"
 import {calcMD5} from "../utils/md5.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('binding-panel')
 class BindingPanel extends LitElement {
@@ -31,52 +33,41 @@ class BindingPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Binding</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.binding.title')}</div>
             <div class="mui-panel">
                 <form class="mui-form">
                     <!-- FEATURE:NOT IS_TX -->
                     <div class="mui-select">
                         <select @change="${(e) => {this.bindType = parseInt(e.target.value)}}" .value="${this.bindType}" >
-                            <option value="0">Persistent (Default) - Bind information is stored across reboots
-                            </option>
-                            <option value="1">Volatile - Never store bind information across reboots</option>
-                            <option value="2">Returnable - Unbinding a receiver reverts to flashed binding phrase
-                            </option>
-                            <option value="3">Administered - Binding information can only be edited through web UI
-                            </option>
+                            <option value="0">${i18n.t('elrs.binding.storage_persistent')}</option>
+                            <option value="1">${i18n.t('elrs.binding.storage_volatile')}</option>
+                            <option value="2">${i18n.t('elrs.binding.storage_returnable')}</option>
+                            <option value="3">${i18n.t('elrs.binding.storage_administered')}</option>
                         </select>
-                        <label>Binding storage</label>
+                        <label>${i18n.t('elrs.binding.storage_label')}</label>
                     </div>
                     <!-- /FEATURE:NOT IS_TX -->
                     ${this.bindType !== 1 ? html`
-                        <div>
-                            Enter a new binding phrase to replace the current binding information.
-                            This will persist across reboots, but <b>will be reset</b> if the firmware is flashed with a
-                            binding phrase.
-                            Note: The Binding phrase is not remembered; it is a temporary field used to generate the
-                            binding UID.
-                            You may also enter a binding UID directly (as six comma-separated numbers), which will be
-                            copied to the UID field and used as-is.
-                            <br/><br/>
+                        <div>${unsafeHTML(i18n.t('elrs.binding.phrase_help'))}<br/><br/>
                             <div class="mui-textfield">
-                                <input type="text" id="phrase" placeholder="Binding Phrase"
+                                <input type="text" id="phrase" placeholder="${i18n.t('elrs.binding.phrase_placeholder')}"
                                        @input="${this._updateBindingPhrase}"/>
-                                <label for="phrase">Binding Phrase</label>
+                                <label for="phrase">${i18n.t('elrs.binding.phrase_label')}</label>
                             </div>
                         </div>
                         <div class="mui-textfield">
                             ${this.bindType !== 1 ? html`
                                 <span class="badge" id="uid-type"
-                                      style="background-color: ${this.uidData.bg}; color: ${this.uidData.fg}">${this.uidData.uidtype}</span>
+                                      style="background-color: ${this.uidData.bg}; color: ${this.uidData.fg}">${i18n.t(this.uidData.i18nKey)}</span>
                             ` : ''}
                             <input size='40' type='text' class='array' readonly
                                    value="${this.uid}"/>
-                            <label>Binding UID</label>
+                            <label>${i18n.t('elrs.binding.uid_label')}</label>
                         </div>
                     ` : ''}
                     <button class="mui-btn mui-btn--primary"
                             ?disabled=${!this.checkChanged()}
-                            @click="${this._submitOptions}">Save
+                            @click="${this._submitOptions}">${i18n.t('elrs.common.save')}
                     </button>
                 </form>
             </div>
@@ -118,18 +109,18 @@ class BindingPanel extends LitElement {
 
     #UID_CONFIG = {
         // --- Specific Named Types ---
-        'Flashed': { bg: '#1976D2', fg: 'white', desc: 'The binding UID was generated from a binding phrase set at flash time' },
-        'Overridden': { bg: '#689F38', fg: 'black', desc: 'The binding UID has been generated from a binding phrase previously entered into the "binding phrase" field above' },
-        'Modified': { bg: '#7c00d5', fg: 'white', desc: 'The binding UID has been modified, but not yet saved' },
-        'Volatile': { bg: '#FFA000', fg: 'white', desc: 'The binding UID will be cleared on boot' },
-        'Loaned': { bg: '#FFA000', fg: 'white', desc: 'This receiver is on loan and can be returned using Lua or three-plug' },
+        'Flashed': { bg: '#1976D2', fg: 'white', desc: 'The binding UID was generated from a binding phrase set at flash time', i18nKey: 'elrs.binding.uidtype.flashed' },
+        'Overridden': { bg: '#689F38', fg: 'black', desc: 'The binding UID has been generated from a binding phrase previously entered into the "binding phrase" field above', i18nKey: 'elrs.binding.uidtype.overridden' },
+        'Modified': { bg: '#7c00d5', fg: 'white', desc: 'The binding UID has been modified, but not yet saved', i18nKey: 'elrs.binding.uidtype.modified' },
+        'Volatile': { bg: '#FFA000', fg: 'white', desc: 'The binding UID will be cleared on boot', i18nKey: 'elrs.binding.uidtype.volatile' },
+        'Loaned': { bg: '#FFA000', fg: 'white', desc: 'This receiver is on loan and can be returned using Lua or three-plug', i18nKey: 'elrs.binding.uidtype.loaned' },
 
         // --- Special Case (Fallback 1) ---
-        'DEFAULT_NOT_SET': { bg: '#D50000', fg: 'white', uidtype: 'Not set', desc: 'Using autogenerated binding UID' },
+        'DEFAULT_NOT_SET': { bg: '#D50000', fg: 'white', uidtype: 'Not set', desc: 'Using autogenerated binding UID', i18nKey: 'elrs.binding.uidtype.not_set' },
 
         // --- RX Fallbacks (Fallback 2) ---
-        'RX_NOT_BOUND': { bg: '#FFA000', fg: 'white', uidtype: 'Not bound', desc: 'This receiver is unbound and will boot to binding mode' },
-        'RX_BOUND': { bg: '#1976D2', fg: 'white', uidtype: 'Bound', desc: 'This receiver is bound and will boot waiting for connection' }
+        'RX_NOT_BOUND': { bg: '#FFA000', fg: 'white', uidtype: 'Not bound', desc: 'This receiver is unbound and will boot to binding mode', i18nKey: 'elrs.binding.uidtype.not_bound' },
+        'RX_BOUND': { bg: '#1976D2', fg: 'white', uidtype: 'Bound', desc: 'This receiver is bound and will boot waiting for connection', i18nKey: 'elrs.binding.uidtype.bound' }
     }
 
     _updateUIDType(uidtype) {
@@ -150,7 +141,8 @@ class BindingPanel extends LitElement {
             uidtype: config.uidtype || uidtype,
             bg: config.bg,
             fg: config.fg,
-            desc: config.desc
+            desc: config.desc,
+            i18nKey: config.i18nKey
         }
     }
 

@@ -3,6 +3,7 @@ import {customElement, query, state} from 'lit/decorators.js'
 import '../components/filedrag.js'
 import {loadJSON, post, postWithFeedback, showAlert} from "../utils/feedback.js"
 import {overlay} from '../utils/overlay.js'
+import {i18n} from "../utils/i18n.js"
 
 @customElement('lr1121-updater')
 export class LR1121Updater extends LitElement {
@@ -24,17 +25,16 @@ export class LR1121Updater extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">LR1121 Firmware Flashing</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.lr1121.title')}</div>
             <div class="mui-panel" style="display: ${this.manual ? 'block' : 'none'}; background-color: #FFC107;">
-                LR1121 firmware has been manually flashed before, to revert to the ExpressLRS provided version you can
-                click the button below.<br>
-                <button class="mui-btn mui-btn--small" @click=${this._reset}>Reset and reboot</button>
+                ${i18n.t('elrs.lr1121.manual_warning')}<br>
+                <button class="mui-btn mui-btn--small" @click=${this._reset}>${i18n.t('elrs.lr1121.reset_btn')}</button>
             </div>
             <div class="mui-panel">
                 ${this._renderRadios()}
-                <label>Upload LR1121 firmware binary:</label>
+                <label>${i18n.t('elrs.lr1121.upload_label')}</label>
                 <br>
-                <file-drop label="Upload and Flash" @file-drop=${this._fileSelected}>or drop firmware file here</file-drop>
+                <file-drop label="${i18n.t('elrs.lr1121.upload_btn')}" @file-drop=${this._fileSelected}>${i18n.t('elrs.lr1121.drop_text')}</file-drop>
                 <br/>
                 <h3>${this.status}</h3>
                 <progress .value="${this.progress}" max="100" style="width:100%;"></progress>
@@ -50,11 +50,11 @@ export class LR1121Updater extends LitElement {
         return html`
             <div class="mui-radio">
                 <input id="radio1" type="radio" name="optionsRadio" value="1" checked>
-                <label for="radio1">Update Radio 1</label>
+                <label for="radio1">${i18n.t('elrs.lr1121.update_radio1')}</label>
             </div>
             <div class="mui-radio">
                 <input id="radio2" type="radio" name="optionsRadio" value="2">
-                <label for="radio2">Update Radio 2</label>
+                <label for="radio2">${i18n.t('elrs.lr1121.update_radio2')}</label>
             </div>
         `
     }
@@ -67,24 +67,24 @@ export class LR1121Updater extends LitElement {
             <table class="mui-table mui-table--bordered">
                 <thead>
                 <tr>
-                    <th>Parameter</th>
-                    <th>Radio 1</th>
-                    <th>Radio 2</th>
+                    <th>${i18n.t('elrs.lr1121.th_parameter')}</th>
+                    <th>${i18n.t('elrs.lr1121.th_radio1')}</th>
+                    <th>${i18n.t('elrs.lr1121.th_radio2')}</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <td>Type</td>
+                    <td>${i18n.t('elrs.lr1121.type')}</td>
                     <td><span>${this._dec2hex(r1?.type, 2)}</span></td>
                     <td><span>${r2 ? this._dec2hex(r2.type, 2) : ''}</span></td>
                 </tr>
                 <tr>
-                    <td>Hardware</td>
+                    <td>${i18n.t('elrs.lr1121.hardware')}</td>
                     <td><span>${this._dec2hex(r1?.hardware, 2)}</span></td>
                     <td><span>${r2 ? this._dec2hex(r2.hardware, 2) : ''}</span></td>
                 </tr>
                 <tr>
-                    <td>Firmware</td>
+                    <td>${i18n.t('elrs.lr1121.firmware')}</td>
                     <td><span>${this._dec2hex(r1?.firmware, 4)}</span></td>
                     <td><span>${r2 ? this._dec2hex(r2.firmware, 4) : ''}</span></td>
                 </tr>
@@ -100,7 +100,7 @@ export class LR1121Updater extends LitElement {
 
     pageReady() {
         if (!this.loadPromise) {
-            this.loadPromise = loadJSON('/lr1121.json', 'Failed to load LR1121 firmware status.')
+            this.loadPromise = loadJSON('/lr1121.json', i18n.t('elrs.lr1121.load_error'))
                 .then((data) => {
                     this.data = data
                     this.manual = !!data.manual
@@ -120,7 +120,7 @@ export class LR1121Updater extends LitElement {
     _reset(e) {
         e.preventDefault()
         e.stopPropagation()
-        return postWithFeedback('LR1121 Reset', 'Reset failed', '/reset?lr1121', null)(e)
+        return postWithFeedback(i18n.t('elrs.lr1121.reset_title'), i18n.t('elrs.lr1121.reset_error'), '/reset?lr1121', null)(e)
     }
 
     _fileSelected(e) {
@@ -142,7 +142,7 @@ export class LR1121Updater extends LitElement {
     _progressHandler(event) {
         const percent = Math.round((event.loaded / event.total) * 100)
         this.progress = percent
-        this.status = percent + '% uploaded... please wait'
+        this.status = i18n.t('elrs.common.uploaded_pct', {pct: percent})
     }
 
     _completeHandler(request) {
@@ -153,23 +153,23 @@ export class LR1121Updater extends LitElement {
             const interval = setInterval(() => {
                 percent = percent + 2
                 this.progress = percent
-                this.status = percent + '% flashed... please wait'
+                this.status = i18n.t('elrs.common.flashed_pct', {pct: percent})
                 if (percent >= 100) {
                     clearInterval(interval)
-                    this._showAlert('success', 'Update Succeeded', data.msg)
+                    this._showAlert('success', i18n.t('elrs.common.update_succeeded'), data.msg)
                 }
             }, 100)
         } else {
-            return this._showAlert('error', 'Update Failed', data.msg || '')
+            return this._showAlert('error', i18n.t('elrs.common.update_failed'), data.msg || '')
         }
     }
 
     _errorHandler(request) {
-        return this._showAlert('error', 'Update Failed', request.responseText || '')
+        return this._showAlert('error', i18n.t('elrs.common.update_failed'), request.responseText || '')
     }
 
     _abortHandler(request) {
-        return this._showAlert('info', 'Update Aborted', request.responseText || '')
+        return this._showAlert('info', i18n.t('elrs.common.update_aborted'), request.responseText || '')
     }
 
     _resetProgress() {

@@ -1,6 +1,7 @@
 import {html, LitElement} from "lit"
 import {customElement} from "lit/decorators.js"
 import {saveJSONWithReboot} from "../utils/feedback.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('models-panel')
 class ModelsPanel extends LitElement {
@@ -10,18 +11,18 @@ class ModelsPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Import/Export Module Settings</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.models.title')}</div>
             <div class="mui-panel">
-                <p>Backup your global transmitter module and model configurations stored in the transmitter module.</p>
+                <p>${i18n.t('elrs.models.backup_text')}</p>
                 <div>
                     <a href="/config?export" download="models.json" target="_blank"
-                       class="mui-btn mui-btn--primary">Export module settings</a>
+                       class="mui-btn mui-btn--primary">${i18n.t('elrs.models.export_btn')}</a>
                 </div>
             </div>
             <div class="mui-panel">
-                <p>Restore your transmitter module and model configurations from a previous export.</p>
+                <p>${i18n.t('elrs.models.restore_text')}</p>
                 <div>
-                    <file-drop label="Import module settings" @file-drop=${this.upload}>or drop model JSON configuration file here</file-drop>
+                    <file-drop label="${i18n.t('elrs.models.import_btn')}" @file-drop=${this.upload}>${i18n.t('elrs.models.drop_text')}</file-drop>
                 </div>
             </div>
         `
@@ -31,11 +32,11 @@ class ModelsPanel extends LitElement {
         const files = e.detail.files
         const reader = new FileReader()
         reader.onload = (x) => saveJSONWithReboot(
-            'Upload Model Configuration',
-            'An error occurred while uploading model configuration file',
+            i18n.t('elrs.models.upload_title'),
+            i18n.t('elrs.models.upload_error'),
             '/import',
             x.target.result,
-            () => { return 'Model configuration updated, reboot for them to take effect' }
+            () => { return i18n.t('elrs.models.reboot_msg') }
         )
         reader.readAsText(files[0])
     }

@@ -81,47 +81,47 @@ export class App extends LitElement {
                 <div class="mui-divider"></div>
                 <ul>
                     <li>
-                        <strong>General</strong>
+                        <strong>${this._t('app.menu.general')}</strong>
                         <ul>
-                            <li><a id="menu-info" href="#info"><span class="mui--align-middle icon--symbols icon--symbols--info"></span>Information</a></li>
-                            <li><a id="menu-binding" href="#binding"><span class="mui--align-middle icon--symbols icon--symbols--bind"></span>Binding</a></li>
-                            <li><a id="menu-options" href="#options"><span class="mui--align-middle icon--symbols icon--symbols--options"></span>Options</a></li>
+                            <li><a id="menu-info" href="#info"><span class="mui--align-middle icon--symbols icon--symbols--info"></span>${this._t('app.menu.info')}</a></li>
+                            <li><a id="menu-binding" href="#binding"><span class="mui--align-middle icon--symbols icon--symbols--bind"></span>${this._t('app.menu.binding')}</a></li>
+                            <li><a id="menu-options" href="#options"><span class="mui--align-middle icon--symbols icon--symbols--options"></span>${this._t('app.menu.options')}</a></li>
                             <!-- FEATURE:IS_TX -->
                             ${elrsState.config['button-actions'] && elrsState.config['button-actions'].length !== 0 ? html`
-                                <li><a id="menu-buttons" href="#buttons"><span class="mui--align-middle icon--symbols icon--symbols-buttons"></span>Buttons</a></li>
+                                <li><a id="menu-buttons" href="#buttons"><span class="mui--align-middle icon--symbols icon--symbols-buttons"></span>${this._t('app.menu.buttons')}</a></li>
                             ` : ''}
-                            <li><a id="menu-models" href="#models"><span class="mui--align-middle icon--symbols icon--symbols--settings"></span>Import/Export</a></li>
+                            <li><a id="menu-models" href="#models"><span class="mui--align-middle icon--symbols icon--symbols--settings"></span>${this._t('app.menu.models')}</a></li>
                             <!-- /FEATURE:IS_TX -->
                             <!-- FEATURE:NOT IS_TX -->
                             ${elrsState.config.pwm !== undefined ? html`
-                            <li><a id="menu-connections" href="#connections"><span class="mui--align-middle icon--symbols icon--symbols--connections"></span>Connections</a></li>
+                            <li><a id="menu-connections" href="#connections"><span class="mui--align-middle icon--symbols icon--symbols--connections"></span>${this._t('app.menu.connections')}</a></li>
                             ` : ''}
-                            <li><a id="menu-serial" href="#serial"><span class="mui--align-middle icon--symbols icon--symbols--serial"></span>Serial</a></li>
+                            <li><a id="menu-serial" href="#serial"><span class="mui--align-middle icon--symbols icon--symbols--serial"></span>${this._t('app.menu.serial')}</a></li>
                             <!-- /FEATURE:NOT IS_TX -->
-                            <li><a id="menu-wifi" href="#wifi"><span class="mui--align-middle icon--symbols icon--symbols--wifi"></span>WiFi</a></li>
-                            <li><a id="menu-update" href="#update"><span class="mui--align-middle icon--symbols icon--symbols--update"></span>Update</a></li>
+                            <li><a id="menu-wifi" href="#wifi"><span class="mui--align-middle icon--symbols icon--symbols--wifi"></span>${this._t('app.menu.wifi')}</a></li>
+                            <li><a id="menu-update" href="#update"><span class="mui--align-middle icon--symbols icon--symbols--update"></span>${this._t('app.menu.update')}</a></li>
                             <!-- FEATURE:PTERONAUTOS -->
-                            <li><a id="menu-ornithopter" href="#ornithopter">🦴 Ornithopter</a></li>
+                            <li><a id="menu-ornithopter" href="#ornithopter">${this._t('app.menu.ornithopter')}</a></li>
                             <!-- /FEATURE:PTERONAUTOS -->
                         </ul>
                     </li>
                     <li>
-                        <strong>Advanced</strong>
+                        <strong>${this._t('app.menu.advanced')}</strong>
                         <ul>
-                            <li><a id="menu-hardware" href="#hardware"><span class="mui--align-middle icon--symbols icon--symbols--hardware"></span>Hardware Layout</a></li>
+                            <li><a id="menu-hardware" href="#hardware"><span class="mui--align-middle icon--symbols icon--symbols--hardware"></span>${this._t('app.menu.hardware')}</a></li>
                             <!-- FEATURE:PTERONAUTOS -->
-                            <li><a id="menu-zephyrus" href="#zephyrus">🧭 Zephyrus Gyro</a></li>
-                            <li><a id="menu-servo" href="#servo">⚙️ Servo Output</a></li>
-                            <li><a id="menu-debug" href="#debug">🛠️ Debug Console</a></li>
+                            <li><a id="menu-zephyrus" href="#zephyrus">${this._t('app.menu.zephyrus')}</a></li>
+                            <li><a id="menu-servo" href="#servo">${this._t('app.menu.servo')}</a></li>
+                            <li><a id="menu-debug" href="#debug">${this._t('app.menu.debug')}</a></li>
                             <!-- /FEATURE:PTERONAUTOS -->
                             <!-- FEATURE:NOT IS_TX -->
                             ${elrsState.settings?.voltage_source_count > 0 ? html`
-                                <li><a id="menu-voltage" href="#voltage"><span class="mui--align-middle icon--symbols icon--symbols--voltage"></span>Voltage Calibration</a></li>
+                                <li><a id="menu-voltage" href="#voltage"><span class="mui--align-middle icon--symbols icon--symbols--voltage"></span>${this._t('app.menu.voltage')}</a></li>
                             ` : ''}
                             <!-- /FEATURE:NOT IS_TX -->
-                            <li><a id="menu-cw" href="#cw"><span class="mui--align-middle icon--symbols icon--symbols--wave"></span>Continuous Wave</a></li>
+                            <li><a id="menu-cw" href="#cw"><span class="mui--align-middle icon--symbols icon--symbols--wave"></span>${this._t('app.menu.cw')}</a></li>
                             <!-- FEATURE:HAS_LR1121 -->
-                            <li><a id="menu-lr1121" href="#lr1121"><span class="mui--align-middle icon--symbols icon--symbols--lr1121"></span>LR1121 Firmware</a></li>
+                            <li><a id="menu-lr1121" href="#lr1121"><span class="mui--align-middle icon--symbols icon--symbols--lr1121"></span>${this._t('app.menu.lr1121')}</a></li>
                             <!-- /FEATURE:HAS_LR1121 -->
                         </ul>
                     </li>

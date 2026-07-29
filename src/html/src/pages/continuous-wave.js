@@ -2,6 +2,7 @@ import {html, LitElement} from 'lit'
 import {customElement, query, state} from 'lit/decorators.js'
 import {loadJSON, post} from "../utils/feedback.js"
 import {elrsState} from "../utils/state.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('continuous-wave')
 export class ContinuousWave extends LitElement {
@@ -21,16 +22,9 @@ export class ContinuousWave extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Continuous Wave Generation</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.cw.title')}</div>
             <div class="mui-panel">
-                Put the Semtech chip into a mode where it transmits a continuous wave with a center
-                frequency of ${(this.cwFreq / 1000000)}</span> MHz.
-                <br>
-                You can then measure the actual continuous wave center frequency using a spectrum analyzer and enter
-                the
-                measured value below. This will be used to calculate the accuracy of the crystal used in the device
-                and
-                how far it differs from the ideal frequency.
+                ${i18n.t('elrs.cw.description', {freq: (this.cwFreq / 1000000)})}
                 <form class="mui-form">
                     ${this.data?.radios === 2 ? html`
                         <div class="mui-radio">
@@ -40,7 +34,7 @@ export class ContinuousWave extends LitElement {
                                    value="1"
                                    ?disabled=${this.started}
                                    checked>
-                            <label for="radio1">Radio 1</label>
+                            <label for="radio1">${i18n.t('elrs.cw.radio1')}</label>
                         </div>
                         <div class="mui-radio">
                             <input id="radio2"
@@ -48,7 +42,7 @@ export class ContinuousWave extends LitElement {
                                    name="optionsRadios"
                                    value="2"
                                    ?disabled=${this.started}>
-                            <label for="radio2">Radio 2</label>
+                            <label for="radio2">${i18n.t('elrs.cw.radio2')}</label>
                         </div>
                     ` : html``}
                     <!-- FEATURE:HAS_LR1121 -->
@@ -59,46 +53,46 @@ export class ContinuousWave extends LitElement {
                                    id="optionsSetSubGHz"
                                    ?disabled=${this.started}
                                    @click="${this._updateFreq}">
-                            <label for="optionsSetSubGHz">Set continuous wave center frequency to ${(this.data.center / 1000000)} MHz</label>
+                            <label for="optionsSetSubGHz">${i18n.t('elrs.cw.set_subghz', {freq: (this.data.center / 1000000)})}</label>
                         </div>
                     ` : ''}
                     <!-- /FEATURE:HAS_LR1121 -->
                     <br>
                     <button class="mui-btn mui-btn--primary" ?disabled=${this.started} @click="${this._startCW}">
-                        Start Continuous Wave
+                        ${i18n.t('elrs.cw.start_btn')}
                     </button>
                 </form>
                 <br>
                 <div class="mui-textfield">
                     <input id="measured" type='number' required @input="${this._measured}"
-                           placeholder="Enter peak/center frequency of measured continuous wave"
+                           placeholder="${i18n.t('elrs.cw.measured_placeholder')}"
                            @keypress="${(e) => {
                                if (e.which !== 8 && e.which !== 0 && e.which < 48 || e.which > 57)
                                    e.preventDefault()
                            }}"
                     />
-                    <label for="measured">Measured Center Frequency</label>
+                    <label for="measured">${i18n.t('elrs.cw.measured_label')}</label>
                 </div>
                 <div style="display: ${this.result.calculated ? 'block' : 'none'};">
                     <table class="mui-table mui-table--bordered">
                         <tr>
-                            <td>Calculated XO Freq</td>
+                            <td>${i18n.t('elrs.cw.calc_xo_freq')}</td>
                             <td>${this.result.calculated}</td>
                         </tr>
                         <tr>
-                            <td>Calculated XO Offset (kHz)</td>
+                            <td>${i18n.t('elrs.cw.calc_xo_offset_khz')}</td>
                             <td>${this.result.offset}</td>
                         </tr>
                         <tr>
-                            <td>Calculated XO Offset (PPM)</td>
+                            <td>${i18n.t('elrs.cw.calc_xo_offset_ppm')}</td>
                             <td>${this.result.ppm}</td>
                         </tr>
                         <tr>
-                            <td>Raw Offset (kHz)</td>
+                            <td>${i18n.t('elrs.cw.raw_offset_khz')}</td>
                             <td>${this.result.raw}</td>
                         </tr>
                         <tr>
-                            <td>TL;DR</td>
+                            <td>${i18n.t('elrs.cw.tldr')}</td>
                             <td>${this.result.tldr}</td>
                         </tr>
                     </table>
@@ -114,7 +108,7 @@ export class ContinuousWave extends LitElement {
 
     pageReady() {
         if (!this.loadPromise) {
-            this.loadPromise = loadJSON('/cw', 'Failed to load continuous wave settings.')
+            this.loadPromise = loadJSON('/cw', i18n.t('elrs.cw.load_error'))
                 .then((data) => {
                     this._updateParams(data)
                 }, (error) => {

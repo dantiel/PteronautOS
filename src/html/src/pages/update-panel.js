@@ -1,7 +1,9 @@
 import {html, LitElement} from "lit"
+import {unsafeHTML} from "lit/directives/unsafe-html.js"
 import {customElement, state} from "lit/decorators.js"
 import '../components/filedrag.js'
 import {post, showAlert, showConfirm} from "../utils/feedback.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('update-panel')
 class UpdatePanel extends LitElement {
@@ -18,21 +20,21 @@ class UpdatePanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Firmware Update</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.update.title')}</div>
             <div class="mui-panel">
                 <p>
                     Select the correct
                     <!-- FEATURE:IS_8285 -->
-                    <strong>firmware.bin.gz</strong>
+                    <strong>${i18n.t('elrs.update.filetype_bin_gz')}</strong>
                     <!-- /FEATURE:IS_8285 -->
                     <!-- FEATURE:NOT IS_8285 -->
-                    <strong>firmware.bin</strong>
+                    <strong>${i18n.t('elrs.update.filetype_bin')}</strong>
                     <!-- /FEATURE:NOT IS_8285 -->
                     for your platform otherwise a bad flash may occur.
                     If this happens you will need to recover via USB/Serial. You may also download the <a
-                        href="firmware.bin" title="Click to download firmware">currently running firmware</a>.
+                        href="firmware.bin" title="${i18n.t('elrs.update.download_title')}">currently running firmware</a>.
                 </p>
-                <file-drop id="firmware-upload" label="Select firmware file" @file-drop="${this._fileSelectHandler}">or drop firmware file here</file-drop>
+                <file-drop id="firmware-upload" label="${i18n.t('elrs.update.select_btn')}" @file-drop="${this._fileSelectHandler}">${i18n.t('elrs.update.drop_text')}</file-drop>
                 <br/>
                 <h3 id="status">${this.progressText}</h3>
                 <progress id="progressBar" value="0" max="100" style="width:100%;" .value="${this.progress}"></progress>
@@ -47,16 +49,16 @@ class UpdatePanel extends LitElement {
         const fileExt = files[0].name.split('.').pop()
         // FEATURE:IS_8285
         const expectedFileExt = 'gz'
-        const expectedFileExtDesc = '.bin.gz file. <br />Do NOT decompress/unzip/extract the file!'
+        const expectedFileExtDesc = i18n.t('elrs.update.bin_gz_warning')
         // /FEATURE:IS_8285
         // FEATURE:NOT IS_8285
         const expectedFileExt = 'bin'
-        const expectedFileExtDesc = '.bin file.'
+        const expectedFileExtDesc = i18n.t('elrs.update.bin_warning')
         // /FEATURE:NOT IS_8285
         if (fileExt === expectedFileExt) {
             this._uploadFile(files[0])
         } else {
-            showAlert('error', 'Incorrect File Format', 'You selected the file &quot;' + files[0].name.toString() + '&quot;.<br />The firmware file must be a ' + expectedFileExtDesc)
+            showAlert('error', i18n.t('elrs.update.incorrect_format'), i18n.t('elrs.update.incorrect_format_msg', {filename: files[0].name.toString(), expected: expectedFileExtDesc}))
         }
     }
 
@@ -72,7 +74,7 @@ class UpdatePanel extends LitElement {
     _progressHandler(event) {
         const percent = Math.round((event.loaded / event.total) * 100)
         this.progress = percent
-        this.progressText = percent + '% uploaded... please wait'
+        this.progressText = i18n.t('elrs.common.uploaded_pct', {pct: percent})
     }
 
     _completeHandler(request) {
@@ -83,16 +85,16 @@ class UpdatePanel extends LitElement {
         } else if (data.status === 'mismatch') {
             this._confirmForceUpdate(data.msg)
         } else {
-            this._showAlert('error', 'Update Failed', data.msg)
+            this._showAlert('error', i18n.t('elrs.common.update_failed'), data.msg)
         }
     }
 
     _errorHandler(request) {
-        return this._showAlert('error', 'Update Failed', request.responseText)
+        return this._showAlert('error', i18n.t('elrs.common.update_failed'), request.responseText)
     }
 
     _abortHandler(request) {
-        return this._showAlert('info', 'Update Aborted', request.responseText)
+        return this._showAlert('info', i18n.t('elrs.common.update_aborted'), request.responseText)
     }
 
     _resetProgress() {
@@ -115,26 +117,26 @@ class UpdatePanel extends LitElement {
             percent = percent + 2
             // /FEATURE:NOT IS_8285
             this.progress = percent
-            this.progressText = percent + '% flashed... please wait'
+            this.progressText = i18n.t('elrs.common.flashed_pct', {pct: percent})
             if (percent === 100) {
                 clearInterval(interval)
-                this._showAlert('success', 'Update Succeeded', message)
+                this._showAlert('success', i18n.t('elrs.common.update_succeeded'), message)
             }
         }, 100)
     }
 
     _confirmForceUpdate(message) {
-        showConfirm('Targets Mismatch', message, 'Flash anyway', 'Cancel').then((action) => {
+        showConfirm(i18n.t('elrs.common.targets_mismatch'), message, i18n.t('elrs.common.flash_anyway'), i18n.t('app.cancel')).then((action) => {
             if (action !== 'confirm') return
             const data = new FormData()
             data.append('action', action)
             post('/forceupdate', data, {
                 onload: (xhr) => {
                     const response = JSON.parse(xhr.responseText)
-                    this._showAlert('info', 'Force Update', response.msg)
+                    this._showAlert('info', i18n.t('elrs.common.force_update'), response.msg)
                 },
                 onerror: () => {
-                    this._showAlert('error', 'Force Update', 'An error occurred trying to force the update')
+                    this._showAlert('error', i18n.t('elrs.common.force_update'), i18n.t('elrs.common.force_update_error'))
                 }
             })
         })

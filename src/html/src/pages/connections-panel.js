@@ -1,8 +1,10 @@
 import {html, LitElement} from "lit"
+import {unsafeHTML} from "lit/directives/unsafe-html.js"
 import {customElement} from "lit/decorators.js"
 import {elrsState, saveConfig} from "../utils/state.js"
 import {_} from "../utils/libs.js"
 import {postWithFeedback} from "../utils/feedback.js"
+import {i18n} from "../utils/i18n.js"
 
 export const PWM_MODE_SERIAL = 10
 export const PWM_MODE_SERIAL2RX = 14
@@ -41,22 +43,19 @@ class ConnectionsPanel extends LitElement {
                 }
             </style>
             <div class="connections-panel-root">
-                <div class="mui-panel mui--text-title">PWM Pin Functions</div>
+                <div class="mui-panel mui--text-title">${i18n.t('elrs.connections.title')}</div>
                 <div class="mui-panel warning-bg connections-mobile-warning">
-                    <div class="mui--text-title connections-mobile-title">Rotate to landscape</div>
-                    <p>
-                        The connections panel is too wide for small screens in portrait mode. Please rotate your device to
-                        landscape mode to view and edit the settings.
-                    </p>
+                    <div class="mui--text-title connections-mobile-title">${i18n.t('elrs.connections.mobile_warning_title')}</div>
+                    <p>${i18n.t('elrs.connections.mobile_warning_text')}</p>
                 </div>
                 <div class="mui-panel connections-panel">
-                    Set PWM output mode and failsafe positions.
+                    ${i18n.t('elrs.connections.subtitle')}
                     <form @input=${this._onFormEdited} @change=${this._onFormEdited}>
                         <div class="mui-panel pwmpnl">
                             <table class="pwmtbl mui-table">
                                 <thead>
                                 <tr>
-                                    <th class="fixed-column">Output</th><th class="mui--text-center fixed-column">Features</th><th>Mode</th><th>Input</th><th class="mui--text-center fixed-column">Invert</th><th class="mui--text-center fixed-column">Stretch</th><th class="mui--text-center fixed-column pwmitm">Failsafe Mode</th><th class="mui--text-center fixed-column pwmitm">Failsafe Pos</th>
+                                    <th class="fixed-column">${i18n.t('elrs.connections.th_output')}</th><th class="mui--text-center fixed-column">${i18n.t('elrs.connections.th_features')}</th><th>${i18n.t('elrs.connections.th_mode')}</th><th>${i18n.t('elrs.connections.th_input')}</th><th class="mui--text-center fixed-column">${i18n.t('elrs.connections.th_invert')}</th><th class="mui--text-center fixed-column">${i18n.t('elrs.connections.th_stretch')}</th><th class="mui--text-center fixed-column pwmitm">${i18n.t('elrs.connections.th_failsafe_mode')}</th><th class="mui--text-center fixed-column pwmitm">${i18n.t('elrs.connections.th_failsafe_pos')}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -67,48 +66,43 @@ class ConnectionsPanel extends LitElement {
                         <div>
                             <button class="mui-btn mui-btn--small mui-btn--primary"
                                     ?disabled=${!this.checkChanged()}
-                                    @click="${this._savePwmConfig}">Save</button>
+                                    @click="${this._savePwmConfig}">${i18n.t('elrs.common.save')}</button>
                             ${elrsState.options.customised ? html`
                                 <button class="mui-btn mui-btn--small mui-btn--danger mui--pull-right"
-                                        @click="${postWithFeedback('Reset PWM Configuration', 'An error occurred resetting the configuration', '/reset?config', null)}"
+                                        @click="${postWithFeedback(i18n.t('elrs.connections.reset_pwm_title'), i18n.t('elrs.connections.reset_pwm_error'), '/reset?config', null)}"
                                 >
-                                    Reset to defaults
+                                    ${i18n.t('elrs.common.reset_to_defaults')}
                                 </button>
                             ` : ''}
                         </div>
                     </form>
                     <div class="mui-divider"></div>
                     <ul>
-                        <li><b>Output:</b> Receiver output pin</li>
-                        <li><b>Features:</b> If an output is capable of supporting another function, that is indicated
-                            here
-                        </li>
-                        <li><b>Mode:</b> Output frequency, 10KHz 0-100% duty cycle, binary On/Off, DShot, Serial, or I2C
-                            (some options are pin dependant)
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_output'))}</li>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_features'))}</li>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_mode'))}
                             <ul>
-                                <li>When enabling serial pins, be sure to select the <b>Serial Protocol</b> below and <b>UART
-                                    baud</b> on the <b><a href="#serial">Serial</a></b> page in the menu
-                                </li>
+                                <li>${unsafeHTML(i18n.t('elrs.connections.legend_mode_serial_note'))}</li>
                             </ul>
                         </li>
-                        <li><b>Input:</b> Input channel from the handset</li>
-                        <li><b>Invert:</b> Invert input channel position</li>
-                        <li><b>Stretch:</b> Stretch pulse width from mode limits to 500-2500us</li>
-                        <li><b>Failsafe</b>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_input'))}</li>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_invert'))}</li>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_stretch'))}</li>
+                        <li>${unsafeHTML(i18n.t('elrs.connections.legend_failsafe'))}
                             <ul>
-                                <li>"Set Position" sets the servo to an absolute "Failsafe Pos"
+                                <li>${i18n.t('elrs.connections.legend_fs_set_pos')}
                                     <ul>
-                                        <li>Does not use "Invert" or "Stretch" flags</li>
-                                        <li>Will be converted to binary for "On/Off" mode (>1500us = HIGH)</li>
+                                        <li>${i18n.t('elrs.connections.legend_fs_set_pos_note1')}</li>
+                                        <li>${i18n.t('elrs.connections.legend_fs_set_pos_note2')}</li>
                                     </ul>
                                 </li>
-                                <li>"No Pulses" stops sending pulses
+                                <li>${i18n.t('elrs.connections.legend_fs_no_pulses')}
                                     <ul>
-                                        <li>Unpowers servos</li>
-                                        <li>May disarm ESCs</li>
+                                        <li>${i18n.t('elrs.connections.legend_fs_no_pulses_note1')}</li>
+                                        <li>${i18n.t('elrs.connections.legend_fs_no_pulses_note2')}</li>
                                     </ul>
                                 </li>
-                                <li>"Last Position" continues sending last received channel position</li>
+                                <li>${i18n.t('elrs.connections.legend_fs_last_pos')}</li>
                             </ul>
                         </li>
                     </ul>
@@ -170,26 +164,35 @@ class ConnectionsPanel extends LitElement {
             const stretch = (item.config >> 20) & 1
             const failsafeMode = (item.config >> 22) & 3; // 2 bits
             const features = item.features
-            const modes = ['50Hz', '60Hz', '100Hz', '160Hz', '333Hz', '400Hz', '10KHzDuty', 'On/Off']
+            const modes = [
+                i18n.t('elrs.connections.mode_50hz'),
+                i18n.t('elrs.connections.mode_60hz'),
+                i18n.t('elrs.connections.mode_100hz'),
+                i18n.t('elrs.connections.mode_160hz'),
+                i18n.t('elrs.connections.mode_333hz'),
+                i18n.t('elrs.connections.mode_400hz'),
+                i18n.t('elrs.connections.mode_10khz_duty'),
+                i18n.t('elrs.connections.mode_onoff'),
+            ]
             if (features & 16) {
-                modes.push('DShot', 'DShot-3D')
+                modes.push(i18n.t('elrs.connections.mode_dshot'), i18n.t('elrs.connections.mode_dshot3d'))
             } else {
                 modes.push(undefined, undefined)
             }
             if (features & 1) {
                 this.pinRxIndex = index
-                modes.push('Serial TX')
+                modes.push(i18n.t('elrs.connections.mode_serial_tx'))
             } else if (features & 2) {
                 this.pinTxIndex = index
-                modes.push('Serial RX')
+                modes.push(i18n.t('elrs.connections.mode_serial_rx'))
             } else {
                 modes.push(undefined)
             }
-            modes.push(features & 4 ? 'I2C SCL' : undefined)
-            modes.push(features & 8 ? 'I2C SDA' : undefined)
+            modes.push(features & 4 ? i18n.t('elrs.connections.mode_i2c_scl') : undefined)
+            modes.push(features & 8 ? i18n.t('elrs.connections.mode_i2c_sda') : undefined)
             modes.push(undefined)  // true PWM (not yet supported)
-            modes.push(features & 32 ? 'Serial2 RX' : undefined)
-            modes.push(features & 64 ? 'Serial2 TX' : undefined)
+            modes.push(features & 32 ? i18n.t('elrs.connections.mode_serial2_rx') : undefined)
+            modes.push(features & 64 ? i18n.t('elrs.connections.mode_serial2_tx') : undefined)
             const selectedMode = modes[mode] ? mode : 0
 
             htmlFields.push(html`
@@ -203,7 +206,7 @@ class ConnectionsPanel extends LitElement {
                             'ch13 (AUX9)', 'ch14 (AUX10)', 'ch15 (AUX11)', 'ch16 (AUX12)'])}</td>
                 <td><div class="mui-checkbox mui--text-center"><input type="checkbox" id="pwm_${index}_inv" ?checked="${inv}"></div></td>
                 <td><div class="mui-checkbox mui--text-center"><input type="checkbox" id="pwm_${index}_stretch" ?checked="${stretch}"></div></td>
-                <td>${this._enumSelectGenerate(`pwm_${index}_fsmode`, failsafeMode, ['Set Position', 'No Pulses', 'Last Position'],
+                <td>${this._enumSelectGenerate(`pwm_${index}_fsmode`, failsafeMode, [i18n.t('elrs.connections.fs_set_position'), i18n.t('elrs.connections.fs_no_pulses'), i18n.t('elrs.connections.fs_last_position')],
                         (e) => {this._failsafeModeChange(e.target, index)})}</td>
                 <td><div class="mui-textfield compact"><input id="pwm_${index}_fs" value="${failsafe}" size="6" class="pwmitm" /></div></td></tr>
             `)

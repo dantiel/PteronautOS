@@ -3,17 +3,44 @@ import {customElement} from "lit/decorators.js"
 import {elrsState, saveConfig} from "../utils/state.js"
 import {_renderOptions} from "../utils/libs.js"
 import {post} from "../utils/feedback.js"
+import {i18n} from "../utils/i18n.js"
 
-const ACTION_OPTIONS = ['Unused', 'Increase Power', 'Go to VTX Band Menu', 'Go to VTX Channel Menu',
-    'Send VTX Settings', 'Start WiFi', 'Send Bind Command', 'Start BLE Joystick']
-const LONG_PRESS_OPTIONS = [
-    'for 0.5 seconds', 'for 1 second', 'for 1.5 seconds', 'for 2 seconds',
-    'for 2.5 seconds', 'for 3 seconds', 'for 3.5 seconds', 'for 4 seconds',
-]
-const COUNT_OPTIONS = [
-    '1 time', '2 times', '3 times', '4 times',
-    '5 times', '6 times', '7 times', '8 times',
-]
+function getActionOptions() {
+    return [
+        i18n.t('elrs.buttons.action_0'),
+        i18n.t('elrs.buttons.action_1'),
+        i18n.t('elrs.buttons.action_2'),
+        i18n.t('elrs.buttons.action_3'),
+        i18n.t('elrs.buttons.action_4'),
+        i18n.t('elrs.buttons.action_5'),
+        i18n.t('elrs.buttons.action_6'),
+        i18n.t('elrs.buttons.action_7'),
+    ]
+}
+function getLongPressOptions() {
+    return [
+        i18n.t('elrs.buttons.longpress_0'),
+        i18n.t('elrs.buttons.longpress_1'),
+        i18n.t('elrs.buttons.longpress_2'),
+        i18n.t('elrs.buttons.longpress_3'),
+        i18n.t('elrs.buttons.longpress_4'),
+        i18n.t('elrs.buttons.longpress_5'),
+        i18n.t('elrs.buttons.longpress_6'),
+        i18n.t('elrs.buttons.longpress_7'),
+    ]
+}
+function getCountOptions() {
+    return [
+        i18n.t('elrs.buttons.count_0'),
+        i18n.t('elrs.buttons.count_1'),
+        i18n.t('elrs.buttons.count_2'),
+        i18n.t('elrs.buttons.count_3'),
+        i18n.t('elrs.buttons.count_4'),
+        i18n.t('elrs.buttons.count_5'),
+        i18n.t('elrs.buttons.count_6'),
+        i18n.t('elrs.buttons.count_7'),
+    ]
+}
 
 @customElement('buttons-panel')
 class ButtonsPanel extends LitElement {
@@ -33,11 +60,9 @@ class ButtonsPanel extends LitElement {
     render() {
         this._initializeButtonActions()
         return html`
-            <div class="mui-panel mui--text-title">Button & Actions</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.buttons.title')}</div>
             <div class="mui-panel">
-                <p>
-                    Specify which actions to perform when clicking or long pressing module buttons.
-                </p>
+                <p>${i18n.t('elrs.buttons.help')}</p>
                 <form class="mui-form">
                     ${this.buttonActions.length ? html`
                         <table class="mui-table">
@@ -48,10 +73,10 @@ class ButtonsPanel extends LitElement {
                             </tbody>
                         </table>
                     ` : ``}
-                    ${this._renderColorInput(0, 'User button 1 color')}
-                    ${this._renderColorInput(1, 'User button 2 color')}
+                    ${this._renderColorInput(0, i18n.t('elrs.buttons.color_btn1'))}
+                    ${this._renderColorInput(1, i18n.t('elrs.buttons.color_btn2'))}
                     <button class="mui-btn mui-btn--primary" @click="${this._submitButtonActions}"
-                            ?disabled=${this._isSaveDisabled()}>Save
+                            ?disabled=${this._isSaveDisabled()}>${i18n.t('elrs.common.save')}
                     </button>
                 </form>
             </div>
@@ -74,14 +99,14 @@ class ButtonsPanel extends LitElement {
         return html`
             <tr>
                 <td>
-                    Button ${b + 1}
+                    ${i18n.t('elrs.buttons.btn_label', {n: b + 1})}
                 </td>
                 <td>
                     <div class="mui-select">
                         <select @change="${(e) => this._changeAction(b, p, parseInt(e.target.value))}">
-                            ${_renderOptions(ACTION_OPTIONS, v.action)}
+                            ${_renderOptions(getActionOptions(), v.action)}
                         </select>
-                        <label>Action</label>
+                        <label>${i18n.t('elrs.buttons.action_label')}</label>
                     </div>
                 </td>
                 <td>
@@ -90,11 +115,10 @@ class ButtonsPanel extends LitElement {
                                 ?disabled=${v.action === 0}
                         >
                             <option value='' disabled hidden ?selected="${v.action === 0}"></option>
-                            <option value='false' ?selected="${v['is-long-press'] === false}">Short press (click)
-                            </option>
-                            <option value='true' ?selected="${v['is-long-press'] === true}">Long press (hold)</option>
+                            <option value='false' ?selected="${v['is-long-press'] === false}">${i18n.t('elrs.buttons.press_short')}</option>
+                            <option value='true' ?selected="${v['is-long-press'] === true}">${i18n.t('elrs.buttons.press_long')}</option>
                         </select>
-                        <label>Press</label>
+                        <label>${i18n.t('elrs.buttons.press_label')}</label>
                     </div>
                 </td>
                 <td>
@@ -104,10 +128,10 @@ class ButtonsPanel extends LitElement {
                         >
                             <option value='' disabled hidden ?selected="${v.action === 0}"></option>
                             ${v['is-long-press'] === true
-                                    ? _renderOptions(LONG_PRESS_OPTIONS, v.count)
-                                    : _renderOptions(COUNT_OPTIONS, v.count)}
+                                    ? _renderOptions(getLongPressOptions(), v.count)
+                                    : _renderOptions(getCountOptions(), v.count)}
                         </select>
-                        <label>Count</label>
+                        <label>${i18n.t('elrs.buttons.count_label')}</label>
                     </div>
                 </td>
             </tr>

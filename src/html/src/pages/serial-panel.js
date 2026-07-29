@@ -1,9 +1,11 @@
 import {html, LitElement} from "lit"
+import {unsafeHTML} from "lit/directives/unsafe-html.js"
 import {customElement, state} from "lit/decorators.js"
 import {_renderOptions} from "../utils/libs.js"
 import {elrsState, saveOptionsAndConfig} from "../utils/state.js"
 import {PWM_MODE_SERIAL, PWM_MODE_SERIAL2RX, PWM_MODE_SERIAL2TX} from "./connections-panel.js"
 import {SERIAL_OPTIONS1, SERIAL_OPTIONS2} from "../utils/globals.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('serial-panel')
 class SerialPanel extends LitElement {
@@ -31,17 +33,17 @@ class SerialPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">Serial/UART Options</div>
+            <div class="mui-panel mui--text-title">${i18n.t('elrs.serial.title')}</div>
             ${this._hasSerial1() || this._hasSerial2() ? html`
             <div class="mui-panel">
-                <p>Set the protocol(s) used to communicate with the flight controller or other external devices.</p>
+                <p>${i18n.t('elrs.serial.help')}</p>
                 <form>
                     ${this._hasSerial1() ? html`
                     <div class="mui-select">
                         <select name='serial-protocol' @change=${this._updateSerial1}>
                             ${_renderOptions(SERIAL_OPTIONS1, this.serial1Protocol)}
                         </select>
-                        <label>Serial 1 Protocol</label>
+                        <label>${i18n.t('elrs.serial.serial1_label')}</label>
                     </div>
                     ` : ''}
                     ${this._hasSerial2() ? html`
@@ -49,7 +51,7 @@ class SerialPanel extends LitElement {
                         <select name='serial1-protocol' @change=${this._updateSerial2}>
                             ${_renderOptions(SERIAL_OPTIONS2, this.serial2Protocol)}
                         </select>
-                        <label>Serial 2 Protocol</label>
+                        <label>${i18n.t('elrs.serial.serial2_label')}</label>
                     </div>
                     ` : ''}
                     ${this._displayBaudRate() ? html`
@@ -57,28 +59,24 @@ class SerialPanel extends LitElement {
                         <input size='7' type='number'
                                @input=${(e) => this.baudRate = parseInt(e.target.value)}
                                .value="${this.baudRate}" />
-                        <label>CRSF/Airport baud</label>
+                        <label>${i18n.t('elrs.serial.baud_label')}</label>
                     </div>
                     ` : ''}
                     ${this._sbusSelected() ? html`
                     <div id="sbus-config">
-                        <div class="mui--text-title">SBUS Failsafe</div>
-                        Set the failsafe behaviour when using the SBUS protocol:<br/>
+                        <div class="mui--text-title">${i18n.t('elrs.serial.sbus_title')}</div>
+                        ${i18n.t('elrs.serial.sbus_desc')}<br/>
                         <ul>
-                            <li>"No Pulses" stops sending SBUS data when a connection to the transmitter is lost
-                            </li>
-                            <li>"Last Position" continues to send the last received channel data along with the
-                                FAILSAFE
-                                bit set
-                            </li>
+                            <li>${i18n.t('elrs.serial.sbus_no_pulses_desc')}</li>
+                            <li>${i18n.t('elrs.serial.sbus_last_pos_desc')}</li>
                         </ul>
                         <br/>
                         <div class="mui-select">
                             <select name='serial-failsafe'
                                     @change=${this._setSbusFailsafe}>
-                                ${_renderOptions(['No Pulses', 'Last Position'], this.sbusFailsafe)}
+                                ${_renderOptions([i18n.t('elrs.connections.fs_no_pulses'), i18n.t('elrs.connections.fs_last_position')], this.sbusFailsafe)}
                             </select>
-                            <label>SBUS Failsafe</label>
+                            <label>${i18n.t('elrs.serial.sbus_failsafe_label')}</label>
                         </div>
                     </div>
                     ` : ''}
@@ -87,21 +85,20 @@ class SerialPanel extends LitElement {
                         <input id="dji" type='checkbox'
                                ?checked="${this.djiArmed}"
                                @change="${(e) => {this.djiArmed = e.target.checked}}"/>
-                        <label for="dji">Permanently arm DJI air units</label>
+                        <label for="dji">${i18n.t('elrs.serial.dji_checkbox')}</label>
                     </div>
                     ` : ''}
                     <button class="mui-btn mui-btn--small mui-btn--primary"
                             ?disabled="${!this.checkChanged()}"
                             @click="${this._saveSerial}"
-                    >Save</button>
+                    >${i18n.t('elrs.common.save')}</button>
                 </form>
             </div>
             `: html`
             <div class="mui-panel info-bg">
                 ${this._canConfigureSerialOnPwm() || elrsState.settings.has_serial_pins ? 
-                    html`This is a PWM receiver and none of the pins have been configured as serial IO pins.<br>
-                    To enable serial IO, go to the <a href="#connections">connections</a> menu and configure one or more pins as Serial RX, Serial TX, Serial2 RX, or Serial2 TX.
-                    ` : html`This receiver does not have any serial-capable PWM pins available.`
+                    html`${i18n.t('elrs.serial.no_serial_pins')}<br>${unsafeHTML(i18n.t('elrs.serial.no_serial_pins_hint'))}`
+                    : html`${i18n.t('elrs.serial.no_serial_capable')}`
                 }
             </div>
             `}

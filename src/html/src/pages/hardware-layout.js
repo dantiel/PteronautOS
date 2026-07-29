@@ -1,9 +1,11 @@
 import {html, LitElement, nothing} from 'lit'
+import {unsafeHTML} from 'lit/directives/unsafe-html.js'
 import {customElement, state} from 'lit/decorators.js'
 import {loadJSON, postWithFeedback, saveJSONWithReboot} from '../utils/feedback.js'
 import '../components/filedrag.js'
 import HARDWARE_SCHEMA from '../utils/hardware-schema.js'
 import {_arrayInput, _floatInput, _intInput, _uintInput} from "../utils/libs.js"
+import {i18n} from "../utils/i18n.js"
 
 @customElement('hardware-layout')
 export class HardwareLayout extends LitElement {
@@ -21,26 +23,22 @@ export class HardwareLayout extends LitElement {
     render() {
         return html`
             <div class="hardware-layout">
-                <div class="mui-panel mui--text-title">Hardware Layout</div>
+                <div class="mui-panel mui--text-title">${i18n.t('elrs.hardware.title')}</div>
                 <div class="mui-panel">
-                    Upload target configuration (remember to press "Save Target Configuration" at the bottom of the page):
+                    ${i18n.t('elrs.hardware.upload_hint')}
                     <p>
-                    <file-drop id="filedrag" label="Upload" @file-drop=${this._onFileDrop}>or drop files here</file-drop>
+                    <file-drop id="filedrag" label="${i18n.t('elrs.hardware.upload_btn')}" @file-drop=${this._onFileDrop}>${i18n.t('elrs.hardware.drop_text')}</file-drop>
                 </div>
                 <div class="mui-panel">
                     <div class="mui-panel warning-bg hardware-customised-warning" ?hidden="${!this.customised}">
-                        This hardware configuration has been customized. This can be safely ignored if this is a custom hardware
-                        build or for testing purposes.<br>
-                        You can <a download href="/hardware.json">download</a> the configuration or
-                        <a href="/reset?hardware" @click="${postWithFeedback('Hardware Configuration Reset', 'Reset failed', '/reset?hardware')}">reset</a>
-                        to pre-configured defaults and reboot.
+                        ${unsafeHTML(i18n.t('elrs.hardware.customised_warning'))}
                     </div>
                     <form id="upload_hardware" class="mui-form"
                           @input=${this._onFormEdited}
                           @change=${this._onFormEdited}>
                         ${this._renderTable()}
                         <br>
-                        <input type="button" name="_ignore" value="Save Target Configuration"
+                        <input type="button" name="_ignore" value="${i18n.t('elrs.hardware.save_btn')}"
                                class="mui-btn mui-btn--primary" @click=${this._submitConfig}
                                ?disabled=${this._isSaveDisabled()} />
                     </form>
@@ -109,7 +107,7 @@ export class HardwareLayout extends LitElement {
     pageReady() {
         if (!this.loadPromise) {
             this.loadPromise = this.updateComplete
-                .then(() => loadJSON('/hardware.json', 'Failed to load hardware configuration.'))
+                .then(() => loadJSON('/hardware.json', i18n.t('elrs.hardware.load_error')))
                 .then((data) => {
                     this.customised = !!data.customised
                     this._updateHardwareSettings(data)
@@ -131,10 +129,10 @@ export class HardwareLayout extends LitElement {
             const images = this.querySelectorAll('.' + cls)
             images.forEach(i => i.setAttribute('title', label))
         }
-        add('icon-input', 'Digital Input')
-        add('icon-output', 'Digital Output')
-        add('icon-analog', 'Analog Input')
-        add('icon-pwm', 'PWM Output')
+        add('icon-input', i18n.t('elrs.hardware.digital_input'))
+        add('icon-output', i18n.t('elrs.hardware.digital_output'))
+        add('icon-analog', i18n.t('elrs.hardware.analog_input'))
+        add('icon-pwm', i18n.t('elrs.hardware.pwm_output'))
     }
 
     _onFileDrop(e) {
@@ -169,7 +167,7 @@ export class HardwareLayout extends LitElement {
     _submitConfig() {
         const body = this.currentHardwareJson
         // Use shared helper that prompts for reboot on success
-        saveJSONWithReboot('Upload Succeeded', 'Upload Failed', '/hardware.json', {...JSON.parse(body), "customised": true}, () => {
+        saveJSONWithReboot(i18n.t('elrs.common.update_succeeded'), i18n.t('elrs.common.update_failed'), '/hardware.json', {...JSON.parse(body), "customised": true}, () => {
             this.loadedHardwareJson = body
         })
         return false
