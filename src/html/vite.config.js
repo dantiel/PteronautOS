@@ -72,8 +72,8 @@ export default defineConfig(({ command, mode }) => {
           app: path.resolve(__dirname, 'index.html'),
         },
         output: {
-          entryFileNames: 'assets/[name]-[hash].js',
-          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: '[name]-[hash].js',
+          chunkFileNames: '[name]-[hash].js',
           manualChunks(id) {
             const p = id.split('\\').join('/')
             if (

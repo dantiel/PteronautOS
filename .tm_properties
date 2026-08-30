@@ -9,7 +9,7 @@ spellingLanguage      = "en_GB"
 
 # --- Includes -----------------------------------------------------------------
 includeFiles          = "{$includeFiles,.aethercodex,.tm_properties,.gitignore}"
-includeInBrowser      = "{$includeInBrowser,.cpp,.h,.hpp,.ini,.md,.yml,.json,.aethercodex,.tm-ai}"
+includeInBrowser      = "{$includeInBrowser,.cpp,.h,.hpp,.ini,.md,.yml,.json,.aethercodex,.tm-ai,src/html/src/locales/*.js}"
 includeDirectories    = "{$includeDirectories,src,lib,targets}"
 includeInFileChooser  = "{$includeInFileChooser,.gitignore,*.orig,*.rej,.pio,.env*}"
 includeInFolderSearch = "{$includeInFolderSearch,src,lib,targets}"

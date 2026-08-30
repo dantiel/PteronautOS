@@ -14,5 +14,10 @@ extern device_t ServoOut_device;
 void servoNewChannelsAvailable();
 // Copy the current output values to the config's failsafe values
 void servoCurrentToFailsafeConfig();
+// Servo sweep test — smooth triangle wave across all channels
+void startServoSweep();
+void stopServoSweep();
+bool isServoSweepActive();
+uint16_t getServoSweepUs();
 
 #endif

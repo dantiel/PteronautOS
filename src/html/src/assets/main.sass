@@ -112,11 +112,13 @@ body.hide-sidedrawer #footer
   align-items: center
   gap: 10px
   padding: 0 15px
+  margin-top: 1em
 
 #sidedrawer ul
   list-style: none
 
-#sidedrawer > ul
+#sidedrawer > ul,
+#sidedrawer > ul > li > ul
   padding-left: 0
 
 #sidedrawer > ul > li:first-child
@@ -124,7 +126,7 @@ body.hide-sidedrawer #footer
 
 #sidedrawer strong
   display: block
-  padding: 15px 22px
+  padding: 22px 22px 7px
   cursor: pointer
 
 #sidedrawer strong + ul > li
@@ -134,6 +136,9 @@ body.hide-sidedrawer #footer
   display: block
   padding: 8px 12px
   text-decoration: none
+  overflow: hidden
+  white-space: nowrap
+  text-overflow: ellipsis
 
 #sidedrawer a:hover
   text-decoration: none

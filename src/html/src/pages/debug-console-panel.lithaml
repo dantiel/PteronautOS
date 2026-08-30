@@ -1,0 +1,5 @@
+.mui-panel.mui--text-title
+  %span.panel-icon.icon--symbols.icon--symbols--debug
+  = self._t('debug.panel.title')
+.mui-panel
+  %p= self._t('debug.coming_soon')

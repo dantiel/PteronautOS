@@ -1,0 +1,151 @@
+#sidedrawer.mui--no-user-select
+  #sidedrawer-brand.mui--appbar-line-height.pto-brand
+    .pto-brand-headline
+      %span.pto-brand-pteronaut= self._t('app.brand.pteronaut')
+      %span.pto-brand-os= self._t('app.brand.os')
+    .pto-brand-tagline= self._t('app.brand.tagline')
+    %pre.pto-brand-glyph= self._brandGlyph()
+      
+  .mui-divider
+    
+  %ul
+    %li
+      %a#menu-info{href: "#info"}
+        %span.mui--align-middle.icon--symbols.icon--symbols--info
+        = self._t('app.menu.info')
+    %li
+      %strong= self._t('app.menu.flight')
+      %ul
+        %li
+          %a#menu-ornithopter{href: "#ornithopter"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--ornithopter
+            = self._t('app.menu.ornithopter')
+        %li
+          %a#menu-flight-profiles{href: "#flight-profiles"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--flight
+            = self._t('app.menu.flight_profiles')
+        %li
+          %a#menu-zephyrus{href: "#zephyrus"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--zephyrus
+            = self._t('app.menu.zephyrus')
+            
+    %li
+      %strong= self._t('app.menu.link')
+      %ul
+        %li
+          %a#menu-binding{href: "#binding"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--bind
+            = self._t('app.menu.binding')
+        %li
+          %a#menu-options{href: "#options"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--options
+            = self._t('app.menu.options')
+        - if self._hasConnections()
+          %li
+            %a#menu-connections{href: "#connections"}
+              %span.mui--align-middle.icon--symbols.icon--symbols--connections
+              = self._t('app.menu.connections')
+        - if self._hasVoltage()
+          %li
+            %a#menu-voltage{href: "#voltage"}
+              %span.mui--align-middle.icon--symbols.icon--symbols--voltage
+              = self._t('app.menu.voltage')
+              
+    %li
+      %strong= self._t('app.menu.system')
+      %ul
+        %li
+          %a#menu-servo{href: "#servo"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--servo
+            = self._t('app.menu.servo')
+        %li
+          %a#menu-hardware{href: "#hardware"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--hardware
+            = self._t('app.menu.hardware')
+        %li
+          %a#menu-wifi{href: "#wifi"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--wifi
+            = self._t('app.menu.wifi')
+        %li
+          %a#menu-update{href: "#update"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--update
+            = self._t('app.menu.update')
+        %li
+          %a#menu-backup{href: "#backup"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--backup
+            = self._t('app.menu.backup')
+            
+    %li
+      %strong= self._t('app.menu.diagnostics')
+      %ul
+        %li
+          %a#menu-serial{href: "#serial"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--serial
+            = self._t('app.menu.serial')
+        %li
+          %a#menu-debug{href: "#debug"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--debug
+            = self._t('app.menu.debug')
+            
+%header.elrs-header.mui-appbar#header
+  .backdrop
+  .backdrop-edge
+  .mui--appbar-height.elrs-header-bar
+    .elrs-header-menu
+      %a.mui--align-middle.sidedrawer-toggle.mui--visible-xs-inline-block.mui--visible-sm-inline-block.js-show-sidedrawer{@click: self.showSidedrawer}
+        %svg{width: "40", height: "40", viewBox: "0 0 512 512"}
+          %path{fill: "none", stroke: "currentColor", stroke-linecap: "round", stroke-miterlimit: "10", stroke-width: "48", d: "M88 152h336M88 256h336M88 360h336"}
+      %a.mui--align-middle.sidedrawer-toggle.mui--hidden-xs.mui--hidden-sm.js-hide-sidedrawer{@click: self.hideSidedrawer}
+        %svg{width: "40", height: "40", viewBox: "0 0 512 512"}
+          %path{fill: "none", stroke: "currentColor", stroke-linecap: "round", stroke-miterlimit: "10", stroke-width: "48", d: "M88 152h336M88 256h336M88 360h336"}
+    .elrs-header-meta
+      #product_name= self._target()
+
+      %div
+        %b= self._t('app.header.firmware_rev')
+        = ' ' + self._version() + ' ' + self._band()
+    %div{style: "margin-left:auto;padding-right:12px;"}
+      %select{@change: self._onLangSelect, style: "background:#1c1c22;color:#ccc;border:1px solid #333;border-radius:3px;padding:4px 8px;font-size:12px;cursor:pointer;"}
+        - for loc of self._locales()
+          %option{value: loc.code, ?selected: self._isSelectedLocale(loc.code)}
+            = loc.nativeName
+            
+#content-wrapper
+  .mui--appbar-height
+  #main.mui-container-fluid
+    - choose self.currentRoute
+      - when 'ornithopter'
+        %ornithopter-panel
+      - when 'flight-profiles'
+        %flight-profiles-panel
+      - when 'zephyrus'
+        %zephyrus-panel
+      - when 'servo'
+        %servo-panel
+      - when 'debug'
+        %debug-console-panel
+      - when 'info'
+        %info-panel
+      - when 'binding'
+        %binding-panel
+      - when 'options'
+        %rx-options-panel
+      - when 'wifi'
+        %wifi-panel
+      - when 'update'
+        %update-panel
+      - when 'backup'
+        %backup-panel
+      - when 'connections'
+        - if self._hasConnections()
+          %connections-panel
+      - when 'serial'
+        %serial-panel
+      - when 'voltage'
+        - if self._hasVoltage()
+          %voltage-calibration-panel
+      - when 'hardware'
+        %hardware-layout
+        
+%elrs-footer
+  

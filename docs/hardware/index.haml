@@ -1,0 +1,70 @@
+!!!
+%html{lang: "en", dir: "ltr"}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= "Hardware — PteronautOS"
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "../assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      %a.home-link{href: "../en/", title: "Back to home"} ↑
+      %a{href: "../tutorials/"} Tutorials
+      %a{href: "../hardware/", class: "active"} Hardware
+      %a{href: "../documentation/"} Docs
+    %main.sub-main
+      .sub-content
+        %h1 Hardware
+        %p.sub-lead The boards PteronautOS runs on, and how to wire them.
+
+        %h2 Supported boards
+        %table
+          %tr
+            %td Board
+            %td MCU · Radio
+          %tr
+            %td Generic 2400 PWMP7 v1.0
+            %td ESP8285 · SX1280 2.4 GHz
+          %tr
+            %td Generic 2400 PWMP7 v1.1
+            %td ESP8285 · SX1280 2.4 GHz
+
+        %h2 Key specs
+        %table
+          %tr
+            %td MCU
+            %td ESP8285 @ 80 MHz, 1 MB flash
+          %tr
+            %td Radio
+            %td ExpressLRS 2.4 GHz (SX1280)
+          %tr
+            %td Gyro
+            %td MPU6050 (GY-521) on I2C
+          %tr
+            %td Servos
+            %td 3 PWM channels — left wing, right wing, crest rudder
+
+        %h2 Wiring
+        %p Three servo channels plus the MPU6050 on the I2C bus. The full pin map, I2C wiring, and v1.0/v1.1 revision differences are in the PWMP7 guide.
+        %p
+          %a{href: "../en/hardware/"} PWMP7 receiver compatibility guide →
+        %p
+          %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"} Full hardware reference (HARDWARE.md) →
+    %footer
+      .lang-switch
+        %a{href: "../"} PT
+        %a{href: "../en/", class: "active"} EN
+        %a{href: "../es/"} ES
+        %a{href: "../fr/"} FR
+        %a{href: "../de/"} DE
+        %a{href: "../ru/"} RU
+        %a{href: "../ko/"} 한국어
+        %a{href: "../ja/"} 日本語
+        %a{href: "../zh/"} 中文
+        %a{href: "../ar/"} عربي
+        %a{href: "../hi/"} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
+      %p.credit= "Built on ExpressLRS 4.x"

@@ -27,9 +27,14 @@ static inline void zephyrusUpdate() {
     lastUs = now;
     zephyrus.update(now);
     ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;
+    // Bridge raw pitch PID terms for waveform modulation (Nigredo)
+    ornithopter.gyroPitchPTerm     = zephyrus.pitchPTerm;
+    ornithopter.gyroPitchITerm     = zephyrus.pitchITerm;
+    ornithopter.gyroPitchDTerm     = zephyrus.pitchDTerm;
+    ornithopter.gyroPitchErrorRate = zephyrus.pitchErrorRate;
 #ifdef ORNITHOPTER_GEARBOX
     ornithopter.gyroAileronCorrection  = zephyrus.rollCorrection * ZEPHYR_GEARBOX_ROLL_GAIN;
-    ornithopter.gyroElevatorCorrection = zephyrus.pitchCorrection * ZEPHYR_GEARBOX_PITCH_GAIN;
+    ornithopter.gyroElevatorCorrection = zephyrus.pitchCorrection * ZEPHYR_GEARBOX_PITCH_GAIN * ornithopter.aeroGainScale;
 #endif
 }
 

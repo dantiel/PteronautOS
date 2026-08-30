@@ -185,6 +185,15 @@ API =
     catch e
       {data: null, error: e}
 
+  # Fetch static pteronautos config (fetched once per panel mount, not polled).
+  fetchConfig: ->
+    try
+      resp = await fetch '/pteronautos/config'
+      throw new Error "HTTP #{resp.status}" unless resp.ok
+      {data: await resp.json(), error: null}
+    catch e
+      {data: null, error: e}
+
   # POST to /pteronautos/calibrate  
   calibrate: ->
     try
@@ -222,13 +231,10 @@ API =
 
 Servo =
   # Channel definitions for servo panel table
-  channels: [
-    {ch: 1, name: 'Left Wing',    pin: 0,  pinLabel: 'GPIO0',  center: 1500, min: 1000, max: 2000}
-    {ch: 2, name: 'Right Wing',   pin: 1,  pinLabel: 'GPIO1',  center: 1500, min: 1000, max: 2000}
-    {ch: 3, name: 'Crest Rudder', pin: 3,  pinLabel: 'GPIO3',  center: 1500, min: 1000, max: 2000}
-    {ch: 4, name: 'AUX 4',        pin: 9,  pinLabel: 'GPIO9',  center: 1500, min: 1000, max: 2000}
-    {ch: 5, name: 'AUX 5',        pin: 10, pinLabel: 'GPIO10', center: 1500, min: 1000, max: 2000}
-  ]
+  _makeCh: (ch, name, pin, pinLabel, center = 1500, min = 1000, max = 2000) ->
+    {ch, name, pin, pinLabel, center, min, max
+     centerLabel: "#{center}µs", minLabel: "#{min}µs", maxLabel: "#{max}µs"
+     failsafeLabel: "#{center}µs"}
 
   # Lookup live microsecond value by channel name
   liveUs: λ (ch, servoLeftUs, servoRightUs, servoRudderUs) ->
@@ -245,6 +251,15 @@ Servo =
   liveStyle: λ (liveUs) ->
     changed = liveUs isnt 1500
     "color:#{if changed then '#d4a017' else '#888'};font-family:monospace;"
+
+# Defined after Servo exists to avoid "undefined is not an object" in JS literal
+Servo.channels = [
+  Servo._makeCh 1, 'Left Wing',    0,  'GPIO0'
+  Servo._makeCh 2, 'Right Wing',   1,  'GPIO1'
+  Servo._makeCh 3, 'Crest Rudder', 3,  'GPIO3'
+  Servo._makeCh 4, 'AUX 4',        9,  'GPIO9'
+  Servo._makeCh 5, 'AUX 5',       10,  'GPIO10'
+]
 
 # ═══════════════════════════════════════════════════════════════════
 # Zephyrus — Gyro-specific helpers
@@ -273,6 +288,9 @@ class PteroElement extends LitElement
   # ── Default polling rate in ms ──
   pollRate: 500
   pollError: false
+  # Subclasses that read static config set this true — triggers a one-shot
+  # /pteronautos/config fetch on mount instead of polling config every 2s.
+  needsConfig: false
   _pollTimer: null
   _boundOnLocale: null
 
@@ -287,8 +305,8 @@ class PteroElement extends LitElement
     super.connectedCallback()
     @_boundOnLocale = => @requestUpdate()
     window.addEventListener 'locale-changed', @_boundOnLocale
-    @_doPoll?()
     @_pollTimer = setInterval (=> @_doPoll?()), @pollRate
+    @_loadConfig?() if @needsConfig
 
   # ── Stop the polling loop and locale listener ──
   disconnectedCallback: ->
@@ -309,7 +327,13 @@ class PteroElement extends LitElement
       @pollError = false
       @_applyState data
 
+  # ── One-shot static config fetch. Override _applyConfig in subclasses. ──
+  _loadConfig: ->
+    {data, error} = await API.fetchConfig()
+    @_applyConfig data unless error
+
   # ── Override me ──
   _applyState: (data) -> # no-op
+  _applyConfig: (data) -> # no-op
 
 export {Fmt, Style, Status, API, Servo, Zephyrus, PteroElement}

@@ -405,6 +405,123 @@ export function devMockPlugin() {
                     })
                 }
 
+                // ── PteronautOS mock endpoints ──────────────────────────
+                const pteroState = {
+                    ornithopter: {
+                        orni_enabled: true,
+                        link_up: true,
+                        voice_throttle: 1500,
+                        voice_cadence: 0,
+                        voice_aileron: 0,
+                        voice_elevator: 0,
+                        voice_rudder: 0,
+                        type: 'servo',
+                        profile_id: 1,
+                        model_name: 'Archaeopteryx 135',
+                        cadence_gain: 20,
+                        ferocity_d_gain: 20,
+                        balance_gain: 10,
+                        ferocity_p_gain: 0,
+                        anchor_gain: 0,
+                        resonance_gain: 0,
+                        ssff_gain: 0,
+                        aero_glide_coeff: 40,
+                        aero_flap_coeff: 40,
+                    },
+                    zephyrus: {
+                        enabled: true,
+                        calibrating: false,
+                        calibration_done: true,
+                        roll: 0.5,
+                        pitch: -1.2,
+                        yaw: 0.1,
+                        heading: 45.0,
+                        temperature: 28.5,
+                        roll_correction: 0,
+                        pitch_correction: 0,
+                        yaw_correction: 0,
+                    },
+                }
+
+                if (method === 'GET' && url === '/pteronautos/state') {
+                    // Inject slight jitter to simulate live sensor data
+                    pteroState.zephyrus.roll = (Math.sin(Date.now() * 0.001) * 2.5 + jitter(1)).toFixed(1)
+                    pteroState.zephyrus.pitch = (Math.cos(Date.now() * 0.0013) * 1.8 + jitter(1)).toFixed(1)
+                    pteroState.zephyrus.yaw = (Math.sin(Date.now() * 0.0007) * 0.5).toFixed(1)
+                    return sendJSON(res, pteroState)
+                }
+                if (method === 'POST' && url === '/pteronautos/config') {
+                    return readBody().then((body) => {
+                        try {
+                            const data = JSON.parse(body || '{}')
+                            if (data.cadence_gain !== undefined) pteroState.ornithopter.cadence_gain = Number(data.cadence_gain)
+                            if (data.ferocity_d_gain !== undefined) pteroState.ornithopter.ferocity_d_gain = Number(data.ferocity_d_gain)
+                            if (data.balance_gain !== undefined) pteroState.ornithopter.balance_gain = Number(data.balance_gain)
+                            if (data.ferocity_p_gain !== undefined) pteroState.ornithopter.ferocity_p_gain = Number(data.ferocity_p_gain)
+                            if (data.anchor_gain !== undefined) pteroState.ornithopter.anchor_gain = Number(data.anchor_gain)
+                            if (data.resonance_gain !== undefined) pteroState.ornithopter.resonance_gain = Number(data.resonance_gain)
+                            if (data.ssff_gain !== undefined) pteroState.ornithopter.ssff_gain = Number(data.ssff_gain)
+                            if (data.aero_glide_coeff !== undefined) pteroState.ornithopter.aero_glide_coeff = Number(data.aero_glide_coeff)
+                            if (data.aero_flap_coeff !== undefined) pteroState.ornithopter.aero_flap_coeff = Number(data.aero_flap_coeff)
+                        } catch (e) { /* ignore parse errors */ }
+                        return sendText(res, 'Config saved')
+                    })
+                }
+                if (method === 'POST' && url === '/pteronautos/calibrate') {
+                    return sendJSON(res, {status: 'ok', msg: 'Calibration started'})
+                }
+                if (method === 'POST' && url === '/pteronautos/orientation') {
+                    return readBody().then(() => sendJSON(res, {status: 'ok'}))
+                }
+                if (method === 'GET' && url === '/pteronautos/ping') {
+                    return sendText(res, 'pong')
+                }
+                if (method === 'GET' && url === '/pteronautos/backup') {
+                    // Mirror firmware SaveOrnithopterConfig(): only persisted tuning
+                    // params. Runtime readouts (voice_*, link_up, orni_enabled) are
+                    // NOT config and must never appear in the export.
+                    const pteroConfig = {
+                        flight_profiles: [
+                            { stroke_ferocity: 0, return_ferocity: 0, glide_angle_deg: 0, flapping_angle_deg: 0, aileron_scale: 100, elevator_scale: 100, rudder_ferocity_range: 0, rudder_amplitude_differential: 0, elevator_ferocity_mix: 0, throttle_ferocity_mix: 0 },
+                            { stroke_ferocity: 0, return_ferocity: 0, glide_angle_deg: 0, flapping_angle_deg: 0, aileron_scale: 100, elevator_scale: 100, rudder_ferocity_range: 0, rudder_amplitude_differential: 0, elevator_ferocity_mix: 0, throttle_ferocity_mix: 0 },
+                            { stroke_ferocity: 0, return_ferocity: 0, glide_angle_deg: 0, flapping_angle_deg: 0, aileron_scale: 100, elevator_scale: 100, rudder_ferocity_range: 0, rudder_amplitude_differential: 0, elevator_ferocity_mix: 0, throttle_ferocity_mix: 0 },
+                        ],
+                        active_flight_profile: 0,
+                        rudder_yaw_weight: 65,
+                        rudder_roll_weight: 35,
+                        elevon_scale: 0,
+                        motor_min_us: 988,
+                        motor_max_us: 2012,
+                        glide_mode: false,
+                        hall_sensor_pin: 0,
+                        ratchet_throttle_pct: 0,
+                        ratchet_timeout_ms: 0,
+                        servo_speed: 0,
+                        flap_base_freq: 0,
+                        servo_min_us: 988,
+                        servo_max_us: 2012,
+                        servo_trim: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        profile_id: pteroState.ornithopter.profile_id,
+                        model_name: pteroState.ornithopter.model_name || '',
+                    }
+                    const backup = {
+                        meta: {
+                            type: 'pteronautos',
+                            version: 1,
+                            target: stubState.settings.target,
+                            firmware: stubState.settings.version,
+                            model_name: pteroState.ornithopter.model_name || '',
+                        },
+                        options: stubState.options,
+                        config: stubState.config,
+                        pteronautos: pteroConfig,
+                    }
+                    return sendJSON(res, backup)
+                }
+                if (method === 'POST' && url === '/pteronautos/backup') {
+                    return readBody().then(() => sendJSON(res, {ok: true, rebooting: true}))
+                }
+
                 return next()
             })
         }

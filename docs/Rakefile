@@ -5,8 +5,9 @@ require "haml"
 
 LANGS = %w[pt en ru es de ko zh ar hi fr]
 SUBFOLDERS = %w[en ru es de ko zh ar hi fr]
+PAGES = %w[tutorials hardware documentation]
 
-CLOBBER.include("index.html", *SUBFOLDERS.map { |d| "#{d}/index.html" }, "assets/css/style.css")
+CLOBBER.include("index.html", *SUBFOLDERS.map { |d| "#{d}/index.html" }, *PAGES.map { |p| "#{p}/index.html" }, "assets/css/style.css")
 
 def build_html(lang)
   vars = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
@@ -24,13 +25,26 @@ task :haml do
   LANGS.each { |lang| build_html(lang) }
 end
 
+def build_page(name)
+  template = File.read("#{name}/index.haml", encoding: "UTF-8")
+  engine = Haml::Template.new { template }
+  output = engine.render(Object.new, {})
+  File.write("#{name}/index.html", output, encoding: "UTF-8")
+  puts "  Built #{name}/index.html"
+end
+
+desc "Build standalone sub-pages (Tutorials + Hardware + Docs)"
+task :pages do
+  PAGES.each { |name| build_page(name) }
+end
+
 desc "Build Sass to CSS"
 task :sass do
   sh "bundle exec sass assets/css/style.sass assets/css/style.css"
 end
 
 desc "Build all"
-task build: [:haml, :sass]
+task build: [:haml, :sass, :pages]
 
 desc "Clean and build"
 task rebuild: [:clobber, :build]
@@ -43,7 +57,7 @@ task :watch do
 
   Rake::Task[:build].invoke
 
-  watched = Dir["index.haml", "assets/css/style.sass", "_lang/*.json"]
+  watched = Dir["index.haml", "assets/css/style.sass", "_lang/*.json", *PAGES.map { |p| "#{p}/index.haml" }]
   mtimes = watched.to_h { |f| [f, File.mtime(f)] }
 
   loop do
@@ -57,9 +71,11 @@ task :watch do
     begin
       run_sass  = changed.any? { |f| f.end_with?(".sass") }
       run_haml  = changed.any? { |f| f.end_with?(".haml", ".json") }
-
+      run_pages = changed.any? { |f| f.include?("/index.haml") && PAGES.include?(f.split("/").first) }
+  
       Rake::Task[:sass].reenable; Rake::Task[:sass].invoke if run_sass
       Rake::Task[:haml].reenable; Rake::Task[:haml].invoke if run_haml
+      Rake::Task[:pages].reenable; Rake::Task[:pages].invoke if run_pages
       puts "✓ Rebuilt at #{Time.now.strftime('%H:%M:%S')}"
     rescue => e
       puts "✗ Error: #{e.message}"

@@ -53,25 +53,8 @@
 
 #include "WebContent.h"
 
+#include <cstdarg>
 #include "config.h"
-// --- PteronautOS Web Debug Ring Buffer ---
-#define PTERO_LOG_SIZE 32
-#define PTERO_LOG_LEN  96
-
-static char pteroLogBuf[PTERO_LOG_SIZE][PTERO_LOG_LEN];
-static uint8_t pteroLogHead = 0;
-static uint8_t pteroLogCount = 0;
-
-void pteroLog(const char *fmt, ...) {
-    char *entry = pteroLogBuf[pteroLogHead];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(entry, PTERO_LOG_LEN, fmt, args);
-    va_end(args);
-    pteroLogHead = (pteroLogHead + 1) % PTERO_LOG_SIZE;
-    if (pteroLogCount < PTERO_LOG_SIZE) pteroLogCount++;
-}
-
 #if defined(RADIO_LR1121)
 #include "lr1121.h"
 #endif
@@ -563,14 +546,6 @@ static void GetPteronautosDebug(AsyncWebServerRequest *request)
     JsonObject root = response->getRoot().to<JsonObject>();
     root["firmware"] = "PteronautOS";
 
-    JsonArray logs = root["log"].to<JsonArray>();
-    uint8_t start = (pteroLogCount < PTERO_LOG_SIZE) ? 0
-                   : pteroLogHead;
-    for (uint8_t i = 0; i < pteroLogCount; i++) {
-        uint8_t idx = (start + i) % PTERO_LOG_SIZE;
-        logs.add(pteroLogBuf[idx]);
-    }
-
     response->setLength();
     request->send(response);
 }
@@ -687,122 +662,672 @@ static void GetPteronautosSystem(AsyncWebServerRequest *request)
     response->setLength();
     request->send(response);
 }
+// ── Servo sweep externs (defined in devServoOutput.cpp) ──────────
+extern void startServoSweep();
+extern void stopServoSweep();
+extern bool isServoSweepActive();
+extern uint16_t getServoSweepUs();
+
+// State endpoint — AsyncJsonResponse (same proven pattern as GetPteronautosSystem).
+// ArduinoJson v7 auto-grows from heap. No stack pressure, no format-string bugs.
+static void LoadOrnithopterConfig();
+static void SaveOrnithopterConfig();
 
 static void GetPteronautosState(AsyncWebServerRequest *request)
 {
-    auto *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot().to<JsonObject>();
+    // Telemetry only. The ~90-field static config moved to GetPteronautosConfig
+    // (fetched once per panel mount) so the 2s poll no longer rebuilds it.
+    auto *response = new AsyncJsonResponse(false);
+    if (!response) {
+        // Heap exhausted — don't deref null (ESP8266 new returns nullptr).
+        request->send(500, "application/json", "{\"error\":\"oom\"}");
+        return;
+    }
+    JsonObject root = response->getRoot().as<JsonObject>();
 
-    // System info
-    root["firmware"] = "PteronautOS";
-    root["version"] = "0.1.0";
+    // System diagnostics (cheap; no float formatting).
     root["uptime_ms"] = millis();
+#if defined(PLATFORM_ESP8266)
+    root["free_heap"] = (int)ESP.getFreeHeap();
+#endif
+    root["reset_reason"] = ESP.getResetReason().c_str();
 
-    // Zephyrus gyro state
-#ifdef ZEPHYRUS_ENABLED
-    {
-        JsonObject zeph = root["zephyrus"].to<JsonObject>();
-        zeph["enabled"] = zephyrus.enabled;
-        zeph["calibrated"] = zephyrus.calibrated;
-        zeph["calibrating"] = zephyrus._calibrating;
-        zeph["calib_samples"] = zephyrus._calibCount;
-        zeph["roll_deg"] = zephyrus.rollDeg;
-        zeph["pitch_deg"] = zephyrus.pitchDeg;
-        zeph["yaw_rate"] = zephyrus.yawRate;
-        zeph["roll_correction"] = zephyrus.rollCorrection;
-        zeph["yaw_correction"] = zephyrus.yawCorrection;
-        zeph["pitch_correction"] = zephyrus.pitchCorrection;
-        zeph["rudder_correction"] = zephyrus.rudderCorrection;
-        zeph["board_rotation"] = zephyrus.boardRotation;
-    }
+    JsonObject orni = root["ornithopter"].to<JsonObject>();
+    orni["servo_left_wing_us"]  = ornithopter.funcValue(SF_LEFT_WING);
+    orni["servo_right_wing_us"] = ornithopter.funcValue(SF_RIGHT_WING);
+    orni["servo_rudder_us"]     = ornithopter.funcValue(SF_RUDDER);
+    orni["servo_motor_us"]      = ornithopter.funcValue(SF_MOTOR);
+    orni["voice_throttle"]      = ornithopter.voiceThrottle;
+    orni["voice_freq"]          = ornithopter.voiceFreq;
+    orni["voice_profile"]       = ornithopter.voiceProfile;
+    orni["voice_aileron"]       = ornithopter.voiceAileron;
+    orni["voice_elevator"]      = ornithopter.voiceElevator;
+    orni["voice_rudder"]        = ornithopter.voiceRudder;
+    orni["voice_arm"]           = ornithopter.voiceArm;
+    orni["link_up"]             = ornithopter.linkUp;
+    orni["enabled"]             = ornithopter.enabled;
+    orni["connection_state"]    = connectionState;
+    orni["active_flight_profile"] = ornithopter.activeFlightProfile;
+
+    JsonObject zeph = root["zephyrus"].to<JsonObject>();
+#if defined(ZEPHYRUS_ENABLED)
+    zeph["enabled"]           = zephyrus.gyroEnabled;
+    zeph["calibrated"]        = zephyrus.calibrated;
+    zeph["calibrating"]       = zephyrus._calibrating;
+    zeph["calib_samples"]     = zephyrus._calibCount;
+    zeph["pitch_deg"]         = zephyrus.pitchDeg;
+    zeph["roll_deg"]          = zephyrus.rollDeg;
+    zeph["yaw_rate"]          = zephyrus.yawRate;
+    zeph["roll_correction"]   = zephyrus.rollCorrection;
+    zeph["yaw_correction"]    = zephyrus.yawCorrection;
+    zeph["pitch_correction"]  = zephyrus.pitchCorrection;
+    zeph["rudder_correction"] = zephyrus.rudderCorrection;
+    zeph["board_rotation"]    = zephyrus.boardRotation;
 #else
-    {
-        JsonObject zeph = root["zephyrus"].to<JsonObject>();
-        zeph["enabled"] = false;
-    }
+    zeph["enabled"]           = false;
+    zeph["calibrated"]        = false;
+    zeph["calibrating"]       = false;
+    zeph["calib_samples"]     = 0;
+    zeph["pitch_deg"]         = 0.0f;
+    zeph["roll_deg"]          = 0.0f;
+    zeph["yaw_rate"]          = 0.0f;
+    zeph["roll_correction"]   = 0.0f;
+    zeph["yaw_correction"]    = 0.0f;
+    zeph["pitch_correction"]  = 0.0f;
+    zeph["rudder_correction"] = 0.0f;
+    zeph["board_rotation"]    = 0;
 #endif
 
-    // Ornithopter state
-#ifdef ORNITHOPTER_MODE
-    {
-        JsonObject orni = root["ornithopter"].to<JsonObject>();
-        orni["enabled"] = ornithopter.enabled;
-        orni["link_up"] = ornithopter.linkUp;
-        orni["type"] = PROFILE_IS_GEARBOX ? "gearbox" : "servo";
-        orni["servo_left_wing_us"]  = ornithopter.funcValue(SF_LEFT_WING);
-        orni["servo_right_wing_us"] = ornithopter.funcValue(SF_RIGHT_WING);
-        orni["servo_rudder_us"]     = ornithopter.funcValue(SF_RUDDER);
-        orni["servo_motor_us"]      = ornithopter.funcValue(SF_MOTOR);
-        orni["servo_vtail_left_us"]  = ornithopter.funcValue(SF_VTAIL_LEFT);
-        orni["servo_vtail_right_us"] = ornithopter.funcValue(SF_VTAIL_RIGHT);
-        orni["servo_elevator_us"]    = ornithopter.funcValue(SF_ELEVATOR);
-        orni["servo_back_left_wing_us"]  = ornithopter.funcValue(SF_BACK_LEFT_WING);
-        orni["servo_back_right_wing_us"] = ornithopter.funcValue(SF_BACK_RIGHT_WING);
-#ifdef ZEPHYRUS_ENABLED
-        orni["gyro_rudder_correction_us"]    = ornithopter.gyroRudderCorrection;
-        orni["gyro_aileron_correction_us"]   = ornithopter.gyroAileronCorrection;
-        orni["gyro_elevator_correction_us"]  = ornithopter.gyroElevatorCorrection;
-#endif
-        orni["voice_throttle"] = ornithopter.voiceThrottle;
-        orni["voice_cadence"] = ornithopter.voiceCadence;
-        orni["voice_aileron"] = ornithopter.voiceAileron;
-        orni["voice_elevator"] = ornithopter.voiceElevator;
-        orni["voice_rudder"] = ornithopter.voiceRudder;
-    }
-#else
-    {
-        JsonObject orni = root["ornithopter"].to<JsonObject>();
-        orni["enabled"] = false;
-    }
-#endif
+    JsonObject sweep = root["sweep"].to<JsonObject>();
+    sweep["active"] = isServoSweepActive();
+    sweep["us"]     = getServoSweepUs();
 
     response->setLength();
     request->send(response);
 }
 
-static void PostPteronautosCalibrate(AsyncWebServerRequest *request)
+static void GetPteronautosConfig(AsyncWebServerRequest *request)
 {
-#ifdef ZEPHYRUS_ENABLED
-    zephyrus.forceCalibrate();
-#endif
-    auto *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot().to<JsonObject>();
-    root["ok"] = true;
-    root["message"] = "Calibration started — keep aircraft still for 0.5s";
-    response->setLength();
-    request->send(response);
-}
-
-static void PostPteronautosOrientation(AsyncWebServerRequest *request)
-{
-#ifdef ZEPHYRUS_ENABLED
-    if (request->hasParam("rotation", true)) {
-        int rot = request->getParam("rotation", true)->value().toInt();
-        if (rot >= 0 && rot <= 6) {
-            zephyrus.setBoardRotation((uint8_t)rot);
-        }
+    // Static config — only changes via POST /pteronautos/config. Fetched once
+    // per panel mount, not polled. Keeps the 2s state poll lean on the heap.
+    auto *response = new AsyncJsonResponse(false);
+    if (!response) {
+        request->send(500, "application/json", "{\"error\":\"oom\"}");
+        return;
     }
-#endif
-    auto *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot().to<JsonObject>();
-    root["ok"] = true;
-#ifdef ZEPHYRUS_ENABLED
-    root["rotation"] = zephyrus.boardRotation;
-#else
-    root["rotation"] = 0;
-#endif
+    JsonObject root = response->getRoot().as<JsonObject>();
+    JsonObject orni = root["ornithopter"].to<JsonObject>();
+
+    // Mixer profile is compile-time (MIXER_PROFILE build flag). config.GetModelId()
+    // is the ELRS model-match id and has nothing to do with the ornithopter kernel —
+    // reporting it as profile_id made the panel show "gearbox" for a servo build.
+    uint8_t pid = (uint8_t)ACTIVE_PROFILE;
+    orni["profile_id"]          = pid;
+    orni["type"]                = PROFILE_IS_GEARBOX ? "gearbox" : "servo";
+    orni["kernel_fixed"]        = false;  // profile is runtime-switchable
+    orni["model_name"]          = ornithopter.modelName;
+
+    orni["cadence_gain"]        = (int)ornithopter.cadenceGain;
+    orni["ferocity_d_gain"]     = (int)ornithopter.ferocityDGain;
+    orni["balance_gain"]        = (int)ornithopter.balanceGain;
+    orni["ferocity_p_gain"]     = (int)ornithopter.ferocityPGain;
+    orni["anchor_gain"]         = (int)ornithopter.anchorGain;
+    orni["resonance_gain"]      = (int)ornithopter.resonanceGain;
+    orni["ssff_gain"]           = (int)ornithopter.ssffGain;
+    orni["aero_glide_coeff"]    = (int)ornithopter.aeroGlideCoeff;
+    orni["aero_flap_coeff"]     = (int)ornithopter.aeroFlapCoeff;
+
+    // Runtime waveform/mixer config fields
+    orni["stroke_ferocity"]     = (int)ornithopter.strokeFerocity;
+    orni["return_ferocity"]     = (int)ornithopter.returnFerocity;
+    orni["glide_angle_deg"]     = ornithopter.glideAngleDeg;
+    orni["flapping_angle_deg"]  = (int)ornithopter.flappingAngleDeg;
+    orni["aileron_scale"]       = (int)ornithopter.aileronScale;
+    orni["elevator_scale"]      = (int)ornithopter.elevatorScale;
+    orni["rudder_yaw_weight"]   = (int)ornithopter.rudderYawWeight;
+    orni["rudder_roll_weight"]  = (int)ornithopter.rudderRollWeight;
+    orni["rudder_ferocity_range"] = (int)ornithopter.rudderFerocityRange;
+    orni["rudder_amplitude_differential"] = (int)ornithopter.rudderAmplitudeDifferential;
+    orni["elevator_ferocity_mix"] = (int)ornithopter.elevatorFerocityMix;
+    orni["throttle_ferocity_mix"] = (int)ornithopter.throttleFerocityMix;
+    orni["elevon_scale"]        = (int)ornithopter.elevonScale;
+    // Kernel-specific pulse params: only emit what the active kernel uses.
+    if (PROFILE_IS_GEARBOX)
+    {
+        orni["motor_min_us"] = ornithopter.motorMinUs;
+        orni["motor_max_us"] = ornithopter.motorMaxUs;
+    }
+    else
+    {
+        orni["servo_min_us"] = ornithopter.servoMinUs;
+        orni["servo_max_us"] = ornithopter.servoMaxUs;
+    }
+    orni["glide_mode"]          = ornithopter.glideMode;
+    orni["hall_sensor_pin"]     = ornithopter.hallSensorPin;
+    orni["ratchet_throttle_pct"] = ornithopter.ratchetThrottlePct;
+    orni["ratchet_timeout_ms"]  = ornithopter.ratchetTimeoutMs;
+    orni["servo_speed"]         = (int)ornithopter.servoSpeed;
+    orni["flap_base_freq"]      = (int)ornithopter.flapBaseFreq;
+    JsonArray trimArr = orni["servo_trim"].to<JsonArray>();
+    for (int i = 0; i < SF_COUNT; ++i) trimArr.add((int)ornithopter.servoTrimUs[i]);
+
+    // Virtual stick override
+    orni["stick_override"]      = ornithopter.stickOverride;
+    JsonArray stickArr = orni["stick_channels"].to<JsonArray>();
+    for (int i = 0; i < STK_COUNT; ++i) stickArr.add(ornithopter.stickChannels[i]);
+
+    // Flight profiles (3 × tuning param sets)
+    JsonArray fpArr = orni["flight_profiles"].to<JsonArray>();
+    for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
+        JsonObject p = fpArr.createNestedObject();
+        p["stroke_ferocity"]       = (int)ornithopter.flightProfiles[i].strokeFerocity;
+        p["return_ferocity"]       = (int)ornithopter.flightProfiles[i].returnFerocity;
+        p["glide_angle_deg"]       = ornithopter.flightProfiles[i].glideAngleDeg;
+        p["flapping_angle_deg"]    = (int)ornithopter.flightProfiles[i].flappingAngleDeg;
+        p["aileron_scale"]         = (int)ornithopter.flightProfiles[i].aileronScale;
+        p["elevator_scale"]        = (int)ornithopter.flightProfiles[i].elevatorScale;
+        p["rudder_ferocity_range"] = (int)ornithopter.flightProfiles[i].rudderFerocityRange;
+        p["rudder_amplitude_differential"] = (int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential;
+        p["elevator_ferocity_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityMix;
+        p["throttle_ferocity_mix"] = (int)ornithopter.flightProfiles[i].throttleFerocityMix;
+    }
+
     response->setLength();
     request->send(response);
 }
 
 static void GetPteronautosPing(AsyncWebServerRequest *request)
 {
-    auto *response = new AsyncJsonResponse();
-    JsonObject root = response->getRoot().to<JsonObject>();
-    root["ok"] = true;
-    root["firmware"] = "PteronautOS";
-    response->setLength();
-    request->send(response);
+    request->send(200, "application/json", "{\"ok\":true,\"firmware\":\"PteronautOS\"}");
+}
+
+// ── Ornithopter Config Endpoint ──────────────────────────────────
+// ESPAsyncWebServer auto-parses form-urlencoded POST bodies into
+// request->params() (post params). Use hasParam/getParam — a body
+// handler is NEVER called for form-urlencoded in this fork, so the
+// previous manual-body approach silently received an empty body.
+static int _pteroParamInt(AsyncWebServerRequest *request, const char* key, int deflt)
+{
+    if (request->hasParam(key, true))
+        return request->getParam(key, true)->value().toInt();
+    return deflt;
+}
+
+// ── Runtime config persistence (LittleFS /pteronautos.conf) ──────
+// Ornithopter params are RAM-only otherwise; save survives reboot.
+static bool _pteroConfigLoaded = false;
+
+// Print a JSON string literal with escaping (used for user-supplied strings
+// like the model name, which may contain quotes/backslashes).
+static void _pteroPrintJsonString(File &f, const char *s)
+{
+    f.print('"');
+    if (s)
+    {
+        for (const char *p = s; *p; ++p)
+        {
+            char c = *p;
+            if (c == '"' || c == '\\') f.print('\\');
+            f.print(c);
+        }
+    }
+    f.print('"');
+}
+
+static void SaveOrnithopterConfig()
+{
+    // Stream JSON straight to LittleFS instead of building a heap JsonDocument.
+    // The ESP8285 has ~23KB free heap; a save POST that overlaps the 2s state
+    // poll used to exhaust it (ArduinoJson v7 auto-grows) and reboot the radio.
+    // Direct File::print writes are heap-free — literals live in flash.
+    File f = LittleFS.open("/pteronautos.conf", "w");
+    if (!f) return;
+
+    f.print("{\"flight_profiles\":[");
+    for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
+        if (i) f.print(',');
+        f.print("{\"stroke_ferocity\":");
+        f.print((int)ornithopter.flightProfiles[i].strokeFerocity);
+        f.print(",\"return_ferocity\":");
+        f.print((int)ornithopter.flightProfiles[i].returnFerocity);
+        f.print(",\"glide_angle_deg\":");
+        f.print((int)ornithopter.flightProfiles[i].glideAngleDeg);
+        f.print(",\"flapping_angle_deg\":");
+        f.print((int)ornithopter.flightProfiles[i].flappingAngleDeg);
+        f.print(",\"aileron_scale\":");
+        f.print((int)ornithopter.flightProfiles[i].aileronScale);
+        f.print(",\"elevator_scale\":");
+        f.print((int)ornithopter.flightProfiles[i].elevatorScale);
+        f.print(",\"rudder_ferocity_range\":");
+        f.print((int)ornithopter.flightProfiles[i].rudderFerocityRange);
+        f.print(",\"rudder_amplitude_differential\":");
+        f.print((int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential);
+        f.print(",\"elevator_ferocity_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].elevatorFerocityMix);
+        f.print(",\"throttle_ferocity_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].throttleFerocityMix);
+        f.print('}');
+    }
+    f.print("],\"active_flight_profile\":");
+    f.print((int)ornithopter.activeFlightProfile);
+    f.print(",\"rudder_yaw_weight\":");
+    f.print((int)ornithopter.rudderYawWeight);
+    f.print(",\"rudder_roll_weight\":");
+    f.print((int)ornithopter.rudderRollWeight);
+    f.print(",\"elevon_scale\":");
+    f.print((int)ornithopter.elevonScale);
+    f.print(",\"motor_min_us\":");
+    f.print((int)ornithopter.motorMinUs);
+    f.print(",\"motor_max_us\":");
+    f.print((int)ornithopter.motorMaxUs);
+    f.print(",\"glide_mode\":");
+    f.print(ornithopter.glideMode ? "true" : "false");
+    f.print(",\"hall_sensor_pin\":");
+    f.print((int)ornithopter.hallSensorPin);
+    f.print(",\"ratchet_throttle_pct\":");
+    f.print((int)ornithopter.ratchetThrottlePct);
+    f.print(",\"ratchet_timeout_ms\":");
+    f.print((int)ornithopter.ratchetTimeoutMs);
+    f.print(",\"servo_speed\":");
+    f.print((int)ornithopter.servoSpeed);
+    f.print(",\"flap_base_freq\":");
+    f.print((int)ornithopter.flapBaseFreq);
+    f.print(",\"servo_min_us\":");
+    f.print((int)ornithopter.servoMinUs);
+    f.print(",\"servo_max_us\":");
+    f.print((int)ornithopter.servoMaxUs);
+    f.print(",\"servo_trim\":[");
+    for (int i = 0; i < SF_COUNT; ++i) {
+        if (i) f.print(',');
+        f.print((int)ornithopter.servoTrimUs[i]);
+    }
+    f.print("],\"profile_id\":");
+    f.print((int)activeProfile);
+    f.print(",\"model_name\":");
+    _pteroPrintJsonString(f, ornithopter.modelName);
+    f.print('}');
+    f.close();
+}
+
+static void LoadOrnithopterConfig()
+{
+    if (_pteroConfigLoaded) return;
+    _pteroConfigLoaded = true;
+    if (!LittleFS.exists("/pteronautos.conf")) return;
+    File f = LittleFS.open("/pteronautos.conf", "r");
+    if (!f) return;
+    DynamicJsonDocument doc(2048);
+    DeserializationError err = deserializeJson(doc, f);
+    f.close();
+    if (err) return;
+    JsonObject o = doc.as<JsonObject>();
+
+    // Per-flight-profile tuning
+    if (o["flight_profiles"].is<JsonArray>()) {
+        JsonArray fpArr = o["flight_profiles"].as<JsonArray>();
+        for (int i = 0; i < FLIGHT_PROFILE_COUNT && i < (int)fpArr.size(); ++i) {
+            JsonObject p = fpArr[i].as<JsonObject>();
+            FlightProfileParams &dst = ornithopter.flightProfiles[i];
+            if (p["stroke_ferocity"].is<int>())       dst.strokeFerocity      = p["stroke_ferocity"].as<int>();
+            if (p["return_ferocity"].is<int>())       dst.returnFerocity      = p["return_ferocity"].as<int>();
+            if (p["glide_angle_deg"].is<int>())       dst.glideAngleDeg       = (int8_t)p["glide_angle_deg"].as<int>();
+                        if (p["flapping_angle_deg"].is<int>()) {
+                            int32_t fa = p["flapping_angle_deg"].as<int>();
+                            if (fa < -15) fa = -15;
+                            if (fa >  15) fa =  15;
+                            dst.flappingAngleDeg = (int8_t)fa;
+                        }
+            if (p["aileron_scale"].is<int>())         dst.aileronScale        = p["aileron_scale"].as<int>();
+            if (p["elevator_scale"].is<int>())        dst.elevatorScale       = p["elevator_scale"].as<int>();
+            if (p["rudder_ferocity_range"].is<int>()) dst.rudderFerocityRange = p["rudder_ferocity_range"].as<int>();
+            if (p["rudder_amplitude_differential"].is<int>()) dst.rudderAmplitudeDifferential = p["rudder_amplitude_differential"].as<int>();
+            if (p["elevator_ferocity_mix"].is<int>()) dst.elevatorFerocityMix = p["elevator_ferocity_mix"].as<int>();
+            if (p["throttle_ferocity_mix"].is<int>()) dst.throttleFerocityMix = p["throttle_ferocity_mix"].as<int>();
+        }
+    }
+
+    // Global mixer params
+    if (o["rudder_yaw_weight"].is<int>())     ornithopter.rudderYawWeight      = o["rudder_yaw_weight"].as<int>();
+    if (o["rudder_roll_weight"].is<int>())    ornithopter.rudderRollWeight     = o["rudder_roll_weight"].as<int>();
+    if (o["elevon_scale"].is<int>())          ornithopter.elevonScale          = o["elevon_scale"].as<int>();
+    if (o["motor_min_us"].is<int>())          ornithopter.motorMinUs           = (uint16_t)o["motor_min_us"].as<int>();
+    if (o["motor_max_us"].is<int>())          ornithopter.motorMaxUs           = (uint16_t)o["motor_max_us"].as<int>();
+    if (o["glide_mode"].is<bool>())           ornithopter.glideMode            = o["glide_mode"].as<bool>();
+    if (o["hall_sensor_pin"].is<int>())       ornithopter.hallSensorPin        = (uint8_t)o["hall_sensor_pin"].as<int>();
+    if (o["ratchet_throttle_pct"].is<int>())  ornithopter.ratchetThrottlePct   = (uint8_t)o["ratchet_throttle_pct"].as<int>();
+    if (o["ratchet_timeout_ms"].is<int>())    ornithopter.ratchetTimeoutMs     = (uint16_t)o["ratchet_timeout_ms"].as<int>();
+    if (o["servo_speed"].is<int>()) {
+        int32_t spd = o["servo_speed"].as<int>();
+        if (spd < ORNI_SERVO_SPEED_MIN_MS) spd = ORNI_SERVO_SPEED_MIN_MS;
+        if (spd > ORNI_SERVO_SPEED_MAX_MS) spd = ORNI_SERVO_SPEED_MAX_MS;
+        ornithopter.servoSpeed = (uint16_t)spd;
+    }
+    if (o["flap_base_freq"].is<int>()) {
+        int32_t bf = o["flap_base_freq"].as<int>();
+        if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
+        if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
+        ornithopter.flapBaseFreq = (uint16_t)bf;
+    }
+    if (o["servo_min_us"].is<int>())          ornithopter.servoMinUs           = (uint16_t)o["servo_min_us"].as<int>();
+    if (o["servo_max_us"].is<int>())          ornithopter.servoMaxUs           = (uint16_t)o["servo_max_us"].as<int>();
+    if (ornithopter.servoMinUs < ORNI_SERVO_ABS_MIN_US) ornithopter.servoMinUs = ORNI_SERVO_ABS_MIN_US;
+    if (ornithopter.servoMinUs > 1490) ornithopter.servoMinUs = 1490;
+    if (ornithopter.servoMaxUs < 1510) ornithopter.servoMaxUs = 1510;
+    if (ornithopter.servoMaxUs > ORNI_SERVO_ABS_MAX_US) ornithopter.servoMaxUs = ORNI_SERVO_ABS_MAX_US;
+    if (ornithopter.servoMaxUs <= ornithopter.servoMinUs) ornithopter.servoMaxUs = ornithopter.servoMinUs + 1;
+    if (o["servo_trim"].is<JsonArray>()) {
+        JsonArray trimArr = o["servo_trim"].as<JsonArray>();
+        for (int i = 0; i < SF_COUNT && i < (int)trimArr.size(); ++i) {
+            int32_t t = trimArr[i].as<int>();
+            if (t < -300) t = -300;
+            if (t >  300) t =  300;
+            ornithopter.servoTrimUs[i] = (int16_t)t;
+        }
+    }
+    if (o["profile_id"].is<int>())            setOrnithopterProfile((uint8_t)o["profile_id"].as<int>());
+    if (o["model_name"].is<const char*>())
+        strlcpy(ornithopter.modelName, o["model_name"].as<const char*>(), sizeof(ornithopter.modelName));
+
+    // Restore active flight profile and apply its params to the mixer.
+    if (o["active_flight_profile"].is<int>())
+        ornithopter.applyFlightProfile((uint8_t)o["active_flight_profile"].as<int>());
+    else
+        ornithopter.applyFlightProfile(ornithopter.activeFlightProfile);
+}
+
+static void PostPteronautosConfig(AsyncWebServerRequest *request)
+{
+    // Mixer profile — runtime-switchable
+    int pid = _pteroParamInt(request, "profile_id", -1);
+    if (pid >= 0) setOrnithopterProfile((uint8_t)pid);
+    // Zephyrus / Ondas gains
+#ifdef ZEPHYRUS_ENABLED
+    ornithopter.cadenceGain     = (float)_pteroParamInt(request, "cadence_gain",       (int)ornithopter.cadenceGain);
+    ornithopter.ferocityDGain   = (float)_pteroParamInt(request, "ferocity_d_gain",    (int)ornithopter.ferocityDGain);
+    ornithopter.balanceGain     = (float)_pteroParamInt(request, "balance_gain",       (int)ornithopter.balanceGain);
+    ornithopter.ferocityPGain   = (float)_pteroParamInt(request, "ferocity_p_gain",    (int)ornithopter.ferocityPGain);
+    ornithopter.anchorGain      = (float)_pteroParamInt(request, "anchor_gain",        (int)ornithopter.anchorGain);
+    ornithopter.resonanceGain   = (float)_pteroParamInt(request, "resonance_gain",     (int)ornithopter.resonanceGain);
+    ornithopter.ssffGain        = (float)_pteroParamInt(request, "ssff_gain",          (int)ornithopter.ssffGain);
+    ornithopter.aeroGlideCoeff  = (float)_pteroParamInt(request, "aero_glide_coeff",   (int)ornithopter.aeroGlideCoeff);
+    ornithopter.aeroFlapCoeff   = (float)_pteroParamInt(request, "aero_flap_coeff",    (int)ornithopter.aeroFlapCoeff);
+    int gv = _pteroParamInt(request, "gyro_enabled", -1);
+    if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
+#endif
+    // Per-flight-profile params (read into locals)
+    float   sf    = (float)_pteroParamInt(request, "stroke_ferocity",       (int)ornithopter.strokeFerocity);
+    float   rf    = (float)_pteroParamInt(request, "return_ferocity",       (int)ornithopter.returnFerocity);
+    int8_t  glide = (int8_t)_pteroParamInt(request, "glide_angle_deg",      ornithopter.glideAngleDeg);
+        int8_t  flapAng = (int8_t)_pteroParamInt(request, "flapping_angle_deg",  ornithopter.flappingAngleDeg);
+        if (flapAng < -15) flapAng = -15;
+        if (flapAng >  15) flapAng =  15;
+    float   ail   = (float)_pteroParamInt(request, "aileron_scale",         (int)ornithopter.aileronScale);
+    float   elev  = (float)_pteroParamInt(request, "elevator_scale",        (int)ornithopter.elevatorScale);
+    float   rudRng= (float)_pteroParamInt(request, "rudder_ferocity_range", (int)ornithopter.rudderFerocityRange);
+    float   rudAmpDiff = (float)_pteroParamInt(request, "rudder_amplitude_differential", (int)ornithopter.rudderAmplitudeDifferential);
+    float   elevFerMix = (float)_pteroParamInt(request, "elevator_ferocity_mix", (int)ornithopter.elevatorFerocityMix);
+    float   thrFerMix  = (float)_pteroParamInt(request, "throttle_ferocity_mix", (int)ornithopter.throttleFerocityMix);
+
+    int fp = _pteroParamInt(request, "flight_profile", -1);
+    if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
+        // Write to a specific flight-profile slot (and apply live if active).
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix);
+    } else {
+        // Legacy/global path: apply to live fields + store into active profile.
+        ornithopter.strokeFerocity      = sf;
+        ornithopter.returnFerocity      = rf;
+        ornithopter.glideAngleDeg       = glide;
+        ornithopter.flappingAngleDeg    = flapAng;
+        ornithopter.aileronScale        = ail;
+        ornithopter.elevatorScale       = elev;
+        ornithopter.rudderFerocityRange = rudRng;
+        ornithopter.rudderAmplitudeDifferential = rudAmpDiff;
+        ornithopter.elevatorFerocityMix = elevFerMix;
+        ornithopter.throttleFerocityMix = thrFerMix;
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix);
+    }
+
+    // Global mixer params (not per-profile)
+    ornithopter.rudderYawWeight    = (float)_pteroParamInt(request, "rudder_yaw_weight",  (int)ornithopter.rudderYawWeight);
+    ornithopter.rudderRollWeight   = (float)_pteroParamInt(request, "rudder_roll_weight", (int)ornithopter.rudderRollWeight);
+    ornithopter.elevonScale        = (float)_pteroParamInt(request, "elevon_scale",       (int)ornithopter.elevonScale);
+    ornithopter.motorMinUs         = (uint16_t)_pteroParamInt(request, "motor_min_us",    ornithopter.motorMinUs);
+    ornithopter.motorMaxUs         = (uint16_t)_pteroParamInt(request, "motor_max_us",    ornithopter.motorMaxUs);
+    ornithopter.glideMode          = _pteroParamInt(request, "glide_mode", ornithopter.glideMode ? 1 : 0) != 0;
+    ornithopter.hallSensorPin      = (uint8_t)_pteroParamInt(request, "hall_sensor_pin",  ornithopter.hallSensorPin);
+    ornithopter.ratchetThrottlePct = (uint8_t)_pteroParamInt(request, "ratchet_throttle_pct", ornithopter.ratchetThrottlePct);
+    ornithopter.ratchetTimeoutMs   = (uint16_t)_pteroParamInt(request, "ratchet_timeout_ms", ornithopter.ratchetTimeoutMs);
+    {
+        int32_t spd = _pteroParamInt(request, "servo_speed", ornithopter.servoSpeed);
+        if (spd < ORNI_SERVO_SPEED_MIN_MS) spd = ORNI_SERVO_SPEED_MIN_MS;
+        if (spd > ORNI_SERVO_SPEED_MAX_MS) spd = ORNI_SERVO_SPEED_MAX_MS;
+        ornithopter.servoSpeed = (uint16_t)spd;
+        int32_t bf = _pteroParamInt(request, "flap_base_freq", ornithopter.flapBaseFreq);
+        if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
+        if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
+        ornithopter.flapBaseFreq = (uint16_t)bf;
+    }
+
+    // Servo sweep pulse limits (kernel-level, wing 0°..180° map)
+    {
+        int32_t mn = _pteroParamInt(request, "servo_min_us", ornithopter.servoMinUs);
+        int32_t mx = _pteroParamInt(request, "servo_max_us", ornithopter.servoMaxUs);
+        if (mn < ORNI_SERVO_ABS_MIN_US) mn = ORNI_SERVO_ABS_MIN_US;
+        if (mn > 1490) mn = 1490;
+        if (mx < 1510) mx = 1510;
+        if (mx > ORNI_SERVO_ABS_MAX_US) mx = ORNI_SERVO_ABS_MAX_US;
+        if (mx <= mn) mx = mn + 1;
+        ornithopter.servoMinUs = (uint16_t)mn;
+        ornithopter.servoMaxUs = (uint16_t)mx;
+    }
+
+    // Per-servo correction (trim), signed µs, keyed by ServoFunc index.
+    for (int i = 0; i < SF_COUNT; ++i) {
+        char key[16];
+        snprintf(key, sizeof(key), "servo_trim_%d", i);
+        int32_t t = _pteroParamInt(request, key, ornithopter.servoTrimUs[i]);
+        if (t < -300) t = -300;
+        if (t >  300) t =  300;
+        ornithopter.servoTrimUs[i] = (int16_t)t;
+    }
+
+    // User-facing model identifier (shown in Overview, included in backup).
+    if (request->hasParam("model_name", true)) {
+        String mn = request->getParam("model_name", true)->value();
+        mn.trim();
+        if (mn.length() >= sizeof(ornithopter.modelName))
+            mn = mn.substring(0, sizeof(ornithopter.modelName) - 1);
+        strlcpy(ornithopter.modelName, mn.c_str(), sizeof(ornithopter.modelName));
+    }
+
+    SaveOrnithopterConfig();
+    request->send(200, "application/json", "{\"ok\":true,\"saved\":true}");
+}
+
+// ── Servo Sweep Endpoints ────────────────────────────────────────
+static void PostPteronautosSweep(AsyncWebServerRequest *request)
+{
+    bool start = false;
+    if (request->hasParam("state", true))
+        start = (request->getParam("state", true)->value() == "1");
+    if (start)
+        startServoSweep();
+    else
+        stopServoSweep();
+    request->send(200, "application/json", "{\"ok\":true}");
+}
+
+static void GetPteronautosSweepStatus(AsyncWebServerRequest *request)
+{
+    char sbuf[64];
+    snprintf(sbuf, sizeof(sbuf), "{\"active\":%u,\"us\":%u}",
+        isServoSweepActive(), getServoSweepUs());
+    request->send(200, "application/json", String(sbuf));
+}
+
+// ── Full Config Backup / Restore ────────────────────────────────
+// GET  /pteronautos/backup — one JSON {meta, options, config, pteronautos}
+// POST /pteronautos/backup — restore that same shape, then reboot.
+static void GetPteronautosBackup(AsyncWebServerRequest *request)
+{
+    // RxConfig portion (EEPROM) — exactly the fields UpdateConfiguration consumes.
+    JsonDocument cfgDoc;
+    JsonObject cfg = cfgDoc.to<JsonObject>();
+#if defined(TARGET_RX)
+    cfg["serial-protocol"] = config.GetSerialProtocol();
+    cfg["sbus-failsafe"]  = config.GetFailsafeMode();
+    cfg["modelid"]        = config.GetModelId();
+    cfg["force-tlm"]      = config.GetForceTlmOff();
+    cfg["vbind"]          = config.GetBindStorage();
+    JsonArray uid = cfg["uid"].to<JsonArray>();
+    copyArray(config.GetUID(), UID_LEN, uid);
+    JsonArray pwm = cfg["pwm"].to<JsonArray>();
+    for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
+        pwm.add(config.GetPwmChannel(ch)->raw);
+#endif
+    String cfgStr;
+    serializeJson(cfg, cfgStr);
+
+    // Ornithopter portion — raw /pteronautos.conf is already valid JSON.
+    String pteroStr = "{}";
+    if (LittleFS.exists("/pteronautos.conf")) {
+        File f = LittleFS.open("/pteronautos.conf", "r");
+        if (f) {
+            pteroStr = f.readString();
+            f.close();
+        }
+    }
+
+    String out;
+    out.reserve(160 + cfgStr.length() + pteroStr.length() + getOptions().length());
+    out += "{\"meta\":{\"type\":\"pteronautos\",\"version\":1,\"target\":\"";
+    out += (const char *)&target_name[4];
+    out += "\",\"firmware\":\"";
+    out += VERSION;
+    out += "\",\"model_name\":";
+    out += '"';
+    for (const char *p = ornithopter.modelName; *p; ++p)
+    {
+        char c = *p;
+        if (c == '"' || c == '\\') out += '\\';
+        out += c;
+    }
+    out += '"';
+    out += "},\"options\":";
+    out += getOptions();
+    out += ",\"config\":";
+    out += cfgStr;
+    out += ",\"pteronautos\":";
+    out += pteroStr;
+    out += "}";
+
+    request->send(200, "application/json", out);
+}
+
+static void PostPteronautosBackup(AsyncWebServerRequest *request, JsonVariant &json)
+{
+    // 1) firmware options → /options.json (+ rebuild cached options string).
+    if (json["options"].is<JsonObject>()) {
+        JsonObject opts = json["options"].as<JsonObject>();
+        // Keep this device's current discriminator so the restored file is
+        // honoured on next boot (options_LoadFromFlashOrFile compares it).
+        opts["flash-discriminator"] = firmwareOptions.flash_discriminator;
+        File f = LittleFS.open("/options.json", "w");
+        if (f) {
+            serializeJson(opts, f);
+            f.close();
+        }
+        String s;
+        serializeJson(opts, s);
+        setOptions(s);
+    }
+
+    // 2) RxConfig → EEPROM.
+#if defined(TARGET_RX)
+    if (json["config"].is<JsonObject>()) {
+        JsonObject cfg = json["config"].as<JsonObject>();
+        if (cfg["serial-protocol"].is<int>()) config.SetSerialProtocol((eSerialProtocol)cfg["serial-protocol"].as<int>());
+        if (cfg["sbus-failsafe"].is<int>())  config.SetFailsafeMode((eFailsafeMode)cfg["sbus-failsafe"].as<int>());
+        long modelid = cfg["modelid"] | 255;
+        if (modelid < 0 || modelid > 63) modelid = 255;
+        config.SetModelId((uint8_t)modelid);
+        config.SetForceTlmOff((cfg["force-tlm"] | false) != 0);
+        config.SetBindStorage((rx_config_bindstorage_t)(cfg["vbind"] | 0));
+
+        JsonArray uid = cfg["uid"].as<JsonArray>();
+        if (!uid.isNull()) {
+            uint8_t newUid[UID_LEN] = { 0 };
+            size_t juidLen = constrain(uid.size(), 0, UID_LEN);
+            copyArray(uid, &newUid[UID_LEN - juidLen], juidLen);
+            config.SetUID(newUid);
+            memcpy(UID, newUid, UID_LEN);
+        }
+
+        JsonArray pwm = cfg["pwm"].as<JsonArray>();
+        if (!pwm.isNull()) {
+            for (uint32_t ch = 0; ch < pwm.size(); ch++) {
+                rx_config_pwm_t pwmChannel;
+                pwmChannel.raw = pwm[ch];
+                if (OPT_PWM_OUT_ONLY &&
+                    (pwmChannel.val.mode == somSerial || pwmChannel.val.mode == somSCL || pwmChannel.val.mode == somSDA ||
+                     pwmChannel.val.mode == somSerial1RX || pwmChannel.val.mode == somSerial1TX))
+                {
+                    pwmChannel.val.mode = som50Hz;
+                }
+                config.SetPwmChannelRaw(ch, pwmChannel.raw);
+            }
+        }
+        config.Commit();
+    }
+#endif
+
+    // 3) Ornithopter config → /pteronautos.conf + live reload.
+    if (json["pteronautos"].is<JsonObject>()) {
+        File f = LittleFS.open("/pteronautos.conf", "w");
+        if (f) {
+            serializeJson(json["pteronautos"], f);
+            f.close();
+        }
+        _pteroConfigLoaded = false;
+        LoadOrnithopterConfig();
+    }
+
+    request->send(200, "application/json", "{\"ok\":true,\"rebooting\":true}");
+    scheduleRebootTime(500);
+}
+
+// ── Virtual Stick Endpoint ───────────────────────────────────────
+// POST /pteronautos/stick  — form-urlencoded: override=1&ch0=1500&ch1=1500&...
+// GET  /pteronautos/stick  — returns JSON with override status + channel values
+
+static void PostPteronautosStick(AsyncWebServerRequest *request)
+{
+    // Form-urlencoded POST bodies are auto-parsed into post params
+    // (body handlers are never invoked for form-urlencoded in this fork).
+    if (request->hasParam("override", true))
+        ornithopter.setStickOverride(request->getParam("override", true)->value() == "1");
+
+    for (int ch = 0; ch < STK_COUNT; ++ch)
+    {
+        char key[5];
+        snprintf(key, sizeof(key), "ch%d", ch);
+        if (request->hasParam(key, true))
+        {
+            uint16_t val = (uint16_t)request->getParam(key, true)->value().toInt();
+            if (val >= 172 && val <= 1811)
+                ornithopter.setStickChannel((uint8_t)ch, val);
+        }
+    }
+
+    // Minimal static response — the panel fires this fetch without reading the
+    // body. Building a snprintf + heap String per POST fragmented the ESP8285
+    // heap; under the 2s state poll this exhausted it and rebooted the radio.
+    request->send(200, "application/json", "{\"ok\":1}");
+}
+
+static void GetPteronautosStick(AsyncWebServerRequest *request)
+{
+    PostPteronautosStick(request); // same response
 }
 
 #if defined(TARGET_TX)
@@ -1361,8 +1886,13 @@ static void startMDNS()
   options += " -DTLM_REPORT_INTERVAL_MS=" + String(firmwareOptions.tlm_report_interval);
   options += " -DFAN_MIN_RUNTIME=" + String(firmwareOptions.fan_min_runtime);
   #endif
-
-  #if defined(TARGET_RX)
+server.addHandler(new AsyncCallbackJsonWebHandler("/options.json", UpdateSettings));
+{
+  auto *backupHandler = new AsyncCallbackJsonWebHandler("/pteronautos/backup", PostPteronautosBackup);
+  backupHandler->setMaxContentLength(16384);
+  server.addHandler(backupHandler);
+}
+#if defined(TARGET_RX)
   if (firmwareOptions.lock_on_first_connection)
   {
     options += " -DLOCK_ON_FIRST_CONNECTION";
@@ -1484,14 +2014,21 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
-  server.on("/pteronautos/calibrate", HTTP_POST, PostPteronautosCalibrate);
-  server.on("/pteronautos/orientation", HTTP_POST, PostPteronautosOrientation);
-  server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
+  // One-shot LittleFS config restore at web-server start — not inside the
+  // state poll. Restoring during the first poll built a DynamicJsonDocument
+  // while also building the state JSON and exhausted the ESP8285 heap.
+  LoadOrnithopterConfig();
+
   server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
-  server.on("/pteronautos/debug", HTTP_GET, GetPteronautosDebug);
-  server.on("/pteronautos/i2cscan", HTTP_GET, GetPteronautosI2cScan);
-  server.on("/pteronautos/system", HTTP_GET, GetPteronautosSystem);
+  server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
+  server.on("/pteronautos/config", HTTP_GET, GetPteronautosConfig);
+  server.on("/pteronautos/config", HTTP_POST, PostPteronautosConfig);
+  server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);
+  server.on("/pteronautos/sweep/status", HTTP_GET, GetPteronautosSweepStatus);
+  server.on("/pteronautos/backup", HTTP_GET, GetPteronautosBackup);
+  server.on("/pteronautos/stick", HTTP_GET, GetPteronautosStick);
+  server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
   server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
@@ -1522,7 +2059,6 @@ static void startServices()
   server.onNotFound(WebUpdateHandleNotFound);
 
   server.begin();
-  pteroLog("PteronautOS v0.1.0 — WebUI ready, listen on all endpoints");
 
   dnsServer.start(DNS_PORT, "*", ipAddress);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
@@ -1646,9 +2182,10 @@ static int start()
 {
   ipAddress.fromString(wifi_ap_address);
 #if defined(PTERONAUTOS)
-  // Baked options may not be parsed yet — never return DURATION_NEVER.
-  int32_t interval = firmwareOptions.wifi_auto_on_interval;
-  return (interval <= 0) ? 5000 : interval;
+  // timeout() owns the full grace-period schedule (respecting the WebUI
+  // wifi_auto_on_interval). Starting it immediately avoids a double wait
+  // (start() delay + timeout() grace period).
+  return DURATION_IMMEDIATELY;
 #else
   return firmwareOptions.wifi_auto_on_interval;
 #endif
@@ -1718,7 +2255,7 @@ static int timeout()
   }
   #endif
   #if defined(PTERONAUTOS)
-  // PteronautOS WiFi startup: 30s radio grace period before WiFi.
+  // PteronautOS WiFi startup: radio grace period before WiFi.
   // ESP8285 cannot run WiFi + SX1280 simultaneously — radio gets first chance.
   if (!wifiStarted)
   {
@@ -1739,8 +2276,15 @@ static int timeout()
       return DURATION_NEVER;
     }
 
-    // 30s grace period: radio listens for TX, WiFi suppressed
-    if (millis() - bootTime < 30000)
+    // Respect the WebUI wifi_auto_on_interval (ms). -1 = never auto-start.
+    int32_t interval = firmwareOptions.wifi_auto_on_interval;
+    if (interval == -1)
+    {
+      return DURATION_NEVER;
+    }
+    if (interval <= 0) interval = 30000;   // default 30s grace
+
+    if (millis() - bootTime < (uint32_t)interval)
     {
       return 1000;
     }

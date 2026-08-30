@@ -1,0 +1,198 @@
+.mui-panel.mui--text-title
+  %span.panel-icon.icon--symbols.icon--symbols--flight
+  = self._t('ornithopter.flight_profiles.title')
+
+- unless self.stateLoaded
+  %div{style: "color:#d4a017;font-size:13px;margin:8px 0;"} = self._t('ornithopter.loading_config')
+
+- if self.linkUp
+  .mui-panel
+    .mui--text-title= self._t('ornithopter.crsf.title')
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.throttle')
+          %td= self.voiceThrottle
+        %tr
+          %td
+            %b= self._t('ornithopter.flight_profiles.freq')
+          %td= self.voiceFreq
+        %tr
+          %td
+            %b= self._t('ornithopter.flight_profiles.profile')
+          %td= self.voiceProfile
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.aileron')
+          %td= self.voiceAileron
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.elevator')
+          %td= self.voiceElevator
+        %tr
+          %td
+            %b= self._t('ornithopter.crsf.rudder')
+          %td= self.voiceRudder
+
+- if self._isServoProfile()
+  .mui-panel
+    .mui--text-title= self._t('ornithopter.flight_profiles.title')
+    %small{style: "color:#888;"} = self._t('ornithopter.flight_profiles.per_profile_tuning')
+    %select{@change: self._onEditProfile, .disabled: self._uiLocked(), style: "width:100%;padding:8px 10px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;margin:8px 0;"}
+      - for i in [0,1,2]
+        - if i == self.editProfile
+          %option{value: i, selected: ""}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
+        - else
+          %option{value: i}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
+    %div{style: "color:#d4a017;font-size:13px;margin:4px 0 8px;"}= self._t('ornithopter.flight_profiles.active_ch7', {n: self.activeFlightProfile})
+    - if self.editProfile != self.activeFlightProfile
+      %div{style: "color:#e07b39;font-size:12px;margin:0 0 8px;"} = self._t('ornithopter.flight_profiles.editing_inactive', {n: self.editProfile})
+
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.glide_angle.title')
+            %br
+            %small{style: "color:#888;"} = self._t('ornithopter.glide_angle.desc')
+          %td
+            %input{type: "number", min: "-15", max: "15", step: "1", .value: self.glideAngleDeg, @input: self._onNumberInput('glideAngleDeg'), @change: self._onNumberCommit('glideAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
+            | °
+            %small.label= self._glideAngleLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.flapping_angle.title')
+            %br
+                        %small{style: "color:#888;"} = self._t('ornithopter.flapping_angle.desc')
+          %td
+                        %input{type: "number", min: "-15", max: "15", step: "1", .value: self.flappingAngleDeg, @input: self._onNumberInput('flappingAngleDeg'), @change: self._onNumberCommit('flappingAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
+            | °
+        %tr
+          %td
+            %b= self._t('ornithopter.stroke_ferocity.title')
+            %br
+            %small{style: "color:#888;"} = self._t('ornithopter.stroke_ferocity.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.strokeFerocity, @input: self._onSlider('strokeFerocity'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.strokeFerocity
+            %small.label= self._strokeLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.return_ferocity.title')
+            %br
+            %small{style: "color:#888;"} = self._t('ornithopter.return_ferocity.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.returnFerocity, @input: self._onSlider('returnFerocity'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.returnFerocity
+            %small.label= self._returnLabel()
+        %tr
+          %td
+            %b= self._t('ornithopter.aileron_scale.title')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.aileronScale, @input: self._onSlider('aileronScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.aileronScale
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.elevator_scale.title')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.elevatorScale, @input: self._onSlider('elevatorScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.elevatorScale
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.rudder_ferocity_range.title')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.rudderFerocityRange, @input: self._onSlider('rudderFerocityRange'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.rudderFerocityRange
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.rudder_amplitude_differential.title')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.rudder_amplitude_differential.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.rudderAmplitudeDifferential, @input: self._onSlider('rudderAmplitudeDifferential'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.rudderAmplitudeDifferential
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.elevator_ferocity_mix.title')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.elevator_ferocity_mix.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.elevatorFerocityMix, @input: self._onSlider('elevatorFerocityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.elevatorFerocityMix
+            %
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_ferocity_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_ferocity_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.throttleFerocityMix, @input: self._onSlider('throttleFerocityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleFerocityMix
+           %
+
+/ Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
+.mui-panel
+  .mui--text-title= self._t('ornithopter.channel_test.title')
+  %label{style: "cursor:pointer;display:inline-block;margin:8px 0;padding:6px 12px;border:1px solid #333;border-radius:4px;background:#151515;"}
+    %input{type: "checkbox", checked: self.stickOverride, @change: self._onStickToggle, .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#9cf;margin-right:8px;vertical-align:middle;"}
+    %span{style: "color:#9cf;font-size:14px;vertical-align:middle;"}= self.stickOverride ? self._t('ornithopter.channel_test.override_on') : self._t('ornithopter.channel_test.override_off')
+  %br
+  %small{style: "color:#888;"} = self._t('ornithopter.channel_test.hint')
+  .chnrow{style: "display:flex;gap:14px;align-items:flex-end;margin-top:12px;overflow-x:auto;padding-bottom:6px;"}
+    - for def of self.channelDefs
+      .chncol{style: "display:flex;flex-direction:column;align-items:center;min-width:64px;"}
+        %div{style: "color:#9cf;font-size:11px;font-weight:700;"}= "CH#{def.ch}"
+        %div{style: "color:#ccc;font-size:11px;margin:2px 0;"}= def.fn
+        %input{type: "range", min: "1000", max: "2000", .value: self._stickPwm(def), @input: self._onStickInput(def), @change: self._onStickRelease(def), .disabled: self._uiLocked(), style: self._chnSliderStyle()}
+        %div{style: "color:#d4a017;font-size:11px;font-family:'SF Mono',monospace;"}= "#{self._stickPwm(def)}µs"
+        - if def.snap
+          %div{style: "color:#666;font-size:10px;"} = self._t('ornithopter.channel_test.spring')
+        - else
+          %div{style: "color:#666;font-size:10px;"} = self._t('ornithopter.channel_test.hold')
+
+/ Live mixer output — debug readout to trace stick→servo chain
+.mui-panel
+  .mui--text-title{style: "font-size:14px;"} = self._t('ornithopter.mixer_output.title')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('ornithopter.mixer_output.override')
+        %td= self.stickOverride ? 'ON' : 'OFF'
+      %tr
+        %td
+          %b voiceThrottle
+        %td= self.voiceThrottle
+      %tr
+        %td
+          %b voiceArm
+        %td= self.voiceArm
+      %tr
+        %td
+          %b= self._t('ornithopter.mixer_output.left_wing')
+        %td
+          %span= self.servoLeftUs
+          |  µs
+      %tr
+        %td
+          %b= self._t('ornithopter.mixer_output.right_wing')
+        %td
+          %span= self.servoRightUs
+          |  µs
+      %tr
+        %td
+          %b Rudder
+        %td
+          %span= self.servoRudderUs
+          |  µs
+.mui-panel.ptero-centered
+  %button.ptero-btn{@click: self._saveConfig, .disabled: self._uiLocked()}= self._t('ornithopter.save')
+  - if self._saveStateText().length
+    %div{style: "#{self._saveStateStyle()}font-size:13px;margin-top:6px;"}= self._saveStateText()
+  %br
+  %small.ptero-muted= self._t('ornithopter.flight_profiles.save_hint')

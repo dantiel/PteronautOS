@@ -17,10 +17,10 @@ const char version[] = {LATEST_VERSION, 0};
 const char *wifi_hostname = "elrs_tx";
 const char *wifi_ap_ssid = "ExpressLRS TX";
 #else
-const char *wifi_hostname = "elrs_rx";
-const char *wifi_ap_ssid = "ExpressLRS RX";
+const char *wifi_hostname = "pteronaut";
+const char *wifi_ap_ssid = "Pteronaut OS";
 #endif
-const char *wifi_ap_password = "expresslrs";
+const char *wifi_ap_password = "flynatural";
 const char *wifi_ap_address = "10.0.0.1";
 
 #if defined(UNIT_TEST)

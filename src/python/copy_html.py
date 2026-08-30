@@ -36,4 +36,8 @@ if not os.path.isfile(header_path):
         sys.stderr.write(f'Run the appropriate npm build command in src/html/ first.\n')
         sys.exit(1)
 
-shutil.copy(header_path, '../include/WebContent.h')
+shutil.copy(header_path, '../lib/WIFI/WebContent.h')
+# Remove stale include/ copy if it exists (prevents shadow confusion)
+include_copy = '../include/WebContent.h'
+if os.path.isfile(include_copy):
+    os.remove(include_copy)

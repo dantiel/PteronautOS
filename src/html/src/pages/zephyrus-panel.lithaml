@@ -1,4 +1,6 @@
-.mui-panel.mui--text-title= self._t('zephyrus.panel.title')
+.mui-panel.mui--text-title
+  %span.panel-icon.icon--symbols.icon--symbols--zephyrus
+  = self._t('zephyrus.panel.title')
 
 .mui-panel
   .badge{style: self._badgeStyle()}
@@ -41,7 +43,7 @@
 
 - if self.gyroEnabled
   .mui-panel
-    .mui--text-title{style: "font-size:16px;"}= self._t('zephyrus.telemetry.title')
+    .mui--text-title= self._t('zephyrus.telemetry.title')
     %table.mui-table.mui-table--bordered
       %tbody
         %tr
@@ -70,54 +72,56 @@
             %b= self._t('zephyrus.telemetry.rudder_us')
           %td{colspan: "2"}= self._fmt1 self.rudderCorrection
 
-.mui-panel{style: "text-align:center;"}
-  .attitude-indicator{style: "font-size:12px; color:#888; margin-bottom:8px;"}= self._t('zephyrus.attitude.title')
-  .pteronautos-horizon{style: self._horizonOuterStyle()}
-    .horizon-line{style: self._horizonLineStyle()}
-      .center-dot{style: self._centerDotStyle()}
-  %small{style: "color:#888; display:block; margin-top:8px;"}
-    = self._horizonCaption()
+- if self.gyroEnabled
+  .mui-panel{style: "text-align:center;"}
+    .attitude-indicator{style: "font-size:12px; color:#888; margin-bottom:8px;"}= self._t('zephyrus.attitude.title')
+    .pteronautos-horizon{style: self._horizonOuterStyle()}
+      .horizon-line{style: self._horizonLineStyle()}
+        .center-dot{style: self._centerDotStyle()}
+    %small{style: "color:#888; display:block; margin-top:8px;"}
+      = self._horizonCaption()
 
 # PID Controllers — Roll / Pitch / Yaw with Feed Forward
-- for axis of [ {id:'roll', label: self._t('zephyrus.pid.roll'), p:self.rollP,i:self.rollI,d:self.rollD,max:self.rollMax,ff:self.rollFF}, {id:'pitch', label: self._t('zephyrus.pid.pitch'), p:self.pitchP,i:self.pitchI,d:self.pitchD,max:self.pitchMax,ff:self.pitchFF}, {id:'yaw', label: self._t('zephyrus.pid.yaw'), p:self.yawP,i:self.yawI,d:self.yawD,max:self.yawMax,ff:self.yawFF} ]
-  .mui-panel
-    .mui--text-title{style: "font-size:16px;"}= axis.label
-    %table.mui-table.mui-table--bordered
-      %tbody
-        %tr
-          %td
-            %b= self._t('zephyrus.pid.p')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P"), style: "width:130px;"}
-            %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P")}
-        %tr
-          %td
-            %b= self._t('zephyrus.pid.i')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I"), style: "width:130px;"}
-            %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I")}
-        %tr
-          %td
-            %b= self._t('zephyrus.pid.d')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D"), style: "width:130px;"}
-            %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D")}
-        %tr
-          %td
-            %b= self._t('zephyrus.pid.max')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max"), style: "width:130px;"}
-            %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max")}
-            %
-        %tr
-          %td
-            %b= self._t('zephyrus.pid.ff')
-            %br
-            %small{style: "color:#888;"}= self._t('zephyrus.pid.ff_desc')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF"), style: "width:130px;"}
-            %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF")}
-            %
+- if self.gyroEnabled
+  - for axis of [ {id:'roll', label: self._t('zephyrus.pid.roll'), p:self.rollP,i:self.rollI,d:self.rollD,max:self.rollMax,ff:self.rollFF}, {id:'pitch', label: self._t('zephyrus.pid.pitch'), p:self.pitchP,i:self.pitchI,d:self.pitchD,max:self.pitchMax,ff:self.pitchFF}, {id:'yaw', label: self._t('zephyrus.pid.yaw'), p:self.yawP,i:self.yawI,d:self.yawD,max:self.yawMax,ff:self.yawFF} ]
+    .mui-panel
+      .mui--text-title= axis.label
+      %table.mui-table.mui-table--bordered
+        %tbody
+          %tr
+            %td
+              %b= self._t('zephyrus.pid.p')
+            %td
+              %input{type: "range", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P"), style: "width:130px;"}
+              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P")}
+          %tr
+            %td
+              %b= self._t('zephyrus.pid.i')
+            %td
+              %input{type: "range", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I"), style: "width:130px;"}
+              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I")}
+          %tr
+            %td
+              %b= self._t('zephyrus.pid.d')
+            %td
+              %input{type: "range", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D"), style: "width:130px;"}
+              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D")}
+          %tr
+            %td
+              %b= self._t('zephyrus.pid.max')
+            %td
+              %input{type: "range", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max"), style: "width:130px;"}
+              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max")}
+              %
+          %tr
+            %td
+              %b= self._t('zephyrus.pid.ff')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.pid.ff_desc')
+            %td
+              %input{type: "range", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF"), style: "width:130px;"}
+              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF")}
+              %
 
 .mui-panel{style: "text-align:center;"}
   %button.mui-btn.mui-btn--primary{?disabled: self._calibDisabled(), @click: self._doCalibrate}

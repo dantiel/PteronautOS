@@ -170,17 +170,9 @@ static String builtinHardwareConfig;
 
 String& getHardware()
 {
-    File file = LittleFS.open("/hardware.json", "r");
-    if (!file || file.isDirectory())
-    {
-        if (file)
-        {
-            file.close();
-        }
-        // Try JSON at the end of the firmware
-        return builtinHardwareConfig;
-    }
-    builtinHardwareConfig = file.readString();
+    // PteronautOS: hardware is fixed (onboard SX1280 + fixed PWM pins).
+    // Always serve the embedded definition; a LittleFS /hardware.json from
+    // foreign firmware must never be read or served.
     return builtinHardwareConfig;
 }
 
@@ -244,31 +236,25 @@ bool hardware_init(EspFlashStream &strmFlash)
     hardware_ClearAllFields();
     builtinHardwareConfig.clear();
 
-    Stream *strmSrc;
     JsonDocument doc;
-    File file = LittleFS.open("/hardware.json", "r");
-    if (!file || file.isDirectory()) {
-        constexpr size_t hardwareConfigOffset = ELRSOPTS_PRODUCTNAME_SIZE + ELRSOPTS_DEVICENAME_SIZE + ELRSOPTS_OPTIONS_SIZE;
-        strmFlash.setPosition(hardwareConfigOffset);
-        if (!options_HasStringInFlash(strmFlash))
-        {
-            return false;
-        }
 
-        strmSrc = &strmFlash;
-    }
-    else
+    // PteronautOS: hardware is fixed (onboard SX1280 + fixed PWM pins).
+    // Always load the embedded definition; never read a LittleFS /hardware.json,
+    // so a foreign config surviving a non-erasing flash cannot override the pins.
+    constexpr size_t hardwareConfigOffset = ELRSOPTS_PRODUCTNAME_SIZE + ELRSOPTS_DEVICENAME_SIZE + ELRSOPTS_OPTIONS_SIZE;
+    strmFlash.setPosition(hardwareConfigOffset);
+    if (!options_HasStringInFlash(strmFlash))
     {
-        strmSrc = &file;
+        return false;
     }
 
-    DeserializationError error = deserializeJson(doc, *strmSrc);
+    DeserializationError error = deserializeJson(doc, strmFlash);
     if (error)
     {
         return false;
     }
-    serializeJson(doc, builtinHardwareConfig);
 
+    serializeJson(doc, builtinHardwareConfig);
     hardware_LoadFieldsFromDoc(doc);
 
     return true;

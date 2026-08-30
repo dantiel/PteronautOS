@@ -8,7 +8,7 @@ import {i18n} from '../utils/i18n'
 # FEATURE:PTERONAUTOS
 ###
 class ServoPanel extends PteroElement
-  pollRate: 500
+  pollRate: 2000
 
   @properties:
     servoLeftUs:   {state: true}
@@ -20,52 +20,43 @@ class ServoPanel extends PteroElement
     failsafeMode:  {state: true}
     failsafeDelay: {state: true}
 
-  servoLeftUs   = 1500
-  servoRightUs  = 1500
-  servoRudderUs = 1500
-  linkUp        = false
-  _sweeping     = false
-  _sweepPos     = 0
-  failsafeMode  = 'center'
-  failsafeDelay = 1000
+  constructor: ->
+    super()
+    @servoLeftUs   = 1500
+    @servoRightUs  = 1500
+    @servoRudderUs = 1500
+    @linkUp        = false
+    @_sweeping     = false
+    @_sweepPos     = 0
+    @failsafeMode  = 'center'
+    @failsafeDelay = 1000
 
   # — Apply polled state —
   _applyState: (data) ->
-    return unless data.ornithopter
-    o = data.ornithopter
-    @linkUp        = !!o.link_up
-    @servoLeftUs   = Fmt.f0 o.servo_left_us
-    @servoRightUs  = Fmt.f0 o.servo_right_us
-    @servoRudderUs = Fmt.f0 o.servo_rudder_us
+    if data.ornithopter
+      o = data.ornithopter
+      @linkUp        = !!o.link_up
+      @servoLeftUs   = Fmt.f0 o.servo_left_wing_us
+      @servoRightUs  = Fmt.f0 o.servo_right_wing_us
+      @servoRudderUs = Fmt.f0 o.servo_rudder_us
+    # Sweep status from firmware
+    if data.sweep
+      wasSweeping = @_sweeping
+      @_sweeping = !!data.sweep.active
+      if @_sweeping
+        sweepUs = Fmt.f0 data.sweep.us
+        @_sweepPos = Math.round((sweepUs - 1000) / 10)
+        @servoLeftUs = @servoRightUs = @servoRudderUs = sweepUs
 
-  # — Sweep test animation —
+  # — Sweep test — firmware-side triangle wave, auto-stops after 6s —
   _doSweep: ->
-    return if @_sweeping
-    @_sweeping = true
-    @_sweepPos = 0
-    dir = 1
-    step = 30
-    tick = =>
-      return unless @_sweeping
-      @_sweepPos += dir * step
-      if @_sweepPos >= 100
-        @_sweepPos = 100
-        dir = -1
-      else if @_sweepPos <= 0
-        @_sweepPos = 0
-        dir = 1
-      # Animate — sweep all channels
-      pos = 1000 + (@_sweepPos / 100) * 1000
-      @servoLeftUs   = Fmt.f0 pos
-      @servoRightUs  = Fmt.f0 pos
-      @servoRudderUs = Fmt.f0 pos
-      setTimeout(tick, 40) if @_sweeping
-    tick()
-    # Auto-stop after 3 seconds
-    setTimeout(=>
+    if @_sweeping
+      fetch('/pteronautos/sweep', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'state=0'})
       @_sweeping = false
       @_sweepPos = 0
-    , 3000)
+    else
+      fetch('/pteronautos/sweep', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'state=1'})
+      @_sweeping = true
 
   _onSlider: (prop) -> (evt) =>
     @[prop] = parseInt(evt.target.value)

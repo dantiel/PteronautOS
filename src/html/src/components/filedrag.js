@@ -19,7 +19,7 @@ export class FileDrop extends LitElement {
         // Capture initial light-DOM children before Lit renders and replaces them
         // This emulates <slot> when using light DOM (createRenderRoot returns `this`)
         if (this._projectedHTML === '' && this.innerHTML.trim() !== '') {
-            this._projectedHTML = this.innerHTML;
+            this._projectedHTML = this.innerText; //this.innerHTML;
             this.innerHTML = '';
         }
         super.connectedCallback();

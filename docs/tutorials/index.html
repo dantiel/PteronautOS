@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Tutorials — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<a class='home-link' href='../en/' title='Back to home'>↑</a>
+<a class='active' href='../tutorials/'>Tutorials</a>
+<a href='../hardware/'>Hardware</a>
+<a href='../documentation/'>Docs</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Tutorials</h1>
+<p class='sub-lead'>Getting PteronautOS into the air — from source to first flap, step by step.</p>
+<h2>01 · Build the firmware</h2>
+<p>Clone the repository and build the receiver target with PlatformIO.</p>
+<pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Flash the receiver</h2>
+<p>Wire an FTDI adapter to the UART pads, hold BOOT, and write the firmware image. On the ESP8285 the auto-reset line is unreliable, so keep BOOT held while powering the board.</p>
+<pre><code>esptool.py --port /dev/cu.usbserial-XXXX --baud 115200 --before no_reset write_flash --flash_mode dout --flash_size 1MB --flash_freq 40m 0x0 firmware.bin</code></pre>
+<h2>03 · Bind your transmitter</h2>
+<p>Flash the same binding phrase on transmitter and receiver. The UID is derived from the phrase — same phrase on both ends, they find each other. The receiver status in the web UI shows the UID.</p>
+<h2>04 · Wire the servos</h2>
+<p>Three servo channels: left wing, right wing, and crest rudder. The MPU6050 gyro hangs on the I2C bus.</p>
+<p>See the %a{href: "../hardware/"} Hardware page for pin maps and wiring.</p>
+<h2>05 · First flap</h2>
+<p>Power up, centre the trims, and advance the throttle. At zero ferocity the wings should beat in a clean sine. If a servo slams to an endstop, check the flapping centre offset and the servo pulse limits.</p>
+<h2>06 · Tune via the Web UI</h2>
+<p>Join the receiver's WiFi network and open the config panel in a browser. Adjust ferocity, glide angle, flapping centre offset, and rudder yaw/roll mixing — no reflash needed.</p>
+<p>The full reference lives in the %a{href: "../documentation/"} Documentation page.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a href='../'>PT</a>
+<a class='active' href='../en/'>EN</a>
+<a href='../es/'>ES</a>
+<a href='../fr/'>FR</a>
+<a href='../de/'>DE</a>
+<a href='../ru/'>RU</a>
+<a href='../ko/'>한국어</a>
+<a href='../ja/'>日本語</a>
+<a href='../zh/'>中文</a>
+<a href='../ar/'>عربي</a>
+<a href='../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>Built on ExpressLRS 4.x</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,63 @@
+.mui-panel.mui--text-title
+  %span.panel-icon.icon--symbols.icon--symbols--info
+  = self._t('elrs.info.title')
+.mui-panel
+  .mui--text-title= self._t('elrs.info.section_pteronautos')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('elrs.info.model_name')
+        %td= self._modelLabel()
+      %tr
+        %td
+          %b= self._t('elrs.info.ornithopter_mode')
+        %td{style: "color:#d4a017;"}= self._t('elrs.info.active')
+      %tr
+        %td
+          %b= self._t('elrs.info.kernel_type')
+        %td= self._kernelLabel()
+      %tr
+        %td
+          %b= self._t('elrs.info.mixer_profile')
+        %td= self._mixerLabel()
+      %tr
+        %td
+          %b= self._t('elrs.info.zephyrus')
+        %td= self._gyroLabel()
+      %tr
+        %td
+          %b= self._t('elrs.info.link')
+        %td= self._linkLabel()
+.mui-panel
+  .mui--text-title= self._t('elrs.info.section_device')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('elrs.info.product')
+        %td= self._product()
+      %tr
+        %td
+          %b= self._t('elrs.info.version')
+        %td= self._version()
+      %tr
+        %td
+          %b= self._t('elrs.info.firmware')
+        %td= self._firmware()
+      %tr
+        %td
+          %b= self._t('elrs.info.radio')
+        %td= self._radio()
+      %tr
+        %td
+          %b= self._t('elrs.info.domain')
+        %td= self._band()
+      %tr
+        %td
+          %b= self._t('elrs.info.binding_uid')
+        %td= self._uid()
+      %tr
+        %td
+          %b= self._t('elrs.info.wifi_state')
+        %td= self._wifi()

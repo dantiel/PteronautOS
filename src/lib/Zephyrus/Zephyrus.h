@@ -14,6 +14,7 @@
 class Zephyrus {
 public:
     bool enabled;           // True if MPU6050 WHO_AM_I matched
+    bool gyroEnabled;       // Runtime disable — when false, no I2C, no MPU, no PID
     bool calibrated;        // True after bias calibration succeeds
     uint8_t boardRotation;  // Runtime board orientation (0-6, see ZephyrusConfig.h)
 
@@ -27,6 +28,13 @@ public:
     float yawCorrection;    // Yaw rate PID output magnitude
     float pitchCorrection;  // Pitch PID output magnitude
     float rudderCorrection; // Combined rudder offset in µs (clamped)
+
+    // Raw pitch PID terms — exposed for ornithopter waveform modulation
+    // (Ondas: P→Phase Advance, D→Ferocity, I→Asymmetry; SSFF uses errorRate)
+    float pitchPTerm;       // Raw proportional term
+    float pitchITerm;       // Raw integral term (accumulated error)
+    float pitchDTerm;       // Raw derivative term (low-pass filtered)
+    float pitchErrorRate;   // Pitch error derivative in °/s (for SSFF)
 
     Zephyrus();
 

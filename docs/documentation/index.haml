@@ -1,0 +1,72 @@
+!!!
+%html{lang: "en", dir: "ltr"}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= "Documentation — PteronautOS"
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "../assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      %a.home-link{href: "../en/", title: "Back to home"} ↑
+      %a{href: "../tutorials/"} Tutorials
+      %a{href: "../hardware/"} Hardware
+      %a{href: "../documentation/", class: "active"} Docs
+    %main.sub-main
+      .sub-content
+        %h1 Documentation
+        %p.sub-lead The manual, the gyro notes, and the web UI reference.
+
+        %h2 Manuals
+        %table
+          %tr
+            %td= "PTERONAUTOS.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md", target: "_blank"} Main manual — architecture, mixer, waveform
+          %tr
+            %td= "STABILIZATION.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"} Zephyrus gyro — AHRS and PID
+          %tr
+            %td= "WEBUI_I18N.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md", target: "_blank"} Web UI and translation reference
+          %tr
+            %td= "HARDWARE.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"} Wiring and pin maps
+
+        %h2 Concepts
+        %dl.grid
+          %dt Ferocity
+          %dd Stroke/return asymmetry and dwell — 0 is a pure sine.
+          %dt Waveform
+          %dd The wingbeat curve; amplitude comes from deg/s ÷ 2·freq.
+          %dt Glide angle
+          %dd Wing centre offset for gliding flight.
+          %dt Flapping centre offset
+          %dd Centre bias during the flap stroke (−15…+15 deg).
+          %dt Rudder mixing
+          %dd Yaw/roll blend that drives the crest rudder.
+          %dt Throttle ferocity mix
+          %dd How much throttle couples into ferocity.
+          %dt Failsafe
+          %dd Wings return to neutral if the link drops.
+    %footer
+      .lang-switch
+        %a{href: "../"} PT
+        %a{href: "../en/", class: "active"} EN
+        %a{href: "../es/"} ES
+        %a{href: "../fr/"} FR
+        %a{href: "../de/"} DE
+        %a{href: "../ru/"} RU
+        %a{href: "../ko/"} 한국어
+        %a{href: "../ja/"} 日本語
+        %a{href: "../zh/"} 中文
+        %a{href: "../ar/"} عربي
+        %a{href: "../hi/"} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
+      %p.credit= "Built on ExpressLRS 4.x"

@@ -8,8 +8,6 @@
 
 #include "Zephyrus.h"
 
-extern "C" void pteroLog(const char *fmt, ...);
-
 #ifdef UNIT_TEST
   #include <stdint.h>
   #include <math.h>
@@ -82,10 +80,12 @@ Zephyrus zephyrus;
 // ---------------------------------------------------------------------------
 Zephyrus::Zephyrus()
     : enabled(false)
+    , gyroEnabled(false)   // OFF by default — enable via WebUI when MPU6050 connected
     , _begun(false)
     , calibrated(false)
     , rollDeg(0.0f), pitchDeg(0.0f), yawRate(0.0f)
     , rollCorrection(0.0f), yawCorrection(0.0f), pitchCorrection(0.0f), rudderCorrection(0.0f)
+    , pitchPTerm(0.0f), pitchITerm(0.0f), pitchDTerm(0.0f), pitchErrorRate(0.0f)
     , _mpuPresent(false)
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
@@ -161,7 +161,6 @@ bool Zephyrus::_mpuInit() {
     // Verify presence
     uint8_t who = _mpuRead(MPU_REG_WHO_AM_I);
     if (who != MPU_WHO_AM_I_VALUE) {
-        pteroLog("Zephyrus: WHO_AM_I=0x%02X expected 0x%02X — MPU6050 absent", who, MPU_WHO_AM_I_VALUE);
         return false;
     }
 
@@ -228,56 +227,37 @@ bool Zephyrus::_mpuReadSensors() {
 // ---------------------------------------------------------------------------
 void Zephyrus::begin() {
     _begun = true;
+    enabled = false;
 
-    #if ZEPHYR_I2C_PRE_DETECT
-    // Active probe on SCL line to detect external I2C pull-up (MPU6050).
-    // Drives SCL LOW to discharge bus, releases to high-Z, then reads.
-    //
-    // Without MPU: no external 4.7kΩ → pin stays LOW (floating or pulled
-    //              by UART RX idle) → detection correct.
-    // With    MPU: 4.7kΩ to VCC overcomes float → pin rises HIGH.
-    //
-    // Cost: ~100µs. Only fires once at boot. Prevents ESP8266 software I2C
-    // hang (core_esp8266_si2c.cpp WAIT_CLOCK_HIGH spins forever when SCL
-    // can't rise, triggering watchdog reset).
-    digitalWrite(ZEPHYR_I2C_SCL, LOW);
-    pinMode(ZEPHYR_I2C_SCL, OUTPUT);     // discharge bus capacitance
-    delayMicroseconds(5);
-    pinMode(ZEPHYR_I2C_SCL, INPUT);      // release — high-Z, no internal pull-up
-    delayMicroseconds(50);               // wait for external pull-up to raise line
-    if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
-        pteroLog("Zephyrus: I2C pre-detect FAIL — SCL LOW, no MPU connected");
-        _mpuPresent = false;
-        enabled = false;
-        return; // MPU not connected — don't touch I2C at all
-    }
-    #endif
-
-    Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
-    Wire.setClock(ZEPHYR_I2C_CLOCK);
-    pteroLog("Zephyrus: I2C pre-detect OK — probing MPU at 0x%02X...", ZEPHYR_MPU_ADDR);
-
-    _mpuPresent = _mpuInit();
-    if (!_mpuPresent) {
-        pteroLog("Zephyrus: MPU6050 init FAILED — not found at 0x%02X", ZEPHYR_MPU_ADDR);
-        enabled = false;
+    if (!gyroEnabled) {
         return;
     }
 
+#if ZEPHYR_I2C_PRE_DETECT
+    pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
+    delay(1);
+    if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
+        pinMode(ZEPHYR_I2C_SCL, INPUT);
+        return;
+    }
+    pinMode(ZEPHYR_I2C_SCL, INPUT);
+#endif
+
+    Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
+    Wire.setClock(ZEPHYR_I2C_CLOCK);
+
+    if (!_mpuInit()) {
+        return;
+    }
+
+    _mpuPresent = true;
     enabled = true;
-    pteroLog("Zephyrus: MPU6050 found at 0x%02X — ENABLED, starting calibration", ZEPHYR_MPU_ADDR);
-    _calibrating = true;
+
+    // Start auto-calibration
     _calibCount = 0;
     _calibStable = 0;
-    for (int i = 0; i < 3; i++) {
-        _calibSum[i]   = 0.0f;
-        _calibSumSq[i] = 0.0f;
-        _prevGyro[i]   = 0.0f;
-    }
-    _mahonyReset();
-    _pidReset(_pidRoll);
-    _pidReset(_pidYaw);
-    _pidReset(_pidPitch);
+    _calibrating = true;
+    calibrated = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -358,7 +338,6 @@ void Zephyrus::_calibrationStep() {
             _gyroBias[i] = _calibSum[i] / n;
         }
         _finishCalibration(n);
-        pteroLog("Zephyrus: calibration timeout — bias accepted after %d samples", _calibCount);
         return;
     }
 
@@ -374,7 +353,6 @@ void Zephyrus::_calibrationStep() {
             }
         }
         _finishCalibration(n);
-        pteroLog("Zephyrus: calibration complete — stable after %d samples", _calibCount);
     }
 }
 
@@ -404,8 +382,6 @@ void Zephyrus::_finishCalibration(float n) {
     rollDeg  = 0.0f;
     pitchDeg = 0.0f;
 
-    pteroLog("Zephyrus: level ref — accel roll=%.1f° pitch=%.1f°",
-             _accelRefRoll * 57.29578f, _accelRefPitch * 57.29578f);
 }
 
 // ---------------------------------------------------------------------------
@@ -427,7 +403,6 @@ void Zephyrus::forceCalibrate() {
     _calibrating = true;
     calibrated   = false;
     _mahonyReset();
-    pteroLog("Zephyrus: force recalibrate — bias zeroed, restarting");
 }
 
 // ---------------------------------------------------------------------------
@@ -436,7 +411,6 @@ void Zephyrus::forceCalibrate() {
 void Zephyrus::setBoardRotation(uint8_t rot) {
     if (rot <= 6) {
         boardRotation = rot;
-        pteroLog("Zephyrus: board rotation set to %d", rot);
     }
 }
 
@@ -570,7 +544,8 @@ void Zephyrus::_mahonyReset() {
 // ---------------------------------------------------------------------------
 float Zephyrus::_pidCompute(PidState &s, float error, float dt,
                              float kp, float ki, float kd, float imax) {
-    if (dt <= 0.0f || dt > 0.1f) return 0.0f;
+    // Validatio: NaN-safe guard — NaN comparisons always false, so isnan() check needed
+    if (dt <= 0.0f || dt > 0.1f || isnan(dt) || isnan(error)) return 0.0f;
 
     // Proportional
     float pOut = kp * error;
@@ -673,12 +648,19 @@ void Zephyrus::update(uint32_t nowUs) {
     if (!_begun) {
         begin();
     }
-    if (!enabled) return;
+    if (!enabled || !gyroEnabled) {
+        rudderCorrection = 0.0f;
+        rollCorrection = 0.0f;
+        yawCorrection = 0.0f;
+        pitchCorrection = 0.0f;
+        return;
+    }
 
     // Calibration phase — accumulate samples, skip AHRS/PID until done
     if (_calibrating) {
         _calibrationStep();
         if (_calibrating) return;  // Not done yet
+        // Calibration complete — proceed to AHRS+PID
     }
 
     // Read MPU6050
@@ -734,11 +716,26 @@ void Zephyrus::update(uint32_t nowUs) {
                                  ZEPHYR_PID_YAW_IMAX);
 
     // --- Pitch PID (target: 0°, stabilize pitch) ---
-    pitchCorrection = _pidCompute(_pidPitch, -pitchDeg, dt,
+    float pitchErr = -pitchDeg;
+    pitchCorrection = _pidCompute(_pidPitch, pitchErr, dt,
                                    ZEPHYR_PID_PITCH_KP,
                                    ZEPHYR_PID_PITCH_KI,
                                    ZEPHYR_PID_PITCH_KD,
                                    ZEPHYR_PID_PITCH_IMAX);
+
+    // Expose raw P/I/D terms for ornithopter waveform modulation (Nigredo)
+    // Validatio: guard against NaN propagation from corrupt MPU6050 data
+    if (isnan(pitchErr) || isnan(_pidPitch.integrator) || isnan(_pidPitch.lastDerivative)) {
+        pitchPTerm    = 0.0f;
+        pitchITerm    = 0.0f;
+        pitchDTerm    = 0.0f;
+        pitchErrorRate = 0.0f;
+    } else {
+        pitchPTerm    = ZEPHYR_PID_PITCH_KP * pitchErr;
+        pitchITerm    = _pidPitch.integrator;
+        pitchDTerm    = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative;
+        pitchErrorRate = _pidPitch.lastDerivative;  // already low-pass filtered °/s
+    }
 
 #ifdef ORNITHOPTER_GEARBOX
     // Gearbox: rudder = yaw-only (roll + pitch go to leg servos separately)

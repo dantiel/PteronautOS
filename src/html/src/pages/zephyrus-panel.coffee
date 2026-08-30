@@ -7,7 +7,7 @@ import {PteroElement, Fmt, Style, Status, API, Zephyrus} from '../lib/ptero'
 # FEATURE:PTERONAUTOS
 ###
 class ZephyrusPanel extends PteroElement
-  pollRate: 200
+  pollRate: 2000
 
   @properties:
     gyroEnabled:      {state: true}

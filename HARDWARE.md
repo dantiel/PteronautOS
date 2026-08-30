@@ -44,7 +44,7 @@
 | **CH1** | 0 | PWM + Button | Left Wing Servo + BOOT button | ✅ |
 | **CH2** | 1 | PWM + UART TX | Right Wing Servo + I²C SDA | ✅ |
 | **CH3** | 3 | PWM + UART RX | Crest Rudder + I²C SCL | ✅ |
-| *(none)* | 2 | *(not exposed)* | — | — |
+| *(none)* | 2 | SX1280 NRESET (radio reset) | Radio reset | 🔒 Hard-reserved |
 | *(none)* | 4 | SX1280 DIO1 IRQ | Radio interrupt | 🔒 Hard-reserved |
 | *(none)* | 5 | *(not exposed)* | — | — |
 | **CH7** | 9 | PWM | Aux Servo 4 | ✅ Free |

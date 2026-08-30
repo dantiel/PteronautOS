@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Hardware — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<a class='home-link' href='../en/' title='Back to home'>↑</a>
+<a href='../tutorials/'>Tutorials</a>
+<a class='active' href='../hardware/'>Hardware</a>
+<a href='../documentation/'>Docs</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Hardware</h1>
+<p class='sub-lead'>The boards PteronautOS runs on, and how to wire them.</p>
+<h2>Supported boards</h2>
+<table>
+<tr>
+<td>Board</td>
+<td>MCU · Radio</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+</table>
+<h2>Key specs</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 MHz, 1 MB flash</td>
+</tr>
+<tr>
+<td>Radio</td>
+<td>ExpressLRS 2.4 GHz (SX1280)</td>
+</tr>
+<tr>
+<td>Gyro</td>
+<td>MPU6050 (GY-521) on I2C</td>
+</tr>
+<tr>
+<td>Servos</td>
+<td>3 PWM channels — left wing, right wing, crest rudder</td>
+</tr>
+</table>
+<h2>Wiring</h2>
+<p>Three servo channels plus the MPU6050 on the I2C bus. The full pin map, I2C wiring, and v1.0/v1.1 revision differences are in the PWMP7 guide.</p>
+<p>
+<a href='../en/hardware/'>PWMP7 receiver compatibility guide →</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Full hardware reference (HARDWARE.md) →</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a href='../'>PT</a>
+<a class='active' href='../en/'>EN</a>
+<a href='../es/'>ES</a>
+<a href='../fr/'>FR</a>
+<a href='../de/'>DE</a>
+<a href='../ru/'>RU</a>
+<a href='../ko/'>한국어</a>
+<a href='../ja/'>日本語</a>
+<a href='../zh/'>中文</a>
+<a href='../ar/'>عربي</a>
+<a href='../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>Built on ExpressLRS 4.x</p>
+</footer>
+</body>
+</html>

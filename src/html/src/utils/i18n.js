@@ -92,7 +92,12 @@ class I18nEngine {
       const enMod = this._locales.get('en');
       if (enMod && enMod.keys[key] !== undefined) {
         str = enMod.keys[key];
+        // Warn about missing translation in current locale (except English)
+        if (this._locale !== 'en') {
+          console.warn(`⚠️ [i18n] Missing translation: "${key}" for locale "${this._locale}" (using English fallback)`);
+        }
       } else {
+        console.warn(`⚠️ [i18n] Missing key: "${key}" (no translation found)`);
         return key; // bare key as last resort
       }
     }

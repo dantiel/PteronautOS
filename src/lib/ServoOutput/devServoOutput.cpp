@@ -19,6 +19,13 @@ static pwm_channel_t pwmChannels[PWM_MAX_CHANNELS];
 static uint16_t pwmChannelValues[PWM_MAX_CHANNELS];
 static bool initialized = false;
 
+// Servo sweep test state
+static bool _sweepActive = false;
+static uint32_t _sweepStartMs = 0;
+static uint16_t _sweepCurrentUs = 1500;
+static constexpr uint32_t SWEEP_PERIOD_MS = 2000;  // full triangle cycle
+static constexpr uint32_t SWEEP_DURATION_MS = 6000; // auto-stop after 6s
+
 #if defined(PLATFORM_ESP32)
 static DShotRMT *dshotInstances[PWM_MAX_CHANNELS] = {nullptr};
 const uint8_t RMT_MAX_CHANNELS = 8;
@@ -29,7 +36,16 @@ static volatile bool newChannelsAvailable;
 static uint32_t lastUpdate;
 // Absolute max failsafe time if no update is received, regardless of LQ
 static constexpr uint32_t FAILSAFE_ABS_TIMEOUT_MS = 1000U;
-static constexpr uint32_t DISCONNECTED_UPDATE_MS = 10;
+// PteronautOS: run the mixer at a fixed 3ms (333Hz) tick in ALL connection
+// states. The flapping waveform runs at 19-25Hz; a longer update cadence
+// yields too few samples per half-stroke. Returning DURATION_IMMEDIATELY in
+// the connected state makes servosUpdate() free-run every loop iteration — on
+// the single-core ESP8285 the loop is shared with WiFi (lwIP), telemetry, OTA
+// and radio SPI, so the actual intervals jitter by several ms. That jitter is
+// invisible at the 2000ms sweep period but visible as flapping stutter at
+// 19-25Hz wingbeat rates. 3ms matches the 333Hz PWM frame so each frame
+// receives a fresh value (watchdog timeout is 50ms).
+static constexpr uint32_t SERVO_TICK_MS = 3;
 
 typedef void (*servoWrite_fn)(uint8_t ch, uint16_t us);
 
@@ -106,9 +122,8 @@ static void servoWriteDshot(eServoOutputMode chMode, uint8_t ch, uint16_t us)
 
 
 
-static void servoWrite(uint8_t ch, uint16_t us)
+static void servoWriteRaw(uint8_t ch, uint16_t us)
 {
-    us = orniFilterChannel(ch, us);
     const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
     const eServoOutputMode chMode = (eServoOutputMode)chConfig->val.mode;
     if (chMode == somDShot || chMode == somDShot3D)
@@ -131,6 +146,11 @@ static void servoWrite(uint8_t ch, uint16_t us)
             PWM.setMicroseconds(pwmChannels[ch], us);
         }
     }
+}
+
+static void servoWrite(uint8_t ch, uint16_t us)
+{
+    servoWriteRaw(ch, orniFilterChannel(ch, us));
 }
 
 static void servosFailsafe()
@@ -157,7 +177,9 @@ static void servosFailsafe()
 static void servosEnterFailsafe()
 {
     ornithopterOnLinkDown();
+#ifdef ZEPHYRUS_ENABLED
     zephyrusOnLinkDown();
+#endif
     newChannelsAvailable = false;
     lastUpdate = 0;
 
@@ -226,20 +248,48 @@ static void servosUpdate(unsigned long now)
     zephyrusUpdate();
 #endif
 
+    // ── Sweep test: bypass ornithopter mixer, write triangle wave ──
+    if (_sweepActive)
+    {
+        uint32_t elapsed = now - _sweepStartMs;
+        if (elapsed > SWEEP_DURATION_MS)
+        {
+            _sweepActive = false;
+            _sweepCurrentUs = 1500;
+        }
+        else
+        {
+            uint32_t phase = elapsed % SWEEP_PERIOD_MS;
+            if (phase < SWEEP_PERIOD_MS / 2)
+                _sweepCurrentUs = 1000 + (uint16_t)((phase * 1000UL) / (SWEEP_PERIOD_MS / 2));
+            else
+                _sweepCurrentUs = 2000 - (uint16_t)(((phase - SWEEP_PERIOD_MS/2) * 1000UL) / (SWEEP_PERIOD_MS / 2));
+            // Write sweep value to all PWM channels — raw, bypassing the
+            // ornithopter mixer filter (which would override with _f[func]).
+            for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
+                servoWriteRaw(ch, _sweepCurrentUs);
+            return;  // skip ornithopter + ELRS channel processing
+        }
+    }
+
+#ifdef ORNITHOPTER_MODE
+    // Advance mixer and write servo outputs on every tick (even disconnected — for PWM test)
+    ornithopter.benchMode = (connectionState == wifiUpdate);
+    ornithopterUpdate();
+    orniInitWrite(&servoWrite);
+    if (ornithopter.stickOverride)
+    {
+        // Virtual stick mode: hold mixer output, skip CRSF + failsafe path.
+        // This lets the flapping/mixing be tested without a transmitter link.
+        return;
+    }
+#endif
+
     if (connectionState != connected || !connectionHasModelMatch || !teamraceHasModelMatch)
     {
         servosEnterFailsafe();
         return;
     }
-
-#ifdef ORNITHOPTER_MODE
-    // Advance mixer and write servo outputs on every tick
-    ornithopterUpdate();
-    if (initialized)
-    {
-        orniInitWrite(&servoWrite);  // profile-driven: writes 0 to all managed PWM indices
-    }
-#endif
 
     if (newChannelsAvailable)
     {
@@ -326,11 +376,38 @@ static bool initialize()
             digitalWrite(pin, LOW);
         }
     }
+    // Allocate PWM channels early so servos work without binding
+    for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
+    {
+#if defined(PTERONAUTOS)
+        // PteronautOS: 333Hz servo refresh — native rate of the KST MS320
+        // digital servo (and other 333Hz-class servos). 3ms frames match the
+        // SERVO_TICK_MS mixer cadence, yielding ~13 samples per
+        // wingbeat stroke instead of ~6 at 160Hz → visibly smoother flapping.
+        constexpr uint32_t frequency = 333U;
+#else
+        const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
+        const auto frequency = servoOutputModeToFrequency((eServoOutputMode)chConfig->val.mode);
+#endif
+        if (frequency && servoPins[ch] != UNDEF_PIN)
+        {
+            pwmChannels[ch] = PWM.allocate(servoPins[ch], frequency);
+        }
+    }
     return true;
 }
 
 static int event()
 {
+#if defined(PTERONAUTOS)
+    // PteronautOS: keep PWM alive during WiFi AP mode so the web panel can
+    // drive servos (sweep test + virtual stick override) with no radio link.
+    if (connectionState == wifiUpdate)
+    {
+        servosEnterFailsafe();
+        return SERVO_TICK_MS;  // keep servosUpdate() running
+    }
+#else
     if (connectionState == wifiUpdate)
     {
         servosEnterFailsafe();
@@ -352,32 +429,20 @@ static int event()
         }
         return DURATION_NEVER;
     }
+#endif
     if (connectionState != connected)
     {
         servosEnterFailsafe();
         // When disconnected, return a timeout to feed the ISR watchdog for the PWM signals
-        return connectionState == disconnected ? DISCONNECTED_UPDATE_MS : DURATION_IMMEDIATELY;
+        return connectionState == disconnected ? SERVO_TICK_MS : DURATION_IMMEDIATELY;
     }
     if (!initialized && connectionState == connected)
     {
         initialized = true;
         ornithopterOnLinkUp();
+#ifdef ZEPHYRUS_ENABLED
         zephyrusOnLinkUp();
-        for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
-        {
-            const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
-            const auto frequency = servoOutputModeToFrequency((eServoOutputMode)chConfig->val.mode);
-            if (frequency && servoPins[ch] != UNDEF_PIN)
-            {
-                pwmChannels[ch] = PWM.allocate(servoPins[ch], frequency);
-            }
-#if defined(PLATFORM_ESP32)
-            else if ((eServoOutputMode)chConfig->val.mode == somDShot || (eServoOutputMode)chConfig->val.mode == somDShot3D)
-            {
-                dshotInstances[ch]->begin(DSHOT300, false); // Set DShot protocol and bidirectional DShot bool
-            }
 #endif
-        }
     }
     return DURATION_IMMEDIATELY;
 }
@@ -385,8 +450,43 @@ static int event()
 static int timeout()
 {
     servosUpdate(millis());
-    // When disconnected, return a timeout to feed the ISR watchdog for the PWM signals
-    return connectionState == disconnected ? DISCONNECTED_UPDATE_MS : DURATION_IMMEDIATELY;
+    // When disconnected (or WiFi AP mode under PteronautOS), return a timeout
+    // to feed the ISR watchdog for the PWM signals.
+#if defined(PTERONAUTOS)
+    // Always tick the mixer at the fixed SERVO_TICK_MS cadence. In the connected
+    // state, DURATION_IMMEDIATELY would free-run servosUpdate() on every loop
+    // iteration; on the single-core ESP8285 the loop is shared with WiFi (lwIP),
+    // telemetry, OTA and radio SPI, so the actual intervals jitter — visible as
+    // flapping stutter at 19-25Hz (invisible at the 2000ms sweep period).
+    return SERVO_TICK_MS;
+#else
+    return connectionState == disconnected ? SERVO_TICK_MS : DURATION_IMMEDIATELY;
+#endif
+}
+
+// ── Sweep test API ───────────────────────────────────────────────
+void startServoSweep()
+{
+    _sweepActive = true;
+    _sweepStartMs = millis();
+    _sweepCurrentUs = 1500;
+}
+
+void stopServoSweep()
+{
+    _sweepActive = false;
+    _sweepCurrentUs = 1500;
+    // Also reset all channels back to ornithopter control on next tick
+}
+
+bool isServoSweepActive()
+{
+    return _sweepActive;
+}
+
+uint16_t getServoSweepUs()
+{
+    return _sweepCurrentUs;
 }
 
 #if defined(PLATFORM_ESP32)

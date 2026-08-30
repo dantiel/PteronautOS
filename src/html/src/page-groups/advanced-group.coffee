@@ -1,0 +1,5 @@
+import '../pages/hardware-layout.js'
+import '../pages/voltage-calibration-panel.js'
+import '../pages/zephyrus-panel.coffee'
+import '../pages/servo-panel.coffee'
+import '../pages/debug-console-panel.coffee'

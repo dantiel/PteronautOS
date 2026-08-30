@@ -17,6 +17,9 @@
  *     - else                         →  else branch of nearest - if
  *     - elsif self.cond2             →  else-if branch
  *     - for item of self.list        →  ${self.list.map(item => html`...`)}
+ *     - choose self.expr             →  ${(expr === val) ? html`...` : ...}
+ *     - when val                     →  branch of nearest - choose
+ *     - otherwise                    →  default branch of - choose
  *     - for item, idx of self.list   →  ${self.list.map((item, idx) => html`...`)}
  *     :plain                         →  raw text block
  *     / comment                      →  skipped
@@ -51,7 +54,7 @@ function parseLine(line) {
   // Code: - if/else/elsif/for/while/switch/return/...
   if (trimmed.startsWith('- ')) {
     const code = trimmed.slice(2).trim()
-    const codeMatch = code.match(/^(if|else|elsif|for|while|switch|unless|until)\b/)
+    const codeMatch = code.match(/^(if|else|elsif|for|while|switch|unless|until|choose|when|otherwise)\b/)
     if (codeMatch) {
       return {
         type: 'code',
@@ -620,8 +623,12 @@ function generateCodeBlock(node, indent, vars) {
     return generateLoop(node, indent, vars)
   }
 
-  if (codeKeyword === 'else' || codeKeyword === 'elsif') {
-    // These are handled by generateConditional when processing the parent - if
+  if (codeKeyword === 'choose') {
+    return generateChoose(node, indent, vars)
+  }
+
+  if (codeKeyword === 'else' || codeKeyword === 'elsif' || codeKeyword === 'when' || codeKeyword === 'otherwise') {
+    // These are handled by generateConditional / generateChoose when processing the parent
     return ''
   }
 
@@ -700,6 +707,43 @@ function generateConditional(ifNode, indent, vars) {
   }
   out += '}'
   
+  return out
+}
+
+function generateChoose(chooseNode, indent, vars) {
+  const subject = processExpr(chooseNode.parsed.codeExpr || 'null')
+  const results = []
+
+  for (const child of (chooseNode.children || [])) {
+    const { codeKeyword, codeExpr } = child.parsed
+    const body = wrapChildrenInHtml(child.children, indent, vars)
+    if (codeKeyword === 'when') {
+      const val = processExpr(codeExpr || 'null')
+      results.push({ cond: `(${subject}) === (${val})`, body, type: 'when' })
+    } else if (codeKeyword === 'otherwise') {
+      results.push({ cond: null, body, type: 'else' })
+    }
+  }
+
+  if (results.length === 0) return '${null}'
+
+  const hasElse = results.some(r => r.type === 'else')
+  let out = '${'
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    const isLast = i === results.length - 1
+    if (r.type === 'when') {
+      const prefix = i === 0 ? '' : ' : '
+      if (isLast && !hasElse) {
+        out += `${prefix}${r.cond} ? ${r.body} : null`
+      } else {
+        out += `${prefix}${r.cond} ? ${r.body}`
+      }
+    } else if (r.type === 'else') {
+      out += ` : ${r.body}`
+    }
+  }
+  out += '}'
   return out
 }
 

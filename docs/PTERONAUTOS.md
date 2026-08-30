@@ -13,13 +13,15 @@
 3. [Build & Flash](#3-build--flash)
 4. [Ornithopter — Wing Waveform Engine](#4-ornithopter--wing-waveform-engine)
 5. [Zephyrus — Gyro Stabilization](#5-zephyrus--gyro-stabilization)
-6. [ServoOutput — PWM Layer](#6-servooutput--pwm-layer)
-7. [Configuration Reference](#7-configuration-reference)
-8. [WiFi WebUI](#8-wifi-webui)
-9. [Build Pipeline](#9-build-pipeline)
-10. [Failsafe & Robustness](#10-failsafe--robustness)
-11. [Tuning Guide](#11-tuning-guide)
-12. [File Map](#12-file-map)
+6. [Stabilization — Cadence, Ferocity, Balance, SSFF & Aeroelastic PID](#6-stabilization)
+7. [ServoOutput — PWM Layer](#7-servooutput--pwm-layer)
+8. [Configuration Reference](#8-configuration-reference)
+9. [WiFi WebUI](#9-wifi-webui)
+10. [Build Pipeline](#10-build-pipeline)
+11. [Failsafe & Robustness](#11-failsafe--robustness)
+12. [Tuning Guide](#12-tuning-guide)
+13. [File Map](#13-file-map)
+14. [Telemetry & Data](#14-telemetry--data)
 
 ---
 
@@ -30,13 +32,15 @@
 │  Radio   │ ────────→ │ rx_main  │ ───────────→ │ Ornithopter  │ ────────→ │ ServoOutput  │
 │ (TX16S)  │           │ (ELRS)   │              │ mixer+wave   │           │ PWM 50-160Hz │
 └──────────┘           └──────────┘              └──────┬───────┘           └──────┬───────┘
-                                                        │                          │
-                                                        │ gyroRudderCorrection     │
-                                                        │ (µs offset)              │
-                                                ┌───────┴────────┐                 │
+                                                        │ ▲                        │
+                                    gyroRudderCorrection│ │pitch P/I/D, errorRate  │
+                                                  (µs)  │ │(Cadence/Ferocity/    │
+                                                        │ │ Balance+SSFF+Aero)    │
+                                                ┌───────┴─┴──────┐                 │
                                                 │   Zephyrus     │                 │
                                                 │ MPU6050+AHRS   │                 │
-                                                │ Roll+Yaw PID   │                 │
+                                                │ Roll+Yaw+Pitch │                 │
+                                                │ PID + raw terms│                 │
                                                 └────────────────┘                 │
                                                                                    │
                                   GPIO0 ──── Left Wing Servo  ←────────────────────┘
@@ -51,8 +55,9 @@
 
 | Module | Directory | Role | Guard |
 |--------|-----------|------|-------|
-| **Ornithopter** | `src/lib/Ornithopter/` | Waveform generator, channel mixer, servo µs computation | `-D ORNITHOPTER_MODE=1` |
-| **Zephyrus** | `src/lib/Zephyrus/` | MPU6050 IMU → Mahony AHRS → dual PID → crest rudder correction | `-D ZEPHYRUS_ENABLED=1` |
+| **Ornithopter** | `src/lib/Ornithopter/` | Waveform generator, channel mixer, servo µs computation + Cadence/Ferocity/Balance/SSFF/Aeroelastic modulation | `-D ORNITHOPTER_MODE=1` |
+| **Zephyrus** | `src/lib/Zephyrus/` | MPU6050 IMU → Mahony AHRS → dual PID → raw P/I/D term exposure | `-D ZEPHYRUS_ENABLED=1` |
+| **Stabilization** | Bridge: `ZephyrusFilter.h` + `Ornithopter` | Cadence/Ferocity/Balance modulation + trapezoidal wave + anchor + resonance + SSFF + aeroelastic | `ZEPHYRUS_ENABLED` |
 | **ServoOutput** | `src/lib/ServoOutput/` | PWM generation synchronized to CRSF tick, failsafe handling | `TARGET_RX` |
 | **Target** | `src/targets/pteronautos-rx.ini` | Build configuration, flags, excludes | — |
 
@@ -145,10 +150,12 @@ pio run -e PteronautOS_ESP8285_2400_RX
 
 **Current build stats:**
 
-| Resource | Used | Limit | % |
-|----------|------|-------|---|
-| RAM | 50,864 B | 81,920 B | 62.1% |
-| Flash | 553,416 B | 991,216 B | 55.8% |
+| Target | RAM | Flash |
+|--------|-----|-------|
+| `PteronautOS_ESP8285_2400_RX` | 69.2% | 57.4% |
+| `PteronautOS_ESP8285_2400_RX_GEARBOX` | 69.2% | 57.1% |
+
+> ⚠️ **RAM at 69%** exceeds the Hermetic Manifest's 65% guideline — a pre-existing constraint from the ELRS WiFi stack + Ornithopter + Zephyrus modules. All new stabilization code adds ~0 bytes RAM (value-type fields only).
 
 ### First Flash — UART Required
 
@@ -230,18 +237,27 @@ Legacy `-D ORNITHOPTER_GEARBOX=1` still maps to profile 5.
 
 ### Flapping Oscillator
 
-The heart of the wing motion is a phase-accumulator oscillator with asymmetric tanh waveshaping:
+The heart of the wing motion is a phase-accumulator oscillator with trapezoidal
+dwell + cos ramp waveshaping (ported from OrniFlight, July 2026):
 
 ```
 phase += cadence × dt          ← frequency from throttle + cadence channel
 rawSin = sin(phase)            ← base sine wave
-shaped = tanh(ferocity × rawSin) / tanh(ferocity)   ← asymmetric waveform
+f = ferocity (stroke or return), d = f/8 = dwell ratio ∈ [0.125, 1.0]
+if |rawSin| ≥ (1-d/2): output = ±1.0 (flat dwell)
+else: output = ±cos(π × ramp) (cos ramp between dwell regions)
 ```
 
-Where `ferocity` switches between `strokeFerocity` (downstroke, rawSin ≥ 0) and `returnFerocity` (upstroke, rawSin < 0). This produces a biologically plausible wingbeat with:
+Where `ferocity` switches between `strokeFerocity` (downstroke, rawSin ≥ 0) and
+`returnFerocity` (upstroke, rawSin < 0). The trapezoidal waveform produces a
+biologically plausible wingbeat with:
 
-- **Sharp, powerful downstroke** (high ferocity → near-square wave)
-- **Smooth, gradual upstroke** (low ferocity → near-sine)
+- **Flat dwell at stroke extremes** (high ferocity → longer dwell, sharper transition)
+- **Smooth cos ramp between dwells** (low ferocity → near-sine)
+- **PD-blend ferocity**: P-term and D-term from Zephyrus pitch PID blend into the dwell ratio
+
+The old tanh-based `shapeWave()` is fully replaced. A `d >= 0.999f` guard prevents
+division by zero at maximum ferocity (f=8.0 → d=1.0, pure square wave).
 
 ### Waveform Kernel (`SERVO_*` profiles)
 
@@ -378,6 +394,23 @@ Mahony AHRS runs with `Ki=0` — no gyro bias estimation. Roll and pitch are cor
 
 Both use **derivative-on-measurement** (derivative acts on the sensor value, not the error) to avoid derivative kick on setpoint changes.
 
+### Raw P/I/D Term Exposure (Nigredo)
+
+The pitch PID's raw proportional, integral, and derivative terms are exposed as public
+fields and bridged to the Ornithopter module for waveform modulation:
+
+```
+Zephyrus::update()
+    pitchPTerm    = Kp × pitchError     → ornithopter.gyroPitchPTerm
+    pitchITerm    = integrator           → ornithopter.gyroPitchITerm
+    pitchDTerm    = Kd × lastDerivative  → ornithopter.gyroPitchDTerm
+    pitchErrorRate = lastDerivative      → ornithopter.gyroPitchErrorRate
+```
+
+These feed the **stabilization modulation** (Cadence P→Phase, Ferocity PD→Dwell, Balance I→Asymmetry),
+**SSFF** (stroke-synchronous feed-forward), and **aeroelastic gain** systems.
+See [`docs/STABILIZATION.md`](STABILIZATION.md) for the complete reference.
+
 ### Rudder Mixer
 
 ```
@@ -385,6 +418,20 @@ rudderCorrection = rollCorrection × ROLL_GAIN  (2.5 µs/°)
                  + yawCorrection  × YAW_GAIN   (1.5 µs/(°/s))
 clamped to ±RUDDER_CLAMP_US (200 µs)
 ```
+
+### Gearbox Mixer (ORNITHOPTER_GEARBOX)
+
+When built with `-D ORNITHOPTER_GEARBOX=1`, Zephyrus provides 3-axis PID:
+
+```
+rudderCorrection  = yawCorrection × YAW_GAIN          → crest rudder
+gyroAileronCorrection  = rollCorrection × GEARBOX_ROLL_GAIN   → leg ailerons/elevons
+gyroElevatorCorrection = pitchCorrection × GEARBOX_PITCH_GAIN × aeroGainScale → leg elevons
+```
+
+All three correction outputs are clamped to `±ZEPHYR_GEARBOX_CLAMP_US` (250µs). The
+`aeroGainScale` multiplier on elevator correction dynamically reduces pitch PID authority
+when the motor is off (glide).
 
 ### Auto-Calibration
 
@@ -420,7 +467,54 @@ Calibration data is **not persisted** — it recalibrates on every power cycle. 
 
 ---
 
-## 6. ServoOutput — PWM Layer
+## 6. Stabilization — Cadence, Ferocity, Balance, SSFF & Aeroelastic PID
+
+> 📘 **Complete reference:** [`docs/STABILIZATION.md`](STABILIZATION.md)
+The stabilization system bridges Zephyrus's raw pitch PID terms (P, I, D, errorRate)
+into the Ornithopter waveform engine, enabling multiple layers of bio-inspired modulation:
+
+### Cadence, Ferocity, Balance — Three-Channel Modulation
+
+| Channel | Source | Maps To | Effect |
+|---------|--------|---------|--------|
+| **Cadence P→Phase** | `gyroPitchPTerm` | `_osc.kGainMod` [0.5, 2.0] | Compresses/decompresses stroke phase — wings "breathe" with pitch |
+| **Ferocity D→Dwell** | `gyroPitchDTerm` | PD-blend `ferocitySignal` | Trapezoidal dwell ratio — sharper strokes during rapid pitch change |
+| **Ferocity P→Dwell** | `gyroPitchPTerm` | PD-blend `ferocitySignal` | P-contribution to dwell (blended with Ferocity D, default 0=off) |
+| **Balance I→Asymmetry** | `gyroPitchITerm` | `iBias` [-3.0, 3.0] | Shifts stroke center — persistent error → biased thrust |
+
+### Trapezoidal Wave Shaping
+
+Replaces the old tanh-based waveform with a trapezoidal dwell + cos ramp (ported
+from OrniFlight). Ferocity controls dwell ratio: low ferocity → nearly sinusoidal,
+high ferocity → square wave with flat dwell at ±1.0 amplitude.
+
+### Anchor (k₂ Damping) + Resonance (Phase Lock)
+
+- **Anchor** controls oscillator damping: 0 = tight lock (k₂=10), up to k₂=110
+- **Resonance** runs a phase-locked lock-in amplifier: `errorRate × sin(phase)` →
+  leaky integrator (τ=0.15s) injected into stroke/return ferocity
+
+### SSFF — Stroke-Synchronous Feed-Forward
+
+Accumulates `gyroPitchErrorRate` (°/s) over each half-stroke. At the waveform
+zero-crossing (wing reversal), biases the next half-stroke's ferocity.
+
+### Aeroelastic PID Gain Modulation
+
+Dynamically scales all stabilization by glide/flap coefficient:
+- **Glide** (wings still): `aeroGlideCoeff × 0.01` — reduced PID authority
+- **Flap** (wings beating): `aeroFlapCoeff × 0.01` — full PID authority
+
+### WebUI
+
+Stabilization and Aeroelastic sections in the Ornithopter panel (visible when Zephyrus
+is detected): 8 sliders (Cadence, Ferocity D, Ferocity P, Balance, SSFF, Anchor,
+Resonance, plus Glide/Flap Coeff). Values persisted via `POST /pteronautos/config`
+(volatile — RAM only, resets on power cycle).
+
+---
+
+## 7. ServoOutput — PWM Layer
 
 Located in `src/lib/ServoOutput/devServoOutput.cpp`. The PWM engine:
 
@@ -461,7 +555,7 @@ When built without `-D ORNITHOPTER_MODE=1`, all functions inline to **nothing** 
 
 ---
 
-## 7. Configuration Reference
+## 8. Configuration Reference
 
 ### Build Flags (`src/targets/pteronautos-rx.ini`)
 
@@ -495,7 +589,7 @@ The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=1` and `-D Z
 
 ---
 
-## 8. WiFi WebUI
+## 9. WiFi WebUI
 
 After booting without a transmitter for 60 seconds, the receiver enters WiFi AP mode. Connect to `ExpressLRS RX` (password: `expresslrs`) and browse to `http://10.0.0.1`.
 
@@ -555,7 +649,7 @@ When the PteronautOS header isn't available, the build falls back to the standar
 
 ---
 
-## 9. Build Pipeline
+## 10. Build Pipeline
 
 ```
 src/html/
@@ -588,7 +682,7 @@ src/html/
 
 ---
 
-## 10. Failsafe & Robustness
+## 11. Failsafe & Robustness
 
 ### Failsafe Sequence
 
@@ -612,7 +706,7 @@ src/html/
 
 ---
 
-## 11. Tuning Guide
+## 12. Tuning Guide
 
 ### First Flight
 
@@ -621,6 +715,23 @@ src/html/
 3. **Arm at zero throttle** — verify wings hold glide position (~96°)
 4. **Increase throttle slowly** — wings should start flapping at ~1040µs
 5. **Adjust ferocity channels mid-flight** — higher values = sharper downstroke
+
+### Stabilization Tuning
+
+> 📘 See [`docs/STABILIZATION.md` §10 Tuning Guide](STABILIZATION.md#10-tuning-guide) for the complete procedure.
+
+1. **Start with all gains at 0** — fly with manual control + Zephyrus rudder only
+2. **Cadence (P→Phase Advance)** — start at 10. Wings should feel "connected" to pitch
+3. **Ferocity D (D→Dwell)** — start at 10. Rapid pitch → sharper strokes via trapezoidal
+4. **Ferocity P (P→Dwell)** — optional, start at 5. Blends P into dwell ratio
+5. **Balance (I→Asymmetry)** — start at 5. Most destabilizing — keep low
+6. **Anchor** — keep at 0 (default tight k₂=10). Increase for tighter lock
+7. **Resonance** — start at 5. Phase-locked error accumulation; subtle effect
+8. **SSFF** — start at 5 after other channels are tuned
+6. **Aeroelastic coefficients** — tune last. Glide=40, Flap=40 are conservative defaults
+
+> ⚠️ **Always test at low throttle.** Stabilization directly alters wing motion. Unexpected thrust
+vectors possible at aggressive settings.
 
 ### Zephyrus PID Tuning
 
@@ -645,7 +756,7 @@ src/html/
 
 ---
 
-## 12. File Map
+## 13. File Map
 
 ```
 PteronautOS/
@@ -709,7 +820,7 @@ PteronautOS/
 
 ---
 
-## 13. Telemetry & Data
+## 14. Telemetry & Data
 
 ### CRSF Attitude Telemetry (to TX)
 
