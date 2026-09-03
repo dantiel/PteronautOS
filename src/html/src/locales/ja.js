@@ -613,5 +613,7 @@ export default {
     'backup.import_done': '設定のインポートに成功しました — 再起動中',
     'backup.error.html': 'サーバーからの無効な応答',
     'backup.error.json': '無効なJSONファイル',
+    'elrs.info.link_down': 'リンク切断',
+    'elrs.info.disabled': '無効',
   }
 };

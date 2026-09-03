@@ -75,6 +75,10 @@ export default defineConfig(({ command, mode }) => {
           entryFileNames: '[name]-[hash].js',
           chunkFileNames: '[name]-[hash].js',
           manualChunks(id) {
+            // ESP8285 has too little network heap to reliably serve multiple
+            // large module streams during the first uncached page load.
+            // PteronautOS uses static imports, so keep it in one JS asset.
+            if (env.VITE_FEATURE_PTERONAUTOS === 'true') return undefined
             const p = id.split('\\').join('/')
             if (
               (p.includes('/src/utils/') && !p.endsWith('/hardware-schema.js')) ||

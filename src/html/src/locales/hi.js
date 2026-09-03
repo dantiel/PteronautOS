@@ -613,5 +613,7 @@ export default {
     'backup.import_done': 'कॉन्फ़िगरेशन सफलतापूर्वक आयात किया गया — पुनरारंभ हो रहा है',
     'backup.error.html': 'सर्वर प्रतिक्रिया अमान्य',
     'backup.error.json': 'अमान्य JSON फ़ाइल',
+    'elrs.info.link_down': 'लिंक टूटा',
+    'elrs.info.disabled': 'अक्षम',
   }
 };

@@ -2,6 +2,7 @@ import {LitElement} from 'lit'
 import renderFn from './info-panel.lithaml'
 import {elrsState, formatBand, formatWifiRssi} from '../utils/state'
 import {i18n} from '../utils/i18n'
+import {API} from '../lib/ptero'
 
 # Mixer profile labels — index = profile_id (0..7), mirrors OrnithopterConfig.h
 MIXER_PROFILE_LABELS = -> [
@@ -44,12 +45,12 @@ class InfoPanel extends LitElement
 
   _loadOverview: ->
     try
-      [cfgRes, stateRes] = await Promise.all [
-        fetch '/pteronautos/config'
-        fetch '/pteronautos/state'
-      ]
-      cfg = if cfgRes.ok then (await cfgRes.json()) else null
-      state = if stateRes.ok then (await stateRes.json()) else null
+      # ESP8285 cannot safely retain two ArduinoJson response documents while
+      # both TCP responses are in flight. Fetch these sequentially.
+      cfgResult = await API.fetchConfig()
+      stateResult = await API.fetchState()
+      cfg = cfgResult.data
+      state = stateResult.data
       if cfg?.ornithopter
         @kernelType = cfg.ornithopter.type or 'servo'
         @profileId = cfg.ornithopter.profile_id ? null

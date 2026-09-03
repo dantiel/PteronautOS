@@ -1,0 +1,73 @@
+!!!
+%html{lang: "en", dir: "ltr"}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= "Flashing PteronautOS — Tutorials"
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "../../assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": "Scroll to top", title: "Scroll to top"} ↑
+      %a.home-link{href: "../../en/", title: "PteronautOS home"}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "../", class: "active"} Tutorials
+      %a{href: "../../hardware/"} Hardware
+      %a{href: "../../documentation/"} Docs
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number Tutorial 01
+        %h1 Flashing PteronautOS
+        %p.sub-lead Build and install the hermetic firmware on the supported ESP8285 receiver target.
+
+        %p Before connecting power, remove propulsive loads from the wing mechanism and make sure no servo can drive into a hard stop. Flashing is electrical work; the airframe should remain mechanically safe throughout the procedure.
+
+        .video-embed
+          %iframe{src: "https://www.youtube-nocookie.com/embed/h_MSh6qvfEAin", title: "Flashing PteronautOS tutorial", loading: "lazy", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowfullscreen: true}
+
+        %h2 01 · Build the firmware
+        %p Clone the repository, install PlatformIO, and build the dedicated receiver environment. The target enables the PteronautOS identity, ornithopter control, and the ESP8285/SX1280 hardware configuration.
+        %pre
+          %code pio run -e PteronautOS_ESP8285_2400_RX
+
+        %h2 02 · Connect the receiver
+        %p Wire a 3.3 V FTDI adapter to the UART pads and connect ground first. Do not apply 5 V to the ESP8285 logic pins. Disconnect the MPU6050 where the board revision shares its pins with the programming header.
+
+        %h2 03 · Enter the bootloader
+        %p Hold BOOT while powering the receiver. ESP8285 auto-reset is not reliable on every board, so keep BOOT asserted until the flashing tool has established communication.
+
+        %h2 04 · Write the image
+        %p Replace the serial device below with the port used by your adapter, then write the generated firmware image with DOUT flash mode.
+        %pre
+          %code esptool.py --port /dev/cu.usbserial-XXXX --baud 115200 --before no_reset write_flash --flash_mode dout --flash_size 1MB --flash_freq 40m 0x0 firmware.bin
+
+        %h2 05 · Verify the installation
+        %p Power-cycle the receiver without holding BOOT. Confirm that its WiFi access point and WebUI become available (SSID: <code>Pteronaut OS</code>, password: <code>flynatural</code>), then load the configuration and verify the target name before reconnecting servos.
+        %p 
+          Continue with the
+          %a{href: "../../hardware/"} Hardware page 
+          for pin maps and revision-specific wiring notes.
+    %footer
+      .lang-switch
+        %a{href: "../../"} PT
+        %a{href: "../../en/", class: "active"} EN
+        %a{href: "../../es/"} ES
+        %a{href: "../../fr/"} FR
+        %a{href: "../../de/"} DE
+        %a{href: "../../ru/"} RU
+        %a{href: "../../ko/"} 한국어
+        %a{href: "../../ja/"} 日本語
+        %a{href: "../../zh/"} 中文
+        %a{href: "../../ar/"} عربي
+        %a{href: "../../hi/"} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
+      %p.credit= "HERMETIC FIRMWARE"

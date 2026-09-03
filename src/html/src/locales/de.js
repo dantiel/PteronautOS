@@ -600,6 +600,8 @@ export default {
     'elrs.info.mixer_profile': 'Mixer-Profil',
     'elrs.info.zephyrus': 'Zephyrus-Gyro',
     'elrs.info.link': 'Verbindungsstatus',
+    'elrs.info.link_down': 'Verbindung unterbrochen',
+    'elrs.info.disabled': 'Deaktiviert',
     'elrs.info.section_device': 'Geräteinformationen',
 
     // Backup panel

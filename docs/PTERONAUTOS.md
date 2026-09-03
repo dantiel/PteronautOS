@@ -183,7 +183,7 @@ pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial
 ### Subsequent Wi-Fi Updates
 
 1. Power receiver — enters WiFi AP mode after 60s without transmitter
-2. Connect to `ExpressLRS RX` (password: `expresslrs`)
+2. Connect to `Pteronaut OS` (password: `flynatural`)
 3. Browse to `http://10.0.0.1`
 4. Upload `firmware.bin` via the web UI
 
@@ -591,7 +591,7 @@ The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=1` and `-D Z
 
 ## 9. WiFi WebUI
 
-After booting without a transmitter for 60 seconds, the receiver enters WiFi AP mode. Connect to `ExpressLRS RX` (password: `expresslrs`) and browse to `http://10.0.0.1`.
+After booting without a transmitter for 60 seconds, the receiver enters WiFi AP mode. Connect to `Pteronaut OS` (password: `flynatural`) and browse to `http://10.0.0.1`.
 
 ### PteronautOS Branded UI
 

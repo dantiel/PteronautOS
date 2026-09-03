@@ -10,38 +10,31 @@
     %link{rel: "stylesheet", href: "../assets/css/style.css"}
   %body.sub-page
     %nav.sub-nav
-      %a.home-link{href: "../en/", title: "Back to home"} ↑
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": "Scroll to top", title: "Scroll to top"} ↑
+      %a.home-link{href: "../en/", title: "PteronautOS home"}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
       %a{href: "../tutorials/", class: "active"} Tutorials
       %a{href: "../hardware/"} Hardware
       %a{href: "../documentation/"} Docs
     %main.sub-main
       .sub-content
         %h1 Tutorials
-        %p.sub-lead Getting PteronautOS into the air — from source to first flap, step by step.
+        %p.sub-lead Practical guides for preparing the hardware, installing the hermetic firmware, and bringing a new PteronautOS airframe to life.
 
-        %h2 01 · Build the firmware
-        %p Clone the repository and build the receiver target with PlatformIO.
-        %pre
-          %code pio run -e PteronautOS_ESP8285_2400_RX
+        %p PteronautOS is not a conventional multirotor stack. It translates CRSF control into a coordinated wingbeat for two wing servos and a crest rudder, with Zephyrus stabilization remaining optional and gracefully degradable.
+        %p Start with the flashing guide below. Later guides will cover receiver wiring, binding, the first controlled flap, and tuning the waveform through the WebUI. Every procedure keeps the project’s core rules in view: deterministic timing, centred failsafe behaviour, and no blocking work in the flight loop.
 
-        %h2 02 · Flash the receiver
-        %p Wire an FTDI adapter to the UART pads, hold BOOT, and write the firmware image. On the ESP8285 the auto-reset line is unreliable, so keep BOOT held while powering the board.
-        %pre
-          %code esptool.py --port /dev/cu.usbserial-XXXX --baud 115200 --before no_reset write_flash --flash_mode dout --flash_size 1MB --flash_freq 40m 0x0 firmware.bin
-
-        %h2 03 · Bind your transmitter
-        %p Flash the same binding phrase on transmitter and receiver. The UID is derived from the phrase — same phrase on both ends, they find each other. The receiver status in the web UI shows the UID.
-
-        %h2 04 · Wire the servos
-        %p Three servo channels: left wing, right wing, and crest rudder. The MPU6050 gyro hangs on the I2C bus.
-        %p See the %a{href: "../hardware/"} Hardware page for pin maps and wiring.
-
-        %h2 05 · First flap
-        %p Power up, centre the trims, and advance the throttle. At zero ferocity the wings should beat in a clean sine. If a servo slams to an endstop, check the flapping centre offset and the servo pulse limits.
-
-        %h2 06 · Tune via the Web UI
-        %p Join the receiver's WiFi network and open the config panel in a browser. Adjust ferocity, glide angle, flapping centre offset, and rudder yaw/roll mixing — no reflash needed.
-        %p The full reference lives in the %a{href: "../documentation/"} Documentation page.
+        .tutorial-menu
+          %a.tutorial-card{href: "./flashing/"}
+            %span.tutorial-number Tutorial 01
+            %strong Flashing PteronautOS
+            %p Build the ESP8285 target, connect the receiver safely, and install the firmware.
     %footer
       .lang-switch
         %a{href: "../"} PT
@@ -57,4 +50,4 @@
         %a{href: "../hi/"} हिन्दी
       %p
         %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
-      %p.credit= "Built on ExpressLRS 4.x"
+      %p.credit= "HERMETIC FIRMWARE"

@@ -68,7 +68,7 @@
   "build_line": "pio run -e PteronautOS_ESP8285_2400_RX",
   "build_compatible": "Совместимость: ExpressLRS TX 2.4GHz · Baudrate: 420000",
   "footer_hermetic": "Герметичная прошивка · 80MHz · 1MB Flash · Ноль зависимостей",
-  "footer_credit": "Создан на основе ExpressLRS 4.x",
+  "footer_credit": "HERMETIC FIRMWARE",
   "nav_github": "GitHub",
   "footer_resources": "<a href=\"https://github.com/dantiel/PteronautOS\" target=\"_blank\">GitHub</a> · <a href=\"https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md\" target=\"_blank\">Documentation</a> · <a href=\"../en/hardware/\" target=\"_blank\">Hardware</a>",
   "lang_href_ja": "../ja/",

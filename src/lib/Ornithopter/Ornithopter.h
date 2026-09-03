@@ -43,7 +43,7 @@ public:
     uint16_t voiceArm;
     uint16_t voiceFreq;      // flap frequency modulator channel
     uint16_t voiceProfile;   // flight profile selector channel
-
+    
     // Unified servo output — indexed by ServoFunc tag
     // _f[SF_LEFT_WING], _f[SF_RIGHT_WING], _f[SF_RUDDER],
     // _f[SF_MOTOR], _f[SF_VTAIL_LEFT], _f[SF_VTAIL_RIGHT],

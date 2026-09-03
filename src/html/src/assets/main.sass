@@ -58,6 +58,7 @@ button
   transition: margin-left 0.2s
   padding: 6px
   position: fixed
+  z-index: 2
   width: 100%
   top: calc(100% - var(--footer-height))
 
@@ -97,14 +98,56 @@ body.hide-sidedrawer #footer
   transform: translate(var(--drawer-width))
 
 .sidedrawer-toggle
+  position: relative
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  width: 48px
+  height: 48px
+  padding: 10px
+  box-sizing: border-box
+  border: 0
+  outline: 0
+  border-radius: 9999px
+  color: #fff
+  background: transparent
   cursor: pointer
-  font-size: 20px
-  line-height: 20px
-  margin-right: 10px
-  margin-left: 1px
+  line-height: 1
+  margin: 0 12px 0 0
+  z-index: 0
+
+.sidedrawer-toggle::before
+  content: ''
+  position: absolute
+  inset: 0
+  z-index: 0
+  overflow: hidden
+  border-radius: 9999px
+  background-color: rgba(255, 255, 255, 0.1)
+  box-shadow: inset 2px 2px 0 -2px rgba(255, 255, 255, 0.7), inset 0 0 3px 1px rgba(255, 255, 255, 0.7)
+
+.sidedrawer-toggle::after
+  content: ''
+  position: absolute
+  inset: 0
+  z-index: -1
+  overflow: hidden
+  border-radius: 9999px
+  -webkit-backdrop-filter: blur(0)
+  backdrop-filter: blur(0)
+  -webkit-filter: url(#menu-liquid-glass)
+  filter: url(#menu-liquid-glass)
+
+.sidedrawer-toggle svg
+  position: relative
+  z-index: 2
+  width: 100%
+  height: 100%
+  stroke: #fff
 
 .sidedrawer-toggle:hover
   text-decoration: none
+  color: #fff
 
 #sidedrawer-brand
   display: flex
@@ -162,6 +205,98 @@ body.hide-sidedrawer #footer
 #main
   opacity: 1
   transition: opacity 180ms ease, transform 180ms ease
+
+// Progressive blur: overlapping masked bands increase blur toward each edge.
+.main-progressive-blur
+  position: fixed
+  left: 0
+  right: 0
+  height: 144px
+  z-index: 1
+  pointer-events: none
+  user-select: none
+  -webkit-user-select: none
+  transition: left 0.2s
+  overflow: hidden
+
+.main-progressive-blur span
+  position: absolute
+  inset: 0
+  background: transparent
+
+.main-progressive-blur span:nth-child(1)
+  -webkit-backdrop-filter: blur(2px)
+  backdrop-filter: blur(2px)
+
+.main-progressive-blur span:nth-child(2)
+  -webkit-backdrop-filter: blur(5px)
+  backdrop-filter: blur(5px)
+
+.main-progressive-blur span:nth-child(3)
+  -webkit-backdrop-filter: blur(10px)
+  backdrop-filter: blur(10px)
+
+.main-progressive-blur span:nth-child(4)
+  -webkit-backdrop-filter: blur(18px)
+  backdrop-filter: blur(18px)
+
+.main-progressive-blur--top
+  top: 0
+
+.main-progressive-blur--top span:nth-child(1)
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.72) 44%, transparent 100%)
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.72) 44%, transparent 100%)
+
+.main-progressive-blur--top span:nth-child(2)
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.68) 28%, transparent 74%)
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.68) 28%, transparent 74%)
+
+.main-progressive-blur--top span:nth-child(3)
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.62) 16%, transparent 52%)
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.62) 16%, transparent 52%)
+
+.main-progressive-blur--top span:nth-child(4)
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.5) 10%, transparent 32%)
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.5) 10%, transparent 32%)
+
+.main-progressive-blur--bottom
+  bottom: 0
+  height: 88px
+
+.main-progressive-blur--bottom span:nth-child(1)
+  -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.68) 40%, transparent 100%)
+  mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.68) 40%, transparent 100%)
+
+.main-progressive-blur--bottom span:nth-child(2)
+  -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.62) 25%, transparent 72%)
+  mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.62) 25%, transparent 72%)
+
+.main-progressive-blur--bottom span:nth-child(3)
+  -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.56) 14%, transparent 48%)
+  mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.56) 14%, transparent 48%)
+
+.main-progressive-blur--bottom span:nth-child(4)
+  -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.46) 8%, transparent 28%)
+  mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.46) 8%, transparent 28%)
+
+@media (min-width: 48em) and (hover: hover) and (pointer: fine)
+  .main-progressive-blur
+    left: var(--drawer-width)
+
+  body.hide-sidedrawer .main-progressive-blur
+    left: 0
+
+@media (prefers-reduced-transparency: reduce)
+  .main-progressive-blur span,
+  .sidedrawer-toggle
+    -webkit-backdrop-filter: none
+    backdrop-filter: none
+
+.liquid-glass-filters
+  position: absolute
+  width: 0
+  height: 0
+  overflow: hidden
 
 #main.route-fade-out
   opacity: 0
