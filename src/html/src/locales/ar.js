@@ -613,5 +613,7 @@ export default {
   'backup.import_done': 'تم استيراد التكوين بنجاح — جاري إعادة التشغيل',
   'backup.error.html': 'استجابة خادم غير صالحة',
   'backup.error.json': 'ملف JSON غير صالح',
-  }
+  'elrs.info.link_down': 'الرابط مقطوع',
+  'elrs.info.disabled': 'معطل',
+}
 };

@@ -613,5 +613,7 @@ export default {
   'backup.import_done': 'Конфигурация успешно импортирована — перезагрузка',
   'backup.error.html': 'Неверный ответ сервера',
   'backup.error.json': 'Неверный JSON-файл',
-  }
+  'elrs.info.link_down': 'Связь потеряна',
+  'elrs.info.disabled': 'Отключено',
+}
 };

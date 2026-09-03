@@ -105,12 +105,53 @@ nav {
   gap: 2.5rem;
   padding: 2.5rem 2rem 2rem;
   z-index: 100;
-  background: linear-gradient(to bottom, var(--bg) 20%, transparent 100%);
-  transition: background 0.3s;
+  background: transparent;
 }
 nav.scrolled {
-  background: linear-gradient(to bottom, var(--bg) 40%, rgba(0, 0, 0, 0) 100%);
+  background: transparent;
 }
+nav > *:not(.nav-progressive-blur) {
+  position: relative;
+  z-index: 1;
+}
+
+.nav-progressive-blur {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: 8.5rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nav-progressive-blur span {
+  position: absolute;
+  inset: 0;
+}
+.nav-progressive-blur span:nth-child(1) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.75) 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.75) 45%, transparent 100%);
+}
+.nav-progressive-blur span:nth-child(2) {
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.68) 28%, transparent 74%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.68) 28%, transparent 74%);
+}
+.nav-progressive-blur span:nth-child(3) {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 16%, transparent 52%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 16%, transparent 52%);
+}
+.nav-progressive-blur span:nth-child(4) {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.5) 8%, transparent 32%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.5) 8%, transparent 32%);
+}
+
 nav a.home-link {
   font-size: 1.3rem;
   letter-spacing: 0;
@@ -121,7 +162,8 @@ nav a.home-link:hover {
   opacity: 1;
   text-shadow: 0 0 12px var(--fg);
 }
-nav a {
+
+nav > a {
   color: var(--nav);
   text-decoration: none;
   font-size: 0.78rem;
@@ -132,10 +174,10 @@ nav a {
   transition: opacity 0.3s;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
-nav a:hover {
+nav > a:hover {
   opacity: 1;
 }
-nav a.active {
+nav > a.active {
   opacity: 1;
 }
 
@@ -449,6 +491,9 @@ footer a {
   text-decoration: none;
   border-bottom: 1px solid var(--accent);
 }
+footer .lang-switch a {
+  border-bottom: 0;
+}
 
 .credit {
   margin-top: 1.5rem;
@@ -725,7 +770,7 @@ footer .lang-switch {
   gap: 2.5rem;
   padding: 2.5rem 2rem 2rem;
   z-index: 100;
-  background: linear-gradient(to bottom, var(--bg) 40%, transparent 100%);
+  background: transparent;
 }
 .sub-nav a {
   color: var(--nav);
@@ -745,11 +790,32 @@ footer .lang-switch {
   text-shadow: 0 0 12px var(--nav);
 }
 .sub-nav a.home-link {
-  font-size: 1.3rem;
-  letter-spacing: 0;
-  opacity: 0.55;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  opacity: 0.8;
 }
 .sub-nav a.home-link:hover {
+  opacity: 1;
+}
+.sub-nav a.home-link .pteronaut {
+  color: var(--nav);
+}
+.sub-nav a.home-link .os {
+  color: #666;
+}
+.sub-nav .nav-scroll-top {
+  position: relative;
+  z-index: 1;
+  color: var(--nav);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  opacity: 0.55;
+  cursor: pointer;
+}
+.sub-nav .nav-scroll-top:hover {
   opacity: 1;
 }
 
@@ -822,6 +888,72 @@ footer .lang-switch {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.75rem;
+}
+
+.tutorial-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0 3rem;
+}
+
+.tutorial-card {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid var(--dim) !important;
+  background: rgba(127, 127, 127, 0.04);
+}
+.tutorial-card .tutorial-number {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--mut);
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+}
+.tutorial-card strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+.tutorial-card p {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.92rem;
+}
+
+.video-embed {
+  position: relative;
+  width: 100%;
+  margin: 1.5rem 0 2.5rem;
+  padding-top: 56.25%;
+  overflow: hidden;
+  background: var(--dim);
+}
+.video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 700px) {
+  .sub-nav {
+    gap: 0.55rem;
+    padding: 1rem 0.5rem 1.4rem;
+  }
+  .sub-nav a,
+  .sub-nav a.home-link {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+  }
+  .sub-nav .nav-scroll-top {
+    font-size: 1rem;
+  }
+  .nav-progressive-blur {
+    height: 5rem;
+  }
 }
 
 /*# sourceMappingURL=style.css.map */

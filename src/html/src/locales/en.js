@@ -561,6 +561,8 @@ export default {
     'elrs.info.mixer_profile': 'Mixer Profile',
     'elrs.info.zephyrus': 'Zephyrus Gyro',
     'elrs.info.link': 'Link Status',
+    'elrs.info.link_down': 'Link Down',
+    'elrs.info.disabled': 'Disabled',
     'elrs.info.section_device': 'Device Information',
     'ornithopter.kernel.model_name': 'Model Name',
     'ornithopter.kernel.model_name_desc': 'Name for this ornithopter configuration',
@@ -589,7 +591,10 @@ export default {
     'ornithopter.throttle_ferocity_mix.title': 'Throttle → Ferocity',
     'ornithopter.throttle_ferocity_mix.desc': 'Extra flapping aggression from throttle (dwell coupling)',
     'ornithopter.servo.right_wing': 'Right Wing',
+    'ornithopter.servo.left_wing': 'Left Wing',
     'ornithopter.servo.rudder': 'Rudder',
+    'ornithopter.kernel.trim_title': 'Servo Trim Calibration',
+    'ornithopter.kernel.trim_desc': 'Per-servo pulse width trim for centering adjustment (±300µs)',
     'ornithopter.mixing.kernel_hint': 'Configure kernel parameters before mixing',
 
   // Backup panel

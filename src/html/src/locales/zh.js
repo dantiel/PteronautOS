@@ -612,6 +612,8 @@ export default {
     'backup.import_text': '从 JSON 文件恢复完整配置。导入后设备将重启。',
     'backup.import_done': '配置导入成功 — 正在重启',
     'backup.error.html': '服务器响应无效',
-    'backup.error.json': '无效的 JSON 文件',
+    'backup.error.json': '无效的JSON文件',
+    'elrs.info.link_down': '链路断开',
+    'elrs.info.disabled': '已禁用',
   }
 };

@@ -175,22 +175,35 @@ Status =
 # API — Async fetch helpers
 # ═══════════════════════════════════════════════════════════════════
 
+delay = (ms) -> new Promise (resolve) -> setTimeout resolve, ms
+
+# A completed browser fetch can race the ESPAsyncWebServer response destructor.
+# Retry only transient busy/network failures; permanent HTTP errors return at once.
+fetchJsonWithRetry = (url, attempts = 6) ->
+  lastError = null
+  for attempt in [0...attempts]
+    try
+      resp = await fetch url
+      return await resp.json() if resp.ok
+      throw new Error "HTTP #{resp.status}" unless resp.status in [429, 503]
+      lastError = new Error "HTTP #{resp.status}"
+    catch e
+      lastError = e
+    await delay 150 * (attempt + 1) if attempt + 1 < attempts
+  throw lastError
+
 API =
   # Fetch pteronautos state JSON. Returns {data, error}.
   fetchState: ->
     try
-      resp = await fetch '/pteronautos/state'
-      throw new Error "HTTP #{resp.status}" unless resp.ok
-      {data: await resp.json(), error: null}
+      {data: await fetchJsonWithRetry('/pteronautos/state'), error: null}
     catch e
       {data: null, error: e}
 
   # Fetch static pteronautos config (fetched once per panel mount, not polled).
   fetchConfig: ->
     try
-      resp = await fetch '/pteronautos/config'
-      throw new Error "HTTP #{resp.status}" unless resp.ok
-      {data: await resp.json(), error: null}
+      {data: await fetchJsonWithRetry('/pteronautos/config'), error: null}
     catch e
       {data: null, error: e}
 

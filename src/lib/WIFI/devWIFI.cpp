@@ -155,6 +155,11 @@ static void WebUpdateSendContent(AsyncWebServerRequest *request)
     if (request->url().equals(WEB_ASSETS[i].path)) {
       AsyncWebServerResponse *response = request->beginResponse(200, WEB_ASSETS[i].content_type, WEB_ASSETS[i].data, WEB_ASSETS[i].size);
       response->addHeader("Content-Encoding", "gzip");
+      if (request->url().equals("/index.html")) {
+        response->addHeader("Cache-Control", "no-cache");
+      } else {
+        response->addHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
       request->send(response);
       return;
     }
@@ -678,11 +683,6 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     // Telemetry only. The ~90-field static config moved to GetPteronautosConfig
     // (fetched once per panel mount) so the 2s poll no longer rebuilds it.
     auto *response = new AsyncJsonResponse(false);
-    if (!response) {
-        // Heap exhausted — don't deref null (ESP8266 new returns nullptr).
-        request->send(500, "application/json", "{\"error\":\"oom\"}");
-        return;
-    }
     JsonObject root = response->getRoot().as<JsonObject>();
 
     // System diagnostics (cheap; no float formatting).
@@ -708,6 +708,8 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     orni["enabled"]             = ornithopter.enabled;
     orni["connection_state"]    = connectionState;
     orni["active_flight_profile"] = ornithopter.activeFlightProfile;
+    orni["active_profile"] = (uint8_t)activeProfile;
+    orni["servo_count"] = PROFILE.servoCount;
 
     JsonObject zeph = root["zephyrus"].to<JsonObject>();
 #if defined(ZEPHYRUS_ENABLED)
@@ -751,10 +753,6 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     // Static config — only changes via POST /pteronautos/config. Fetched once
     // per panel mount, not polled. Keeps the 2s state poll lean on the heap.
     auto *response = new AsyncJsonResponse(false);
-    if (!response) {
-        request->send(500, "application/json", "{\"error\":\"oom\"}");
-        return;
-    }
     JsonObject root = response->getRoot().as<JsonObject>();
     JsonObject orni = root["ornithopter"].to<JsonObject>();
 

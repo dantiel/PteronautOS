@@ -10,7 +10,15 @@
     %link{rel: "stylesheet", href: "../assets/css/style.css"}
   %body.sub-page
     %nav.sub-nav
-      %a.home-link{href: "../en/", title: "Back to home"} ↑
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": "Scroll to top", title: "Scroll to top"} ↑
+      %a.home-link{href: "../en/", title: "PteronautOS home"}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
       %a{href: "../tutorials/"} Tutorials
       %a{href: "../hardware/", class: "active"} Hardware
       %a{href: "../documentation/"} Docs
@@ -67,4 +75,4 @@
         %a{href: "../hi/"} हिन्दी
       %p
         %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
-      %p.credit= "Built on ExpressLRS 4.x"
+      %p.credit= "HERMETIC FIRMWARE"

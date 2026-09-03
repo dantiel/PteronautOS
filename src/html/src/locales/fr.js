@@ -569,6 +569,8 @@ export default {
     'ornithopter.channel_test.hint': 'Tester la réponse du canal',
     'ornithopter.channel_test.spring': 'Ressort',
     'ornithopter.channel_test.hold': 'Maintenir',
+    'elrs.info.link_down': 'Lien coupé',
+    'elrs.info.disabled': 'Désactivé',
     'ornithopter.mixer_output.title': 'Sortie du Mixer',
     'ornithopter.mixer_output.override': 'Override',
     'ornithopter.mixer_output.left_wing': 'Aile Gauche',

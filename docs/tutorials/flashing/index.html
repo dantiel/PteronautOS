@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Flashing PteronautOS — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Scroll to top' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Scroll to top' type='button'>↑</button>
+<a class='home-link' href='../../en/' title='PteronautOS home'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../'>Tutorials</a>
+<a href='../../hardware/'>Hardware</a>
+<a href='../../documentation/'>Docs</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Tutorial 01</p>
+<h1>Flashing PteronautOS</h1>
+<p class='sub-lead'>Build and install the hermetic firmware on the supported ESP8285 receiver target.</p>
+<p>Before connecting power, remove propulsive loads from the wing mechanism and make sure no servo can drive into a hard stop. Flashing is electrical work; the airframe should remain mechanically safe throughout the procedure.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube-nocookie.com/embed/h_MSh6qvfEAin' title='Flashing PteronautOS tutorial'></iframe>
+</div>
+<h2>01 · Build the firmware</h2>
+<p>Clone the repository, install PlatformIO, and build the dedicated receiver environment. The target enables the PteronautOS identity, ornithopter control, and the ESP8285/SX1280 hardware configuration.</p>
+<pre><code>pio run -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Connect the receiver</h2>
+<p>Wire a 3.3 V FTDI adapter to the UART pads and connect ground first. Do not apply 5 V to the ESP8285 logic pins. Disconnect the MPU6050 where the board revision shares its pins with the programming header.</p>
+<h2>03 · Enter the bootloader</h2>
+<p>Hold BOOT while powering the receiver. ESP8285 auto-reset is not reliable on every board, so keep BOOT asserted until the flashing tool has established communication.</p>
+<h2>04 · Write the image</h2>
+<p>Replace the serial device below with the port used by your adapter, then write the generated firmware image with DOUT flash mode.</p>
+<pre><code>esptool.py --port /dev/cu.usbserial-XXXX --baud 115200 --before no_reset write_flash --flash_mode dout --flash_size 1MB --flash_freq 40m 0x0 firmware.bin</code></pre>
+<h2>05 · Verify the installation</h2>
+<p>Power-cycle the receiver without holding BOOT. Confirm that its WiFi access point and WebUI become available (SSID: <code>Pteronaut OS</code>, password: <code>flynatural</code>), then load the configuration and verify the target name before reconnecting servos.</p>
+<p>
+Continue with the
+<a href='../../hardware/'>Hardware page</a>
+for pin maps and revision-specific wiring notes.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a href='../../'>PT</a>
+<a class='active' href='../../en/'>EN</a>
+<a href='../../es/'>ES</a>
+<a href='../../fr/'>FR</a>
+<a href='../../de/'>DE</a>
+<a href='../../ru/'>RU</a>
+<a href='../../ko/'>한국어</a>
+<a href='../../ja/'>日本語</a>
+<a href='../../zh/'>中文</a>
+<a href='../../ar/'>عربي</a>
+<a href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

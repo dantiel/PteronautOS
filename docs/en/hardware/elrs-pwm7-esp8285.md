@@ -228,7 +228,7 @@ pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial
 Once PteronautOS is installed via UART, Wi-Fi updates work normally:
 
 1. Power the receiver; it enters WiFi AP mode if no transmitter is connected
-2. Connect to `ExpressLRS RX` WiFi network (password: `expresslrs`)
+2. Connect to `Pteronaut OS` WiFi network (password: `flynatural`)
 3. Navigate to `http://10.0.0.1`
 4. Upload `firmware.bin` from `.pio/build/PteronautOS_ESP8285_2400_RX/`
 
@@ -244,7 +244,7 @@ If the receiver currently runs ExpressLRS (DIY_2400_RX_PWMPEX), flashing Pterona
 
 ## 7. Web UI Configuration
 
-After flashing, connect to the receiver's WiFi AP and navigate to `http://10.0.0.1`. The web UI retains full ELRS compatibility:
+After flashing, connect to the `Pteronaut OS` WiFi network (password: `flynatural`) and navigate to `http://10.0.0.1`. The web UI retains full ELRS compatibility:
 
 - **PWM Output Modes**: Configure each channel (50Hz, 100Hz, 160Hz, On/Off, etc.)
 - **Channel 6 (GPIO5) and Channel 7 (GPIO2)**: Will appear as `Serial SDA` / `Serial SCL` respectively — Zephyrus I2C pins are automatically excluded from PWM, leaving 5 usable outputs

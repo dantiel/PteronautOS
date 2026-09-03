@@ -287,7 +287,10 @@ static uint32_t findFirmwareEnd()
         uint32_t segSize = readFlashUnaligned32(pos + 4);
         pos += 8 + segSize;
     }
-    return (pos + 15) & ~15; // 16-byte align
+    // Keep this exactly in sync with UnifiedConfiguration.findFirmwareEnd().
+    // The image appender deliberately advances to the *next* 16-byte boundary,
+    // even when the final segment already ends on one.
+    return (pos + 16) & ~15;
 }
 #endif
 

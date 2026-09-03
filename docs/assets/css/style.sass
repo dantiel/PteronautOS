@@ -119,13 +119,52 @@ nav
   gap: 2.5rem
   padding: 2.5rem 2rem 2rem
   z-index: 100
-  background: linear-gradient(to bottom, var(--bg) 20%, transparent 100%)
-  transition: background 0.3s
+  background: transparent
 
   &.scrolled
-    background: linear-gradient(to bottom, var(--bg) 40%, rgba(0,0,0,0) 100%)
+    background: transparent
 
-  a.home-link
+  > *:not(.nav-progressive-blur)
+    position: relative
+    z-index: 1
+
+.nav-progressive-blur
+  position: absolute
+  z-index: 0
+  inset: 0 0 auto
+  height: 8.5rem
+  overflow: hidden
+  pointer-events: none
+
+  span
+    position: absolute
+    inset: 0
+
+  span:nth-child(1)
+    backdrop-filter: blur(2px)
+    -webkit-backdrop-filter: blur(2px)
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.75) 45%, transparent 100%)
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.75) 45%, transparent 100%)
+
+  span:nth-child(2)
+    backdrop-filter: blur(5px)
+    -webkit-backdrop-filter: blur(5px)
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.68) 28%, transparent 74%)
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.68) 28%, transparent 74%)
+
+  span:nth-child(3)
+    backdrop-filter: blur(10px)
+    -webkit-backdrop-filter: blur(10px)
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.6) 16%, transparent 52%)
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.6) 16%, transparent 52%)
+
+  span:nth-child(4)
+    backdrop-filter: blur(18px)
+    -webkit-backdrop-filter: blur(18px)
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.5) 8%, transparent 32%)
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.5) 8%, transparent 32%)
+
+nav a.home-link
     font-size: 1.3rem
     letter-spacing: 0
     opacity: 0.55
@@ -135,7 +174,7 @@ nav
       opacity: 1
       text-shadow: 0 0 12px var(--fg)
 
-  a
+nav > a
     color: var(--nav)
     text-decoration: none
     font-size: 0.78rem
@@ -454,6 +493,9 @@ footer
     text-decoration: none
     border-bottom: 1px solid var(--accent)
 
+  .lang-switch a
+    border-bottom: 0
+
 .credit
   margin-top: 1.5rem
   font-size: 0.6rem
@@ -732,7 +774,7 @@ footer .lang-switch
   gap: 2.5rem
   padding: 2.5rem 2rem 2rem
   z-index: 100
-  background: linear-gradient(to bottom, var(--bg) 40%, transparent 100%)
+  background: transparent
 
   a
     color: var(--nav)
@@ -752,9 +794,30 @@ footer .lang-switch
       text-shadow: 0 0 12px var(--nav)
 
   a.home-link
+    font-size: 0.78rem
+    letter-spacing: 0.16em
+    opacity: 0.8
+
+    &:hover
+      opacity: 1
+
+    .pteronaut
+      color: var(--nav)
+
+    .os
+      color: $os-grey
+
+  .nav-scroll-top
+    position: relative
+    z-index: 1
+    color: var(--nav)
+    background: transparent
+    border: 0
+    font: inherit
     font-size: 1.3rem
-    letter-spacing: 0
+    line-height: 1
     opacity: 0.55
+    cursor: pointer
 
     &:hover
       opacity: 1
@@ -828,3 +891,64 @@ footer .lang-switch
       letter-spacing: 0.12em
       text-transform: uppercase
       font-size: 0.75rem
+
+.tutorial-menu
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))
+  gap: 1rem
+  margin: 2rem 0 3rem
+
+.tutorial-card
+  display: block
+  padding: 1.5rem
+  border: 1px solid var(--dim) !important
+  background: rgba(127,127,127,.04)
+
+  .tutorial-number
+    display: block
+    margin-bottom: .5rem
+    color: var(--mut)
+    font-size: .68rem
+    letter-spacing: .24em
+
+  strong
+    display: block
+    margin-bottom: .5rem
+    color: var(--text)
+    font-size: 1.2rem
+
+  p
+    margin: 0
+    color: var(--accent)
+    font-size: .92rem
+
+.video-embed
+  position: relative
+  width: 100%
+  margin: 1.5rem 0 2.5rem
+  padding-top: 56.25%
+  overflow: hidden
+  background: var(--dim)
+
+  iframe
+    position: absolute
+    inset: 0
+    width: 100%
+    height: 100%
+    border: 0
+
+@media (max-width: 700px)
+  .sub-nav
+    gap: .55rem
+    padding: 1rem .5rem 1.4rem
+
+    a,
+    a.home-link
+      font-size: .58rem
+      letter-spacing: .12em
+
+    .nav-scroll-top
+      font-size: 1rem
+
+  .nav-progressive-blur
+    height: 5rem

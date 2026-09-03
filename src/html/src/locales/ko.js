@@ -613,5 +613,7 @@ export default {
     'backup.import_done': '설정 가져오기 성공 — 재부팅 중',
     'backup.error.html': '서버 응답 오류',
     'backup.error.json': '잘못된 JSON 파일',
+    'elrs.info.link_down': '링크 끊김',
+    'elrs.info.disabled': '비활성화',
   }
 };
