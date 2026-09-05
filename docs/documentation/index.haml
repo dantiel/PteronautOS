@@ -8,6 +8,7 @@
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
     %link{rel: "stylesheet", href: "../assets/css/style.css"}
+    %script{src: "../assets/js/ferocity-waveform.js", defer: true}
   %body.sub-page
     %nav.sub-nav
       .nav-progressive-blur{"aria-hidden": "true"}
@@ -62,6 +63,68 @@
           %dd How much throttle couples into ferocity.
           %dt Failsafe
           %dd Wings return to neutral if the link drops.
+
+        %section#ferocity-waveform.waveform-docs
+          %h2 Ferocity waveform geometry
+          %p Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.
+          %p The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.
+
+          .waveform-explorer{"data-ferocity-explorer": true}
+            .waveform-controls
+              %label{for: "wave-down-ferocity"}
+                %span Down ferocity
+                %output{"data-value": "down", for: "wave-down-ferocity"} 8.0
+                %input#wave-down-ferocity{"data-control": "down", type: "range", min: "0", max: "8", step: "0.1", value: "8"}
+              %label{for: "wave-up-ferocity"}
+                %span Up ferocity
+                %output{"data-value": "up", for: "wave-up-ferocity"} 0.0
+                %input#wave-up-ferocity{"data-control": "up", type: "range", min: "0", max: "8", step: "0.1", value: "0"}
+              %label{for: "wave-shape-mix"}
+                %span Shape mix
+                %output{"data-value": "mix", for: "wave-shape-mix"} 100%
+                %input#wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
+
+            .waveform-presets{"aria-label": "Waveform examples"}
+              %button{type: "button", "data-preset": "8,0,100"} Extreme 8 / 0
+              %button{type: "button", "data-preset": "7,1,100"} Near-extreme 7 / 1
+              %button{type: "button", "data-preset": "8,6,100"} High base 8 / 6
+              %button{type: "button", "data-preset": "8,6,50"} High base, mixed
+
+            %p.waveform-metric{"data-waveform-metric": true, "aria-live": "polite"}
+
+            .waveform-chart
+              %h3 Whole cycle
+              .waveform-legend
+                %span
+                  %i.current
+                  Current waveform
+                %span
+                  %i.direct
+                  Exact direct reference
+                %span
+                  %i.boundary
+                  Reversal
+              %svg{"data-chart": "cycle", role: "img", "aria-label": "Wing position over the complete beat cycle"}
+
+            .waveform-chart
+              %h3 Each half stretched to equal width
+              .waveform-legend
+                %span
+                  %i.down
+                  Down half
+                %span
+                  %i.up
+                  Up half, direction aligned
+                %span
+                  %i.direct
+                  Exact diagonal
+              %svg{"data-chart": "halves", role: "img", "aria-label": "Normalized downstroke and upstroke shapes"}
+
+          %h3 Reading extreme combinations
+          %p A 7 / 1 combination clearly produces a short pointed downstroke and a long sinusoidal return. Exact and near-maximum values require care: the current duration law uses the amount remaining below ferocity 8. Consequently, 8 / 0 allocates only about 0.125% of the cycle to the downstroke, while even 8 / 6 allocates about 0.5%. Position remains continuous, but the requested speed and acceleration can become physically unreachable.
+          %aside.waveform-caution
+            %strong Bench-test before flight.
+            The explorer describes the commanded mathematical waveform, not guaranteed servo motion. Avoid extreme asymmetric settings until amplitude, frequency, linkage geometry, and servo-speed limits have been verified without aerodynamic load.
     %footer
       .lang-switch
         %a{href: "../"} PT

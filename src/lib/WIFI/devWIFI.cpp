@@ -5,6 +5,7 @@
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include "PteroConfigWriter.h"
 
 #if defined(PLATFORM_ESP32)
 #include <esp_wifi.h>
@@ -675,8 +676,8 @@ extern uint16_t getServoSweepUs();
 
 // State endpoint — AsyncJsonResponse (same proven pattern as GetPteronautosSystem).
 // ArduinoJson v7 auto-grows from heap. No stack pressure, no format-string bugs.
-static void LoadOrnithopterConfig();
-static void SaveOrnithopterConfig();
+void LoadOrnithopterConfig();
+static bool SaveOrnithopterConfig();
 
 static void GetPteronautosState(AsyncWebServerRequest *request)
 {
@@ -788,6 +789,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["rudder_amplitude_differential"] = (int)ornithopter.rudderAmplitudeDifferential;
     orni["elevator_ferocity_mix"] = (int)ornithopter.elevatorFerocityMix;
     orni["throttle_ferocity_mix"] = (int)ornithopter.throttleFerocityMix;
+    orni["throttle_frequency_mix"] = (int)ornithopter.throttleFrequencyMix;
+    orni["ferocity_shape_mix"] = (int)ornithopter.ferocityShapeMix;
     orni["elevon_scale"]        = (int)ornithopter.elevonScale;
     // Kernel-specific pulse params: only emit what the active kernel uses.
     if (PROFILE_IS_GEARBOX)
@@ -828,6 +831,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["rudder_amplitude_differential"] = (int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential;
         p["elevator_ferocity_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityMix;
         p["throttle_ferocity_mix"] = (int)ornithopter.flightProfiles[i].throttleFerocityMix;
+        p["throttle_frequency_mix"] = (int)ornithopter.flightProfiles[i].throttleFrequencyMix;
+        p["ferocity_shape_mix"] = (int)ornithopter.flightProfiles[i].ferocityShapeMix;
     }
 
     response->setLength();
@@ -857,7 +862,7 @@ static bool _pteroConfigLoaded = false;
 
 // Print a JSON string literal with escaping (used for user-supplied strings
 // like the model name, which may contain quotes/backslashes).
-static void _pteroPrintJsonString(File &f, const char *s)
+static void _pteroPrintJsonString(Print &f, const char *s)
 {
     f.print('"');
     if (s)
@@ -865,6 +870,13 @@ static void _pteroPrintJsonString(File &f, const char *s)
         for (const char *p = s; *p; ++p)
         {
             char c = *p;
+            if ((uint8_t)c < 0x20) {
+                const char hex[] = "0123456789abcdef";
+                f.print("\\u00");
+                f.print(hex[((uint8_t)c) >> 4]);
+                f.print(hex[((uint8_t)c) & 15]);
+                continue;
+            }
             if (c == '"' || c == '\\') f.print('\\');
             f.print(c);
         }
@@ -872,14 +884,14 @@ static void _pteroPrintJsonString(File &f, const char *s)
     f.print('"');
 }
 
-static void SaveOrnithopterConfig()
+static bool SaveOrnithopterConfig()
 {
     // Stream JSON straight to LittleFS instead of building a heap JsonDocument.
     // The ESP8285 has ~23KB free heap; a save POST that overlaps the 2s state
     // poll used to exhaust it (ArduinoJson v7 auto-grows) and reboot the radio.
     // Direct File::print writes are heap-free — literals live in flash.
-    File f = LittleFS.open("/pteronautos.conf", "w");
-    if (!f) return;
+    PteroConfigWriter f(LittleFS, "/pteronautos.conf", "/pteronautos.conf.tmp");
+    if (!f) return false;
 
     f.print("{\"flight_profiles\":[");
     for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
@@ -904,6 +916,10 @@ static void SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].elevatorFerocityMix);
         f.print(",\"throttle_ferocity_mix\":");
         f.print((int)ornithopter.flightProfiles[i].throttleFerocityMix);
+        f.print(",\"throttle_frequency_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].throttleFrequencyMix);
+        f.print(",\"ferocity_shape_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].ferocityShapeMix);
         f.print('}');
     }
     f.print("],\"active_flight_profile\":");
@@ -944,13 +960,12 @@ static void SaveOrnithopterConfig()
     f.print(",\"model_name\":");
     _pteroPrintJsonString(f, ornithopter.modelName);
     f.print('}');
-    f.close();
+    return f.commit();
 }
 
-static void LoadOrnithopterConfig()
+void LoadOrnithopterConfig()
 {
     if (_pteroConfigLoaded) return;
-    _pteroConfigLoaded = true;
     if (!LittleFS.exists("/pteronautos.conf")) return;
     File f = LittleFS.open("/pteronautos.conf", "r");
     if (!f) return;
@@ -958,6 +973,8 @@ static void LoadOrnithopterConfig()
     DeserializationError err = deserializeJson(doc, f);
     f.close();
     if (err) return;
+    if (!doc.is<JsonObject>()) return;
+    _pteroConfigLoaded = true;
     JsonObject o = doc.as<JsonObject>();
 
     // Per-flight-profile tuning
@@ -981,6 +998,18 @@ static void LoadOrnithopterConfig()
             if (p["rudder_amplitude_differential"].is<int>()) dst.rudderAmplitudeDifferential = p["rudder_amplitude_differential"].as<int>();
             if (p["elevator_ferocity_mix"].is<int>()) dst.elevatorFerocityMix = p["elevator_ferocity_mix"].as<int>();
             if (p["throttle_ferocity_mix"].is<int>()) dst.throttleFerocityMix = p["throttle_ferocity_mix"].as<int>();
+            if (p["throttle_frequency_mix"].is<int>()) {
+                int32_t mix = p["throttle_frequency_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.throttleFrequencyMix = mix;
+            }
+            if (p["ferocity_shape_mix"].is<int>()) {
+                int32_t mix = p["ferocity_shape_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.ferocityShapeMix = mix;
+            }
         }
     }
 
@@ -1035,6 +1064,15 @@ static void LoadOrnithopterConfig()
 
 static void PostPteronautosConfig(AsyncWebServerRequest *request)
 {
+    int fp = -1;
+    if (request->hasParam("flight_profile", true)) {
+        const String &slot = request->getParam("flight_profile", true)->value();
+        if (slot.length() != 1 || slot[0] < '0' || slot[0] >= '0' + FLIGHT_PROFILE_COUNT) {
+            request->send(400, "application/json", "{\"ok\":false,\"saved\":false,\"error\":\"Invalid flight profile slot\"}");
+            return;
+        }
+        fp = slot[0] - '0';
+    }
     // Mixer profile — runtime-switchable
     int pid = _pteroParamInt(request, "profile_id", -1);
     if (pid >= 0) setOrnithopterProfile((uint8_t)pid);
@@ -1052,24 +1090,31 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
 #endif
-    // Per-flight-profile params (read into locals)
-    float   sf    = (float)_pteroParamInt(request, "stroke_ferocity",       (int)ornithopter.strokeFerocity);
-    float   rf    = (float)_pteroParamInt(request, "return_ferocity",       (int)ornithopter.returnFerocity);
-    int8_t  glide = (int8_t)_pteroParamInt(request, "glide_angle_deg",      ornithopter.glideAngleDeg);
-        int8_t  flapAng = (int8_t)_pteroParamInt(request, "flapping_angle_deg",  ornithopter.flappingAngleDeg);
+    // Missing fields in a partial profile save belong to the requested slot,
+    // not whichever profile the transmitter happens to have active.
+    const FlightProfileParams &defaults = ornithopter.flightProfiles[fp >= 0 ? fp : ornithopter.activeFlightProfile];
+    float   sf    = (float)_pteroParamInt(request, "stroke_ferocity",       (int)defaults.strokeFerocity);
+    float   rf    = (float)_pteroParamInt(request, "return_ferocity",       (int)defaults.returnFerocity);
+    int8_t  glide = (int8_t)_pteroParamInt(request, "glide_angle_deg",      defaults.glideAngleDeg);
+        int8_t  flapAng = (int8_t)_pteroParamInt(request, "flapping_angle_deg",  defaults.flappingAngleDeg);
         if (flapAng < -15) flapAng = -15;
         if (flapAng >  15) flapAng =  15;
-    float   ail   = (float)_pteroParamInt(request, "aileron_scale",         (int)ornithopter.aileronScale);
-    float   elev  = (float)_pteroParamInt(request, "elevator_scale",        (int)ornithopter.elevatorScale);
-    float   rudRng= (float)_pteroParamInt(request, "rudder_ferocity_range", (int)ornithopter.rudderFerocityRange);
-    float   rudAmpDiff = (float)_pteroParamInt(request, "rudder_amplitude_differential", (int)ornithopter.rudderAmplitudeDifferential);
-    float   elevFerMix = (float)_pteroParamInt(request, "elevator_ferocity_mix", (int)ornithopter.elevatorFerocityMix);
-    float   thrFerMix  = (float)_pteroParamInt(request, "throttle_ferocity_mix", (int)ornithopter.throttleFerocityMix);
+    float   ail   = (float)_pteroParamInt(request, "aileron_scale",         (int)defaults.aileronScale);
+    float   elev  = (float)_pteroParamInt(request, "elevator_scale",        (int)defaults.elevatorScale);
+    float   rudRng= (float)_pteroParamInt(request, "rudder_ferocity_range", (int)defaults.rudderFerocityRange);
+    float   rudAmpDiff = (float)_pteroParamInt(request, "rudder_amplitude_differential", (int)defaults.rudderAmplitudeDifferential);
+    float   elevFerMix = (float)_pteroParamInt(request, "elevator_ferocity_mix", (int)defaults.elevatorFerocityMix);
+    float   thrFerMix  = (float)_pteroParamInt(request, "throttle_ferocity_mix", (int)defaults.throttleFerocityMix);
+    float   thrFreqMix = (float)_pteroParamInt(request, "throttle_frequency_mix", (int)defaults.throttleFrequencyMix);
+    if (thrFreqMix < 0.0f) thrFreqMix = 0.0f;
+    if (thrFreqMix > 100.0f) thrFreqMix = 100.0f;
+    float   ferShapeMix = (float)_pteroParamInt(request, "ferocity_shape_mix", (int)defaults.ferocityShapeMix);
+    if (ferShapeMix < 0.0f) ferShapeMix = 0.0f;
+    if (ferShapeMix > 100.0f) ferShapeMix = 100.0f;
 
-    int fp = _pteroParamInt(request, "flight_profile", -1);
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
@@ -1082,7 +1127,9 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.rudderAmplitudeDifferential = rudAmpDiff;
         ornithopter.elevatorFerocityMix = elevFerMix;
         ornithopter.throttleFerocityMix = thrFerMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix);
+        ornithopter.throttleFrequencyMix = thrFreqMix;
+        ornithopter.ferocityShapeMix = ferShapeMix;
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix);
     }
 
     // Global mixer params (not per-profile)
@@ -1138,7 +1185,10 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         strlcpy(ornithopter.modelName, mn.c_str(), sizeof(ornithopter.modelName));
     }
 
-    SaveOrnithopterConfig();
+    if (!SaveOrnithopterConfig()) {
+        request->send(500, "application/json", "{\"ok\":false,\"saved\":false,\"error\":\"Settings applied in RAM, but saving to flash failed. Previous saved configuration retained; retry saving.\"}");
+        return;
+    }
     request->send(200, "application/json", "{\"ok\":true,\"saved\":true}");
 }
 
@@ -1281,10 +1331,11 @@ static void PostPteronautosBackup(AsyncWebServerRequest *request, JsonVariant &j
 
     // 3) Ornithopter config → /pteronautos.conf + live reload.
     if (json["pteronautos"].is<JsonObject>()) {
-        File f = LittleFS.open("/pteronautos.conf", "w");
-        if (f) {
-            serializeJson(json["pteronautos"], f);
-            f.close();
+        PteroConfigWriter f(LittleFS, "/pteronautos.conf", "/pteronautos.conf.tmp");
+        serializeJson(json["pteronautos"], f);
+        if (!f.commit()) {
+            request->send(500, "application/json", "{\"ok\":false,\"error\":\"Receiver settings may have changed, but the PteronautOS configuration could not be saved. Import incomplete; retry.\"}");
+            return;
         }
         _pteroConfigLoaded = false;
         LoadOrnithopterConfig();
@@ -2012,9 +2063,8 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
-  // One-shot LittleFS config restore at web-server start — not inside the
-  // state poll. Restoring during the first poll built a DynamicJsonDocument
-  // while also building the state JSON and exhausted the ESP8285 heap.
+  // Fallback/retry for recovery mode. Normal receiver startup restores before
+  // outputs start; never allocate the config document inside a state poll.
   LoadOrnithopterConfig();
 
   server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);

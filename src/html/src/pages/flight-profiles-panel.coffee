@@ -2,6 +2,21 @@ import renderFn from './flight-profiles-panel.lithaml'
 import {PteroElement, Fmt} from '../lib/ptero'
 import {i18n} from '../utils/i18n'
 
+# One schema for the request snapshot and the successfully saved cache.
+PROFILE_FIELDS =
+  strokeFerocity: 'stroke_ferocity'
+  returnFerocity: 'return_ferocity'
+  glideAngleDeg: 'glide_angle_deg'
+  flappingAngleDeg: 'flapping_angle_deg'
+  aileronScale: 'aileron_scale'
+  elevatorScale: 'elevator_scale'
+  rudderFerocityRange: 'rudder_ferocity_range'
+  rudderAmplitudeDifferential: 'rudder_amplitude_differential'
+  elevatorFerocityMix: 'elevator_ferocity_mix'
+  throttleFerocityMix: 'throttle_ferocity_mix'
+  throttleFrequencyMix: 'throttle_frequency_mix'
+  ferocityShapeMix: 'ferocity_shape_mix'
+
 ###
 # Flight Profiles Panel — per-profile tuning + channel test.
 # Live telemetry via /pteronautos/state; flight profiles via /pteronautos/config.
@@ -13,6 +28,9 @@ class FlightProfilesPanel extends PteroElement
   needsConfig: true
 
   @properties:
+    configLoaded:        {state: true}
+    saveState:           {state: true}
+    saveError:           {state: true}
     stateLoaded:         {state: true}
     linkUp:              {state: true}
     voiceThrottle:       {state: true}
@@ -41,12 +59,15 @@ class FlightProfilesPanel extends PteroElement
     rudderAmplitudeDifferential: {state: true}
     elevatorFerocityMix: {state: true}
     throttleFerocityMix: {state: true}
+    throttleFrequencyMix: {state: true}
+    ferocityShapeMix:     {state: true}
     # Virtual stick
     stickOverride:       {state: true}
     stickChannels:       {state: true}
 
   constructor: ->
     super()
+    @configLoaded         = false
     @stateLoaded          = false
     @linkUp               = false
     @voiceThrottle        = 1500
@@ -63,9 +84,9 @@ class FlightProfilesPanel extends PteroElement
     @editProfile          = 1
     @activeFlightProfile  = 1
     @flightProfiles       = [
-      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0}
-      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0}
-      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0}
+      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
+      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
+      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
     ]
     @strokeFerocity       = 30
     @returnFerocity       = 50
@@ -77,6 +98,8 @@ class FlightProfilesPanel extends PteroElement
     @rudderAmplitudeDifferential = 0
     @elevatorFerocityMix  = 0
     @throttleFerocityMix  = 0
+    @throttleFrequencyMix = 0
+    @ferocityShapeMix      = 0
     @stickOverride        = false
     @ratchetTimeoutMs     = 500
     # CRSF range (172–1811), neutral = 992. Throttle at glide (below flap
@@ -86,6 +109,9 @@ class FlightProfilesPanel extends PteroElement
     @_stickPending        = {}
     @_pollInFlight        = false
     @_saveInFlight        = false
+    @_saveQueued          = false
+    @_unsavedProfiles     = {}
+    @_profileSaveErrors   = {}
     @_fieldFocused        = false
     @_stickDragActive     = false
     @_stickDragTimer      = null
@@ -153,6 +179,7 @@ class FlightProfilesPanel extends PteroElement
   _applyConfig: (data) ->
     return unless data?.ornithopter
     o = data.ornithopter
+    return unless Array.isArray(o.flight_profiles) and o.flight_profiles.length == 3
     @kernel = o.type or 'servo'
     if o.stick_override?
       @stickOverride = o.stick_override == true
@@ -172,18 +199,25 @@ class FlightProfilesPanel extends PteroElement
         rudderAmplitudeDifferential: p.rudder_amplitude_differential ? 0
         elevatorFerocityMix: p.elevator_ferocity_mix ? 0
         throttleFerocityMix: p.throttle_ferocity_mix ? 0
+        throttleFrequencyMix: p.throttle_frequency_mix ? 0
+        ferocityShapeMix: p.ferocity_shape_mix ? 0
       @_loadEditProfile() unless @_fieldFocused
+      @configLoaded = true
 
   render: -> renderFn(this)
 
   # ── Flight profile editing ────────────────────────────────────────
   _onEditProfile: (evt) =>
+    return if @_uiLocked()
+    clearTimeout @_saveResetTimer if @_saveResetTimer
     @editProfile = parseInt(evt.target.value)
     @_loadEditProfile()
 
   # Load the selected edit profile's params into the slider buffer.
   _loadEditProfile: ->
-    p = @flightProfiles[@editProfile] or @flightProfiles[1]
+    p = @_unsavedProfiles[@editProfile] or @flightProfiles[@editProfile] or @flightProfiles[1]
+    @saveState = if @_unsavedProfiles[@editProfile] then 'error' else 'idle'
+    @saveError = @_profileSaveErrors[@editProfile] or null
     @strokeFerocity      = p.strokeFerocity
     @returnFerocity      = p.returnFerocity
     @glideAngleDeg       = p.glideAngleDeg
@@ -194,6 +228,8 @@ class FlightProfilesPanel extends PteroElement
     @rudderAmplitudeDifferential = p.rudderAmplitudeDifferential
     @elevatorFerocityMix = p.elevatorFerocityMix
     @throttleFerocityMix = p.throttleFerocityMix
+    @throttleFrequencyMix = p.throttleFrequencyMix
+    @ferocityShapeMix = p.ferocityShapeMix
 
   # ── Virtual Stick (channel test) ──────────────────────────────────
   _onStickToggle: =>
@@ -219,19 +255,6 @@ class FlightProfilesPanel extends PteroElement
     body = new URLSearchParams()
     body.append "ch#{idx}", val
     body.append 'ratchet_timeout_ms', parseInt(@ratchetTimeoutMs)
-    # Optimistically mirror the edited profile's buffer into local
-    # flightProfiles, so switching profiles shows the save immediately.
-    if p = @flightProfiles[@editProfile]
-      p.strokeFerocity      = parseInt(@strokeFerocity)
-      p.returnFerocity      = parseInt(@returnFerocity)
-      p.glideAngleDeg       = parseInt(@glideAngleDeg)
-      p.flappingAngleDeg    = parseInt(@flappingAngleDeg)
-      p.aileronScale        = parseInt(@aileronScale)
-      p.elevatorScale       = parseInt(@elevatorScale)
-      p.rudderFerocityRange = parseInt(@rudderFerocityRange)
-      p.rudderAmplitudeDifferential = parseInt(@rudderAmplitudeDifferential)
-      p.elevatorFerocityMix = parseInt(@elevatorFerocityMix)
-      p.throttleFerocityMix = parseInt(@throttleFerocityMix)
     try
       await fetch '/pteronautos/stick', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
     catch
@@ -260,36 +283,56 @@ class FlightProfilesPanel extends PteroElement
 
   # ── Save flight-profile params ────────────────────────────────────
   _saveConfig: ->
-    return if @_saveInFlight
+    return unless @configLoaded
+    if @_saveInFlight
+      @_saveQueued = true
+      return
+    # Capture both the slot and values before yielding to the network.
+    profileIndex = @editProfile
+    return unless profileIndex in [0, 1, 2]
+    snapshot = {}
+    for prop of PROFILE_FIELDS
+      value = Number(@[prop])
+      bounds = @_boundsFor(prop) or [0, 100]
+      unless Number.isInteger(value) and bounds[0] <= value <= bounds[1]
+        @saveState = 'error'
+        @saveError = "Invalid value: #{prop}"
+        return
+      snapshot[prop] = value
     @_saveInFlight = true
     @saveState = 'saving'
     @saveError = null
     clearTimeout @_saveResetTimer if @_saveResetTimer
     body = new URLSearchParams()
-    body.append 'flight_profile',       parseInt(@editProfile)
-    body.append 'stroke_ferocity',      parseInt(@strokeFerocity)
-    body.append 'return_ferocity',      parseInt(@returnFerocity)
-    body.append 'glide_angle_deg',      parseInt(@glideAngleDeg)
-    body.append 'flapping_angle_deg',   parseInt(@flappingAngleDeg)
-    body.append 'aileron_scale',        parseInt(@aileronScale)
-    body.append 'elevator_scale',       parseInt(@elevatorScale)
-    body.append 'rudder_ferocity_range',parseInt(@rudderFerocityRange)
-    body.append 'rudder_amplitude_differential',parseInt(@rudderAmplitudeDifferential)
-    body.append 'elevator_ferocity_mix',parseInt(@elevatorFerocityMix)
-    body.append 'throttle_ferocity_mix',parseInt(@throttleFerocityMix)
+    body.append 'flight_profile', profileIndex
+    for prop, key of PROFILE_FIELDS
+      body.append key, snapshot[prop]
     try
       res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
-      if res and res.ok
-        @saveState = 'saved'
-      else
-        @saveState = 'error'
-        @saveError = "HTTP #{res?.status ? '?'}"
+      result = await res.json()
+      unless res.ok and result?.saved == true
+        throw new Error(result?.error or "HTTP #{res.status}: save not confirmed")
+      profiles = @flightProfiles.slice()
+      profiles[profileIndex] = snapshot
+      @flightProfiles = profiles
+      delete @_unsavedProfiles[profileIndex]
+      delete @_profileSaveErrors[profileIndex]
+      @saveState = 'saved'
     catch e
       @saveState = 'error'
-      @saveError = e?.message ? self._t('app.error.network')
+      @saveError = e?.message ? @_t('app.error.network')
+      # Retain the attempted values per slot even if the reply was lost after
+      # a successful device write. Switching profiles must not resurrect an
+      # older confirmed snapshot and silently overwrite these values later.
+      @_unsavedProfiles[profileIndex] = snapshot
+      @_profileSaveErrors[profileIndex] = @saveError
     finally
       @_saveInFlight = false
-      @_saveResetTimer = setTimeout (=> @saveState = 'idle'), 2500
+      if @_saveQueued
+        @_saveQueued = false
+        @_saveConfig()
+      else if @saveState == 'saved'
+        @_saveResetTimer = setTimeout (=> @saveState = 'idle'), 2500
 
   # ── Slider / Number handlers ──────────────────────────────────────
   _onSlider: (prop) -> (evt) =>
@@ -333,7 +376,7 @@ class FlightProfilesPanel extends PteroElement
 
   # ── Save feedback / UI lock helpers ────────────────────────────────
   _saving: -> @_saveInFlight
-  _uiLocked: -> !@stateLoaded or @_saveInFlight
+  _uiLocked: -> !@configLoaded or @_saveInFlight
   _isServoProfile: -> @kernel == 'servo'
   _saveStateText: ->
     switch @saveState

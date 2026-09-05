@@ -1,4 +1,46 @@
 @charset "UTF-8";
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-ExtraLight.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-Light.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-Medium.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Turret Road Mono";
+  src: url("../fonts/turret-road-mono/TurretRoadMono-ExtraBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
 html {
   --bg: #000;
   --text: #fff;
@@ -12,6 +54,10 @@ html {
   --shadow-a: rgba(0, 0, 0, 0.5);
   --shadow-b: rgba(0, 0, 0, 0.3);
   --shadow-c: rgba(0, 0, 0, 0.15);
+  --wave-down: #a9d2ff;
+  --wave-up: #b8dd8a;
+  --wave-direct: #dfa776;
+  --wave-grid: rgba(255, 255, 255, 0.16);
 }
 
 @media (prefers-color-scheme: light) {
@@ -28,6 +74,10 @@ html {
     --shadow-a: rgba(0, 0, 0, 0.08);
     --shadow-b: rgba(0, 0, 0, 0.05);
     --shadow-c: rgba(0, 0, 0, 0.03);
+    --wave-down: #175f9e;
+    --wave-up: #497c18;
+    --wave-direct: #a45116;
+    --wave-grid: rgba(0, 0, 0, 0.18);
   }
 }
 * {
@@ -289,20 +339,22 @@ nav > a.active {
 
 .glyph {
   line-height: 1;
-  opacity: 0.35;
+  opacity: 1;
   margin: 2rem auto 1.5rem auto;
   white-space: pre;
   color: var(--mut);
   user-select: none;
-  font-family: "Turret Road", monospace;
+  font-family: "Turret Road Mono", monospace;
   font-size: clamp(1.5rem, 2.3vw, 1.8rem);
   text-align: left;
-  width: 8em;
-  font-weight: 500;
+  width: 25em;
+  font-weight: normal;
+  letter-spacing: -0.3em;
+  line-height: 0.8em;
 }
 
 .version {
-  font-family: "Turret Road", monospace;
+  font-family: "Turret Road Mono", monospace;
   font-weight: 200;
   font-size: 0.75rem;
   letter-spacing: 0.4em;
@@ -367,7 +419,7 @@ strong {
 }
 
 code {
-  font-family: "Turret Road", monospace;
+  font-family: "Turret Road Mono", monospace;
   font-weight: 400;
   font-size: 0.9rem;
   letter-spacing: 0.06em;
@@ -460,7 +512,7 @@ td:first-child {
 }
 
 .compatible {
-  font-family: "Turret Road", monospace;
+  font-family: "Turret Road Mono", monospace;
   font-weight: 200;
   font-size: 0.85rem;
   letter-spacing: 0.25em;
@@ -790,7 +842,7 @@ footer .lang-switch {
   text-shadow: 0 0 12px var(--nav);
 }
 .sub-nav a.home-link {
-  font-size: 0.78rem;
+  font-size: 1.28rem;
   letter-spacing: 0.16em;
   opacity: 0.8;
 }
@@ -799,9 +851,11 @@ footer .lang-switch {
 }
 .sub-nav a.home-link .pteronaut {
   color: var(--nav);
+  font-weight: bolder;
 }
 .sub-nav a.home-link .os {
   color: #666;
+  font-weight: lighter;
 }
 .sub-nav .nav-scroll-top {
   position: relative;
@@ -938,6 +992,178 @@ footer .lang-switch {
   border: 0;
 }
 
+.waveform-docs {
+  scroll-margin-top: 7rem;
+}
+
+.waveform-explorer {
+  margin: 2rem 0 2.5rem;
+  padding: 1.5rem 0 1.75rem;
+  border-top: 1px solid var(--dim);
+  border-bottom: 1px solid var(--dim);
+}
+
+.waveform-controls {
+  font-family: "Turret Road Mono", monospace;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.waveform-controls label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.75rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.waveform-controls output {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.waveform-controls input[type=range] {
+  grid-column: 1/-1;
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.waveform-presets {
+  font-family: "Turret Road Mono", monospace;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-top: 1rem;
+}
+.waveform-presets button {
+  padding: 0.15rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--dim);
+  color: var(--accent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.waveform-presets button:hover, .waveform-presets button:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.sub-content p.waveform-metric {
+  font-family: "Turret Road Mono", monospace;
+  min-height: 1.5rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--mut);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.07em;
+}
+
+.waveform-chart {
+  margin-top: 1.6rem;
+}
+.waveform-chart h3 {
+  margin: 0 0 0.35rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+}
+.waveform-chart svg {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  overflow: visible;
+}
+
+.waveform-legend {
+  font-family: "Turret Road Mono", monospace;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--mut);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+.waveform-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.waveform-legend i {
+  display: inline-block;
+  width: 1.1rem;
+  height: 2px;
+  background: var(--wave-down);
+}
+.waveform-legend i.up {
+  background: var(--wave-up);
+}
+.waveform-legend i.direct {
+  background: var(--wave-direct);
+}
+.waveform-legend i.boundary {
+  height: 1px;
+  border-top: 1px dashed var(--text);
+  background: transparent;
+}
+
+.waveform-frame,
+.waveform-axis,
+.waveform-tick {
+  stroke: var(--wave-grid);
+  vector-effect: non-scaling-stroke;
+}
+
+.waveform-axis-label,
+.waveform-tick-label {
+  fill: var(--mut);
+  font-family: "Turret Road Mono", monospace;
+  font-size: 11px;
+}
+
+.waveform-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.waveform-line.current, .waveform-line.down {
+  stroke: var(--wave-down);
+  stroke-width: 2.2;
+}
+.waveform-line.up {
+  stroke: var(--wave-up);
+  stroke-width: 2.2;
+}
+.waveform-line.direct {
+  stroke: var(--wave-direct);
+  stroke-width: 1.3;
+  stroke-dasharray: 5 4;
+}
+.waveform-line.boundary {
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.65;
+}
+
+.waveform-caution {
+  margin: 1.5rem 0 2rem;
+  padding: 1rem 1.25rem;
+  border-left: 2px solid var(--wave-direct);
+  color: var(--accent);
+  background: rgba(127, 127, 127, 0.05);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.waveform-caution strong {
+  color: var(--text);
+}
+
 @media (max-width: 700px) {
   .sub-nav {
     gap: 0.55rem;
@@ -953,6 +1179,16 @@ footer .lang-switch {
   }
   .nav-progressive-blur {
     height: 5rem;
+  }
+  .waveform-controls {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  .waveform-chart svg {
+    min-height: 205px;
+  }
+  .waveform-presets {
+    gap: 0.35rem 0.8rem;
   }
 }
 

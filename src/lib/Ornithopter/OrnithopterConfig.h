@@ -152,6 +152,22 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
 #define ORNI_FLAP_BASE_FREQ_MIN_DHZ   10   // 1.0 Hz
 #define ORNI_FLAP_BASE_FREQ_MAX_DHZ   200  // 20.0 Hz
 
+// Blend the independent CH6 frequency command toward throttle. Inputs and
+// output are normalized: 0 = ORNI_FREQ_MIN, 1 = flapBaseFreq. Keeping this
+// helper Arduino-free makes the control law directly unit-testable.
+constexpr float orniClamp01(float value) {
+    return value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+}
+
+constexpr float orniThrottleFrequencyCommand(float independentFreq01,
+                                              float throttle01,
+                                              float couplingPercent) {
+    const float mix = orniClamp01(couplingPercent * 0.01f);
+    const float independent = orniClamp01(independentFreq01);
+    const float throttle = orniClamp01(throttle01);
+    return independent + (throttle - independent) * mix;
+}
+
 // ─── Flight Profiles (multi-position channel) ──────────────────────
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
 // Kernel (MixerProfile / servo geometry) is NOT per-profile — it stays fixed.
@@ -168,6 +184,8 @@ struct FlightProfileParams {
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection
     float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
+    float   throttleFrequencyMix; // 0–100, CH6→throttle frequency-command blend
+    float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

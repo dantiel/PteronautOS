@@ -2009,6 +2009,11 @@ void setup()
         // Init EEPROM and load config, checking powerup count
         setupConfigAndPocCheck();
         setupTarget();
+#ifdef ORNITHOPTER_MODE
+        // options_init mounted LittleFS. Restore before servo/radio devices
+        // start, even when the receiver never enters WiFi mode.
+        LoadOrnithopterConfig();
+#endif
         // If serial is not already defined, then see if there is serial pin configured in the PWM configuration
         if (OPT_HAS_SERVO_OUTPUT && GPIO_PIN_RCSIGNAL_RX == UNDEF_PIN && GPIO_PIN_RCSIGNAL_TX == UNDEF_PIN)
         {

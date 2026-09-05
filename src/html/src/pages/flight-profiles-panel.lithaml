@@ -2,7 +2,7 @@
   %span.panel-icon.icon--symbols.icon--symbols--flight
   = self._t('ornithopter.flight_profiles.title')
 
-- unless self.stateLoaded
+- unless self.configLoaded
   %div{style: "color:#d4a017;font-size:13px;margin:8px 0;"} = self._t('ornithopter.loading_config')
 
 - if self.linkUp
@@ -45,7 +45,9 @@
           %option{value: i, selected: ""}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
         - else
           %option{value: i}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
-    %div{style: "color:#d4a017;font-size:13px;margin:4px 0 8px;"}= self._t('ornithopter.flight_profiles.active_ch7', {n: self.activeFlightProfile})
+    %div{style: "color:#d4a017;font-size:13px;margin:4px 0 8px;"}
+      = self._t('ornithopter.flight_profiles.active_ch7')
+      = ': ' + self._t('ornithopter.flight_profiles.profile_n', {n: self.activeFlightProfile})
     - if self.editProfile != self.activeFlightProfile
       %div{style: "color:#e07b39;font-size:12px;margin:0 0 8px;"} = self._t('ornithopter.flight_profiles.editing_inactive', {n: self.editProfile})
 
@@ -133,6 +135,24 @@
          %td
            %input{type: "range", min: "0", max: "100", .value: self.throttleFerocityMix, @input: self._onSlider('throttleFerocityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.throttleFerocityMix
+           %
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_frequency_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_frequency_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.throttleFrequencyMix, @input: self._onSlider('throttleFrequencyMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleFrequencyMix
+           %
+       %tr
+         %td
+           %b= self._t('ornithopter.ferocity_shape_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.ferocity_shape_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.ferocityShapeMix, @input: self._onSlider('ferocityShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.ferocityShapeMix
            %
 
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing

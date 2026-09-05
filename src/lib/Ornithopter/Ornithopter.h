@@ -60,7 +60,11 @@ public:
     FlightProfileParams flightProfiles[FLIGHT_PROFILE_COUNT];
     uint8_t activeFlightProfile;   // 0..2 (selected by STK_PROFILE channel)
     void applyFlightProfile(uint8_t idx);
-        void setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide, int8_t flapAng, float ail, float elev, float rudRng, float rudAmpDiff, float elevFerMix, float thrFerMix);
+    void setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide,
+                                int8_t flapAng, float ail, float elev,
+                                float rudRng, float rudAmpDiff,
+                                float elevFerMix, float thrFerMix,
+                                float thrFreqMix, float ferShapeMix);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
@@ -80,6 +84,8 @@ public:
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection
     float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
+    float   throttleFrequencyMix; // 0–100, throttle→frequency coupling
+    float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)

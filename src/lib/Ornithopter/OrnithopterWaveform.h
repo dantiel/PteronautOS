@@ -22,7 +22,8 @@ public:
     // wings, so left/right reverse at the SAME phase even when their ferocities
     // differ (rudder differential). < 0 means "compute from this wing's own
     // ferocities" (legacy behaviour).
-    static float shapeWave(float theta, float strokeFerocity, float returnFerocity, float limiarShared = -1.0f);
+    static float shapeWave(float theta, float strokeFerocity, float returnFerocity,
+                           float limiarShared = -1.0f, float shapeMixPercent = 0.0f);
     void decay(float dt);
     void reset();
 };
@@ -42,25 +43,28 @@ inline float FlappingOscillator::advance(float dt) {
 }
 
 inline float FlappingOscillator::shapeWave(
-    float theta, float strokeFerocity, float returnFerocity, float limiarShared
+    float theta, float strokeFerocity, float returnFerocity,
+    float limiarShared, float shapeMixPercent
 ) {
-    // Faithful port of GralhaAzul::formaDoBaterDasAsas().
-    // Trapezoidal half-wave: dwell + cos ramp, continuous across all boundaries.
+    // The original GralhaAzul mode is a dwell/plateau plus a compressed cosine
+    // ramp. shapeMixPercent continuously transmutes it into a rounded pyramidal
+    // stroke: no dwell, nearly constant velocity through the middle, and a
+    // finite-acceleration reversal. Each half uses its own ferocity, while the
+    // shared reversal threshold below preserves anticipation from asymmetry.
     constexpr float kPi = 3.14159265358979f;
     constexpr float kTwoPi = 6.283185307f;
+    constexpr float kMaxDwell = 0.98f;  // never emit an impossible position jump
+    constexpr float kMaxPoint = 0.98f;  // rounded rather than infinite-acceleration triangle
 
     // Normalize phase into [0, 2π)
     theta = fmodf(theta, kTwoPi);
     if (theta < 0.0f) theta += kTwoPi;
 
-    // Fast-path: max ferocity → pure square wave (limiarShared shifts the 50/50 boundary)
-    if (strokeFerocity >= 7.999f && returnFerocity >= 7.999f) {
-        float limiar = (limiarShared >= 0.0f) ? limiarShared : kPi;
-        return (theta < limiar) ? 1.0f : -1.0f;
-    }
-
     float fD = strokeFerocity; if (fD < 0.0f) fD = 0.0f; else if (fD > 8.0f) fD = 8.0f;
     float fS = returnFerocity; if (fS < 0.0f) fS = 0.0f; else if (fS > 8.0f) fS = 8.0f;
+    float shapeMix = shapeMixPercent * 0.01f;
+    if (shapeMix < 0.0f) shapeMix = 0.0f;
+    else if (shapeMix > 1.0f) shapeMix = 1.0f;
 
     // Shared reversal threshold between downstroke (descida) and upstroke (subida)
     float limiar;
@@ -82,14 +86,26 @@ inline float FlappingOscillator::shapeWave(
         f = fS;
     }
 
-    float d = f * 0.125f;   // f/8, dwell ratio ∈ [0,1]
+    float ferocity01 = f * 0.125f;
+    float d = ferocity01 * kMaxDwell;
     float dh = d * 0.5f;    // half-dwell per extreme
 
-    if (d >= 1.0f) return descida ? 1.0f : -1.0f;
-    if (t < dh) return descida ? 1.0f : -1.0f;             // dwell at start
-    if (t > 1.0f - dh) return descida ? -1.0f : 1.0f;      // dwell at end
-    float ramp = cosf(kPi * (t - dh) / (1.0f - d));
-    return descida ? ramp : -ramp;
+    float plateau;
+    if (t < dh) plateau = 1.0f;
+    else if (t > 1.0f - dh) plateau = -1.0f;
+    else plateau = cosf(kPi * (t - dh) / (1.0f - d));
+
+    // Coupling pointedness to this half's ferocity makes a strong half-stroke
+    // direct and pyramidal while a weaker, elongated half remains sinusoidal.
+    // The eased mapping reaches the direct-stroke family decisively at high
+    // ferocity without ever reaching the sharp k=1 triangle singularity.
+    float pointK = kMaxPoint * (2.0f * ferocity01 - ferocity01 * ferocity01);
+    float pointed = pointK < 0.0001f
+        ? cosf(kPi * t)
+        : asinf(pointK * cosf(kPi * t)) / asinf(pointK);
+
+    float halfWave = plateau + (pointed - plateau) * shapeMix;
+    return descida ? halfWave : -halfWave;
 }
 
 inline void FlappingOscillator::decay(float /*dt*/) {

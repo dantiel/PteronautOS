@@ -37,9 +37,16 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     rudderAmplitudeDifferential = p.rudderAmplitudeDifferential;
     elevatorFerocityMix = p.elevatorFerocityMix;
     throttleFerocityMix = p.throttleFerocityMix;
+    throttleFrequencyMix = p.throttleFrequencyMix;
+    ferocityShapeMix = p.ferocityShapeMix;
 }
 
-void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide, int8_t flapAng, float ail, float elev, float rudRng, float rudAmpDiff, float elevFerMix, float thrFerMix)
+void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
+                                         int8_t glide, int8_t flapAng,
+                                         float ail, float elev, float rudRng,
+                                         float rudAmpDiff, float elevFerMix,
+                                         float thrFerMix, float thrFreqMix,
+                                         float ferShapeMix)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
     FlightProfileParams &p = flightProfiles[idx];
@@ -53,6 +60,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t
     p.rudderAmplitudeDifferential = rudAmpDiff;
     p.elevatorFerocityMix = elevFerMix;
     p.throttleFerocityMix = thrFerMix;
+    p.throttleFrequencyMix = thrFreqMix;
+    p.ferocityShapeMix = ferShapeMix;
     if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
@@ -81,6 +90,8 @@ Ornithopter::Ornithopter()
   , rudderAmplitudeDifferential(0.0f)
   , elevatorFerocityMix(0.0f)
   , throttleFerocityMix(0.0f)
+  , throttleFrequencyMix(0.0f)
+  , ferocityShapeMix(0.0f)
   , elevonScale(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
@@ -122,9 +133,9 @@ Ornithopter::Ornithopter()
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;  // motor stopped
     }
     // Flight profile defaults — three distinct tuning sets
-        flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f };
-        flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f };
-        flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 40.0f, 60.0f, 50.0f, 0.0f };
+    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
 void Ornithopter::onLinkUp() {
@@ -235,10 +246,16 @@ void Ornithopter::_computeServoMixer() {
     int angleLeft, angleRight;
 
     if (isFlapping) {
-        // Frequency modulator channel (FREQ) sets flap rate directly within
-        // the window [ORNI_FREQ_MIN … flapBaseFreq]; throttle sets stroke
-        // amplitude (%). Both CRSF raw (172–1811).
-        float freq01 = _crsfToNorm(voiceFreq) * 0.5f + 0.5f;   // 0..1
+        // At 0% coupling CH6 independently commands frequency. At 100%, the
+        // normalized frequency command follows normalized throttle, so
+        // frequency and amplitude scale together. Intermediate profile values
+        // are a continuous blend. Both sources are CRSF raw (172–1811).
+        float independentFreq01 = _crsfToNorm(voiceFreq) * 0.5f + 0.5f;
+        float throttlePct = constrain((throttleUsF - (float)ORNI_FLAP_THRESHOLD_US) /
+                                      (1811.0f - (float)ORNI_FLAP_THRESHOLD_US), 0.0f, 1.0f);
+        float freq01 = orniThrottleFrequencyCommand(independentFreq01,
+                                                    throttlePct,
+                                                    throttleFrequencyMix);
         float freqMax = flapBaseFreq * 0.1f;                   // deci-Hz → Hz
         float freqHz = ORNI_FREQ_MIN + freq01 * (freqMax - ORNI_FREQ_MIN);
         _osc.cadenceTarget = freqHz * 6.283185307f;            // 2π rad/s
@@ -271,8 +288,6 @@ void Ornithopter::_computeServoMixer() {
         float degPerSec = 60.0f / (servoSpeed * 0.001f);       // ms/60° → °/s
         float ampMax = degPerSec / (2.0f * freqHz);
                 if (ampMax > ORNI_AMP_MAX) ampMax = ORNI_AMP_MAX;            // hard safety ceiling
-        float throttlePct = constrain((throttleUsF - (float)ORNI_FLAP_THRESHOLD_US) /
-                                      (1811.0f - (float)ORNI_FLAP_THRESHOLD_US), 0.0f, 1.0f);
         float amplitude = throttlePct * ampMax;
 
         // Elevator → ferocity: ASYMMETRIC stroke modulation.
@@ -330,8 +345,10 @@ void Ornithopter::_computeServoMixer() {
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
-        float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL, limiarShared);
-        float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR, limiarShared);
+        float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
+                                                     limiarShared, ferocityShapeMix);
+        float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
+                                                     limiarShared, ferocityShapeMix);
 
 #ifdef ZEPHYRUS_ENABLED
         _resonanceAccum = 0.0f;

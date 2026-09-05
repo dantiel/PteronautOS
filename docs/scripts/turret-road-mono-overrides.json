@@ -1,0 +1,14 @@
+{
+  "defaults": {
+    "cell_width": 700,
+    "side_bearing": 40
+  },
+  "glyphs": {
+    "quotedbl": {
+      "shift_x": 0
+    },
+    "U+005F": {
+      "side_bearing": 28
+    }
+  }
+}

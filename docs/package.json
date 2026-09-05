@@ -1,0 +1,10 @@
+{
+  "name": "pteronautos-docs",
+  "private": true,
+  "scripts": {
+    "build:coffee": "coffee --compile --bare --output assets/js assets/js/ferocity-waveform.coffee"
+  },
+  "devDependencies": {
+    "coffeescript": "2.7.0"
+  }
+}

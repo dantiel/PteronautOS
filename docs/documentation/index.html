@@ -8,6 +8,7 @@
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../assets/css/style.css' rel='stylesheet'>
+<script defer src='../assets/js/ferocity-waveform.js'></script>
 </head>
 <body class='sub-page'>
 <nav class='sub-nav'>
@@ -72,6 +73,79 @@
 <dt>Failsafe</dt>
 <dd>Wings return to neutral if the link drops.</dd>
 </dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>Ferocity waveform geometry</h2>
+<p>Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.</p>
+<p>The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.</p>
+<div class='waveform-explorer' data-ferocity-explorer>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>Down ferocity</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<label for='wave-up-ferocity'>
+<span>Up ferocity</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>Shape mix</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='Waveform examples' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>Extreme 8 / 0</button>
+<button data-preset='7,1,100' type='button'>Near-extreme 7 / 1</button>
+<button data-preset='8,6,100' type='button'>High base 8 / 6</button>
+<button data-preset='8,6,50' type='button'>High base, mixed</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>Whole cycle</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+Current waveform
+</span>
+<span>
+<i class='direct'></i>
+Exact direct reference
+</span>
+<span>
+<i class='boundary'></i>
+Reversal
+</span>
+</div>
+<svg aria-label='Wing position over the complete beat cycle' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>Each half stretched to equal width</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+Down half
+</span>
+<span>
+<i class='up'></i>
+Up half, direction aligned
+</span>
+<span>
+<i class='direct'></i>
+Exact diagonal
+</span>
+</div>
+<svg aria-label='Normalized downstroke and upstroke shapes' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>Reading extreme combinations</h3>
+<p>A 7 / 1 combination clearly produces a short pointed downstroke and a long sinusoidal return. Exact and near-maximum values require care: the current duration law uses the amount remaining below ferocity 8. Consequently, 8 / 0 allocates only about 0.125% of the cycle to the downstroke, while even 8 / 6 allocates about 0.5%. Position remains continuous, but the requested speed and acceleration can become physically unreachable.</p>
+<aside class='waveform-caution'>
+<strong>Bench-test before flight.</strong>
+The explorer describes the commanded mathematical waveform, not guaranteed servo motion. Avoid extreme asymmetric settings until amplitude, frequency, linkage geometry, and servo-speed limits have been verified without aerodynamic load.
+</aside>
+</section>
 </div>
 </main>
 <footer>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Turret Road Mono specimen</title>
+  <style>
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-ExtraLight.woff2") format("woff2"); font-weight: 200; font-display: swap; }
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+    @font-face { font-family: "Turret Road Mono"; src: url("TurretRoadMono-ExtraBold.woff2") format("woff2"); font-weight: 800; font-display: swap; }
+    :root { color-scheme: dark; font-family: "Turret Road Mono", monospace; background: #090909; color: #f5f5f5; }
+    * { box-sizing: border-box; }
+    body { max-width: 1050px; margin: 0 auto; padding: clamp(2rem, 6vw, 6rem) clamp(1rem, 4vw, 3rem); }
+    h1 { margin: 0 0 .35rem; font-size: clamp(2rem, 6vw, 5rem); font-weight: 800; letter-spacing: -.04em; }
+    .meta { margin: 0 0 4rem; color: #888; font-size: .85rem; letter-spacing: .08em; }
+    .weight { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; align-items: baseline; border-top: 1px solid #252525; padding: 1.1rem 0; }
+    .weight small { color: #777; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+    .weight p { margin: 0; overflow: hidden; white-space: nowrap; font-size: clamp(1.2rem, 3vw, 2.2rem); letter-spacing: 0; }
+    .grid { margin-top: 4rem; padding: 1rem; overflow-x: auto; border: 1px solid #252525; color: #c9dbeb; font-size: clamp(1rem, 2.2vw, 1.5rem); line-height: 1.7; white-space: pre; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(1ch - 1px), #24303a calc(1ch - 1px), #24303a 1ch); }
+    .language { margin-top: 2rem; color: #aaa; font-size: 1.1rem; line-height: 1.8; }
+    @media (max-width: 600px) { .weight { grid-template-columns: 1fr; gap: .2rem; } }
+  </style>
+</head>
+<body>
+  <h1>Turret Road Mono</h1>
+  <p class="meta">700 / 1000 FIXED CELL · PTERONAUTOS CUT · OFL 1.1</p>
+  <main>
+    <div class="weight"><small>200 ExtraLight</small><p style="font-weight:200">Natural flight, precise control.</p></div>
+    <div class="weight"><small>300 Light</small><p style="font-weight:300">Natural flight, precise control.</p></div>
+    <div class="weight"><small>400 Regular</small><p style="font-weight:400">Natural flight, precise control.</p></div>
+    <div class="weight"><small>500 Medium</small><p style="font-weight:500">Natural flight, precise control.</p></div>
+    <div class="weight"><small>700 Bold</small><p style="font-weight:700">Natural flight, precise control.</p></div>
+    <div class="weight"><small>800 ExtraBold</small><p style="font-weight:800">Natural flight, precise control.</p></div>
+    <div class="grid" aria-label="Monospaced character grid">MW@#  il1|  0OQ  {}[]()  &lt;=/&gt;
+0123456789  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz  .,:;!?_-+*~^</div>
+    <p class="language">ÄÖÜ äöü ß · ÀÉÎÕ Çñ · PŘIROZENÝ LET · FLÜGELSCHLAG 7.25 Hz</p>
+  </main>
+</body>
+</html>

@@ -44,8 +44,19 @@ task :sass do
   sh "bundle exec sass assets/css/style.sass assets/css/style.css"
 end
 
+desc "Build interactive documentation CoffeeScript"
+task :coffee do
+  sh "npm run build:coffee"
+end
+
+desc "Regenerate and validate Turret Road Mono (requires requirements-fonts.txt)"
+task :fonts do
+  sh "python3 scripts/monospace_turret_road.py"
+  sh "python3 scripts/monospace_turret_road.py --check"
+end
+
 desc "Build all"
-task build: [:haml, :sass, :pages]
+task build: [:haml, :sass, :coffee, :pages]
 
 desc "Clean and build"
 task rebuild: [:clobber, :build]
@@ -53,12 +64,12 @@ task rebuild: [:clobber, :build]
 desc "Watch for changes and rebuild automatically"
 task :watch do
   puts "👁  Watching docs/ for changes... (Ctrl+C to stop)"
-  puts "   Monitoring: *.haml, *.sass, _lang/*.json"
+  puts "   Monitoring: *.haml, *.sass, *.coffee, _lang/*.json"
   puts
 
   Rake::Task[:build].invoke
 
-  watched = Dir["index.haml", "assets/css/style.sass", "_lang/*.json", *PAGES.map { |p| "#{p}/index.haml" }]
+  watched = Dir["index.haml", "assets/css/style.sass", "assets/js/*.coffee", "_lang/*.json", *PAGES.map { |p| "#{p}/index.haml" }]
   mtimes = watched.to_h { |f| [f, File.mtime(f)] }
 
   loop do
@@ -71,10 +82,12 @@ task :watch do
 
     begin
       run_sass  = changed.any? { |f| f.end_with?(".sass") }
+      run_coffee = changed.any? { |f| f.end_with?(".coffee") }
       run_haml  = changed.any? { |f| f.end_with?(".haml", ".json") }
       run_pages = changed.any? { |f| f.include?("/index.haml") && PAGES.include?(f.split("/").first) }
   
       Rake::Task[:sass].reenable; Rake::Task[:sass].invoke if run_sass
+      Rake::Task[:coffee].reenable; Rake::Task[:coffee].invoke if run_coffee
       Rake::Task[:haml].reenable; Rake::Task[:haml].invoke if run_haml
       Rake::Task[:pages].reenable; Rake::Task[:pages].invoke if run_pages
       puts "✓ Rebuilt at #{Time.now.strftime('%H:%M:%S')}"
