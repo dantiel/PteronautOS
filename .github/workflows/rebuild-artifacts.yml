@@ -32,9 +32,13 @@ jobs:
       - name: Build Web UI
         run: |
           cd src/html
+          npm run build:all
+
+      - name: Sync headers
+        run: |
+          cd src/html
           rm -rf headers
           cp -r out headers
-          npm run build:all
 
       - name: Verify reproducible artifacts
         run: |
