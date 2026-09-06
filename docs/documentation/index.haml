@@ -83,6 +83,9 @@
                 %span Shape mix
                 %output{"data-value": "mix", for: "wave-shape-mix"} 100%
                 %input#wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
+              %label.lock-ferocity
+                %input#lock-ferocity{"data-control": "lock", type: "checkbox"}
+                %span Lock together
 
             .waveform-presets{"aria-label": "Waveform examples"}
               %button{type: "button", "data-preset": "8,0,100"} Extreme 8 / 0
