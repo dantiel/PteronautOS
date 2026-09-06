@@ -39,7 +39,7 @@
   "arch_title": "Arquitectura",
   "arch_ornithopter_title": "Ornithopter",
   "arch_ornithopter_desc": "Mezclador, generación de onda, filtrado de canales",
-  "arch_zephyrus_title": "Zephyrus",
+  "arch_zephyrus_title": "Céfiro",
   "arch_zephyrus_desc": "Giróscopo MPU6050 + Mahony AHRS + PID dual",
   "arch_servo_title": "ServoOutput",
   "arch_servo_desc": "PWM sincronizado al tick CRSF",

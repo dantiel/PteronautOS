@@ -87,7 +87,7 @@ export default {
     'ornithopter.glide.ratchet_timeout_desc': 'सुरक्षा रोक से पहले अधिकतम खोज समय',
     'ornithopter.save': 'कॉन्फ़िगरेशन सहेजें',
     'ornithopter.save_hint': 'कर्नल + मिक्सर चयन + सभी मिक्सिंग पैरामीटर + ग्लाइड कॉन्फ़िग /pteronautos/config को भेजता है',
-    'zephyrus.panel.title': 'ज़ेफायरस जायरो स्थिरीकरण',
+    'zephyrus.panel.title': 'ज़ेफ़िरस जायरो स्थिरीकरण',
     'zephyrus.info.sensor': 'सेंसर',
     'zephyrus.info.sensor_val': 'MPU6050 (GY-521)',
     'zephyrus.info.bus': 'बस',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': 'कर्नल प्रकार',
     'elrs.info.kernel_servo': 'सर्वो कर्नल',
     'elrs.info.mixer_profile': 'मिक्सर प्रोफ़ाइल',
-    'elrs.info.zephyrus': 'Zephyrus जायरो',
+    'elrs.info.zephyrus': 'ज़ेफ़िरस जायरो',
     'elrs.info.link': 'लिंक स्थिति',
     'elrs.info.section_device': 'डिवाइस जानकारी',
 

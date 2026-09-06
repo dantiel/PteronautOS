@@ -39,7 +39,7 @@
   "arch_title": "구조",
   "arch_ornithopter_title": "Ornithopter",
   "arch_ornithopter_desc": "뱁서, 파형 생성, 채널 필터링",
-  "arch_zephyrus_title": "Zephyrus",
+  "arch_zephyrus_title": "제피로스",
   "arch_zephyrus_desc": "MPU6050 자이로 + Mahony AHRS + 듀얼 PID",
   "arch_servo_title": "ServoOutput",
   "arch_servo_desc": "CRSF 틱에 동기화된 PWM",

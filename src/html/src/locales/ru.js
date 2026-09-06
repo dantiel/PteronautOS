@@ -21,7 +21,7 @@ export default {
     'app.menu.update': 'Обновление',
     'app.menu.ornithopter': 'Орнитоптер',
     'app.menu.hardware': 'Разводка Платы',
-    'app.menu.zephyrus': 'Гироскоп Zephyrus',
+    'app.menu.zephyrus': 'Гироскоп Зефир',
     'app.menu.servo': 'Выход Серво',
     'app.menu.debug': 'Консоль Отладки',
     'app.menu.voltage': 'Калибровка Напряжения',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': 'Тип Ядра',
     'elrs.info.kernel_servo': 'Серво-Ядро',
     'elrs.info.mixer_profile': 'Профиль Микшера',
-    'elrs.info.zephyrus': 'Гироскоп Zephyrus',
+    'elrs.info.zephyrus': 'Гироскоп Зефир',
     'elrs.info.link': 'Статус Связи',
     'elrs.info.section_device': 'Информация об Устройстве',
 

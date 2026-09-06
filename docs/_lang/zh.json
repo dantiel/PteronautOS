@@ -39,7 +39,7 @@
   "arch_title": "架构",
   "arch_ornithopter_title": "Ornithopter",
   "arch_ornithopter_desc": "混控器、波形生成、通道滤波",
-  "arch_zephyrus_title": "Zephyrus",
+  "arch_zephyrus_title": "西风神",
   "arch_zephyrus_desc": "MPU6050陀螺仪 + Mahony AHRS + 双PID",
   "arch_servo_title": "ServoOutput",
   "arch_servo_desc": "PWM同步于CRSF节拍",

@@ -42,7 +42,7 @@ const KEYS_TO_ADD = {
         de: 'Mixer-Profil', es: 'Perfil del Mixer', fr: 'Profil du Mixer', pt: 'Perfil do Mixer', ru: 'Профиль Микшера'
     },
     'elrs.info.zephyrus': {
-        de: 'Zephyrus Gyro', es: 'Giroscopio Zephyrus', fr: 'Gyro Zephyrus', pt: 'Giroscópio Zephyrus', ru: 'Гироскоп Зефир'
+        de: 'Zephyr Gyro', es: 'Giroscopio Céfiro', fr: 'Gyro Zéphyr', pt: 'Giroscópio Zéfiro', ru: 'Гироскоп Зефир'
     },
     'elrs.info.link': {
         de: 'Link', es: 'Enlace', fr: 'Liaison', pt: 'Link', ru: 'Связь'

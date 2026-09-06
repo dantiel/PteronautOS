@@ -21,7 +21,7 @@ export default {
     'app.menu.update': '업데이트',
     'app.menu.ornithopter': '오르니토프터',
     'app.menu.hardware': '하드웨어 레이아웃',
-    'app.menu.zephyrus': 'Zephyrus 자이로',
+    'app.menu.zephyrus': '제피로스 자이로',
     'app.menu.servo': '서보 출력',
     'app.menu.debug': '디버그 콘솔',
     'app.menu.voltage': '전압 보정',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': '커널 타입',
     'elrs.info.kernel_servo': '서보 커널',
     'elrs.info.mixer_profile': '믹서 프로필',
-    'elrs.info.zephyrus': 'Zephyrus 자이로',
+    'elrs.info.zephyrus': '제피로스 자이로',
     'elrs.info.link': '링크 상태',
     'elrs.info.section_device': '장치 정보',
 

@@ -21,7 +21,7 @@ export default {
     'app.menu.update': '更新',
     'app.menu.ornithopter': '扑翼机',
     'app.menu.hardware': '硬件布局',
-    'app.menu.zephyrus': 'Zephyrus 陀螺仪',
+    'app.menu.zephyrus': '西风陀螺仪',
     'app.menu.servo': '舵机输出',
     'app.menu.debug': '调试控制台',
     'app.menu.voltage': '电压校准',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': '核心类型',
     'elrs.info.kernel_servo': '舵机核心',
     'elrs.info.mixer_profile': '混合器配置文件',
-    'elrs.info.zephyrus': 'Zephyrus 陀螺仪',
+    'elrs.info.zephyrus': '西风陀螺仪',
     'elrs.info.link': '链路状态',
     'elrs.info.section_device': '设备信息',
 

@@ -39,7 +39,7 @@
   "arch_title": "Архитектура",
   "arch_ornithopter_title": "Ornithopter",
   "arch_ornithopter_desc": "Микшер, генерация волны, фильтрация каналов",
-  "arch_zephyrus_title": "Zephyrus",
+  "arch_zephyrus_title": "Зефир",
   "arch_zephyrus_desc": "Гироскоп MPU6050 + Mahony AHRS + двойной PID",
   "arch_servo_title": "ServoOutput",
   "arch_servo_desc": "ШИМ, синхронизированный с тиком CRSF",

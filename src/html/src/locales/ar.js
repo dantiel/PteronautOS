@@ -21,7 +21,7 @@ export default {
     'app.menu.update': 'تحديث',
     'app.menu.ornithopter': 'طائر آلي',
     'app.menu.hardware': 'تخطيط الأجهزة',
-    'app.menu.zephyrus': 'جيروسكوب Zephyrus',
+    'app.menu.zephyrus': 'جيروسكوب زيفيروس',
     'app.menu.servo': 'مخرج محرك',
     'app.menu.debug': 'كونسول التصحيح',
     'app.menu.voltage': 'معايرة الجهد',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': 'نوع النواة',
     'elrs.info.kernel_servo': 'نواة السيرفو',
     'elrs.info.mixer_profile': 'ملف تعريف الخلاط',
-    'elrs.info.zephyrus': 'جيروسكوب Zephyrus',
+    'elrs.info.zephyrus': 'جيروسكوب زيفيروس',
     'elrs.info.link': 'حالة الارتباط',
     'elrs.info.section_device': 'معلومات الجهاز',
 

@@ -39,7 +39,7 @@
   "arch_title": "المعمارية",
   "arch_ornithopter_title": "Ornithopter",
   "arch_ornithopter_desc": "خلاط، توليد شكل موجة، تصفية القنوات",
-  "arch_zephyrus_title": "Zephyrus",
+  "arch_zephyrus_title": "زيفيروس",
   "arch_zephyrus_desc": "MPU6050 جيروسكوب + Mahony AHRS + PID مزدوج",
   "arch_servo_title": "ServoOutput",
   "arch_servo_desc": "PWM متزامن مع نبضة CRSF",
