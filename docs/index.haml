@@ -28,9 +28,9 @@
         %a{href: "#zephyrus"}= nav_zephyrus
         %span.nav-separator
         %span.nav-group= nav_group_explore
-        %a{href: "#{asset_prefix}/tutorials/"}= nav_tutorials
-        %a{href: "#{asset_prefix}/hardware/"}= nav_hardware
-        %a{href: "#{asset_prefix}/documentation/"}= nav_documentation
+        %a{href: "#{asset_prefix}/#{lang_dir}tutorials/"}= nav_tutorials
+        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}= nav_hardware
+        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}= nav_documentation
       %button.nav-toggle{type: "button", "aria-label": "Menu", "aria-expanded": "false", "aria-controls": "nav-links"}
         %span
         %span
@@ -145,9 +145,9 @@
       %p.footer-links
         %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
         %span.sep ·
-        %a{href: "#{asset_prefix}/documentation/"}= nav_documentation
+        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}= nav_documentation
         %span.sep ·
-        %a{href: "#{asset_prefix}/hardware/"}= nav_hardware
+        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}= nav_hardware
       %p= footer_hermetic
       %p.credit= footer_credit
 

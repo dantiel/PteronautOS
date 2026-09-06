@@ -19,6 +19,9 @@ def build_html(lang)
   vars = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
   template = File.read("index.haml", encoding: "UTF-8")
   engine = Haml::Template.new { template }
+
+  vars["lang_dir"] = lang == "pt" ? "" : "#{lang}/"
+
   output = engine.render(Object.new, vars)
 
   out_path = lang == "pt" ? "index.html" : "#{lang}/index.html"
@@ -46,7 +49,7 @@ def build_page(name, lang)
 
   LANGS.each do |l|
     ldir = l == "pt" ? "" : "#{l}/"
-    vars["sub_lang_href_#{l}"] = asset_prefix + ldir
+    vars["sub_lang_href_#{l}"] = asset_prefix + ldir + name + "/"
     vars["sub_lang_class_#{l}"] = (l == lang) ? "active" : ""
   end
 
