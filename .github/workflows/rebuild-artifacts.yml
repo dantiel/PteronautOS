@@ -29,21 +29,23 @@ jobs:
           cd src/html
           npm ci
 
-      - name: Build Web UI
+      - name: Rebuild all headers
         run: |
           cd src/html
           npm run build:all
 
-      - name: Sync headers
-        run: |
-          cd src/html
-          rm -rf headers
-          cp -r out headers
-
       - name: Verify reproducible artifacts
         run: |
+          # Snapshot the first complete build, rebuild from the same locked
+          # inputs, then require byte-identical generated headers. Do not copy
+          # from `out/`: build.yml creates that directory only as its own
+          # before/after comparison snapshot.
+          artifact_snapshot="$(mktemp -d)"
+          trap 'rm -rf "$artifact_snapshot"' EXIT
+          cp -R src/html/headers/. "$artifact_snapshot/"
           cd src/html
-          diff -qr out headers
+          npm run build:all
+          diff -qr "$artifact_snapshot" headers
 
       - name: Commit updated artifacts
         run: |
