@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>ハードウェア — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='トップへ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='トップへ' type='button'>↑</button>
+<a class='home-link' href='../../ja/' title='PteronautOS ホーム'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ja/tutorials/'>チュートリアル</a>
+<a class='active' href='../../ja/hardware/'>ハードウェア</a>
+<a href='../../ja/documentation/'>ドキュメント</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>ハードウェア</h1>
+<p class='sub-lead'>PteronautOS が動作するボードと、その配線方法。</p>
+<h2>対応ボード</h2>
+<table>
+<tr>
+<td>ボード</td>
+<td>MCU · 無線</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+</table>
+<h2>主要スペック</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 MHz、1 MB フラッシュ</td>
+</tr>
+<tr>
+<td>無線</td>
+<td>ExpressLRS 2.4 GHz（SX1280）</td>
+</tr>
+<tr>
+<td>ジャイロ</td>
+<td>I2C 上の MPU6050（GY-521）</td>
+</tr>
+<tr>
+<td>サーボ</td>
+<td>3 PWM チャンネル — 左翼、右翼、クレストラダー</td>
+</tr>
+</table>
+<h2>配線</h2>
+<p>3 つのサーボチャンネルに加え、I2C バス上の MPU6050。完全なピン配置、I2C 配線、v1.0/v1.1 リビジョンの違いは PWMP7 ガイドにあります。</p>
+<p>
+<a href='../../en/hardware-pwmp7/'>PWMP7 受信機互換ガイド →</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>完全なハードウェアリファレンス（HARDWARE.md）→</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='active' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

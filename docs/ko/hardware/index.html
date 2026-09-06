@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ko'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>하드웨어 — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='맨 위로' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='맨 위로' type='button'>↑</button>
+<a class='home-link' href='../../ko/' title='PteronautOS 홈'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ko/tutorials/'>튜토리얼</a>
+<a class='active' href='../../ko/hardware/'>하드웨어</a>
+<a href='../../ko/documentation/'>문서</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>하드웨어</h1>
+<p class='sub-lead'>PteronautOS가 실행되는 보드와 그 배선 방법.</p>
+<h2>지원 보드</h2>
+<table>
+<tr>
+<td>보드</td>
+<td>MCU · 라디오</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+</table>
+<h2>주요 사양</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 MHz, 1 MB 플래시</td>
+</tr>
+<tr>
+<td>라디오</td>
+<td>ExpressLRS 2.4 GHz (SX1280)</td>
+</tr>
+<tr>
+<td>자이로</td>
+<td>I2C의 MPU6050 (GY-521)</td>
+</tr>
+<tr>
+<td>서보</td>
+<td>3 PWM 채널 — 왼쪽 날개, 오른쪽 날개, 크레스트 러더</td>
+</tr>
+</table>
+<h2>배선</h2>
+<p>세 개의 서보 채널과 I2C 버스의 MPU6050. 전체 핀 맵, I2C 배선, v1.0/v1.1 리비전 차이는 PWMP7 가이드에 있습니다.</p>
+<p>
+<a href='../../en/hardware-pwmp7/'>PWMP7 수신기 호환 가이드 →</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>전체 하드웨어 레퍼런스 (HARDWARE.md) →</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='active' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

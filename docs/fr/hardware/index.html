@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='fr'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Matériel — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Remonter en haut' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Remonter en haut' type='button'>↑</button>
+<a class='home-link' href='../../fr/' title='Accueil PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../fr/tutorials/'>Tutoriels</a>
+<a class='active' href='../../fr/hardware/'>Matériel</a>
+<a href='../../fr/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Matériel</h1>
+<p class='sub-lead'>Les cartes sur lesquelles PteronautOS fonctionne, et comment les câbler.</p>
+<h2>Cartes prises en charge</h2>
+<table>
+<tr>
+<td>Carte</td>
+<td>MCU · Radio</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2,4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2,4 GHz</td>
+</tr>
+</table>
+<h2>Caractéristiques clés</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 MHz, 1 Mo flash</td>
+</tr>
+<tr>
+<td>Radio</td>
+<td>ExpressLRS 2,4 GHz (SX1280)</td>
+</tr>
+<tr>
+<td>Gyroscope</td>
+<td>MPU6050 (GY-521) en I2C</td>
+</tr>
+<tr>
+<td>Servos</td>
+<td>3 canaux PWM — aile gauche, aile droite, gouvernail de crête</td>
+</tr>
+</table>
+<h2>Câblage</h2>
+<p>Trois canaux de servo plus le MPU6050 sur le bus I2C. Le brochage complet, le câblage I2C et les différences entre révisions v1.0/v1.1 figurent dans le guide PWMP7.</p>
+<p>
+<a href='../../en/hardware-pwmp7/'>Guide de compatibilité du récepteur PWMP7 →</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Référence matérielle complète (HARDWARE.md) →</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='active' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

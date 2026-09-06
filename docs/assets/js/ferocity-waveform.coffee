@@ -19,6 +19,14 @@ appendText = (parent, value, attributes = {}) ->
 class FerocityWaveformExplorer
   constructor: (@root) ->
     @state = down: 8, up: 0, mix: 100, lockMode: 'unlocked'  # 'unlocked', 'sync', 'oppose'
+    @i18n =
+      lockSync: @root.dataset.i18nLockSync ? 'Sync: Both sliders move together (click to cycle)'
+      lockOppose: @root.dataset.i18nLockOppose ? 'Oppose: Sliders complementary (sum=8) (click to cycle)'
+      lockUnlocked: @root.dataset.i18nLockUnlocked ? 'Unlocked (click to cycle)'
+      axisWing: @root.dataset.i18nAxisWing ? 'Wing position'
+      axisCycle: @root.dataset.i18nAxisCycle ? 'Beat-cycle phase'
+      axisHalf: @root.dataset.i18nAxisHalf ? 'Local half-stroke phase'
+      metric: @root.dataset.i18nMetric ? 'Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'
     @controls = {}
     for name in ['down', 'up', 'mix', 'lock']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
@@ -85,20 +93,20 @@ class FerocityWaveformExplorer
         <rect class="lock-body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
         <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       """
-      @controls.lock.setAttribute 'title', 'Sync: Both sliders move together (click to cycle)'
+      @controls.lock.setAttribute 'title', @i18n.lockSync
     else if @state.lockMode is 'oppose'
       # Shuffle icon (crossed arrows) - opposing
       icon.innerHTML = """
         <path d="M4 4l6 6M14 14l6 6M4 20l6-6M14 10l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
       """
-      @controls.lock.setAttribute 'title', 'Oppose: Sliders complementary (sum=8) (click to cycle)'
+      @controls.lock.setAttribute 'title', @i18n.lockOppose
     else
       # Unlock icon (open)
       icon.innerHTML = """
         <rect class="lock-body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
         <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       """
-      @controls.lock.setAttribute 'title', 'Unlocked (click to cycle)'
+      @controls.lock.setAttribute 'title', @i18n.lockUnlocked
     @resizePending = false
     @resizeObserver = new ResizeObserver (entries) =>
       width = Math.round entries[0].contentRect.width
@@ -198,7 +206,7 @@ class FerocityWaveformExplorer
       appendText group, tick.toFixed(1), class: 'waveform-tick-label', x: -10, y: y + 4, 'text-anchor': 'end'
 
     appendText svg, xTitle, class: 'waveform-axis-label', x: margins.left + innerWidth / 2, y: height - 5, 'text-anchor': 'middle'
-    yLabel = appendText svg, 'Wing position', class: 'waveform-axis-label', x: 14, y: margins.top + innerHeight / 2, 'text-anchor': 'middle'
+    yLabel = appendText svg, @i18n.axisWing, class: 'waveform-axis-label', x: 14, y: margins.top + innerHeight / 2, 'text-anchor': 'middle'
     yLabel.setAttribute 'transform', "rotate(-90 14 #{margins.top + innerHeight / 2})"
     group
 
@@ -213,7 +221,7 @@ class FerocityWaveformExplorer
 
     svg.setAttribute 'viewBox', "0 0 #{width} #{height}"
     svg.removeChild svg.firstChild while svg.firstChild
-    title = if chart is 'cycle' then 'Beat-cycle phase' else 'Local half-stroke phase'
+    title = if chart is 'cycle' then @i18n.axisCycle else @i18n.axisHalf
     group = @drawAxes svg, width, height, margins, xScale, yScale, title
     boundary = @boundary()
 
@@ -249,7 +257,10 @@ class FerocityWaveformExplorer
     upShare = 100 - downShare
     speedRatio = @peakSlope(true) / Math.max 0.000000001, @peakSlope(false)
     metric = @root.querySelector '[data-waveform-metric]'
-    metric.textContent = "Time allocation: down #{downShare.toFixed 2}% · up #{upShare.toFixed 2}% · peak phase-speed ratio #{speedRatio.toFixed 1}×"
+    metric.textContent = @i18n.metric
+      .replace('{down}', downShare.toFixed 2)
+      .replace('{up}', upShare.toFixed 2)
+      .replace('{ratio}', speedRatio.toFixed 1)
     @draw()
 
 document.addEventListener 'DOMContentLoaded', ->

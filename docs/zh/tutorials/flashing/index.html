@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='zh'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>刷写 PteronautOS — 教程</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='回到顶部' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='回到顶部' type='button'>↑</button>
+<a class='home-link' href='../../../zh/' title='PteronautOS 首页'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../zh/tutorials/'>教程</a>
+<a href='../../../zh/hardware/'>硬件</a>
+<a href='../../../zh/documentation/'>文档</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>教程 01</p>
+<h1>刷写 PteronautOS</h1>
+<p class='sub-lead'>以 CYCLONE ELRS 2.4GHz 7CH PWM RX 接收机为例，构建并安装密封固件。</p>
+<p>PteronautOS 也支持其他接收机板。共用 ESP8285 并不意味着布线相同：暴露的 GPIO、通道分配、编程连接和 PCB 版本可能不同。下方的供电与 CH2/CH3 接线适用于此 CYCLONE 示例；连接其他接收机前，请检查板子的引脚定义和支持的硬件配置。</p>
+<p>连接电源前，请移除机翼机构的推进负载，并确保没有舵机撞到硬限位。刷写属于电气作业；整个过程机架应保持机械安全。</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS 刷写教程'></iframe>
+</div>
+<h2>01 · 构建固件</h2>
+<p>克隆仓库，安装 PlatformIO，然后从仓库根目录运行以下命令。PlatformIO 项目位于 src；此命令构建本示例所用的专用 ESP8285 接收机环境。</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · 连接接收机</h2>
+<p>对于此 CYCLONE 接收机，请使用 FTDI 适配器的 5V 电源输出来给接收机供电，而非其 3.3V 输出。其 UART 连接位于通道 2 和 3 的信号引脚上——无需寻找单独的 UART 焊盘。</p>
+<table>
+<tr>
+<th>FTDI 适配器</th>
+<th>接收机连接</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>供电 (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>CH3 信号 — 接收机 RX (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>CH2 信号 — 接收机 TX (GPIO1)</td>
+</tr>
+</table>
+<p>5V 设置指接收机供电。请查看适配器文档：即使供电输出为 5V，TX/RX 也必须使用 ESP8285 兼容的 3.3V 逻辑。请勿同时连接第二个电源。</p>
+<h2>03 · 进入引导加载程序</h2>
+<p>按住 BOOT（GPIO0），拔下并重新插入 FTDI USB 线，保持 BOOT 约一秒后松开。刷写脚本不会自动复位，因此运行前请手动进入引导加载程序。</p>
+<h2>04 · 写入镜像</h2>
+<p>从仓库根目录运行提供的刷写脚本。它会定位可用的 PlatformIO 自带刷写工具和已构建固件，选择串口，并以所需的 flash 设置写入镜像。</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>自动端口选择会查找 macOS 的 /dev/cu.* 设备。若连接了多个串口设备，或使用其他操作系统，请显式选择接收机适配器的端口。将下方示例替换为你的实际设备路径。</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>要在不写入固件的情况下检查引导加载程序通信，请使用可选的检查模式。若失败，请在重试前重复 BOOT 上电循环。</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · 验证安装</h2>
+<p>
+不按 BOOT 给接收机重新上电。确认其 WiFi 热点和 WebUI 已可用（SSID：
+<code>Pteronaut OS</code>
+，密码：
+<code>flynatural</code>
+），然后加载配置并在重新连接舵机前验证目标名称。
+</p>
+<p>
+继续阅读 
+<a href='../../../zh/hardware/'>硬件页面</a>
+ 查看引脚图和版本特定的接线说明。
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='active' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

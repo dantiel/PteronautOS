@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Flashing PteronautOS — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Scroll to top' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Scroll to top' type='button'>↑</button>
+<a class='home-link' href='../../../en/' title='PteronautOS home'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../en/tutorials/'>Tutorials</a>
+<a href='../../../en/hardware/'>Hardware</a>
+<a href='../../../en/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Tutorial 01</p>
+<h1>Flashing PteronautOS</h1>
+<p class='sub-lead'>Build and install the hermetic firmware using a CYCLONE ELRS 2.4GHz 7CH PWM RX Receiver as the example.</p>
+<p>PteronautOS supports other receiver boards too. Sharing an ESP8285 does not make their wiring identical: the exposed GPIOs, channel assignments, programming connections, and PCB revisions can differ. The power and CH2/CH3 wiring below apply to this CYCLONE example; check your board’s pinout and supported hardware configuration before connecting another receiver.</p>
+<p>Before connecting power, remove propulsive loads from the wing mechanism and make sure no servo can drive into a hard stop. Flashing is electrical work; the airframe should remain mechanically safe throughout the procedure.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='Flashing PteronautOS tutorial'></iframe>
+</div>
+<h2>01 · Build the firmware</h2>
+<p>Clone the repository, install PlatformIO, and run the following command from the repository root. The PlatformIO project is in src; this command builds the dedicated ESP8285 receiver environment used in this example.</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Connect the receiver</h2>
+<p>For this CYCLONE receiver, use the FTDI adapter’s 5 V power output for the receiver supply, not its 3.3 V power output. Its UART connections are on the signal pins of channels 2 and 3 — there is no need to locate separate UART pads.</p>
+<table>
+<tr>
+<th>FTDI adapter</th>
+<th>Receiver connection</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>Supply (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>CH3 signal — receiver RX (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>CH2 signal — receiver TX (GPIO1)</td>
+</tr>
+</table>
+<p>The 5 V setting refers to receiver power. Check your adapter’s documentation: TX/RX must use ESP8285-compatible 3.3 V logic, even when the supply output is 5 V. Do not connect a second power supply at the same time.</p>
+<h2>03 · Enter the bootloader</h2>
+<p>Hold BOOT (GPIO0), unplug and reconnect the FTDI USB cable, keep BOOT held for about one second, then release it. The flashing script does not perform an automatic reset, so enter the bootloader manually before running it.</p>
+<h2>04 · Write the image</h2>
+<p>From the repository root, run the provided flashing script. It locates a working PlatformIO-bundled flashing tool and the built firmware, selects a serial port, and writes the image with the required flash settings.</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>Automatic port selection looks for macOS /dev/cu.* devices. If several serial devices are connected, or you are using a different operating system, explicitly select the receiver adapter’s port. Replace the example below with your actual device path.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>To check bootloader communication without writing firmware, use the optional check mode. If it fails, repeat the BOOT power cycle before trying again.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · Verify the installation</h2>
+<p>
+Power-cycle the receiver without holding BOOT. Confirm that its WiFi access point and WebUI become available (SSID: 
+<code>Pteronaut OS</code>
+, password: 
+<code>flynatural</code>
+), then load the configuration and verify the target name before reconnecting servos.
+</p>
+<p>
+Continue with the 
+<a href='../../../en/hardware/'>Hardware page</a>
+ for pin maps and revision-specific wiring notes.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='active' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

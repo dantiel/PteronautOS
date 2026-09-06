@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS फ्लैश करना — ट्यूटोरियल</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../../hi/hardware/'>हार्डवेयर</a>
+<a href='../../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>ट्यूटोरियल 01</p>
+<h1>PteronautOS फ्लैश करना</h1>
+<p class='sub-lead'>CYCLONE ELRS 2.4GHz 7CH PWM RX रिसीवर को उदाहरण मानकर हर्मेटिक फ़र्मवेयर बनाएँ और स्थापित करें।</p>
+<p>PteronautOS अन्य रिसीवर बोर्ड का भी समर्थन करता है। ESP8285 साझा करने से उनकी वायरिंग एक जैसी नहीं हो जाती: खुले GPIO, चैनल आवंटन, प्रोग्रामिंग कनेक्शन और PCB संशोधन भिन्न हो सकते हैं। नीचे की पावर और CH2/CH3 वायरिंग इस CYCLONE उदाहरण पर लागू होती है; दूसरा रिसीवर जोड़ने से पहले अपने बोर्ड का पिनआउट और समर्थित हार्डवेयर विन्यास जाँचें।</p>
+<p>पावर जोड़ने से पहले, विंग तंत्र से प्रणोदक भार हटाएँ और सुनिश्चित करें कि कोई सर्वो कठोर स्टॉप पर न टकराए। फ्लैशिंग विद्युत कार्य है; पूरी प्रक्रिया के दौरान एयरफ़्रेम यांत्रिक रूप से सुरक्षित रहना चाहिए।</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS फ्लैशिंग ट्यूटोरियल'></iframe>
+</div>
+<h2>01 · फ़र्मवेयर बनाएँ</h2>
+<p>रिपॉज़िटरी क्लोन करें, PlatformIO स्थापित करें, और रिपॉज़िटरी रूट से निम्न कमांड चलाएँ। PlatformIO प्रोजेक्ट src में है; यह कमांड इस उदाहरण में प्रयुक्त समर्पित ESP8285 रिसीवर वातावरण बनाती है।</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · रिसीवर कनेक्ट करें</h2>
+<p>इस CYCLONE रिसीवर के लिए, रिसीवर आपूर्ति हेतु FTDI अडैप्टर के 5V पावर आउटपुट का उपयोग करें, न कि उसके 3.3V आउटपुट का। इसके UART कनेक्शन चैनल 2 और 3 के सिग्नल पिन पर हैं — अलग UART पैड खोजने की आवश्यकता नहीं है।</p>
+<table>
+<tr>
+<th>FTDI अडैप्टर</th>
+<th>रिसीवर कनेक्शन</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>आपूर्ति (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>CH3 सिग्नल — रिसीवर RX (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>CH2 सिग्नल — रिसीवर TX (GPIO1)</td>
+</tr>
+</table>
+<p>5V सेटिंग रिसीवर पावर को दर्शाती है। अपने अडैप्टर का दस्तावेज़ देखें: आपूर्ति आउटपुट 5V होने पर भी TX/RX को ESP8285-संगत 3.3V लॉजिक का उपयोग करना चाहिए। एक साथ दूसरी पावर आपूर्ति न जोड़ें।</p>
+<h2>03 · बूटलोडर में प्रवेश करें</h2>
+<p>BOOT (GPIO0) दबाए रखें, FTDI USB केबल निकालकर फिर जोड़ें, BOOT को लगभग एक सेकंड दबाए रखें, फिर छोड़ दें। फ्लैशिंग स्क्रिप्ट स्वचालित रीसेट नहीं करती, इसलिए चलाने से पहले मैन्युअल रूप से बूटलोडर में प्रवेश करें।</p>
+<h2>04 · इमेज लिखें</h2>
+<p>रिपॉज़िटरी रूट से, दी गई फ्लैशिंग स्क्रिप्ट चलाएँ। यह PlatformIO-बंडल्ड फ्लैशिंग टूल और बने फ़र्मवेयर को खोजती है, एक सीरियल पोर्ट चुनती है, और आवश्यक फ्लैश सेटिंग्स के साथ इमेज लिखती है।</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>स्वचालित पोर्ट चयन macOS /dev/cu.* डिवाइस खोजता है। यदि कई सीरियल डिवाइस जुड़े हों, या आप भिन्न ऑपरेटिंग सिस्टम उपयोग कर रहे हों, तो रिसीवर अडैप्टर का पोर्ट स्पष्ट रूप से चुनें। नीचे के उदाहरण को अपने वास्तविक डिवाइस पथ से बदलें।</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>फ़र्मवेयर लिखे बिना बूटलोडर संचार जाँचने के लिए वैकल्पिक चेक मोड का उपयोग करें। विफल होने पर, पुनः प्रयास से पहले BOOT पावर साइकिल दोहराएँ।</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · स्थापना सत्यापित करें</h2>
+<p>
+BOOT दबाए बिना रिसीवर को पावर-साइकिल करें। पुष्टि करें कि उसका WiFi एक्सेस पॉइंट और WebUI उपलब्ध हो गए हैं (SSID: 
+<code>Pteronaut OS</code>
+, पासवर्ड: 
+<code>flynatural</code>
+), फिर कॉन्फ़िगरेशन लोड करें और सर्वो दोबारा जोड़ने से पहले टारगेट नाम सत्यापित करें।
+</p>
+<p>
+आगे पढ़ें 
+<a href='../../../hi/hardware/'>हार्डवेयर पृष्ठ</a>
+ पिन मैप और संशोधन-विशिष्ट वायरिंग नोट्स के लिए।
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='active' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

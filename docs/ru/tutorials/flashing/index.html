@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Прошивка PteronautOS — Учебники</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Наверх' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Наверх' type='button'>↑</button>
+<a class='home-link' href='../../../ru/' title='Главная PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ru/tutorials/'>Учебники</a>
+<a href='../../../ru/hardware/'>Аппаратура</a>
+<a href='../../../ru/documentation/'>Документация</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Урок 01</p>
+<h1>Прошивка PteronautOS</h1>
+<p class='sub-lead'>Соберите и установите герметичную прошивку на примере приёмника CYCLONE ELRS 2.4GHz 7CH PWM RX.</p>
+<p>PteronautOS поддерживает и другие платы приёмников. Общий ESP8285 не делает их распайку одинаковой: открытые GPIO, назначение каналов, соединения для программирования и ревизии PCB могут различаться. Питание и распайка CH2/CH3 ниже относятся к этому примеру CYCLONE; проверьте распиновку вашей платы и поддерживаемую конфигурацию оборудования перед подключением другого приёмника.</p>
+<p>Перед подачей питания снимите движущие нагрузки с механизма крыла и убедитесь, что ни один сервопривод не может упереться в жёсткий упор. Прошивка — это электрическая работа; планер должен оставаться механически безопасным на протяжении всей процедуры.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='Урок по прошивке PteronautOS'></iframe>
+</div>
+<h2>01 · Сборка прошивки</h2>
+<p>Клонируйте репозиторий, установите PlatformIO и выполните следующую команду из корня репозитория. Проект PlatformIO находится в src; эта команда собирает выделенное окружение приёмника ESP8285 из этого примера.</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Подключение приёмника</h2>
+<p>Для этого приёмника CYCLONE используйте выход 5 В адаптера FTDI для питания приёмника, а не выход 3,3 В. Его соединения UART находятся на сигнальных выводах каналов 2 и 3 — искать отдельные площадки UART не нужно.</p>
+<table>
+<tr>
+<th>Адаптер FTDI</th>
+<th>Подключение приёмника</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 В / VCC</td>
+<td>Питание (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>Сигнал CH3 — RX приёмника (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>Сигнал CH2 — TX приёмника (GPIO1)</td>
+</tr>
+</table>
+<p>Настройка 5 В относится к питанию приёмника. Проверьте документацию адаптера: TX/RX должны использовать совместимую с ESP8285 логику 3,3 В, даже если выход питания 5 В. Не подключайте одновременно второй источник питания.</p>
+<h2>03 · Вход в загрузчик</h2>
+<p>Удерживайте BOOT (GPIO0), отключите и снова подключите USB-кабель FTDI, удерживайте BOOT около секунды, затем отпустите. Скрипт прошивки не выполняет автоматический сброс, поэтому войдите в загрузчик вручную перед его запуском.</p>
+<h2>04 · Запись образа</h2>
+<p>Из корня репозитория запустите предоставленный скрипт прошивки. Он находит рабочий инструмент прошивки из PlatformIO и собранную прошивку, выбирает последовательный порт и записывает образ с нужными настройками флеша.</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>Автовыбор порта ищет устройства macOS /dev/cu.*. Если подключено несколько последовательных устройств или вы используете другую ОС, явно укажите порт адаптера приёмника. Замените пример ниже на фактический путь вашего устройства.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>Чтобы проверить связь с загрузчиком без записи прошивки, используйте опциональный режим проверки. При сбое повторите цикл питания BOOT перед повторной попыткой.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · Проверка установки</h2>
+<p>
+Перезапустите приёмник, не удерживая BOOT. Убедитесь, что его точка доступа WiFi и WebUI стали доступны (SSID: 
+<code>Pteronaut OS</code>
+, пароль: 
+<code>flynatural</code>
+), затем загрузите конфигурацию и проверьте имя таргета перед повторным подключением сервоприводов.
+</p>
+<p>
+Продолжите со 
+<a href='../../../ru/hardware/'>страница «Аппаратура»</a>
+ для карт выводов и примечаний по распайке для конкретной ревизии.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='active' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

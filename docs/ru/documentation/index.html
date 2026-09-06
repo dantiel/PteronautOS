@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Документация — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/ferocity-waveform.js'></script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Наверх' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Наверх' type='button'>↑</button>
+<a class='home-link' href='../../ru/' title='Главная PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ru/tutorials/'>Учебники</a>
+<a href='../../ru/hardware/'>Аппаратура</a>
+<a class='active' href='../../ru/documentation/'>Документация</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Документация</h1>
+<p class='sub-lead'>Руководство, заметки по гироскопу и справка по веб-интерфейсу.</p>
+<h2>Руководства</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Основное руководство — архитектура, микшер, форма волны</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Гироскоп Зефир — AHRS и PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Веб-интерфейс и справочник переводов</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Распайка и карты выводов</a>
+</td>
+</tr>
+</table>
+<h2>Концепции</h2>
+<dl class='grid'>
+<dt>Ferocity</dt>
+<dd>Асимметрия взмаха и возврата и выдержка — 0 это чистый синус.</dd>
+<dt>Форма волны</dt>
+<dd>Кривая взмаха крыла; амплитуда получается из град/с ÷ 2·частота.</dd>
+<dt>Угол планирования</dt>
+<dd>Смещение центра крыла для планирующего полёта.</dd>
+<dt>Смещение центра взмаха</dt>
+<dd>Смещение центра во время взмаха (−15…+15 градусов).</dd>
+<dt>Микширование руля</dt>
+<dd>Смесь рыскания/крена, управляющая гребневым рулём.</dd>
+<dt>Микс газа и ferocity</dt>
+<dd>Насколько газ связан с ferocity.</dd>
+<dt>Failsafe</dt>
+<dd>Крылья возвращаются в нейтраль при потере связи.</dd>
+</dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>Геометрия формы волны ferocity</h2>
+<p>Ferocity управляет и характером, и таймингом полувзмаха. Внутренне настройка WebUI 0–100 соответствует 0–8. Более высокая ferocity опускания укорачивает долю цикла опускания; более высокая ferocity возврата укорачивает долю возврата. Оставшееся время передаётся противоположной половине — паузы на нуле нет.</p>
+<p>Настройка Ferocity Shape для профиля выбирает характер высокой ferocity. При 0 % предпочтительна конечная форма плато/квадрата. При 100 % — скруглённый пирамидальный путь. Каждая половина по-прежнему использует свою ferocity, поэтому половина с низкой ferocity остаётся вытянутой и синусоидальной, а половина с высокой ferocity приближается к прямому диагональному проходу.</p>
+<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Фаза цикла взмаха' data-i18n-axis-half='Локальная фаза полувзмаха' data-i18n-axis-wing='Положение крыла' data-i18n-lock-oppose='Противоположно: ползунки дополнительны (сумма=8) (щелчок для переключения)' data-i18n-lock-sync='Синхронно: оба ползунка движутся вместе (щелчок для переключения)' data-i18n-lock-unlocked='Разблокировано (щелчок для переключения)' data-i18n-metric='Распределение времени: вниз {down}% · вверх {up}% · пиковое отношение фазовой скорости {ratio}×'>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>Ferocity опускания</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<div class='lock-ferocity'>
+<div class='lock-lines'></div>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='Связать вниз+вверх вместе (сумма=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
+</svg>
+</button>
+<div class='lock-lines'></div>
+</div>
+<label for='wave-up-ferocity'>
+<span>Ferocity подъёма</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>Микс формы</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='Примеры формы волны' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>Экстрим 8 / 0</button>
+<button data-preset='7,1,100' type='button'>Почти экстрим 7 / 1</button>
+<button data-preset='8,6,100' type='button'>Высокая база 8 / 6</button>
+<button data-preset='8,6,50' type='button'>Высокая база, смешанная</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>Полный цикл</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+Текущая форма волны
+</span>
+<span>
+<i class='direct'></i>
+Точная прямая опора
+</span>
+<span>
+<i class='boundary'></i>
+Разворот
+</span>
+</div>
+<svg aria-label='Положение крыла за полный цикл взмаха' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>Каждая половина растянута до равной ширины</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+Половина опускания
+</span>
+<span>
+<i class='up'></i>
+Половина подъёма, направление выровнено
+</span>
+<span>
+<i class='direct'></i>
+Точная диагональ
+</span>
+</div>
+<svg aria-label='Нормализованные формы опускания и подъёма' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>Чтение экстремальных комбинаций</h3>
+<p>Комбинация 7 / 1 явно даёт короткий заострённый спуск и длинный синусоидальный возврат. Точные и почти максимальные значения требуют осторожности: текущий закон длительности использует остаток ниже ferocity 8. Следовательно, 8 / 0 выделяет на опускание лишь около 0,125% цикла, а даже 8 / 6 — около 0,5%. Положение остаётся непрерывным, но запрошенные скорость и ускорение могут стать физически недостижимыми.</p>
+<aside class='waveform-caution'>
+<strong>Проверьте на стенде перед полётом.</strong>
+Обозреватель описывает заданную математическую форму волны, а не гарантированное движение сервопривода. Избегайте экстремальных асимметричных настроек, пока амплитуда, частота, геометрия тяг и пределы скорости сервопривода не проверены без аэродинамической нагрузки.
+</aside>
+</section>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='active' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

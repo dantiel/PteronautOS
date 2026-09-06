@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>وميض PteronautOS — دروس</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ar/tutorials/'>دروس</a>
+<a href='../../../ar/hardware/'>العتاد</a>
+<a href='../../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>الدرس 01</p>
+<h1>وميض PteronautOS</h1>
+<p class='sub-lead'>قم ببناء وتثبيت البرنامج الثابت المحكم باستخدام مستقبل CYCLONE ELRS 2.4GHz 7CH PWM RX كمثال.</p>
+<p>يدعم PteronautOS لوحات مستقبل أخرى أيضًا. إن اشتراك ESP8285 لا يجعل توصيلاتها متطابقة: قد تختلف منافذ GPIO المكشوفة وتعيين القنوات ووصلات البرمجة ومراجعات PCB. تنطبق الطاقة وتوصيل CH2/CH3 أدناه على مثال CYCLONE هذا؛ تحقق من تخطيط أطراف لوحتك وتكوين العتاد المدعوم قبل توصيل مستقبل آخر.</p>
+<p>قبل توصيل الطاقة، أزل الأحمال الدافعة من آلية الجناح وتأكد من أن أي سيرفو لا يمكنه الاصطدام بمصد صلب. الوميض عمل كهربائي؛ يجب أن يبقى الهيكل آمنًا ميكانيكيًا طوال الإجراء.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='درس وميض PteronautOS'></iframe>
+</div>
+<h2>01 · بناء البرنامج الثابت</h2>
+<p>استنسخ المستودع، وثبّت PlatformIO، ثم نفّذ الأمر التالي من جذر المستودع. مشروع PlatformIO موجود في src؛ يبني هذا الأمر بيئة مستقبل ESP8285 المخصصة المستخدمة في هذا المثال.</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · توصيل المستقبل</h2>
+<p>بالنسبة لمستقبل CYCLONE هذا، استخدم خرج الطاقة 5V لمحوّل FTDI لتغذية المستقبل، وليس خرج 3.3V. تقع وصلات UART على أطراف إشارة القناتين 2 و 3 — لا حاجة لتحديد منصات UART منفصلة.</p>
+<table>
+<tr>
+<th>محوّل FTDI</th>
+<th>اتصال المستقبل</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 فولت / VCC</td>
+<td>التغذية (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>إشارة CH3 — RX المستقبل (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>إشارة CH2 — TX المستقبل (GPIO1)</td>
+</tr>
+</table>
+<p>يشير إعداد 5V إلى طاقة المستقبل. راجع توثيق المحوّل: يجب أن يستخدم TX/RX منطق 3.3V متوافقًا مع ESP8285 حتى عندما يكون خرج التغذية 5V. لا توصل مصدر طاقة ثانٍ في الوقت نفسه.</p>
+<h2>03 · الدخول إلى محمّل الإقلاع</h2>
+<p>اضغط مع الاستمرار على BOOT (GPIO0)، وافصل كابل USB الخاص بـ FTDI ثم أعد توصيله، وأبقِ BOOT مضغوطًا لنحو ثانية ثم حرّره. لا يقوم سكربت الوميض بإعادة تعيين تلقائية، لذا ادخل إلى محمّل الإقلاع يدويًا قبل تشغيله.</p>
+<h2>04 · كتابة الصورة</h2>
+<p>من جذر المستودع، شغّل سكربت الوميض المقدم. يحدد أداة وميض عاملة مرفقة مع PlatformIO والبرنامج الثابت المبني، ويختار منفذًا تسلسليًا، ويكتب الصورة بإعدادات الفلاش المطلوبة.</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>يبحث الاختيار التلقائي للمنفذ عن أجهزة macOS /dev/cu.*. إذا كانت عدة أجهزة تسلسلية متصلة، أو كنت تستخدم نظام تشغيل مختلفًا، فاختر منفذ محوّل المستقبل صراحةً. استبدل المثال أدناه بمسار جهازك الفعلي.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>للتحقق من اتصال محمّل الإقلاع دون كتابة البرنامج الثابت، استخدم وضع الفحص الاختياري. إذا فشل، كرر دورة طاقة BOOT قبل المحاولة مرة أخرى.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · التحقق من التثبيت</h2>
+<p>
+أعد تشغيل المستقبل دون الضغط على BOOT. تأكد من توفر نقطة وصول WiFi وواجهة WebUI (SSID: 
+<code>Pteronaut OS</code>
+، كلمة المرور: 
+<code>flynatural</code>
+)، ثم حمّل الإعدادات وتحقق من اسم الهدف قبل إعادة توصيل السيرفو.
+</p>
+<p>
+تابع مع 
+<a href='../../../ar/hardware/'>صفحة العتاد</a>
+ للاطلاع على خرائط الأطراف وملاحظات التوصيل الخاصة بالمراجعة.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='active' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

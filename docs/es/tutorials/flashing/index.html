@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='es'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Flashing de PteronautOS — Tutoriales</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Volver arriba' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Volver arriba' type='button'>↑</button>
+<a class='home-link' href='../../../es/' title='Inicio de PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../es/tutorials/'>Tutoriales</a>
+<a href='../../../es/hardware/'>Hardware</a>
+<a href='../../../es/documentation/'>Documentación</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Tutorial 01</p>
+<h1>Flashing de PteronautOS</h1>
+<p class='sub-lead'>Compila e instala el firmware hermético usando un receptor CYCLONE ELRS 2.4GHz 7CH PWM RX como ejemplo.</p>
+<p>PteronautOS también admite otras placas receptoras. Compartir un ESP8285 no hace idéntico su cableado: los GPIO expuestos, la asignación de canales, las conexiones de programación y las revisiones de PCB pueden diferir. La alimentación y el cableado CH2/CH3 de abajo se aplican a este ejemplo CYCLONE; comprueba el pinout de tu placa y la configuración de hardware soportada antes de conectar otro receptor.</p>
+<p>Antes de conectar la alimentación, retira las cargas propulsivas del mecanismo del ala y asegúrate de que ningún servo pueda chocar contra un tope duro. El flasheo es trabajo eléctrico; la célula debe permanecer mecánicamente segura durante todo el procedimiento.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='Tutorial de flashing de PteronautOS'></iframe>
+</div>
+<h2>01 · Compila el firmware</h2>
+<p>Clona el repositorio, instala PlatformIO y ejecuta el siguiente comando desde la raíz del repositorio. El proyecto PlatformIO está en src; este comando compila el entorno dedicado del receptor ESP8285 usado en este ejemplo.</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Conecta el receptor</h2>
+<p>Para este receptor CYCLONE, usa la salida de 5 V del adaptador FTDI para la alimentación del receptor, no su salida de 3,3 V. Sus conexiones UART están en los pines de señal de los canales 2 y 3 — no hace falta localizar pads UART separados.</p>
+<table>
+<tr>
+<th>Adaptador FTDI</th>
+<th>Conexión del receptor</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>Alimentación (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>Señal CH3 — RX del receptor (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>Señal CH2 — TX del receptor (GPIO1)</td>
+</tr>
+</table>
+<p>El ajuste de 5 V se refiere a la alimentación del receptor. Consulta la documentación de tu adaptador: TX/RX deben usar lógica de 3,3 V compatible con ESP8285, incluso cuando la salida de alimentación es de 5 V. No conectes una segunda fuente de alimentación al mismo tiempo.</p>
+<h2>03 · Entra en el bootloader</h2>
+<p>Mantén BOOT (GPIO0) pulsado, desconecta y vuelve a conectar el cable USB del FTDI, mantén BOOT pulsado alrededor de un segundo y suéltalo. El script de flasheo no realiza un reinicio automático, así que entra en el bootloader manualmente antes de ejecutarlo.</p>
+<h2>04 · Escribe la imagen</h2>
+<p>Desde la raíz del repositorio, ejecuta el script de flasheo proporcionado. Localiza una herramienta de flasheo incluida con PlatformIO y el firmware compilado, selecciona un puerto serie y escribe la imagen con los ajustes de flash necesarios.</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>La selección automática de puerto busca dispositivos macOS /dev/cu.*. Si hay varios dispositivos serie conectados, o usas un sistema operativo diferente, selecciona explícitamente el puerto del adaptador del receptor. Sustituye el ejemplo de abajo por la ruta real de tu dispositivo.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>Para comprobar la comunicación con el bootloader sin escribir firmware, usa el modo de verificación opcional. Si falla, repite el ciclo de encendido de BOOT antes de volver a intentarlo.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · Verifica la instalación</h2>
+<p>
+Reinicia el receptor sin mantener BOOT pulsado. Confirma que su punto de acceso WiFi y la WebUI están disponibles (SSID: 
+<code>Pteronaut OS</code>
+, contraseña: 
+<code>flynatural</code>
+), luego carga la configuración y verifica el nombre del target antes de volver a conectar los servos.
+</p>
+<p>
+Continúa con la 
+<a href='../../../es/hardware/'>página de Hardware</a>
+ para mapas de pines y notas de cableado específicas de la revisión.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='active' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

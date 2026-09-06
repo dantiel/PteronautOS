@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>العتاد — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ar/tutorials/'>دروس</a>
+<a class='active' href='../../ar/hardware/'>العتاد</a>
+<a href='../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>العتاد</h1>
+<p class='sub-lead'>اللوحات التي يعمل عليها PteronautOS وكيفية توصيلها.</p>
+<h2>اللوحات المدعومة</h2>
+<table>
+<tr>
+<td>اللوحة</td>
+<td>MCU · راديو</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2.4 GHz</td>
+</tr>
+</table>
+<h2>المواصفات الرئيسية</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 ميجاهرتز، 1 ميجابايت فلاش</td>
+</tr>
+<tr>
+<td>الراديو</td>
+<td>ExpressLRS 2.4 GHz (SX1280)</td>
+</tr>
+<tr>
+<td>الجيروسكوب</td>
+<td>MPU6050 (GY-521) عبر I2C</td>
+</tr>
+<tr>
+<td>السيرفو</td>
+<td>3 قنوات PWM — الجناح الأيسر، الجناح الأيمن، دفة القمة</td>
+</tr>
+</table>
+<h2>التوصيل</h2>
+<p>ثلاث قنوات سيرفو إضافة إلى MPU6050 على ناقل I2C. خريطة الأطراف الكاملة وتوصيل I2C واختلافات المراجعتين v1.0/v1.1 موجودة في دليل PWMP7.</p>
+<p>
+<a href='../../en/hardware-pwmp7/'>دليل توافق مستقبل PWMP7 ←</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>مرجع العتاد الكامل (HARDWARE.md) ←</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='active' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

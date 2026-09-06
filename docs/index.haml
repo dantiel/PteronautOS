@@ -22,15 +22,15 @@
         %span
       %a.home-link{href: "#", onclick: "majesticScroll(); return false;", title: "Scroll to top — PteronautOS"}= nav_home
       .nav-links#nav-links
-        %span.nav-group On this page
+        %span.nav-group= nav_group_page
         %a{href: "#essence"}= nav_essence
         %a{href: "#architecture"}= nav_architecture
         %a{href: "#zephyrus"}= nav_zephyrus
         %span.nav-separator
-        %span.nav-group Explore
-        %a{href: "#{asset_prefix}/tutorials/"} Tutorials
-        %a{href: "#{asset_prefix}/hardware/"} Hardware
-        %a{href: "#{asset_prefix}/documentation/"} Documentation
+        %span.nav-group= nav_group_explore
+        %a{href: "#{asset_prefix}/tutorials/"}= nav_tutorials
+        %a{href: "#{asset_prefix}/hardware/"}= nav_hardware
+        %a{href: "#{asset_prefix}/documentation/"}= nav_documentation
       %button.nav-toggle{type: "button", "aria-label": "Menu", "aria-expanded": "false", "aria-controls": "nav-links"}
         %span
         %span
@@ -143,11 +143,11 @@
         %a{href: lang_href_ar, class: lang_class_ar} عربي
         %a{href: lang_href_hi, class: lang_class_hi} हिन्दी
       %p.footer-links
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
         %span.sep ·
-        %a{href: "#{asset_prefix}/documentation/"} Documentation
+        %a{href: "#{asset_prefix}/documentation/"}= nav_documentation
         %span.sep ·
-        %a{href: "#{asset_prefix}/hardware/"} Hardware
+        %a{href: "#{asset_prefix}/hardware/"}= nav_hardware
       %p= footer_hermetic
       %p.credit= footer_credit
 

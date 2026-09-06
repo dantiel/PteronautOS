@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='fr'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Documentation — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/ferocity-waveform.js'></script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Remonter en haut' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Remonter en haut' type='button'>↑</button>
+<a class='home-link' href='../../fr/' title='Accueil PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../fr/tutorials/'>Tutoriels</a>
+<a href='../../fr/hardware/'>Matériel</a>
+<a class='active' href='../../fr/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Documentation</h1>
+<p class='sub-lead'>Le manuel, les notes du gyroscope et la référence de l&#39;interface web.</p>
+<h2>Manuels</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manuel principal — architecture, mélangeur, forme d&#39;onde</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Gyroscope Zéphyr — AHRS et PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interface web et référence de traduction</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Câblage et brochage</a>
+</td>
+</tr>
+</table>
+<h2>Concepts</h2>
+<dl class='grid'>
+<dt>Férocité</dt>
+<dd>Asymétrie entre l&#39;aller et le retour, et temps de maintien — 0 est un sinus pur.</dd>
+<dt>Forme d&#39;onde</dt>
+<dd>La courbe du battement d&#39;aile ; l&#39;amplitude provient de degrés/s ÷ 2·fréquence.</dd>
+<dt>Angle de plané</dt>
+<dd>Décalage du centre de l&#39;aile pour le vol plané.</dd>
+<dt>Décalage central du battement</dt>
+<dd>Biais central pendant la course de battement (−15…+15 degrés).</dd>
+<dt>Mélange du gouvernail</dt>
+<dd>Mélange lacet/roulis qui pilote le gouvernail de crête.</dd>
+<dt>Mélange de férocité des gaz</dt>
+<dd>À quel point les gaz se couplent à la férocité.</dd>
+<dt>Sécurité intégrée</dt>
+<dd>Les ailes reviennent au neutre si la liaison est perdue.</dd>
+</dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>Géométrie de la forme d&#39;onde de férocité</h2>
+<p>La férocité contrôle à la fois le caractère et le timing d&#39;une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n&#39;y a pas de pause à zéro.</p>
+<p>Le réglage Ferocity Shape par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu&#39;une moitié à faible férocité reste allongée et sinusoïdale, tandis qu&#39;une moitié à forte férocité s&#39;approche d&#39;un parcours diagonal direct.</p>
+<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×'>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>Férocité de descente</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<div class='lock-ferocity'>
+<div class='lock-lines'></div>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='Verrouiller descente+montée ensemble (somme=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
+</svg>
+</button>
+<div class='lock-lines'></div>
+</div>
+<label for='wave-up-ferocity'>
+<span>Férocité de montée</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>Mélange de forme</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='Exemples de forme d&#39;onde' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>Extrême 8 / 0</button>
+<button data-preset='7,1,100' type='button'>Quasi extrême 7 / 1</button>
+<button data-preset='8,6,100' type='button'>Base haute 8 / 6</button>
+<button data-preset='8,6,50' type='button'>Base haute, mélangée</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>Cycle complet</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+Forme d&#39;onde actuelle
+</span>
+<span>
+<i class='direct'></i>
+Référence directe exacte
+</span>
+<span>
+<i class='boundary'></i>
+Inversion
+</span>
+</div>
+<svg aria-label='Position de l&#39;aile sur le cycle de battement complet' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>Chaque moitié étirée à largeur égale</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+Moitié de descente
+</span>
+<span>
+<i class='up'></i>
+Moitié de montée, direction alignée
+</span>
+<span>
+<i class='direct'></i>
+Diagonale exacte
+</span>
+</div>
+<svg aria-label='Formes normalisées de descente et de montée' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>Lire les combinaisons extrêmes</h3>
+<p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n&#39;alloue qu&#39;environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l&#39;accélération demandées peuvent devenir physiquement inatteignables.</p>
+<aside class='waveform-caution'>
+<strong>Testez sur banc avant le vol.</strong>
+L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
+</aside>
+</section>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='active' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

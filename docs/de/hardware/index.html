@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='de'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Hardware — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Nach oben scrollen' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Nach oben scrollen' type='button'>↑</button>
+<a class='home-link' href='../../de/' title='PteronautOS-Startseite'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../de/tutorials/'>Tutorials</a>
+<a class='active' href='../../de/hardware/'>Hardware</a>
+<a href='../../de/documentation/'>Dokumentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Hardware</h1>
+<p class='sub-lead'>Die Platinen, auf denen PteronautOS läuft, und wie man sie verdrahtet.</p>
+<h2>Unterstützte Platinen</h2>
+<table>
+<tr>
+<td>Platine</td>
+<td>MCU · Funk</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.0</td>
+<td>ESP8285 · SX1280 2,4 GHz</td>
+</tr>
+<tr>
+<td>Generic 2400 PWMP7 v1.1</td>
+<td>ESP8285 · SX1280 2,4 GHz</td>
+</tr>
+</table>
+<h2>Wichtige Daten</h2>
+<table>
+<tr>
+<td>MCU</td>
+<td>ESP8285 @ 80 MHz, 1 MB Flash</td>
+</tr>
+<tr>
+<td>Funk</td>
+<td>ExpressLRS 2,4 GHz (SX1280)</td>
+</tr>
+<tr>
+<td>Gyro</td>
+<td>MPU6050 (GY-521) über I2C</td>
+</tr>
+<tr>
+<td>Servos</td>
+<td>3 PWM-Kanäle — linker Flügel, rechter Flügel, Kammruder</td>
+</tr>
+</table>
+<h2>Verdrahtung</h2>
+<p>Drei Servokanäle plus der MPU6050 am I2C-Bus. Die vollständige Pinbelegung, I2C-Verdrahtung und die Unterschiede der Revisionen v1.0/v1.1 stehen im PWMP7-Leitfaden.</p>
+<p>
+<a href='../../en/hardware-pwmp7/'>PWMP7-Empfänger-Kompatibilitätsleitfaden →</a>
+</p>
+<p>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Vollständige Hardware-Referenz (HARDWARE.md) →</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='active' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='de'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS flashen — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Nach oben scrollen' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Nach oben scrollen' type='button'>↑</button>
+<a class='home-link' href='../../../de/' title='PteronautOS-Startseite'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../de/tutorials/'>Tutorials</a>
+<a href='../../../de/hardware/'>Hardware</a>
+<a href='../../../de/documentation/'>Dokumentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Tutorial 01</p>
+<h1>PteronautOS flashen</h1>
+<p class='sub-lead'>Bauen und installieren Sie die hermetische Firmware am Beispiel eines CYCLONE ELRS 2,4-GHz-7CH-PWM-RX-Empfängers.</p>
+<p>PteronautOS unterstützt auch andere Empfängerplatinen. Ein gemeinsamer ESP8285 macht die Verdrahtung nicht identisch: exponierte GPIOs, Kanalzuordnung, Programmieranschlüsse und PCB-Revisionen können abweichen. Die unten gezeigte Spannungs- und CH2/CH3-Verdrahtung gilt für dieses CYCLONE-Beispiel; prüfen Sie das Pinout Ihrer Platine und die unterstützte Hardwarekonfiguration, bevor Sie einen anderen Empfänger anschließen.</p>
+<p>Entfernen Sie vor dem Anschließen der Spannung die Antriebslasten vom Flügelmechanismus und stellen Sie sicher, dass kein Servo gegen einen harten Anschlag fahren kann. Flashen ist elektrische Arbeit; die Zelle muss während des gesamten Verfahrens mechanisch sicher bleiben.</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS-Flash-Tutorial'></iframe>
+</div>
+<h2>01 · Firmware bauen</h2>
+<p>Klonen Sie das Repository, installieren Sie PlatformIO und führen Sie den folgenden Befehl im Repository-Root aus. Das PlatformIO-Projekt liegt in src; dieser Befehl baut die dedizierte ESP8285-Empfängerumgebung dieses Beispiels.</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · Empfänger anschließen</h2>
+<p>Verwenden Sie für diesen CYCLONE-Empfänger den 5-V-Ausgang des FTDI-Adapters für die Empfängerversorgung, nicht dessen 3,3-V-Ausgang. Seine UART-Verbindungen liegen auf den Signalpins von Kanal 2 und 3 — separate UART-Pads müssen nicht gesucht werden.</p>
+<table>
+<tr>
+<th>FTDI-Adapter</th>
+<th>Empfängeranschluss</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>Versorgung (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>CH3-Signal — Empfänger-RX (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>CH2-Signal — Empfänger-TX (GPIO1)</td>
+</tr>
+</table>
+<p>Die 5-V-Einstellung bezieht sich auf die Empfängerversorgung. Prüfen Sie die Dokumentation Ihres Adapters: TX/RX müssen ESP8285-kompatible 3,3-V-Logik verwenden, auch wenn die Versorgung 5 V liefert. Schließen Sie nicht gleichzeitig eine zweite Spannungsversorgung an.</p>
+<h2>03 · Bootloader aufrufen</h2>
+<p>Halten Sie BOOT (GPIO0) gedrückt, ziehen Sie das FTDI-USB-Kabel ab und stecken Sie es wieder ein, halten Sie BOOT etwa eine Sekunde lang gedrückt und lassen Sie es dann los. Das Flash-Skript führt keinen automatischen Reset durch — rufen Sie den Bootloader daher manuell auf, bevor Sie es ausführen.</p>
+<h2>04 · Image schreiben</h2>
+<p>Führen Sie im Repository-Root das bereitgestellte Flash-Skript aus. Es sucht ein funktionierendes, von PlatformIO gebündeltes Flash-Werkzeug und die gebaute Firmware, wählt einen seriellen Port und schreibt das Image mit den erforderlichen Flash-Einstellungen.</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>Die automatische Portauswahl sucht nach macOS-Geräten unter /dev/cu.*. Wenn mehrere serielle Geräte angeschlossen sind oder Sie ein anderes Betriebssystem nutzen, wählen Sie den Port des Empfängeradapters explizit aus. Ersetzen Sie das Beispiel unten durch Ihren tatsächlichen Gerätepfad.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>Um die Bootloader-Kommunikation ohne Firmware-Schreiben zu prüfen, nutzen Sie den optionalen Prüfmodus. Schlägt er fehl, wiederholen Sie den BOOT-Stromzyklus, bevor Sie es erneut versuchen.</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · Installation prüfen</h2>
+<p>
+Starten Sie den Empfänger neu, ohne BOOT zu halten. Bestätigen Sie, dass sein WiFi-Zugangspunkt und die WebUI verfügbar werden (SSID: 
+<code>Pteronaut OS</code>
+, Passwort: 
+<code>flynatural</code>
+), laden Sie dann die Konfiguration und prüfen Sie den Target-Namen, bevor Sie die Servos wieder anschließen.
+</p>
+<p>
+Fahren Sie fort mit der 
+<a href='../../../de/hardware/'>Hardware-Seite</a>
+ für Pinbelegungen und revisionsspezifische Verdrahtungshinweise.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='active' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

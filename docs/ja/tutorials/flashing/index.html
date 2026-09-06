@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS 書き込み — チュートリアル</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='トップへ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='トップへ' type='button'>↑</button>
+<a class='home-link' href='../../../ja/' title='PteronautOS ホーム'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ja/tutorials/'>チュートリアル</a>
+<a href='../../../ja/hardware/'>ハードウェア</a>
+<a href='../../../ja/documentation/'>ドキュメント</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>チュートリアル 01</p>
+<h1>PteronautOS の書き込み</h1>
+<p class='sub-lead'>CYCLONE ELRS 2.4GHz 7CH PWM RX レシーバーを例に、ハーメティック・ファームウェアをビルドして書き込みます。</p>
+<p>PteronautOS は他の受信機ボードもサポートします。ESP8285 を共有していても配線が同一とは限りません: 露出した GPIO、チャンネル割り当て、書き込み用接続、PCB リビジョンは異なる場合があります。以下の電源と CH2/CH3 の配線はこの CYCLONE の例に適用されます。別の受信機を接続する前に、ボードのピン配置とサポートされるハードウェア構成を確認してください。</p>
+<p>電源を接続する前に、翼機構から推進負荷を取り除き、どのサーボも硬いストッパーに当たらないことを確認してください。書き込みは電気的な作業です。手順の間、機体は機械的に安全な状態を保つ必要があります。</p>
+<div class='video-embed'>
+<iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS 書き込みチュートリアル'></iframe>
+</div>
+<h2>01 · ファームウェアをビルド</h2>
+<p>リポジトリをクローンし、PlatformIO をインストールして、リポジトリのルートから次のコマンドを実行します。PlatformIO プロジェクトは src にあります。このコマンドは、この例で使う専用の ESP8285 受信機環境をビルドします。</p>
+<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<h2>02 · 受信機を接続</h2>
+<p>この CYCLONE 受信機では、受信機の電源に FTDI アダプタの 5V 出力を使い、3.3V 出力は使わないでください。UART 接続はチャンネル 2 と 3 の信号ピンにあり、別途 UART パッドを探す必要はありません。</p>
+<table>
+<tr>
+<th>FTDI アダプタ</th>
+<th>受信機の接続</th>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND (−)</td>
+</tr>
+<tr>
+<td>5 V / VCC</td>
+<td>電源 (+)</td>
+</tr>
+<tr>
+<td>TX</td>
+<td>CH3 信号 — 受信機 RX (GPIO3)</td>
+</tr>
+<tr>
+<td>RX</td>
+<td>CH2 信号 — 受信機 TX (GPIO1)</td>
+</tr>
+</table>
+<p>5V 設定は受信機の電源を指します。アダプタのドキュメントを確認してください: 供給出力が 5V でも、TX/RX は ESP8285 互換の 3.3V ロジックを使う必要があります。同時に 2 つ目の電源を接続しないでください。</p>
+<h2>03 · ブートローダーに入る</h2>
+<p>BOOT（GPIO0）を押したまま FTDI の USB ケーブルを抜き差しし、BOOT を約 1 秒押し続けてから離します。書き込みスクリプトは自動リセットを行わないため、実行前に手動でブートローダーに入ってください。</p>
+<h2>04 · イメージを書き込む</h2>
+<p>リポジトリのルートから、提供された書き込みスクリプトを実行します。スクリプトは PlatformIO 同梱の書き込みツールとビルド済みファームウェアを探し、シリアルポートを選び、必要なフラッシュ設定でイメージを書き込みます。</p>
+<pre><code>./scripts/flash.sh</code></pre>
+<p>自動ポート選択は macOS の /dev/cu.* デバイスを探します。複数のシリアルデバイスが接続されている場合や、別の OS を使っている場合は、受信機アダプタのポートを明示的に選択してください。下の例を実際のデバイスパスに置き換えてください。</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<p>ファームウェアを書き込まずにブートローダー通信を確認するには、オプションのチェックモードを使います。失敗したら、再試行する前に BOOT の電源サイクルを繰り返してください。</p>
+<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
+<h2>05 · インストールを確認</h2>
+<p>
+BOOT を押さずに受信機の電源を入れ直します。WiFi アクセスポイントと WebUI が利用可能になったことを確認してください（SSID: 
+<code>Pteronaut OS</code>
+、パスワード：
+<code>flynatural</code>
+）、その後設定を読み込み、サーボを再接続する前にターゲット名を確認してください。
+</p>
+<p>
+続いて 
+<a href='../../../ja/hardware/'>ハードウェアページ</a>
+ でピン配置とリビジョン固有の配線ノートを確認できます。
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../'>PT</a>
+<a class='' href='../../../en/'>EN</a>
+<a class='' href='../../../es/'>ES</a>
+<a class='' href='../../../fr/'>FR</a>
+<a class='' href='../../../de/'>DE</a>
+<a class='' href='../../../ru/'>RU</a>
+<a class='' href='../../../ko/'>한국어</a>
+<a class='active' href='../../../ja/'>日本語</a>
+<a class='' href='../../../zh/'>中文</a>
+<a class='' href='../../../ar/'>عربي</a>
+<a class='' href='../../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

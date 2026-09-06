@@ -1,13 +1,13 @@
 !!!
-%html{lang: "en", dir: "ltr"}
+%html{lang: lang, dir: dir}
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= "Flashing PteronautOS — Tutorials"
+    %title= flash_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
-    %link{rel: "stylesheet", href: "../../assets/css/style.css"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
   %body.sub-page
     %nav.sub-nav
       .nav-progressive-blur{"aria-hidden": "true"}
@@ -15,84 +15,88 @@
         %span
         %span
         %span
-      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": "Scroll to top", title: "Scroll to top"} ↑
-      %a.home-link{href: "../../en/", title: "PteronautOS home"}
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "../", class: "active"} Tutorials
-      %a{href: "../../hardware/"} Hardware
-      %a{href: "../../documentation/"} Documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
     %main.sub-main
       .sub-content
-        %p.tutorial-number Tutorial 01
-        %h1 Flashing PteronautOS
-        %p.sub-lead Build and install the hermetic firmware using a CYCLONE ELRS 2.4GHz 7CH PWM RX Receiver as the example.
+        %p.tutorial-number= flash_number
+        %h1= flash_h1
+        %p.sub-lead= flash_lead
 
-        %p PteronautOS supports other receiver boards too. Sharing an ESP8285 does not make their wiring identical: the exposed GPIOs, channel assignments, programming connections, and PCB revisions can differ. The power and CH2/CH3 wiring below apply to this CYCLONE example; check your board’s pinout and supported hardware configuration before connecting another receiver.
-
-        %p Before connecting power, remove propulsive loads from the wing mechanism and make sure no servo can drive into a hard stop. Flashing is electrical work; the airframe should remain mechanically safe throughout the procedure.
+        %p= flash_p1
+        %p= flash_p2
 
         .video-embed
-          %iframe{src: "https://www.youtube.com/embed/h_MSh6qvfEA", title: "Flashing PteronautOS tutorial", loading: "lazy", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowfullscreen: true}
+          %iframe{src: "https://www.youtube.com/embed/h_MSh6qvfEA", title: flash_iframe_title, loading: "lazy", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowfullscreen: true}
 
-        %h2 01 · Build the firmware
-        %p Clone the repository, install PlatformIO, and run the following command from the repository root. The PlatformIO project is in src; this command builds the dedicated ESP8285 receiver environment used in this example.
+        %h2= flash_h2_build
+        %p= flash_build_p
         %pre
           %code pio run -d src -e PteronautOS_ESP8285_2400_RX
 
-        %h2 02 · Connect the receiver
-        %p For this CYCLONE receiver, use the FTDI adapter’s 5 V power output for the receiver supply, not its 3.3 V power output. Its UART connections are on the signal pins of channels 2 and 3 — there is no need to locate separate UART pads.
+        %h2= flash_h2_connect
+        %p= flash_connect_p
         %table
           %tr
-            %th FTDI adapter
-            %th Receiver connection
+            %th= flash_th_ftdi
+            %th= flash_th_rx
           %tr
-            %td GND
-            %td GND (−)
+            %td= flash_row_gnd
+            %td= flash_row_gnd_v
           %tr
-            %td 5 V / VCC
-            %td Supply (+)
+            %td= flash_row_vcc
+            %td= flash_row_vcc_v
           %tr
-            %td TX
-            %td CH3 signal — receiver RX (GPIO3)
+            %td= flash_row_tx
+            %td= flash_row_tx_v
           %tr
-            %td RX
-            %td CH2 signal — receiver TX (GPIO1)
-        %p The 5 V setting refers to receiver power. Check your adapter’s documentation: TX/RX must use ESP8285-compatible 3.3 V logic, even when the supply output is 5 V. Do not connect a second power supply at the same time.
+            %td= flash_row_rx
+            %td= flash_row_rx_v
+        %p= flash_connect_note
 
-        %h2 03 · Enter the bootloader
-        %p Hold BOOT (GPIO0), unplug and reconnect the FTDI USB cable, keep BOOT held for about one second, then release it. The flashing script does not perform an automatic reset, so enter the bootloader manually before running it.
+        %h2= flash_h2_boot
+        %p= flash_boot_p
 
-        %h2 04 · Write the image
-        %p From the repository root, run the provided flashing script. It locates a working PlatformIO-bundled flashing tool and the built firmware, selects a serial port, and writes the image with the required flash settings.
+        %h2= flash_h2_write
+        %p= flash_write_p1
         %pre
           %code ./scripts/flash.sh
-        %p Automatic port selection looks for macOS /dev/cu.* devices. If several serial devices are connected, or you are using a different operating system, explicitly select the receiver adapter’s port. Replace the example below with your actual device path.
+        %p= flash_write_p2
         %pre
           %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX
-        %p To check bootloader communication without writing firmware, use the optional check mode. If it fails, repeat the BOOT power cycle before trying again.
+        %p= flash_write_p3
         %pre
           %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check
 
-        %h2 05 · Verify the installation
-        %p Power-cycle the receiver without holding BOOT. Confirm that its WiFi access point and WebUI become available (SSID: <code>Pteronaut OS</code>, password: <code>flynatural</code>), then load the configuration and verify the target name before reconnecting servos.
-        %p 
-          Continue with the
-          %a{href: "../../hardware/"} Hardware page 
-          for pin maps and revision-specific wiring notes.
+        %h2= flash_h2_verify
+        %p
+          = flash_verify_p_a
+          %code Pteronaut OS
+          = flash_verify_p_b
+          %code flynatural
+          = flash_verify_p_c
+        %p
+          = flash_verify_continue
+          %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= flash_verify_hw_link
+          = flash_verify_continue_rest
     %footer
       .lang-switch
-        %a{href: "../../"} PT
-        %a{href: "../../en/", class: "active"} EN
-        %a{href: "../../es/"} ES
-        %a{href: "../../fr/"} FR
-        %a{href: "../../de/"} DE
-        %a{href: "../../ru/"} RU
-        %a{href: "../../ko/"} 한국어
-        %a{href: "../../ja/"} 日本語
-        %a{href: "../../zh/"} 中文
-        %a{href: "../../ar/"} عربي
-        %a{href: "../../hi/"} हिन्दी
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"} GitHub
-      %p.credit= "HERMETIC FIRMWARE"
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

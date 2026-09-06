@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>التوثيق — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/ferocity-waveform.js'></script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ar/tutorials/'>دروس</a>
+<a href='../../ar/hardware/'>العتاد</a>
+<a class='active' href='../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>التوثيق</h1>
+<p class='sub-lead'>الدليل وملاحظات الجيروسكوب ومرجع واجهة الويب.</p>
+<h2>الأدلة</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>الدليل الرئيسي — البنية، الخلاط، شكل الموجة</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>جيروسكوب زيفيروس — AHRS و PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>واجهة الويب ومرجع الترجمة</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>التوصيلات وخرائط الأطراف</a>
+</td>
+</tr>
+</table>
+<h2>المفاهيم</h2>
+<dl class='grid'>
+<dt>الشراسة</dt>
+<dd>عدم تناظر الضربة/العودة والثبات — 0 هو جيب نقي.</dd>
+<dt>شكل الموجة</dt>
+<dd>منحنى خفق الجناح؛ السعة تأتي من درجة/ث ÷ 2·التردد.</dd>
+<dt>زاوية الانزلاق</dt>
+<dd>إزاحة مركز الجناح للطيران الانزلاقي.</dd>
+<dt>إزاحة مركز الخفقان</dt>
+<dd>انحياز المركز أثناء ضربة الخفق (−15…+15 درجة).</dd>
+<dt>خلط الدفة</dt>
+<dd>مزيج الانعراج/التدحرج الذي يحرك دفة القمة.</dd>
+<dt>خلط شراسة الخانق</dt>
+<dd>مقدار اقتران الخانق بالشراسة.</dd>
+<dt>الأمان عند الفشل</dt>
+<dd>تعود الأجنحة إلى الوضع المحايد إذا انقطع الرابط.</dd>
+</dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>هندسة شكل موجة الشراسة</h2>
+<p>تتحكم الشراسة في كل من طابع وتوقيت نصف الضربة. داخليًا، يتطابق إعداد WebUI من 0–100 مع 0–8. الشراسة الأعلى للهبوط تقصّر حصة الهبوط من الدورة؛ والشراسة الأعلى للعودة تقصّر حصة العودة. يُنقل الوقت المتبقي إلى النصف المقابل — لا يوجد توقف عند الصفر.</p>
+<p>يختار تحكم Ferocity Shape لكل ملف تعريف طابع الشراسة العالية. عند 0% يفضّل شكلًا نهائيًا مسطحًا/مربعًا. وعند 100% يفضّل مسارًا هرميًا مدوّرًا. لا يزال كل نصف يستخدم شراسته الخاصة، فيبقى النصف منخفض الشراسة ممدودًا وجيبيًا بينما يقترب النصف مرتفع الشراسة من عبور قطري مباشر.</p>
+<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='طور دورة الخفق' data-i18n-axis-half='طور نصف الضربة المحلي' data-i18n-axis-wing='موضع الجناح' data-i18n-lock-oppose='تقابل: المنزلِقان متكاملان (المجموع=8) (انقر للتبديل)' data-i18n-lock-sync='مزامنة: يتحرك المنزلِقان معًا (انقر للتبديل)' data-i18n-lock-unlocked='غير مقفول (انقر للتبديل)' data-i18n-metric='توزيع الوقت: هبوط {down}% · صعود {up}% · نسبة سرعة الطور القصوى {ratio}×'>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>شراسة الهبوط</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<div class='lock-ferocity'>
+<div class='lock-lines'></div>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='قفل الهبوط+الصعود معًا (المجموع=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
+</svg>
+</button>
+<div class='lock-lines'></div>
+</div>
+<label for='wave-up-ferocity'>
+<span>شراسة الصعود</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>مزيج الشكل</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='أمثلة شكل الموجة' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>أقصى 8 / 0</button>
+<button data-preset='7,1,100' type='button'>شبه أقصى 7 / 1</button>
+<button data-preset='8,6,100' type='button'>قاعدة عالية 8 / 6</button>
+<button data-preset='8,6,50' type='button'>قاعدة عالية، مختلطة</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>الدورة الكاملة</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+شكل الموجة الحالي
+</span>
+<span>
+<i class='direct'></i>
+المرجع المباشر الدقيق
+</span>
+<span>
+<i class='boundary'></i>
+الانعكاس
+</span>
+</div>
+<svg aria-label='موضع الجناح عبر دورة الخفق الكاملة' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>كل نصف ممدود لعرض متساوٍ</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+نصف الهبوط
+</span>
+<span>
+<i class='up'></i>
+نصف الصعود، الاتجاه مُحاذى
+</span>
+<span>
+<i class='direct'></i>
+القطر الدقيق
+</span>
+</div>
+<svg aria-label='أشكال الهبوط والصعود المُطبَّعة' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>قراءة التركيبات القصوى</h3>
+<p>ينتج الجمع 7 / 1 بوضوح هبوطًا قصيرًا مدببًا وعودة جيبية طويلة. تتطلب القيم الدقيقة وشبه القصوى عناية: يستخدم قانون المدة الحالي الكمية المتبقية تحت الشراسة 8. وبالتالي، يخصص 8 / 0 نحو 0.125% فقط من الدورة للهبوط، بينما يخصص حتى 8 / 6 نحو 0.5%. يظل الموضع متصلًا، لكن السرعة والتسارع المطلوبين قد يصبحان غير قابلين للتحقيق فيزيائيًا.</p>
+<aside class='waveform-caution'>
+<strong>اختبر على المنضدة قبل الطيران.</strong>
+يصف المستكشف شكل الموجة الرياضي المُوجَّه، وليس حركة سيرفو مضمونة. تجنّب الإعدادات غير المتماثلة القصوى حتى يتم التحقق من السعة والتردد وهندسة الوصلات وحدود سرعة السيرفو دون حمل هوائي.
+</aside>
+</section>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='active' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>दस्तावेज़ — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/ferocity-waveform.js'></script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../hi/hardware/'>हार्डवेयर</a>
+<a class='active' href='../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>दस्तावेज़</h1>
+<p class='sub-lead'>मैनुअल, जाइरो नोट्स और वेब UI संदर्भ।</p>
+<h2>मैनुअल</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>मुख्य मैनुअल — आर्किटेक्चर, मिक्सर, तरंगरूप</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>ज़ेफ़िरस जाइरो — AHRS और PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>वेब UI और अनुवाद संदर्भ</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>वायरिंग और पिन मैप</a>
+</td>
+</tr>
+</table>
+<h2>अवधारणाएँ</h2>
+<dl class='grid'>
+<dt>फेरोसिटी</dt>
+<dd>स्ट्रोक/वापसी असममिति और ठहराव — 0 शुद्ध साइन है।</dd>
+<dt>तरंगरूप</dt>
+<dd>पंख-धड़कन वक्र; आयाम deg/s ÷ 2·आवृत्ति से आता है।</dd>
+<dt>ग्लाइड कोण</dt>
+<dd>ग्लाइडिंग उड़ान के लिए पंख केंद्र ऑफ़सेट।</dd>
+<dt>फ्लैपिंग केंद्र ऑफ़सेट</dt>
+<dd>फ्लैप स्ट्रोक के दौरान केंद्र बायस (−15…+15 डिग्री)।</dd>
+<dt>रडर मिक्सिंग</dt>
+<dd>यॉ/रोल मिश्रण जो क्रेस्ट रडर को चलाता है।</dd>
+<dt>थ्रॉटल फेरोसिटी मिक्स</dt>
+<dd>थ्रॉटल फेरोसिटी में कितना युग्मित होता है।</dd>
+<dt>फेलसेफ़</dt>
+<dd>लिंक टूटने पर पंख न्यूट्रल पर लौट आते हैं।</dd>
+</dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>फेरोसिटी तरंगरूप ज्यामिति</h2>
+<p>फेरोसिटी आधे-स्ट्रोक के चरित्र और समय दोनों को नियंत्रित करती है। आंतरिक रूप से WebUI की 0–100 सेटिंग 0–8 पर मैप होती है। अधिक डाउनस्ट्रोक फेरोसिटी चक्र में डाउनस्ट्रोक का हिस्सा छोटा कर देती है; अधिक वापसी फेरोसिटी वापसी हिस्सा छोटा कर देती है। शेष समय विपरीत आधे में स्थानांतरित हो जाता है — शून्य पर कोई विराम नहीं होता।</p>
+<p>प्रति-प्रोफ़ाइल Ferocity Shape नियंत्रण उच्च-फेरोसिटी चरित्र चुनता है। 0% पर यह सीमित पठार/वर्ग आकार को पसंद करता है। 100% पर यह गोल पिरामिडीय पथ को पसंद करता है। प्रत्येक आधा फिर भी अपनी फेरोसिटी का उपयोग करता है, इसलिए निम्न-फेरोसिटी आधा लंबा और साइनसॉइडल रहता है जबकि उच्च-फेरोसिटी आधा सीधे विकर्ण मार्ग के करीब पहुँचता है।</p>
+<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='धड़कन-चक्र चरण' data-i18n-axis-half='स्थानीय आधा-स्ट्रोक चरण' data-i18n-axis-wing='पंख की स्थिति' data-i18n-lock-oppose='विरोध: स्लाइडर पूरक (योग=8) (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-sync='सिंक: दोनों स्लाइडर एक साथ चलते हैं (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-unlocked='अनलॉक (चक्रित करने हेतु क्लिक करें)' data-i18n-metric='समय आवंटन: डाउन {down}% · अप {up}% · शिखर चरण-गति अनुपात {ratio}×'>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>डाउन फेरोसिटी</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<div class='lock-ferocity'>
+<div class='lock-lines'></div>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='डाउन+अप एक साथ लॉक करें (योग=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
+</svg>
+</button>
+<div class='lock-lines'></div>
+</div>
+<label for='wave-up-ferocity'>
+<span>अप फेरोसिटी</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>शेप मिक्स</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='तरंगरूप उदाहरण' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>चरम 8 / 0</button>
+<button data-preset='7,1,100' type='button'>लगभग-चरम 7 / 1</button>
+<button data-preset='8,6,100' type='button'>उच्च आधार 8 / 6</button>
+<button data-preset='8,6,50' type='button'>उच्च आधार, मिश्रित</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>पूरा चक्र</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+वर्तमान तरंगरूप
+</span>
+<span>
+<i class='direct'></i>
+सटीक प्रत्यक्ष संदर्भ
+</span>
+<span>
+<i class='boundary'></i>
+उत्क्रमण
+</span>
+</div>
+<svg aria-label='पूर्ण धड़कन चक्र में पंख की स्थिति' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>प्रत्येक आधा समान चौड़ाई तक खींचा गया</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+डाउन आधा
+</span>
+<span>
+<i class='up'></i>
+अप आधा, दिशा संरेखित
+</span>
+<span>
+<i class='direct'></i>
+सटीक विकर्ण
+</span>
+</div>
+<svg aria-label='सामान्यीकृत डाउनस्ट्रोक और अपस्ट्रोक आकार' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>चरम संयोजन पढ़ना</h3>
+<p>7 / 1 संयोजन स्पष्ट रूप से एक छोटा नुकीला डाउनस्ट्रोक और लंबा साइनसॉइडल रिटर्न उत्पन्न करता है। सटीक और लगभग-अधिकतम मानों में सावधानी चाहिए: वर्तमान अवधि नियम फेरोसिटी 8 से नीचे शेष राशि का उपयोग करता है। फलस्वरूप 8 / 0 डाउनस्ट्रोक को चक्र का केवल लगभग 0.125% आवंटित करता है, जबकि 8 / 6 भी लगभग 0.5% आवंटित करता है। स्थिति निरंतर रहती है, परंतु माँगी गई गति और त्वरण भौतिक रूप से अप्राप्य हो सकते हैं।</p>
+<aside class='waveform-caution'>
+<strong>उड़ान से पहले बेंच-टेस्ट करें।</strong>
+एक्सप्लोरर आदेशित गणितीय तरंगरूप का वर्णन करता है, न कि गारंटीकृत सर्वो गति का। जब तक आयाम, आवृत्ति, लिंकेज ज्यामिति और सर्वो-गति सीमाएँ वायुगतिकीय भार के बिना सत्यापित न हों, तब तक अत्यधिक असममित सेटिंग से बचें।
+</aside>
+</section>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='active' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

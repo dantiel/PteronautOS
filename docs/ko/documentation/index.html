@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ko'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>문서 — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/ferocity-waveform.js'></script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='맨 위로' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='맨 위로' type='button'>↑</button>
+<a class='home-link' href='../../ko/' title='PteronautOS 홈'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ko/tutorials/'>튜토리얼</a>
+<a href='../../ko/hardware/'>하드웨어</a>
+<a class='active' href='../../ko/documentation/'>문서</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>문서</h1>
+<p class='sub-lead'>매뉴얼, 자이로 노트, 웹 UI 레퍼런스.</p>
+<h2>매뉴얼</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>주 매뉴얼 — 아키텍처, 믹서, 파형</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>제피로스 자이로 — AHRS 및 PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>웹 UI 및 번역 레퍼런스</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>배선 및 핀 맵</a>
+</td>
+</tr>
+</table>
+<h2>개념</h2>
+<dl class='grid'>
+<dt>퍼로시티</dt>
+<dd>스트로크/복귀 비대칭과 체류 — 0은 순수 사인파.</dd>
+<dt>파형</dt>
+<dd>날갯짓 곡선; 진폭은 deg/s ÷ 2·주파수에서 나옵니다.</dd>
+<dt>글라이드 각도</dt>
+<dd>활공 비행을 위한 날개 중심 오프셋.</dd>
+<dt>플래핑 중심 오프셋</dt>
+<dd>플랩 스트로크 중 중심 편향 (−15…+15도).</dd>
+<dt>러더 믹싱</dt>
+<dd>크레스트 러더를 구동하는 요/롤 블렌드.</dd>
+<dt>스로틀 퍼로시티 믹스</dt>
+<dd>스로틀이 퍼로시티에 결합되는 정도.</dd>
+<dt>페일세이프</dt>
+<dd>링크가 끊기면 날개가 중립으로 복귀합니다.</dd>
+</dl>
+<section class='waveform-docs' id='ferocity-waveform'>
+<h2>퍼로시티 파형 기하학</h2>
+<p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
+<p>프로필별 Ferocity Shape 컨트롤은 고퍼로시티 특성을 선택합니다. 0%에서는 유한한 플래토/사각 형태를, 100%에서는 둥근 피라미드 경로를 선호합니다. 각 절반은 여전히 자신의 퍼로시티를 사용하므로, 저퍼로시티 절반은 길쭉하고 사인파에 가깝게 유지되고, 고퍼로시티 절반은 직접적인 대각선 이동에 가까워집니다.</p>
+<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×'>
+<div class='waveform-controls'>
+<label for='wave-down-ferocity'>
+<span>다운 퍼로시티</span>
+<output data-value='down' for='wave-down-ferocity'>8.0</output>
+<input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
+</label>
+<div class='lock-ferocity'>
+<div class='lock-lines'></div>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='다운+업 함께 잠금 (합=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
+</svg>
+</button>
+<div class='lock-lines'></div>
+</div>
+<label for='wave-up-ferocity'>
+<span>업 퍼로시티</span>
+<output data-value='up' for='wave-up-ferocity'>0.0</output>
+<input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
+</label>
+<label for='wave-shape-mix'>
+<span>셰이프 믹스</span>
+<output data-value='mix' for='wave-shape-mix'>100%</output>
+<input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+</div>
+<div aria-label='파형 예시' class='waveform-presets'>
+<button data-preset='8,0,100' type='button'>익스트림 8 / 0</button>
+<button data-preset='7,1,100' type='button'>거의 극단 7 / 1</button>
+<button data-preset='8,6,100' type='button'>하이 베이스 8 / 6</button>
+<button data-preset='8,6,50' type='button'>하이 베이스, 혼합</button>
+</div>
+<p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
+<div class='waveform-chart'>
+<h3>전체 주기</h3>
+<div class='waveform-legend'>
+<span>
+<i class='current'></i>
+현재 파형
+</span>
+<span>
+<i class='direct'></i>
+정확한 직접 기준
+</span>
+<span>
+<i class='boundary'></i>
+반전
+</span>
+</div>
+<svg aria-label='전체 날갯짓 주기에 걸친 날개 위치' data-chart='cycle' role='img'></svg>
+</div>
+<div class='waveform-chart'>
+<h3>각 절반을 동일 폭으로 늘림</h3>
+<div class='waveform-legend'>
+<span>
+<i class='down'></i>
+다운 절반
+</span>
+<span>
+<i class='up'></i>
+업 절반, 방향 정렬
+</span>
+<span>
+<i class='direct'></i>
+정확한 대각선
+</span>
+</div>
+<svg aria-label='정규화된 다운/업 스트로크 형태' data-chart='halves' role='img'></svg>
+</div>
+</div>
+<h3>극단 조합 읽기</h3>
+<p>7 / 1 조합은 분명히 짧고 뾰족한 다운스트로크와 긴 사인파 복귀를 만듭니다. 정확하거나 최대에 가까운 값은 주의가 필요합니다. 현재 지속시간 법칙은 퍼로시티 8 아래 남은 양을 사용합니다. 따라서 8 / 0은 주기의 약 0.125%만 다운스트로크에 할당하고, 8 / 6조차 약 0.5%를 할당합니다. 위치는 연속적이지만, 요청된 속도와 가속도는 물리적으로 도달 불가능해질 수 있습니다.</p>
+<aside class='waveform-caution'>
+<strong>비행 전 벤치 테스트.</strong>
+익스플로러는 보장된 서보 움직임이 아니라 명령된 수학적 파형을 설명합니다. 진폭, 주파수, 링키지 기하, 서보 속도 한계가 공기역학적 부하 없이 검증될 때까지 극단적인 비대칭 설정을 피하세요.
+</aside>
+</section>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../'>PT</a>
+<a class='' href='../../en/'>EN</a>
+<a class='' href='../../es/'>ES</a>
+<a class='' href='../../fr/'>FR</a>
+<a class='' href='../../de/'>DE</a>
+<a class='' href='../../ru/'>RU</a>
+<a class='active' href='../../ko/'>한국어</a>
+<a class='' href='../../ja/'>日本語</a>
+<a class='' href='../../zh/'>中文</a>
+<a class='' href='../../ar/'>عربي</a>
+<a class='' href='../../hi/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

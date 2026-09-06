@@ -763,7 +763,7 @@ PteronautOS/
 ├── hermetic.manifest.md              # Project ethos & constraints
 ├── docs/
 │   ├── PTERONAUTOS.md               # ← this document
-│   └── en/hardware/elrs-pwm7-esp8285.md  # Hardware-specific reference
+│   └── en/hardware-pwmp7/elrs-pwm7-esp8285.md  # Hardware-specific reference
 ├── src/
 │   ├── targets/pteronautos-rx.ini    # Build target definition
 │   ├── hardware/RX/Generic 2400 PWMP7.json  # Hardware pin definitions
