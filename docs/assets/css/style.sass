@@ -191,7 +191,7 @@ nav a.home-link
       opacity: 1
       text-shadow: 0 0 12px var(--fg)
 
-nav > a
+nav a
     color: var(--nav)
     text-decoration: none
     font-size: 0.78rem
@@ -215,6 +215,18 @@ nav > a
   background: var(--dim)
   opacity: 0.6
   flex-shrink: 0
+
+// ── Nav links group + mobile toggle ───────────────────────────
+.nav-links
+  display: flex
+  align-items: center
+  gap: 2.5rem
+
+.nav-group
+  display: none
+
+.nav-toggle
+  display: none
 
 // ── Language switcher ─────────────────────────────────────────
 .lang-switch
@@ -551,7 +563,7 @@ footer .lang-switch
       font-size: 0.5rem
 
   .headline
-    background: linear-gradient(to bottom, var(--headline-shield) 0%, var(--headline-shield) 55%, transparent 100%)
+    background: transparent
 
   .headline h1
     letter-spacing: 0.25em
@@ -559,18 +571,18 @@ footer .lang-switch
     text-shadow: 0 1px 0 var(--shadow-a), 0 2px 2px var(--shadow-b), 0 4px 8px var(--shadow-c)
 
   .hero-content
-    padding-top: 11em
+    padding-top: calc(52vw + 1rem)
     padding-left: 1rem
     padding-right: 1rem
 
   .hero-nemicolopterus
-    transform: translateY(8%)
-    background-size: 42em auto
-    background-position: center 7em
+    transform: none
+    background-size: 100% auto
+    background-position: center top
 
   .hero-bg
-    background-size: 60em auto
-    background-position: center 0
+    background-size: 130% auto
+    background-position: center top
 
   .subhead
     letter-spacing: 0.2em
@@ -648,8 +660,25 @@ footer .lang-switch
   .version
     display: none
 
+// Small tablet & large phone portrait — creature fits viewport, text below
+@media (min-width: 481px) and (max-width: 768px)
+  .headline
+    background: transparent
+
+  .hero-content
+    padding-top: calc(52vw + 1rem)
+
+  .hero-nemicolopterus
+    transform: none
+    background-size: 100% auto
+    background-position: center top
+
+  .hero-bg
+    background-size: 130% auto
+    background-position: center top
+
 // Tablet — medium viewport
-@media (min-width: 481px) and (max-width: 1024px)
+@media (min-width: 769px) and (max-width: 1024px)
   nav
     gap: 1.5rem
     padding: 1.5rem
@@ -678,7 +707,7 @@ footer .lang-switch
 
   .glyph
     font-size: clamp(1.2rem, 1.8vw, 1.4rem)
-    width: 6em
+    width: 23em
 
 // Mid-size — laptops & iPad landscape (1025–1399px)
 // Text stays under the creature but pushed lower for clearance
@@ -714,6 +743,99 @@ footer .lang-switch
 
   .hero-content
     padding-top: 39em
+
+// ── Mobile nav — hamburger + grouped dropdown ─────────────────
+@media (max-width: 768px)
+  nav
+    justify-content: space-between
+    gap: 1rem
+    padding: 0.75rem 1rem
+
+  .nav-toggle
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    width: 44px
+    height: 44px
+    background: transparent
+    border: 1px solid var(--dim)
+    border-radius: 10px
+    cursor: pointer
+    padding: 0
+    flex: none
+
+    span
+      display: block
+      width: 20px
+      height: 2px
+      margin: 3px 0
+      border-radius: 2px
+      background: var(--nav)
+      transition: transform 0.3s ease, opacity 0.3s ease
+
+    &[aria-expanded="true"]
+      span:nth-child(1)
+        transform: translateY(8px) rotate(45deg)
+      span:nth-child(2)
+        opacity: 0
+      span:nth-child(3)
+        transform: translateY(-8px) rotate(-45deg)
+
+  nav .nav-links
+    position: absolute
+    top: 100%
+    left: 1rem
+    right: 1rem
+    display: flex
+    flex-direction: column
+    align-items: stretch
+    gap: 0.2rem
+    padding: 1rem 1.25rem 1.25rem
+    background: var(--bg)
+    border: 1px solid var(--dim)
+    border-radius: 14px
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55)
+    opacity: 0
+    visibility: hidden
+    transform: translateY(-0.6rem)
+    pointer-events: none
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s
+
+  nav.open .nav-links
+    opacity: 1
+    visibility: visible
+    transform: translateY(0)
+    pointer-events: auto
+
+  .nav-links a
+    font-size: 0.9rem
+    letter-spacing: 0.22em
+    text-transform: uppercase
+    opacity: 0.65
+    padding: 0.55rem 0.3rem
+    text-align: left
+
+    &:hover
+      opacity: 1
+
+  .nav-group
+    display: block
+    font-size: 0.6rem
+    font-weight: 500
+    letter-spacing: 0.32em
+    text-transform: uppercase
+    color: var(--dim)
+    margin: 0.6rem 0 0.15rem
+    padding: 0 0.3rem
+
+    &:first-child
+      margin-top: 0
+
+  .nav-separator
+    width: 100%
+    height: 1px
+    margin: 0.6rem 0
 
 // ── Scroll-to-Top Arrow ─────────────────────────────────────
 .scroll-top
@@ -758,6 +880,12 @@ footer .lang-switch
   nav
     flex-direction: row-reverse
 
+  .nav-links
+    flex-direction: row-reverse
+
+  .nav-links a
+    text-align: right
+
   .hero-content
     padding-left: 0
     padding-right: 0
@@ -774,7 +902,7 @@ footer .lang-switch
   .headline
     padding: 1.3em 2.7em
 
-// ── Sub-pages (Tutorials / Hardware / Docs) ──────────────────
+// ────── Sub-pages (Tutorials / Hardware / Documentation) ─────────────────────
 .sub-page
   background: var(--bg)
 

@@ -21,13 +21,22 @@
 <span></span>
 </div>
 <a class='home-link' href='#' onclick='majesticScroll(); return false;' title='Scroll to top — PteronautOS'>↑</a>
+<div class='nav-links' id='nav-links'>
+<span class='nav-group'>On this page</span>
 <a href='#essence'>Esencia</a>
 <a href='#architecture'>Arquitectura</a>
 <a href='#zephyrus'>Céfiro</a>
 <span class='nav-separator'></span>
+<span class='nav-group'>Explore</span>
 <a href='../tutorials/'>Tutorials</a>
 <a href='../hardware/'>Hardware</a>
-<a href='../documentation/'>Docs</a>
+<a href='../documentation/'>Documentation</a>
+</div>
+<button aria-controls='nav-links' aria-expanded='false' aria-label='Menu' class='nav-toggle' type='button'>
+<span></span>
+<span></span>
+<span></span>
+</button>
 </nav>
 <div id='header'>
 <div class='hero-content'>
@@ -148,7 +157,23 @@ Compilación
   const creature = document.querySelector('.hero-nemicolopterus');
   const overlay = document.querySelector('.hero-overlay');
   const nav = document.querySelector('nav');
+  const navToggle = document.querySelector('.nav-toggle');
   const scrollBtn = document.querySelector('.scroll-top');
+  
+  if (navToggle) {
+    navToggle.addEventListener('click', () => {
+      const open = navToggle.getAttribute('aria-expanded') === 'true';
+      navToggle.setAttribute('aria-expanded', String(!open));
+      nav.classList.toggle('open', !open);
+    });
+  
+    nav.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.setAttribute('aria-expanded', 'false');
+        nav.classList.remove('open');
+      });
+    });
+  }
   
   function majesticScroll() {
     const start = window.scrollY;

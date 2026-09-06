@@ -21,13 +21,20 @@
         %span
         %span
       %a.home-link{href: "#", onclick: "majesticScroll(); return false;", title: "Scroll to top — PteronautOS"}= nav_home
-      %a{href: "#essence"}= nav_essence
-      %a{href: "#architecture"}= nav_architecture
-      %a{href: "#zephyrus"}= nav_zephyrus
-      %span.nav-separator
-      %a{href: "#{asset_prefix}/tutorials/"} Tutorials
-      %a{href: "#{asset_prefix}/hardware/"} Hardware
-      %a{href: "#{asset_prefix}/documentation/"} Docs
+      .nav-links#nav-links
+        %span.nav-group On this page
+        %a{href: "#essence"}= nav_essence
+        %a{href: "#architecture"}= nav_architecture
+        %a{href: "#zephyrus"}= nav_zephyrus
+        %span.nav-separator
+        %span.nav-group Explore
+        %a{href: "#{asset_prefix}/tutorials/"} Tutorials
+        %a{href: "#{asset_prefix}/hardware/"} Hardware
+        %a{href: "#{asset_prefix}/documentation/"} Documentation
+      %button.nav-toggle{type: "button", "aria-label": "Menu", "aria-expanded": "false", "aria-controls": "nav-links"}
+        %span
+        %span
+        %span
 
     #header
       .hero-content
@@ -151,7 +158,23 @@
       const creature = document.querySelector('.hero-nemicolopterus');
       const overlay = document.querySelector('.hero-overlay');
       const nav = document.querySelector('nav');
+      const navToggle = document.querySelector('.nav-toggle');
       const scrollBtn = document.querySelector('.scroll-top');
+
+      if (navToggle) {
+        navToggle.addEventListener('click', () => {
+          const open = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', String(!open));
+          nav.classList.toggle('open', !open);
+        });
+
+        nav.querySelectorAll('.nav-links a').forEach(link => {
+          link.addEventListener('click', () => {
+            navToggle.setAttribute('aria-expanded', 'false');
+            nav.classList.remove('open');
+          });
+        });
+      }
 
       function majesticScroll() {
         const start = window.scrollY;
