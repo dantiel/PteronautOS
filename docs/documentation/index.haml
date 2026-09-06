@@ -75,6 +75,11 @@
                 %span Down ferocity
                 %output{"data-value": "down", for: "wave-down-ferocity"} 8.0
                 %input#wave-down-ferocity{"data-control": "down", type: "range", min: "0", max: "8", step: "0.1", value: "8"}
+              .lock-ferocity
+                %button#lock-ferocity{"data-control": "lock", type: "button", title: "Lock Down+Up together (sum=8)", "aria-pressed": "false"}
+                  %svg.lock-icon{viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2"}
+                    %rect.shackle{x: "6", y: "2", width: "12", height: "10", rx: "6", ry: "6"}
+                    %rect.body{x: "4", y: "12", width: "16", height: "10", rx: "2"}
               %label{for: "wave-up-ferocity"}
                 %span Up ferocity
                 %output{"data-value": "up", for: "wave-up-ferocity"} 0.0
@@ -83,9 +88,6 @@
                 %span Shape mix
                 %output{"data-value": "mix", for: "wave-shape-mix"} 100%
                 %input#wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
-              %label.lock-ferocity
-                %input#lock-ferocity{"data-control": "lock", type: "checkbox"}
-                %span Lock together
 
             .waveform-presets{"aria-label": "Waveform examples"}
               %button{type: "button", "data-preset": "8,0,100"} Extreme 8 / 0

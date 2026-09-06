@@ -18,18 +18,39 @@ appendText = (parent, value, attributes = {}) ->
 
 class FerocityWaveformExplorer
   constructor: (@root) ->
-    @state = down: 8, up: 0, mix: 100
+    @state = down: 8, up: 0, mix: 100, locked: false
     @controls = {}
-    for name in ['down', 'up', 'mix']
+    for name in ['down', 'up', 'mix', 'lock']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
-      @controls[name].addEventListener 'input', (event) =>
-        @state[event.currentTarget.dataset.control] = Number event.currentTarget.value
-        @update()
+
+    @controls.down.addEventListener 'input', (event) =>
+      @state.down = Number event.currentTarget.value
+      if @state.locked
+        @state.up = 8 - @state.down
+        @controls.up.value = @state.up
+      @update()
+
+    @controls.up.addEventListener 'input', (event) =>
+      @state.up = Number event.currentTarget.value
+      if @state.locked
+        @state.down = 8 - @state.up
+        @controls.down.value = @state.down
+      @update()
+
+    @controls.mix.addEventListener 'input', (event) =>
+      @state.mix = Number event.currentTarget.value
+      @update()
+
+    @controls.lock.addEventListener 'click', (event) =>
+      @state.locked = !@state.locked
+      event.currentTarget.setAttribute 'aria-pressed', @state.locked
+      event.currentTarget.classList.toggle 'active', @state.locked
+      @update()
 
     for button in @root.querySelectorAll '[data-preset]'
       button.addEventListener 'click', (event) =>
         [down, up, mix] = (Number value for value in event.currentTarget.dataset.preset.split ',' )
-        @state = {down, up, mix}
+        @state = {down, up, mix, locked: @state.locked}
         @controls.down.value = down
         @controls.up.value = up
         @controls.mix.value = mix

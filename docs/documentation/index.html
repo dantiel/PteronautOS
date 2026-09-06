@@ -84,6 +84,14 @@
 <output data-value='down' for='wave-down-ferocity'>8.0</output>
 <input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
 </label>
+<div class='lock-ferocity'>
+<button aria-pressed='false' data-control='lock' id='lock-ferocity' title='Lock Down+Up together (sum=8)' type='button'>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'>
+<rect class='shackle' height='10' rx='6' ry='6' width='12' x='6' y='2'></rect>
+<rect class='body' height='10' rx='2' width='16' x='4' y='12'></rect>
+</svg>
+</button>
+</div>
 <label for='wave-up-ferocity'>
 <span>Up ferocity</span>
 <output data-value='up' for='wave-up-ferocity'>0.0</output>
@@ -93,10 +101,6 @@
 <span>Shape mix</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
-</label>
-<label class='lock-ferocity'>
-<input data-control='lock' id='lock-ferocity' type='checkbox'>
-<span>Lock together</span>
 </label>
 </div>
 <div aria-label='Waveform examples' class='waveform-presets'>
