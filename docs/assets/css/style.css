@@ -1075,6 +1075,66 @@ footer .lang-switch {
   font-size: 0.75rem;
 }
 
+.hw-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.hw-table {
+  min-width: 720px;
+  font-size: 0.85rem;
+}
+.hw-table th {
+  padding: 0.6rem 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: var(--mut);
+  border-bottom: 2px solid var(--accent);
+  white-space: nowrap;
+}
+.hw-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--dim);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.hw-table td:first-child {
+  width: auto;
+  color: inherit;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  font-size: 0.85rem;
+}
+.hw-table strong {
+  display: block;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.hw-table .hw-mfr {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+.hw-table tbody tr:hover {
+  background: rgba(128, 128, 128, 0.06);
+}
+
+.hw-note {
+  font-size: 0.82rem;
+  opacity: 0.75;
+  margin-bottom: 0.6rem;
+}
+
 .tutorial-menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

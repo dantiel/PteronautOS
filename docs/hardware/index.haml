@@ -39,6 +39,133 @@
             %td= hw_board_v11
             %td= hw_mcu_val
 
+        %h2= hw_h2_compat
+        %p= hw_compat_lead
+        .hw-scroll
+          %table.hw-table
+            %thead
+              %tr
+                %th= hw_th_board
+                %th= hw_th_ch
+                %th= hw_th_volt
+                %th= hw_th_weight
+                %th= hw_th_price
+                %th= hw_th_mcu
+                %th= hw_th_notes
+            %tbody
+              %tr
+                %td
+                  %strong RadioMaster ER4
+                  %span.hw-mfr RadioMaster
+                %td 4
+                %td 4.5–8.4 V
+                %td 1.6 g → ~1.0 g
+                %td ~$15
+                %td ESP8285 · SX1281
+                %td 4× PWM · SMD antenna
+              %tr
+                %td
+                  %strong RadioMaster ER4-i
+                  %span.hw-mfr RadioMaster
+                %td 4
+                %td 4.5–8.4 V
+                %td 1.8 g → ~1.1 g
+                %td ~$16
+                %td ESP8285 · SX1281
+                %td 4× PWM · IPEX antenna
+              %tr
+                %td
+                  %strong RadioMaster ER3C-i
+                  %span.hw-mfr RadioMaster
+                %td 3
+                %td 4.5–8.4 V
+                %td 1.7 g → ~1.0 g
+                %td ~$14
+                %td ESP8285 · SX1281
+                %td 3× PWM · IPEX antenna
+              %tr
+                %td
+                  %strong HappyModel EPW6 TCXO
+                  %span.hw-mfr HappyModel
+                %td 6
+                %td 5–8.4 V
+                %td 1.49 g → ~0.9 g
+                %td ~$18
+                %td ESP8285 · SX1280
+                %td 6× PWM · TCXO · IPEX1
+              %tr
+                %td
+                  %strong BetaFPV 2.4G 5CH PWM/CRSF
+                  %span.hw-mfr BetaFPV
+                %td 5
+                %td 5–9 V
+                %td 2.5 g → ~1.5 g
+                %td ~$16
+                %td ESP8285 · SX1280
+                %td 5× PWM + CRSF
+              %tr
+                %td
+                  %strong BetaFPV Micro RX 5CH BEC
+                  %span.hw-mfr BetaFPV
+                %td 5
+                %td 5–9 V
+                %td 3.0 g → ~1.8 g
+                %td ~$17
+                %td ESP8285 · SX1280
+                %td 5× PWM · 5V/9V BEC
+              %tr
+                %td
+                  %strong BeyondFPV ELRS 7CH
+                  %span.hw-mfr BeyondFPV
+                %td 7
+                %td 5–8.4 V
+                %td 3.5 g → ~2.2 g
+                %td ~$19
+                %td ESP8285 · SX1280
+                %td 7× PWM + CRSF
+              %tr
+                %td
+                  %strong ELRS 2.4G 5CH PWM
+                  %span.hw-mfr Generic
+                %td 5
+                %td 5–8.4 V
+                %td 2.8 g → ~1.6 g
+                %td ~$12
+                %td ESP8285 · SX1280
+                %td 5× PWM
+              %tr
+                %td
+                  %strong CYCLONE ELRS 2.4G
+                  %span.hw-mfr CYCLONE
+                %td 5
+                %td 5–8.4 V
+                %td 2.6 g → ~1.5 g
+                %td ~$13
+                %td ESP8285 · SX1280
+                %td 5× PWM
+              %tr
+                %td
+                  %strong HappyModel EP2
+                  %span.hw-mfr HappyModel
+                %td 0
+                %td 5 V
+                %td 0.6 g
+                %td ~$12
+                %td ESP8285 · SX1280
+                %td= hw_note_crsfonly
+              %tr
+                %td
+                  %strong CRSF→PWM 12CH Adapter
+                  %span.hw-mfr Various
+                %td 12
+                %td 5 V
+                %td 2.0 g
+                %td ~$10
+                %td — (passive)
+                %td= hw_note_conv12
+        %p.hw-note= hw_weight_note
+        %p.hw-note= hw_esp32_note
+
         %h2= hw_h2_specs
         %table
           %tr

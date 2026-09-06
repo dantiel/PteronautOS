@@ -201,5 +201,16 @@
   "hw_h2_wiring": "배선",
   "hw_wiring_p": "세 개의 서보 채널과 I2C 버스의 MPU6050. 전체 핀 맵, I2C 배선, v1.0/v1.1 리비전 차이는 PWMP7 가이드에 있습니다.",
   "hw_link_pwmp7": "PWMP7 수신기 호환 가이드 →",
-  "hw_link_full": "전체 하드웨어 레퍼런스 (HARDWARE.md) →"
+  "hw_link_full": "전체 하드웨어 레퍼런스 (HARDWARE.md) →",
+  "hw_h2_compat": "호환 수신기",
+  "hw_compat_lead": "PWM 출력을 제공하는 ESP8285 + SX1280/SX1281 기반 ExpressLRS 2.4GHz 수신기 — 또는 CRSF→PWM 변환기와 함께 쓰는 CRSF 수신기 — 는 PteronautOS를 실행할 수 있습니다. 가격은 대략적인 값이며 지역에 따라 다릅니다.",
+  "hw_th_ch": "채널",
+  "hw_th_volt": "전압",
+  "hw_th_weight": "무게 (기본 → 개조)",
+  "hw_th_price": "가격",
+  "hw_th_notes": "비고",
+  "hw_weight_note": "기본 무게; 수축튜브, 커넥터 또는 하우징을 제거하면 30–60% 절감됩니다.",
+  "hw_esp32_note": "ESP32 기반 수신기(ESP32-C3/S3)는 다른 아키텍처를 사용하며 아직 지원되지 않습니다.",
+  "hw_note_crsfonly": "CRSF 전용 — 변환기 필요",
+  "hw_note_conv12": "CRSF→PWM 변환기로 12× PWM"
 }

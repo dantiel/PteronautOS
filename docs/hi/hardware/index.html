@@ -43,6 +43,159 @@
 <td>ESP8285 · SX1280 2.4 GHz</td>
 </tr>
 </table>
+<h2>संगत रिसीवर</h2>
+<p>ESP8285 + SX1280/SX1281 पर आधारित कोई भी ExpressLRS 2.4 GHz रिसीवर जिसमें PWM आउटपुट हों — या CRSF→PWM कनवर्टर के साथ CRSF रिसीवर — PteronautOS चला सकता है। कीमतें अनुमानित हैं और क्षेत्र के अनुसार बदलती हैं।</p>
+<div class='hw-scroll'>
+<table class='hw-table'>
+<thead>
+<tr>
+<th>बोर्ड</th>
+<th>चैनल</th>
+<th>वोल्टेज</th>
+<th>वज़न (मूल → मॉड)</th>
+<th>कीमत</th>
+<th>MCU · रेडियो</th>
+<th>टिप्पणी</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>RadioMaster ER4</strong>
+<span class='hw-mfr'>RadioMaster</span>
+</td>
+<td>4</td>
+<td>4.5–8.4 V</td>
+<td>1.6 g → ~1.0 g</td>
+<td>~$15</td>
+<td>ESP8285 · SX1281</td>
+<td>4× PWM · SMD antenna</td>
+</tr>
+<tr>
+<td>
+<strong>RadioMaster ER4-i</strong>
+<span class='hw-mfr'>RadioMaster</span>
+</td>
+<td>4</td>
+<td>4.5–8.4 V</td>
+<td>1.8 g → ~1.1 g</td>
+<td>~$16</td>
+<td>ESP8285 · SX1281</td>
+<td>4× PWM · IPEX antenna</td>
+</tr>
+<tr>
+<td>
+<strong>RadioMaster ER3C-i</strong>
+<span class='hw-mfr'>RadioMaster</span>
+</td>
+<td>3</td>
+<td>4.5–8.4 V</td>
+<td>1.7 g → ~1.0 g</td>
+<td>~$14</td>
+<td>ESP8285 · SX1281</td>
+<td>3× PWM · IPEX antenna</td>
+</tr>
+<tr>
+<td>
+<strong>HappyModel EPW6 TCXO</strong>
+<span class='hw-mfr'>HappyModel</span>
+</td>
+<td>6</td>
+<td>5–8.4 V</td>
+<td>1.49 g → ~0.9 g</td>
+<td>~$18</td>
+<td>ESP8285 · SX1280</td>
+<td>6× PWM · TCXO · IPEX1</td>
+</tr>
+<tr>
+<td>
+<strong>BetaFPV 2.4G 5CH PWM/CRSF</strong>
+<span class='hw-mfr'>BetaFPV</span>
+</td>
+<td>5</td>
+<td>5–9 V</td>
+<td>2.5 g → ~1.5 g</td>
+<td>~$16</td>
+<td>ESP8285 · SX1280</td>
+<td>5× PWM + CRSF</td>
+</tr>
+<tr>
+<td>
+<strong>BetaFPV Micro RX 5CH BEC</strong>
+<span class='hw-mfr'>BetaFPV</span>
+</td>
+<td>5</td>
+<td>5–9 V</td>
+<td>3.0 g → ~1.8 g</td>
+<td>~$17</td>
+<td>ESP8285 · SX1280</td>
+<td>5× PWM · 5V/9V BEC</td>
+</tr>
+<tr>
+<td>
+<strong>BeyondFPV ELRS 7CH</strong>
+<span class='hw-mfr'>BeyondFPV</span>
+</td>
+<td>7</td>
+<td>5–8.4 V</td>
+<td>3.5 g → ~2.2 g</td>
+<td>~$19</td>
+<td>ESP8285 · SX1280</td>
+<td>7× PWM + CRSF</td>
+</tr>
+<tr>
+<td>
+<strong>ELRS 2.4G 5CH PWM</strong>
+<span class='hw-mfr'>Generic</span>
+</td>
+<td>5</td>
+<td>5–8.4 V</td>
+<td>2.8 g → ~1.6 g</td>
+<td>~$12</td>
+<td>ESP8285 · SX1280</td>
+<td>5× PWM</td>
+</tr>
+<tr>
+<td>
+<strong>CYCLONE ELRS 2.4G</strong>
+<span class='hw-mfr'>CYCLONE</span>
+</td>
+<td>5</td>
+<td>5–8.4 V</td>
+<td>2.6 g → ~1.5 g</td>
+<td>~$13</td>
+<td>ESP8285 · SX1280</td>
+<td>5× PWM</td>
+</tr>
+<tr>
+<td>
+<strong>HappyModel EP2</strong>
+<span class='hw-mfr'>HappyModel</span>
+</td>
+<td>0</td>
+<td>5 V</td>
+<td>0.6 g</td>
+<td>~$12</td>
+<td>ESP8285 · SX1280</td>
+<td>केवल CRSF — कनवर्टर चाहिए</td>
+</tr>
+<tr>
+<td>
+<strong>CRSF→PWM 12CH Adapter</strong>
+<span class='hw-mfr'>Various</span>
+</td>
+<td>12</td>
+<td>5 V</td>
+<td>2.0 g</td>
+<td>~$10</td>
+<td>— (passive)</td>
+<td>CRSF→PWM कनवर्टर से 12× PWM</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class='hw-note'>मूल वज़न; हीटश्रिंक, कनेक्टर या हाउसिंग हटाने से 30–60% कम हो सकता है।</p>
+<p class='hw-note'>ESP32-आधारित रिसीवर (ESP32-C3/S3) भिन्न आर्किटेक्चर का उपयोग करते हैं और अभी समर्थित नहीं हैं।</p>
 <h2>मुख्य विनिर्देश</h2>
 <table>
 <tr>

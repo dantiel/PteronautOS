@@ -201,5 +201,16 @@
   "hw_h2_wiring": "配線",
   "hw_wiring_p": "3 つのサーボチャンネルに加え、I2C バス上の MPU6050。完全なピン配置、I2C 配線、v1.0/v1.1 リビジョンの違いは PWMP7 ガイドにあります。",
   "hw_link_pwmp7": "PWMP7 受信機互換ガイド →",
-  "hw_link_full": "完全なハードウェアリファレンス（HARDWARE.md）→"
+  "hw_link_full": "完全なハードウェアリファレンス（HARDWARE.md）→",
+  "hw_h2_compat": "対応レシーバー",
+  "hw_compat_lead": "PWM 出力を備えた ESP8285 + SX1280/SX1281 ベースの ExpressLRS 2.4GHz レシーバー、または CRSF→PWM コンバーターと組み合わせた CRSF レシーバーは PteronautOS を実行できます。価格は概算で地域により異なります。",
+  "hw_th_ch": "チャンネル",
+  "hw_th_volt": "電圧",
+  "hw_th_weight": "重量 (標準 → 改造)",
+  "hw_th_price": "価格",
+  "hw_th_notes": "備考",
+  "hw_weight_note": "標準重量。熱収縮チューブ、コネクタ、筐体を取り除くと 30～60% 軽量化できます。",
+  "hw_esp32_note": "ESP32 ベースのレシーバー (ESP32-C3/S3) は異なるアーキテクチャのため未対応です。",
+  "hw_note_crsfonly": "CRSF 専用 — コンバーターが必要",
+  "hw_note_conv12": "CRSF→PWM コンバーターで 12× PWM"
 }

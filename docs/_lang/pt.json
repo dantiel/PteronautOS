@@ -201,5 +201,16 @@
   "hw_h2_wiring": "Ligações",
   "hw_wiring_p": "Três canais de servo mais o MPU6050 no barramento I2C. O mapa de pinos completo, a ligação I2C e as diferenças entre as revisões v1.0/v1.1 estão no guia PWMP7.",
   "hw_link_pwmp7": "Guia de compatibilidade do recetor PWMP7 →",
-  "hw_link_full": "Referência completa de hardware (HARDWARE.md) →"
+  "hw_link_full": "Referência completa de hardware (HARDWARE.md) →",
+  "hw_h2_compat": "Receptores compatíveis",
+  "hw_compat_lead": "Qualquer receptor ExpressLRS 2,4 GHz baseado em ESP8285 + SX1280/SX1281 com saídas PWM — ou um receptor CRSF com conversor CRSF→PWM — pode correr o PteronautOS. Os preços são aproximados e variam por região.",
+  "hw_th_ch": "Canais",
+  "hw_th_volt": "Tensão",
+  "hw_th_weight": "Peso (original → mod)",
+  "hw_th_price": "Preço",
+  "hw_th_notes": "Notas",
+  "hw_weight_note": "Peso original; remover termorretrátil, conectores ou carcaça pode reduzi-lo em 30–60%.",
+  "hw_esp32_note": "Receptores baseados em ESP32 (ESP32-C3/S3) usam outra arquitectura e ainda não são suportados.",
+  "hw_note_crsfonly": "Apenas CRSF — precisa de conversor",
+  "hw_note_conv12": "12× PWM via conversor CRSF→PWM"
 }

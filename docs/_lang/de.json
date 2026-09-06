@@ -201,5 +201,16 @@
   "hw_h2_wiring": "Verdrahtung",
   "hw_wiring_p": "Drei Servokanäle plus der MPU6050 am I2C-Bus. Die vollständige Pinbelegung, I2C-Verdrahtung und die Unterschiede der Revisionen v1.0/v1.1 stehen im PWMP7-Leitfaden.",
   "hw_link_pwmp7": "PWMP7-Empfänger-Kompatibilitätsleitfaden →",
-  "hw_link_full": "Vollständige Hardware-Referenz (HARDWARE.md) →"
+  "hw_link_full": "Vollständige Hardware-Referenz (HARDWARE.md) →",
+  "hw_h2_compat": "Kompatible Empfänger",
+  "hw_compat_lead": "Jeder ExpressLRS-2,4-GHz-Empfänger auf Basis ESP8285 + SX1280/SX1281 mit PWM-Ausgängen — oder ein CRSF-Empfänger mit CRSF→PWM-Wandler — kann PteronautOS ausführen. Preise sind Richtwerte und regional unterschiedlich.",
+  "hw_th_ch": "Kanäle",
+  "hw_th_volt": "Spannung",
+  "hw_th_weight": "Gewicht (Serie → mod)",
+  "hw_th_price": "Preis",
+  "hw_th_notes": "Anmerkungen",
+  "hw_weight_note": "Seriengewicht; Entfernen von Schrumpfschlauch, Steckern oder Gehäuse spart 30–60%.",
+  "hw_esp32_note": "ESP32-basierte Empfänger (ESP32-C3/S3) nutzen eine andere Architektur und werden noch nicht unterstützt.",
+  "hw_note_crsfonly": "Nur CRSF — braucht Wandler",
+  "hw_note_conv12": "12× PWM über CRSF→PWM-Wandler"
 }
