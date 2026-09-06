@@ -18,23 +18,19 @@ appendText = (parent, value, attributes = {}) ->
 
 class FerocityWaveformExplorer
   constructor: (@root) ->
-    @state = down: 8, up: 0, mix: 100, locked: false
+    @state = down: 8, up: 0, mix: 100, lockMode: 'unlocked'  # 'unlocked', 'sync', 'oppose'
     @controls = {}
     for name in ['down', 'up', 'mix', 'lock']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
     @controls.down.addEventListener 'input', (event) =>
       @state.down = Number event.currentTarget.value
-      if @state.locked
-        @state.up = 8 - @state.down
-        @controls.up.value = @state.up
+      @_applyLock 'down'
       @update()
 
     @controls.up.addEventListener 'input', (event) =>
       @state.up = Number event.currentTarget.value
-      if @state.locked
-        @state.down = 8 - @state.up
-        @controls.down.value = @state.down
+      @_applyLock 'up'
       @update()
 
     @controls.mix.addEventListener 'input', (event) =>
@@ -42,21 +38,67 @@ class FerocityWaveformExplorer
       @update()
 
     @controls.lock.addEventListener 'click', (event) =>
-      @state.locked = !@state.locked
-      event.currentTarget.setAttribute 'aria-pressed', @state.locked
-      event.currentTarget.classList.toggle 'active', @state.locked
+      @_cycleLock()
       @update()
 
     for button in @root.querySelectorAll '[data-preset]'
       button.addEventListener 'click', (event) =>
         [down, up, mix] = (Number value for value in event.currentTarget.dataset.preset.split ',' )
-        @state = {down, up, mix, locked: @state.locked}
+        @state = {down, up, mix, lockMode: @state.lockMode}
         @controls.down.value = down
         @controls.up.value = up
         @controls.mix.value = mix
         @update()
 
     @lastWidth = Math.round @root.getBoundingClientRect().width
+
+  # Cycle: unlocked → sync → oppose → unlocked
+  _cycleLock: ->
+    modes = ['unlocked', 'sync', 'oppose']
+    currentIdx = modes.indexOf(@state.lockMode)
+    nextIdx = (currentIdx + 1) % modes.length
+    @state.lockMode = modes[nextIdx]
+    @_updateLockIcon()
+    if @state.lockMode isnt 'unlocked'
+      @_applyLock 'down'
+
+  _applyLock: (changedControl) ->
+    if @state.lockMode is 'sync'
+      # Parallel: both same value
+      other = if changedControl is 'down' then 'up' else 'down'
+      @state[other] = @state[changedControl]
+      @controls[other].value = @state[other]
+    else if @state.lockMode is 'oppose'
+      # Opposing: down + up = 8
+      other = if changedControl is 'down' then 'up' else 'down'
+      @state[other] = 8 - @state[changedControl]
+      @controls[other].value = @state[other]
+
+  _updateLockIcon: ->
+    icon = @controls.lock.querySelector('.lock-icon')
+    @controls.lock.classList.remove 'state-sync', 'state-oppose', 'state-unlocked'
+    @controls.lock.classList.add "state-#{@state.lockMode}"
+    
+    if @state.lockMode is 'sync'
+      # Lock icon (closed) - parallel
+      icon.innerHTML = """
+        <rect class="lock-body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
+        <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      """
+      @controls.lock.setAttribute 'title', 'Sync: Both sliders move together (click to cycle)'
+    else if @state.lockMode is 'oppose'
+      # Shuffle icon (crossed arrows) - opposing
+      icon.innerHTML = """
+        <path d="M4 4l6 6M14 14l6 6M4 20l6-6M14 10l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+      """
+      @controls.lock.setAttribute 'title', 'Oppose: Sliders complementary (sum=8) (click to cycle)'
+    else
+      # Unlock icon (open)
+      icon.innerHTML = """
+        <rect class="lock-body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
+        <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      """
+      @controls.lock.setAttribute 'title', 'Unlocked (click to cycle)'
     @resizePending = false
     @resizeObserver = new ResizeObserver (entries) =>
       width = Math.round entries[0].contentRect.width

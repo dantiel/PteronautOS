@@ -1177,6 +1177,40 @@ footer .lang-switch
   strong
     color: var(--text)
 
+.lock-ferocity
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding: 0 0.35rem
+  position: relative
+  
+  button
+    background: transparent
+    border: none
+    cursor: pointer
+    padding: 0.25rem
+    border-radius: 4px
+    transition: all 0.25s ease
+    opacity: 0.35
+    
+    &:hover, &:focus
+      background-color: rgba(128,128,128,0.15)
+    
+    &.state-sync, &.state-oppose
+      opacity: 1
+  
+  .lock-icon
+    width: 22px
+    height: 22px
+    vertical-align: middle
+  
+  .lock-lines
+    height: 2px
+    width: 10px
+    background: linear-gradient(90deg, transparent, rgba(128,128,128,0.3))
+    flex-shrink: 0
+
 @media (max-width: 700px)
   .sub-nav
     gap: .55rem
