@@ -1,0 +1,94 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= wave_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number= tut_card_wave_number
+        %h1= wave_h1
+        %p.sub-lead= wave_lead
+        %p
+          Explore the parameters live with the <a href="#{asset_prefix}#{lang_dir}documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+
+        %h2= wave_h2_ferocity
+        %p
+          <strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
+        %p
+          Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
+
+        %h2= wave_h2_amplitude
+        %p
+          Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
+        %p
+          The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
+
+        %h2= wave_h2_glide
+        %p
+          <strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
+
+        %h2= wave_h2_presets
+        %table
+          %tr
+            %th Preset
+            %th down / up
+            %th mix
+            %th Character
+          %tr
+            %td Extreme
+            %td 8 / 0
+            %td 100%
+            %td Hard power stroke, aggressive
+          %tr
+            %td Near-sine
+            %td 7 / 1
+            %td 100%
+            %td Balanced, most natural
+          %tr
+            %td High dwell
+            %td 8 / 6
+            %td 100%
+            %td Long reversal dwell, floaty
+          %tr
+            %td Mixed
+            %td 8 / 6
+            %td 50%
+            %td Soft blend, cruise efficiency
+        %p
+          Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

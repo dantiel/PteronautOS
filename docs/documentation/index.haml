@@ -47,6 +47,18 @@
             %td
               %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= doc_manual_hw
 
+        %h2= doc_h2_articles
+        .tutorial-menu
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}
+            %strong= sk_h1
+            %p= sk_lead
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/failsafe/"}
+            %strong= fs_h1
+            %p= fs_lead
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/budget/"}
+            %strong= budget_h1
+            %p= budget_lead
+
         %h2= doc_h2_concepts
         %dl.grid
           %dt= doc_c_ferocity

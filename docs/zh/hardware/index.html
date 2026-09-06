@@ -8,6 +8,7 @@
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/hw-table.js'></script>
 </head>
 <body class='sub-page'>
 <nav class='sub-nav'>
@@ -45,149 +46,153 @@
 </table>
 <h2>兼容接收机</h2>
 <p>任何基于 ESP8285 + SX1280/SX1281 且提供 PWM 输出的 ExpressLRS 2.4GHz 接收机——或搭配 CRSF→PWM 转换器的 CRSF 接收机——均可运行 PteronautOS。价格仅供参考，因地区而异。</p>
+<div class='hw-toolbar'>
+<input aria-label='筛选接收机…' class='hw-filter' data-hw-filter placeholder='筛选接收机…' type='search'>
+<span class='hw-count' data-count-label='个接收机' data-hw-count></span>
+</div>
 <div class='hw-scroll'>
-<table class='hw-table'>
+<table class='hw-table' data-hw-table>
 <thead>
 <tr>
-<th>板子</th>
-<th>通道</th>
-<th>电压</th>
-<th>重量 (原装 → 改装)</th>
-<th>价格</th>
+<th data-sort='board' data-type='alpha'>板子</th>
+<th data-sort='ch' data-type='num'>通道</th>
+<th data-sort='volt' data-type='num'>电压</th>
+<th data-sort='weight' data-type='num'>重量 (原装 → 改装)</th>
+<th data-sort='price' data-type='num'>价格</th>
 <th>MCU · 无线电</th>
 <th>备注</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>
+<td data-val='radiomaster er4'>
 <strong>RadioMaster ER4</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.6 g → ~1.0 g</td>
-<td>~$15</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.6 g → ~1.0 g</td>
+<td data-val='15'>~$15</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · SMD antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er4-i'>
 <strong>RadioMaster ER4-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.8 g → ~1.1 g</td>
-<td>~$16</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.1'>1.8 g → ~1.1 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er3c-i'>
 <strong>RadioMaster ER3C-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>3</td>
-<td>4.5–8.4 V</td>
-<td>1.7 g → ~1.0 g</td>
-<td>~$14</td>
+<td data-val='3'>3</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.7 g → ~1.0 g</td>
+<td data-val='14'>~$14</td>
 <td>ESP8285 · SX1281</td>
 <td>3× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel epw6 tcxo'>
 <strong>HappyModel EPW6 TCXO</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>6</td>
-<td>5–8.4 V</td>
-<td>1.49 g → ~0.9 g</td>
-<td>~$18</td>
+<td data-val='6'>6</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='0.9'>1.49 g → ~0.9 g</td>
+<td data-val='18'>~$18</td>
 <td>ESP8285 · SX1280</td>
 <td>6× PWM · TCXO · IPEX1</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv 5ch pwm/crsf'>
 <strong>BetaFPV 2.4G 5CH PWM/CRSF</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>2.5 g → ~1.5 g</td>
-<td>~$16</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.5'>2.5 g → ~1.5 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv micro rx 5ch bec'>
 <strong>BetaFPV Micro RX 5CH BEC</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>3.0 g → ~1.8 g</td>
-<td>~$17</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.8'>3.0 g → ~1.8 g</td>
+<td data-val='17'>~$17</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM · 5V/9V BEC</td>
 </tr>
 <tr>
-<td>
+<td data-val='beyondfpv elrs 7ch'>
 <strong>BeyondFPV ELRS 7CH</strong>
 <span class='hw-mfr'>BeyondFPV</span>
 </td>
-<td>7</td>
-<td>5–8.4 V</td>
-<td>3.5 g → ~2.2 g</td>
-<td>~$19</td>
+<td data-val='7'>7</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='2.2'>3.5 g → ~2.2 g</td>
+<td data-val='19'>~$19</td>
 <td>ESP8285 · SX1280</td>
 <td>7× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='elrs 2.4g 5ch pwm'>
 <strong>ELRS 2.4G 5CH PWM</strong>
 <span class='hw-mfr'>Generic</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.8 g → ~1.6 g</td>
-<td>~$12</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.6'>2.8 g → ~1.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='cyclone elrs 2.4g'>
 <strong>CYCLONE ELRS 2.4G</strong>
 <span class='hw-mfr'>CYCLONE</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.6 g → ~1.5 g</td>
-<td>~$13</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.5'>2.6 g → ~1.5 g</td>
+<td data-val='13'>~$13</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel ep2'>
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>0</td>
-<td>5 V</td>
-<td>0.6 g</td>
-<td>~$12</td>
+<td data-val='0'>0</td>
+<td data-val='5'>5 V</td>
+<td data-val='0.6'>0.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>仅 CRSF — 需要转换器</td>
 </tr>
 <tr>
-<td>
+<td data-val='crsf pwm 12ch adapter'>
 <strong>CRSF→PWM 12CH Adapter</strong>
 <span class='hw-mfr'>Various</span>
 </td>
-<td>12</td>
-<td>5 V</td>
-<td>2.0 g</td>
-<td>~$10</td>
+<td data-val='12'>12</td>
+<td data-val='5'>5 V</td>
+<td data-val='2.0'>2.0 g</td>
+<td data-val='10'>~$10</td>
 <td>— (passive)</td>
 <td>经 CRSF→PWM 转换器输出 12× PWM</td>
 </tr>
@@ -196,6 +201,7 @@
 </div>
 <p class='hw-note'>原装重量；去除热缩管、连接器或外壳可减轻 30–60%。</p>
 <p class='hw-note'>基于 ESP32 的接收机 (ESP32-C3/S3) 采用不同架构，暂不支持。</p>
+<p class='hw-note'>没有原生PWM？任何CRSF接收机（EP2、EP1、EPW6…）都能通过廉价的CRSF→PWM转换器驱动舵机——参见教程。</p>
 <h2>关键规格</h2>
 <table>
 <tr>
@@ -217,9 +223,23 @@
 </table>
 <h2>接线</h2>
 <p>三个舵机通道加上 I2C 总线上的 MPU6050。完整引脚图、I2C 接线和 v1.0/v1.1 版本差异见 PWMP7 指南。</p>
+<div class='tutorial-menu'>
+<a class='tutorial-card' href='../../zh/hardware/power/'>
+<strong>电源与BEC</strong>
+<p>如何用单块电池为接收机、MPU6050和机翼舵机供电——BEC选择与接线。</p>
+</a>
+<a class='tutorial-card' href='../../zh/hardware/telemetry/'>
+<strong>遥测与传感器</strong>
+<p>VBAT、RSSI、链路质量与陀螺仪遥测回传遥控——已暴露与计划内容。</p>
+</a>
+</div>
 <p>
 <a href='../../en/hardware-pwmp7/'>PWMP7 接收机兼容指南 →</a>
 </p>
+<p>
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>舵机效率表 (OrniFlight) →</a>
+</p>
+<p class='hw-note'>详细的舵机选择（扭矩、速度、相对扑翼频率的效率）请参阅专门的OrniFlight舵机表——我们链接而非复制。</p>
 <p>
 <a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>完整硬件参考（HARDWARE.md）→</a>
 </p>

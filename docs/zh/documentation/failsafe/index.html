@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='zh'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>失控保护行为 — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='回到顶部' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='回到顶部' type='button'>↑</button>
+<a class='home-link' href='../../../zh/' title='PteronautOS 首页'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../zh/tutorials/'>教程</a>
+<a href='../../../zh/hardware/'>硬件</a>
+<a class='active' href='../../../zh/documentation/'>文档</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>失控保护行为</h1>
+<p class='sub-lead'>链路丢失时会发生什么——机翼中立、方向舵中立、优雅降级。</p>
+<h2>触发条件</h2>
+<p>
+Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
+</p>
+<h2>中立输出</h2>
+<p>
+On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
+</p>
+<h2>优雅降级</h2>
+<p>
+The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
+</p>
+<h2>恢复</h2>
+<p>
+Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
+</p>
+<aside class='waveform-caution'>
+<strong>飞行前先做台架测试。</strong>
+该探索器描述的是指令数学波形，而非保证的舵机运动。在振幅、频率、连杆几何和舵机速度极限未经空载验证之前，请避免极端的不对称设置。
+</aside>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/failsafe/'>PT</a>
+<a class='' href='../../../en/documentation/failsafe/'>EN</a>
+<a class='' href='../../../es/documentation/failsafe/'>ES</a>
+<a class='' href='../../../fr/documentation/failsafe/'>FR</a>
+<a class='' href='../../../de/documentation/failsafe/'>DE</a>
+<a class='' href='../../../ru/documentation/failsafe/'>RU</a>
+<a class='' href='../../../ko/documentation/failsafe/'>한국어</a>
+<a class='' href='../../../ja/documentation/failsafe/'>日本語</a>
+<a class='active' href='../../../zh/documentation/failsafe/'>中文</a>
+<a class='' href='../../../ar/documentation/failsafe/'>عربي</a>
+<a class='' href='../../../hi/documentation/failsafe/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

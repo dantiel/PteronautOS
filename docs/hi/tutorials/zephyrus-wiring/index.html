@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>जेफिरस जाइरो वायरिंग — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../../hi/hardware/'>हार्डवेयर</a>
+<a href='../../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>०५</p>
+<h1>जेफिरस जाइरो वायरिंग</h1>
+<p class='sub-lead'>MPU6050 को I2C बस से जोड़ें, पिन विरोध हल करें और सीरियल लॉग से AHRS सत्यापित करें।</p>
+<h2>I2C पिन चयन</h2>
+<p>
+The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
+</p>
+<h2>GY-521 वायरिंग</h2>
+<table>
+<tr>
+<th>GY-521</th>
+<th>Receiver</th>
+</tr>
+<tr>
+<td>VCC</td>
+<td>5V rail (onboard regulator makes 3.3V)</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND</td>
+</tr>
+<tr>
+<td>SDA</td>
+<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+</tr>
+<tr>
+<td>SCL</td>
+<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+</tr>
+<tr>
+<td>AD0 / INT / XDA / XCL</td>
+<td>leave open</td>
+</tr>
+</table>
+<p>
+The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
+</p>
+<h2>कैलिब्रेशन और सत्यापन</h2>
+<p>
+The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/zephyrus-wiring/'>PT</a>
+<a class='' href='../../../en/tutorials/zephyrus-wiring/'>EN</a>
+<a class='' href='../../../es/tutorials/zephyrus-wiring/'>ES</a>
+<a class='' href='../../../fr/tutorials/zephyrus-wiring/'>FR</a>
+<a class='' href='../../../de/tutorials/zephyrus-wiring/'>DE</a>
+<a class='' href='../../../ru/tutorials/zephyrus-wiring/'>RU</a>
+<a class='' href='../../../ko/tutorials/zephyrus-wiring/'>한국어</a>
+<a class='' href='../../../ja/tutorials/zephyrus-wiring/'>日本語</a>
+<a class='' href='../../../zh/tutorials/zephyrus-wiring/'>中文</a>
+<a class='' href='../../../ar/tutorials/zephyrus-wiring/'>عربي</a>
+<a class='active' href='../../../hi/tutorials/zephyrus-wiring/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

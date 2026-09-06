@@ -1,0 +1,86 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= tx_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number= tut_card_tx_number
+        %h1= tx_h1
+        %p.sub-lead= tx_lead
+
+        %h2= tx_h2_bind
+        %p
+          Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
+
+        %h2= tx_h2_channels
+        %table
+          %tr
+            %th Radio channel
+            %th PteronautOS role
+          %tr
+            %td CH1
+            %td Aileron (roll)
+          %tr
+            %td CH2
+            %td Elevator (pitch)
+          %tr
+            %td CH3
+            %td Throttle (flap drive)
+          %tr
+            %td CH4
+            %td Rudder (yaw / crest)
+        %p
+          Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
+
+        %h2= tx_h2_endpoints
+        %p
+          Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
+
+        %h2= tx_h2_rates
+        %p
+          Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
+
+        %h2= tx_h2_verify
+        %ul
+          %li Stick full right → right wing rises, left falls.
+          %li Stick full back (pitch up) → both wings raise the nose.
+          %li Throttle up → flap frequency increases; down → decreases or glide.
+          %li Rudder right → crest deflects right.
+          %li Transmitter off → all surfaces centre (failsafe).
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

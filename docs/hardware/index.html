@@ -8,6 +8,7 @@
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../assets/css/style.css' rel='stylesheet'>
+<script defer src='../assets/js/hw-table.js'></script>
 </head>
 <body class='sub-page'>
 <nav class='sub-nav'>
@@ -45,149 +46,153 @@
 </table>
 <h2>Receptores compatíveis</h2>
 <p>Qualquer receptor ExpressLRS 2,4 GHz baseado em ESP8285 + SX1280/SX1281 com saídas PWM — ou um receptor CRSF com conversor CRSF→PWM — pode correr o PteronautOS. Os preços são aproximados e variam por região.</p>
+<div class='hw-toolbar'>
+<input aria-label='Filter receivers…' class='hw-filter' data-hw-filter placeholder='Filter receivers…' type='search'>
+<span class='hw-count' data-count-label='receivers shown' data-hw-count></span>
+</div>
 <div class='hw-scroll'>
-<table class='hw-table'>
+<table class='hw-table' data-hw-table>
 <thead>
 <tr>
-<th>Placa</th>
-<th>Canais</th>
-<th>Tensão</th>
-<th>Peso (original → mod)</th>
-<th>Preço</th>
+<th data-sort='board' data-type='alpha'>Placa</th>
+<th data-sort='ch' data-type='num'>Canais</th>
+<th data-sort='volt' data-type='num'>Tensão</th>
+<th data-sort='weight' data-type='num'>Peso (original → mod)</th>
+<th data-sort='price' data-type='num'>Preço</th>
 <th>MCU · Rádio</th>
 <th>Notas</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>
+<td data-val='radiomaster er4'>
 <strong>RadioMaster ER4</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.6 g → ~1.0 g</td>
-<td>~$15</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.6 g → ~1.0 g</td>
+<td data-val='15'>~$15</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · SMD antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er4-i'>
 <strong>RadioMaster ER4-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.8 g → ~1.1 g</td>
-<td>~$16</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.1'>1.8 g → ~1.1 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er3c-i'>
 <strong>RadioMaster ER3C-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>3</td>
-<td>4.5–8.4 V</td>
-<td>1.7 g → ~1.0 g</td>
-<td>~$14</td>
+<td data-val='3'>3</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.7 g → ~1.0 g</td>
+<td data-val='14'>~$14</td>
 <td>ESP8285 · SX1281</td>
 <td>3× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel epw6 tcxo'>
 <strong>HappyModel EPW6 TCXO</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>6</td>
-<td>5–8.4 V</td>
-<td>1.49 g → ~0.9 g</td>
-<td>~$18</td>
+<td data-val='6'>6</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='0.9'>1.49 g → ~0.9 g</td>
+<td data-val='18'>~$18</td>
 <td>ESP8285 · SX1280</td>
 <td>6× PWM · TCXO · IPEX1</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv 5ch pwm/crsf'>
 <strong>BetaFPV 2.4G 5CH PWM/CRSF</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>2.5 g → ~1.5 g</td>
-<td>~$16</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.5'>2.5 g → ~1.5 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv micro rx 5ch bec'>
 <strong>BetaFPV Micro RX 5CH BEC</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>3.0 g → ~1.8 g</td>
-<td>~$17</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.8'>3.0 g → ~1.8 g</td>
+<td data-val='17'>~$17</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM · 5V/9V BEC</td>
 </tr>
 <tr>
-<td>
+<td data-val='beyondfpv elrs 7ch'>
 <strong>BeyondFPV ELRS 7CH</strong>
 <span class='hw-mfr'>BeyondFPV</span>
 </td>
-<td>7</td>
-<td>5–8.4 V</td>
-<td>3.5 g → ~2.2 g</td>
-<td>~$19</td>
+<td data-val='7'>7</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='2.2'>3.5 g → ~2.2 g</td>
+<td data-val='19'>~$19</td>
 <td>ESP8285 · SX1280</td>
 <td>7× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='elrs 2.4g 5ch pwm'>
 <strong>ELRS 2.4G 5CH PWM</strong>
 <span class='hw-mfr'>Generic</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.8 g → ~1.6 g</td>
-<td>~$12</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.6'>2.8 g → ~1.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='cyclone elrs 2.4g'>
 <strong>CYCLONE ELRS 2.4G</strong>
 <span class='hw-mfr'>CYCLONE</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.6 g → ~1.5 g</td>
-<td>~$13</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.5'>2.6 g → ~1.5 g</td>
+<td data-val='13'>~$13</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel ep2'>
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>0</td>
-<td>5 V</td>
-<td>0.6 g</td>
-<td>~$12</td>
+<td data-val='0'>0</td>
+<td data-val='5'>5 V</td>
+<td data-val='0.6'>0.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>Apenas CRSF — precisa de conversor</td>
 </tr>
 <tr>
-<td>
+<td data-val='crsf pwm 12ch adapter'>
 <strong>CRSF→PWM 12CH Adapter</strong>
 <span class='hw-mfr'>Various</span>
 </td>
-<td>12</td>
-<td>5 V</td>
-<td>2.0 g</td>
-<td>~$10</td>
+<td data-val='12'>12</td>
+<td data-val='5'>5 V</td>
+<td data-val='2.0'>2.0 g</td>
+<td data-val='10'>~$10</td>
 <td>— (passive)</td>
 <td>12× PWM via conversor CRSF→PWM</td>
 </tr>
@@ -196,6 +201,7 @@
 </div>
 <p class='hw-note'>Peso original; remover termorretrátil, conectores ou carcaça pode reduzi-lo em 30–60%.</p>
 <p class='hw-note'>Receptores baseados em ESP32 (ESP32-C3/S3) usam outra arquitectura e ainda não são suportados.</p>
+<p class='hw-note'>No native PWM? Any CRSF receiver (EP2, EP1, EPW6…) can drive servos through a cheap CRSF→PWM converter — see the tutorial.</p>
 <h2>Especificações principais</h2>
 <table>
 <tr>
@@ -217,9 +223,23 @@
 </table>
 <h2>Ligações</h2>
 <p>Três canais de servo mais o MPU6050 no barramento I2C. O mapa de pinos completo, a ligação I2C e as diferenças entre as revisões v1.0/v1.1 estão no guia PWMP7.</p>
+<div class='tutorial-menu'>
+<a class='tutorial-card' href='../hardware/power/'>
+<strong>Power &amp; BEC</strong>
+<p>How to feed the receiver, the MPU6050 and the wing servos from a single battery — BEC selection and wiring.</p>
+</a>
+<a class='tutorial-card' href='../hardware/telemetry/'>
+<strong>Telemetry &amp; Sensors</strong>
+<p>VBAT, RSSI, link quality and gyro telemetry back to the radio — what is exposed and what is planned.</p>
+</a>
+</div>
 <p>
 <a href='../en/hardware-pwmp7/'>Guia de compatibilidade do recetor PWMP7 →</a>
 </p>
+<p>
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>Servo efficiency table (OrniFlight) →</a>
+</p>
+<p class='hw-note'>For detailed servo selection (torque, speed, efficiency vs. flapping frequency), see the dedicated OrniFlight servo table — we link it instead of duplicating it.</p>
 <p>
 <a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Referência completa de hardware (HARDWARE.md) →</a>
 </p>

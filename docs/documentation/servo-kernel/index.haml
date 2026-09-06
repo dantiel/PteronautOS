@@ -1,0 +1,60 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= sk_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %h1= sk_h1
+        %p.sub-lead= sk_lead
+
+        %h2= sk_h2_pulse
+        %p
+          The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
+
+        %h2= sk_h2_trim
+        %p
+          <code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
+
+        %h2= sk_h2_speed
+        %p
+          <strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
+
+        %p.hw-note
+          For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ko'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>텔레메트리 및 센서 — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='맨 위로' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='맨 위로' type='button'>↑</button>
+<a class='home-link' href='../../../ko/' title='PteronautOS 홈'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../ko/tutorials/'>튜토리얼</a>
+<a class='active' href='../../../ko/hardware/'>하드웨어</a>
+<a href='../../../ko/documentation/'>문서</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>텔레메트리 및 센서</h1>
+<p class='sub-lead'>VBAT, RSSI, 링크 품질, 자이로 텔레메트리를 라디오로 — 노출된 것과 계획된 것.</p>
+<h2>VBAT</h2>
+<p>
+The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
+</p>
+<h2>RSSI 및 링크 품질</h2>
+<p>
+RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
+</p>
+<h2>자이로 텔레메트리</h2>
+<p>
+The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
+</p>
+<h2>계획된 센서</h2>
+<ul>
+<li>Barometer (BMP280) for altitude hold and glide control.</li>
+<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
+<li>Current sensor for live power consumption and pack endurance.</li>
+<li>GPS for position logging and return-to-home experiments.</li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../hardware/telemetry/'>PT</a>
+<a class='' href='../../../en/hardware/telemetry/'>EN</a>
+<a class='' href='../../../es/hardware/telemetry/'>ES</a>
+<a class='' href='../../../fr/hardware/telemetry/'>FR</a>
+<a class='' href='../../../de/hardware/telemetry/'>DE</a>
+<a class='' href='../../../ru/hardware/telemetry/'>RU</a>
+<a class='active' href='../../../ko/hardware/telemetry/'>한국어</a>
+<a class='' href='../../../ja/hardware/telemetry/'>日本語</a>
+<a class='' href='../../../zh/hardware/telemetry/'>中文</a>
+<a class='' href='../../../ar/hardware/telemetry/'>عربي</a>
+<a class='' href='../../../hi/hardware/telemetry/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

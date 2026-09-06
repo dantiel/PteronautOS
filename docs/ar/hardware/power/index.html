@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>الطاقة وBEC — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../ar/tutorials/'>دروس</a>
+<a class='active' href='../../../ar/hardware/'>العتاد</a>
+<a href='../../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>الطاقة وBEC</h1>
+<p class='sub-lead'>كيفية تغذية المستقبل وMPU6050 وسيرفو الجناح من بطارية واحدة — اختيار BEC والتوصيل.</p>
+<h2>ميزانية طاقة السيرفو</h2>
+<p>
+A single wing servo can pull <strong>1–2&nbsp;A</strong> transiently at reversal; three servos plus the receiver and gyro demand a rail that never sags. Size the BEC for the <em>stall</em> current of all three servos summed, not their idle current. A 5&nbsp;V / 3&nbsp;A switching BEC is a safe baseline for most 2–4&nbsp;g micro servos; larger wings need 5&nbsp;A or more.
+</p>
+<h2>اختيار BEC</h2>
+<p>
+Prefer a <strong>switching (buck) BEC</strong> over a linear one: linears burn the voltage drop as heat and collapse under burst load. Match the BEC voltage to the servo rating (5&nbsp;V for most micro servos, up to 9&nbsp;V for HV servos) — but keep the receiver on its own 5&nbsp;V feed if it lacks a wide-input regulator.
+</p>
+<h2>خط تغذية المستقبل</h2>
+<p>
+Most ELRS receivers take <strong>4.5–8.4&nbsp;V</strong> (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&nbsp;V and makes its own 3.3&nbsp;V.
+</p>
+<h2>مخطط التوصيل</h2>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<p>
+Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../hardware/power/'>PT</a>
+<a class='' href='../../../en/hardware/power/'>EN</a>
+<a class='' href='../../../es/hardware/power/'>ES</a>
+<a class='' href='../../../fr/hardware/power/'>FR</a>
+<a class='' href='../../../de/hardware/power/'>DE</a>
+<a class='' href='../../../ru/hardware/power/'>RU</a>
+<a class='' href='../../../ko/hardware/power/'>한국어</a>
+<a class='' href='../../../ja/hardware/power/'>日本語</a>
+<a class='' href='../../../zh/hardware/power/'>中文</a>
+<a class='active' href='../../../ar/hardware/power/'>عربي</a>
+<a class='' href='../../../hi/hardware/power/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

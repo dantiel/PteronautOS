@@ -5,7 +5,22 @@ require "haml"
 
 LANGS = %w[pt en ru es de ko ja zh ar hi fr]
 SUBFOLDERS = %w[en ru es de ko ja zh ar hi fr]
-PAGES = %w[tutorials tutorials/flashing hardware documentation]
+PAGES = %w[
+  tutorials
+  tutorials/flashing
+  tutorials/first-flight
+  tutorials/transmitter
+  tutorials/waveform-tuning
+  tutorials/zephyrus-wiring
+  tutorials/crsf-converter
+  hardware
+  hardware/power
+  hardware/telemetry
+  documentation
+  documentation/servo-kernel
+  documentation/failsafe
+  documentation/budget
+]
 
 CLOBBER.include(
   "index.html",

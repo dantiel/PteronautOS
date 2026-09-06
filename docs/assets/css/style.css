@@ -1036,6 +1036,16 @@ footer .lang-switch {
   line-height: 1.75;
   letter-spacing: 0.03em;
 }
+.sub-content ul {
+  margin: 0 0 1.5rem 1.5rem;
+  padding-left: 0;
+}
+.sub-content ul li {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  letter-spacing: 0.03em;
+}
 .sub-content a {
   color: var(--accent);
   text-decoration: none;
@@ -1075,10 +1085,46 @@ footer .lang-switch {
   font-size: 0.75rem;
 }
 
+.hw-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0 0.25rem;
+  flex-wrap: wrap;
+}
+
+.hw-filter {
+  flex: 1 1 240px;
+  max-width: 320px;
+  background: transparent;
+  border: 1px solid var(--dim);
+  color: var(--text);
+  padding: 0.55rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  border-radius: 0;
+}
+.hw-filter::placeholder {
+  color: var(--mut);
+  opacity: 0.7;
+}
+.hw-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hw-count {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
 .hw-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  margin: 1.5rem 0 0.5rem;
+  margin: 1rem 0 0.5rem;
 }
 
 .hw-table {
@@ -1095,6 +1141,29 @@ footer .lang-switch {
   color: var(--mut);
   border-bottom: 2px solid var(--accent);
   white-space: nowrap;
+}
+.hw-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.hw-table th.sortable:hover {
+  color: var(--accent);
+}
+.hw-table th.sortable::after {
+  content: " ⇅";
+  opacity: 0.45;
+  font-size: 0.75em;
+}
+.hw-table th.sortable[aria-sort=ascending]::after {
+  content: " ↑";
+  opacity: 1;
+  color: var(--accent);
+}
+.hw-table th.sortable[aria-sort=descending]::after {
+  content: " ↓";
+  opacity: 1;
+  color: var(--accent);
 }
 .hw-table td {
   padding: 0.7rem 0.75rem;

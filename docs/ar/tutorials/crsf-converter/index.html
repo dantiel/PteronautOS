@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>محول CRSF→PWM — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ar/tutorials/'>دروس</a>
+<a href='../../../ar/hardware/'>العتاد</a>
+<a href='../../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>٠٦</p>
+<h1>محول CRSF→PWM</h1>
+<p class='sub-lead'>حوّل لوحة ESP32-S3 بقيمة 6 دولارات إلى محول CRSF-سيرفو مستقل — أرخص طريقة للطيران بـ PteronautOS على مستقبل بدون PWM أصلي.</p>
+<h2>لماذا المحول؟</h2>
+<p>
+Most ExpressLRS receivers — <strong>HappyModel EP2</strong>, <strong>EP1</strong>, <strong>EPW6</strong> in CRSF mode — expose only a serial <code>CRSF</code> stream and no usable PWM headers. PteronautOS expects three servo channels (left wing, right wing, crest rudder). The cleanest, cheapest bridge is a tiny <strong>ESP32-S3</strong> board programmed as a pure <em>CRSF→PWM converter</em>: it reads the CRSF frames over UART and fans out rock-steady servo pulses.
+</p>
+<p>
+The <strong>Waveshare ESP32-S3-Tiny</strong> (~6&nbsp;USD) is ideal: it is 23&nbsp;×&nbsp;18&nbsp;mm, weighs under 3&nbsp;g without headers, runs at up to 240&nbsp;MHz, and — unlike the ESP8266 — every GPIO is a true PWM-capable pin. A single board can generate up to 8 servo channels.
+</p>
+<h2>التوصيل</h2>
+<table>
+<tr>
+<th>RX (EP2 / CRSF)</th>
+<th>ESP32-S3-Tiny</th>
+<th>Note</th>
+</tr>
+<tr>
+<td>TX (CRSF out)</td>
+<td>GPIO44 (U0RX)</td>
+<td>Cross: RX←TX</td>
+</tr>
+<tr>
+<td>RX (CRSF in)</td>
+<td>GPIO43 (U0TX)</td>
+<td>Cross: TX←RX</td>
+</tr>
+<tr>
+<td>5V</td>
+<td>5V</td>
+<td>Shared power rail</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND</td>
+<td>Common ground (mandatory)</td>
+</tr>
+</table>
+<p>
+CRSF runs at <strong>420&nbsp;000&nbsp;baud</strong> (ELRS) — do not use the default 115&nbsp;200. Servos connect to any three free GPIOs, e.g. <code>GPIO1</code> (left wing), <code>GPIO2</code> (right wing), <code>GPIO3</code> (rudder), each with its own signal line; servo <code>5V</code> and <code>GND</code> come from a shared BEC rail.
+</p>
+<h2>وميض البرنامج الثابت</h2>
+<p>
+Flash the converter with a minimal Arduino sketch. The core loop is a CRSF parser that maps the first four channels (roll, pitch, throttle, yaw) to 988–2012&nbsp;µs servo pulses:
+</p>
+<pre><code>#include <ESP32Servo.h>&#x000A;&#x000A;Servo wingL, wingR, rudder;&#x000A;#define CRSF_BAUD 420000&#x000A;#define CRSF_MAX_CH 16&#x000A;uint16_t channels[CRSF_MAX_CH];&#x000A;&#x000A;void setup() {&#x000A;  Serial.begin(CRSF_BAUD, SERIAL_8N1);&#x000A;  wingL.attach(1); wingR.attach(2); rudder.attach(3);&#x000A;  wingL.writeMicroseconds(1500);&#x000A;  wingR.writeMicroseconds(1500);&#x000A;  rudder.writeMicroseconds(1500);&#x000A;}&#x000A;&#x000A;void loop() {&#x000A;  if (Serial.available() >= 26) {&#x000A;    uint8_t hdr = Serial.read();&#x000A;    if (hdr == 0xC8 || hdr == 0xEE) {          // device / extended&#x000A;      uint8_t len = Serial.read();&#x000A;      uint8_t type = Serial.read();&#x000A;      if (type == 0x16) {                       // RC channels&#x000A;        uint8_t payload[22];&#x000A;        Serial.readBytes(payload, 22);&#x000A;        for (int i = 0; i < 16; i++) {&#x000A;          channels[i] = (payload[i*11/8] | payload[i*11/8+1]<<8)&#x000A;                        & 0x07FF;&#x000A;        }&#x000A;        wingR.writeMicroseconds(map(channels[0],172,1811,988,2012));&#x000A;        rudder.writeMicroseconds(map(channels[1],172,1811,988,2012));&#x000A;        wingL.writeMicroseconds(map(channels[2],172,1811,988,2012));&#x000A;      }&#x000A;    }&#x000A;  }&#x000A;}&#x000A;</code></pre>
+<p>
+A production-ready version validates the CRC, frames the stream on the 26-byte packet boundary and keeps a failsafe (if no valid frame arrives within 1&nbsp;s, hold the last known pulses or centre to 1500&nbsp;µs). PteronautOS itself already implements a centred failsafe on the RX — but a standalone converter should be fail-safe on its own.
+</p>
+<h2>التحقق</h2>
+<ul>
+<li>Power the RX and the ESP32-S3 from the same 5V rail.</li>
+<li>On the radio, bind and wiggle each stick; the servos must track smoothly with no jitter.</li>
+<li>Verify the failsafe: switch the transmitter off — servos must return to 1500&nbsp;µs.</li>
+<li>If pulses are stuck or twitchy, confirm the baud is 420&nbsp;000 and GND is shared.</li>
+</ul>
+<p class='hw-note'>
+لا يوجد PWM أصلي؟ أي مستقبل CRSF(EP2 وEP1 وEPW6…)يمكنه تشغيل السيرفو عبر محول CRSF→PWM رخيص — انظر البرنامج التعليمي.
+<a href='../../../ar/tutorials/crsf-converter/'>→ tutorial</a>
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/crsf-converter/'>PT</a>
+<a class='' href='../../../en/tutorials/crsf-converter/'>EN</a>
+<a class='' href='../../../es/tutorials/crsf-converter/'>ES</a>
+<a class='' href='../../../fr/tutorials/crsf-converter/'>FR</a>
+<a class='' href='../../../de/tutorials/crsf-converter/'>DE</a>
+<a class='' href='../../../ru/tutorials/crsf-converter/'>RU</a>
+<a class='' href='../../../ko/tutorials/crsf-converter/'>한국어</a>
+<a class='' href='../../../ja/tutorials/crsf-converter/'>日本語</a>
+<a class='' href='../../../zh/tutorials/crsf-converter/'>中文</a>
+<a class='active' href='../../../ar/tutorials/crsf-converter/'>عربي</a>
+<a class='' href='../../../hi/tutorials/crsf-converter/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

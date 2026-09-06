@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='de'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Sender-Konfiguration — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Nach oben scrollen' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Nach oben scrollen' type='button'>↑</button>
+<a class='home-link' href='../../../de/' title='PteronautOS-Startseite'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../de/tutorials/'>Tutorials</a>
+<a href='../../../de/hardware/'>Hardware</a>
+<a href='../../../de/documentation/'>Dokumentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>03</p>
+<h1>Sender-Konfiguration</h1>
+<p class='sub-lead'>Binde ein ELRS-Funkgerät, ordne die vier Steuerkanäle zu und setze Endpunkte passend zum Servo-Kernel.</p>
+<h2>Binding</h2>
+<p>
+Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
+</p>
+<h2>Kanalzuordnung</h2>
+<table>
+<tr>
+<th>Radio channel</th>
+<th>PteronautOS role</th>
+</tr>
+<tr>
+<td>CH1</td>
+<td>Aileron (roll)</td>
+</tr>
+<tr>
+<td>CH2</td>
+<td>Elevator (pitch)</td>
+</tr>
+<tr>
+<td>CH3</td>
+<td>Throttle (flap drive)</td>
+</tr>
+<tr>
+<td>CH4</td>
+<td>Rudder (yaw / crest)</td>
+</tr>
+</table>
+<p>
+Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
+</p>
+<h2>Endpunkte und Richtung</h2>
+<p>
+Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
+</p>
+<h2>Raten und Expo</h2>
+<p>
+Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
+</p>
+<h2>Prüfung</h2>
+<ul>
+<li>Stick full right → right wing rises, left falls.</li>
+<li>Stick full back (pitch up) → both wings raise the nose.</li>
+<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
+<li>Rudder right → crest deflects right.</li>
+<li>Transmitter off → all surfaces centre (failsafe).</li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/transmitter/'>PT</a>
+<a class='' href='../../../en/tutorials/transmitter/'>EN</a>
+<a class='' href='../../../es/tutorials/transmitter/'>ES</a>
+<a class='' href='../../../fr/tutorials/transmitter/'>FR</a>
+<a class='active' href='../../../de/tutorials/transmitter/'>DE</a>
+<a class='' href='../../../ru/tutorials/transmitter/'>RU</a>
+<a class='' href='../../../ko/tutorials/transmitter/'>한국어</a>
+<a class='' href='../../../ja/tutorials/transmitter/'>日本語</a>
+<a class='' href='../../../zh/tutorials/transmitter/'>中文</a>
+<a class='' href='../../../ar/tutorials/transmitter/'>عربي</a>
+<a class='' href='../../../hi/tutorials/transmitter/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

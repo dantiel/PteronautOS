@@ -1,0 +1,85 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= first_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number= tut_card_first_number
+        %h1= first_h1
+        %p.sub-lead= first_lead
+
+        %h2= first_h2_center
+        %p
+          Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
+        %p
+          The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
+
+        %h2= first_h2_direction
+        %table
+          %tr
+            %th Stick
+            %th Expected surface
+          %tr
+            %td Roll right
+            %td Right wing tips up, left wing tips down
+          %tr
+            %td Pitch up (pull)
+            %td Both wings tilt to raise the nose (or elevon equivalent)
+          %tr
+            %td Yaw right
+            %td Crest rudder deflects right
+        %p
+          If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
+
+        %h2= first_h2_endpoints
+        %p
+          The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
+
+        %h2= first_h2_preflight
+        %ul
+          %li Wings centred at neutral, both directions correct.
+          %li Endpoints set with no stall buzz.
+          %li Failsafe verified — transmitter off → wings and rudder centre.
+          %li Gyro responds in the correct sense (roll the airframe, rudder should oppose).
+          %li Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.
+
+        %h2= first_h2_maiden
+        %p
+          Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

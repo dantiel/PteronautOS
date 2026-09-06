@@ -33,6 +33,26 @@
             %span.tutorial-number= tut_card_number
             %strong= tut_card_title
             %p= tut_card_desc
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/first-flight/"}
+            %span.tutorial-number= tut_card_first_number
+            %strong= tut_card_first_title
+            %p= tut_card_first_desc
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/transmitter/"}
+            %span.tutorial-number= tut_card_tx_number
+            %strong= tut_card_tx_title
+            %p= tut_card_tx_desc
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/waveform-tuning/"}
+            %span.tutorial-number= tut_card_wave_number
+            %strong= tut_card_wave_title
+            %p= tut_card_wave_desc
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/zephyrus-wiring/"}
+            %span.tutorial-number= tut_card_zeph_number
+            %strong= tut_card_zeph_title
+            %p= tut_card_zeph_desc
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/crsf-converter/"}
+            %span.tutorial-number= tut_card_crsf_number
+            %strong= tut_card_crsf_title
+            %p= tut_card_crsf_desc
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT

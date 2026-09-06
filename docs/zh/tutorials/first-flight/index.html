@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='zh'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>首飞与舵机设置 — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='回到顶部' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='回到顶部' type='button'>↑</button>
+<a class='home-link' href='../../../zh/' title='PteronautOS 首页'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../zh/tutorials/'>教程</a>
+<a href='../../../zh/hardware/'>硬件</a>
+<a href='../../../zh/documentation/'>文档</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>02</p>
+<h1>首飞与舵机设置</h1>
+<p class='sub-lead'>中立机翼、设定方向、调整行程并完成首飞。</p>
+<h2>1 · 舵机中立</h2>
+<p>
+Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
+</p>
+<p>
+The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
+</p>
+<h2>2 · 方向与反向</h2>
+<table>
+<tr>
+<th>Stick</th>
+<th>Expected surface</th>
+</tr>
+<tr>
+<td>Roll right</td>
+<td>Right wing tips up, left wing tips down</td>
+</tr>
+<tr>
+<td>Pitch up (pull)</td>
+<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+</tr>
+<tr>
+<td>Yaw right</td>
+<td>Crest rudder deflects right</td>
+</tr>
+</table>
+<p>
+If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
+</p>
+<h2>3 · 行程与限位</h2>
+<p>
+The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
+</p>
+<h2>4 · 飞行前检查</h2>
+<ul>
+<li>Wings centred at neutral, both directions correct.</li>
+<li>Endpoints set with no stall buzz.</li>
+<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
+<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
+<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+</ul>
+<h2>5 · 首飞</h2>
+<p>
+Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/first-flight/'>PT</a>
+<a class='' href='../../../en/tutorials/first-flight/'>EN</a>
+<a class='' href='../../../es/tutorials/first-flight/'>ES</a>
+<a class='' href='../../../fr/tutorials/first-flight/'>FR</a>
+<a class='' href='../../../de/tutorials/first-flight/'>DE</a>
+<a class='' href='../../../ru/tutorials/first-flight/'>RU</a>
+<a class='' href='../../../ko/tutorials/first-flight/'>한국어</a>
+<a class='' href='../../../ja/tutorials/first-flight/'>日本語</a>
+<a class='active' href='../../../zh/tutorials/first-flight/'>中文</a>
+<a class='' href='../../../ar/tutorials/first-flight/'>عربي</a>
+<a class='' href='../../../hi/tutorials/first-flight/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

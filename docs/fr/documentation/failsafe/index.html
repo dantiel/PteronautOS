@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='fr'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Comportement failsafe — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Remonter en haut' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Remonter en haut' type='button'>↑</button>
+<a class='home-link' href='../../../fr/' title='Accueil PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../fr/tutorials/'>Tutoriels</a>
+<a href='../../../fr/hardware/'>Matériel</a>
+<a class='active' href='../../../fr/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Comportement failsafe</h1>
+<p class='sub-lead'>Ce qui se passe en cas de perte de liaison — ailes centrées, dérive centrée, dégradation gracieuse.</p>
+<h2>Conditions de déclenchement</h2>
+<p>
+Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
+</p>
+<h2>Sortie centrée</h2>
+<p>
+On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
+</p>
+<h2>Dégradation gracieuse</h2>
+<p>
+The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
+</p>
+<h2>Récupération</h2>
+<p>
+Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
+</p>
+<aside class='waveform-caution'>
+<strong>Testez sur banc avant le vol.</strong>
+L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
+</aside>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/failsafe/'>PT</a>
+<a class='' href='../../../en/documentation/failsafe/'>EN</a>
+<a class='' href='../../../es/documentation/failsafe/'>ES</a>
+<a class='active' href='../../../fr/documentation/failsafe/'>FR</a>
+<a class='' href='../../../de/documentation/failsafe/'>DE</a>
+<a class='' href='../../../ru/documentation/failsafe/'>RU</a>
+<a class='' href='../../../ko/documentation/failsafe/'>한국어</a>
+<a class='' href='../../../ja/documentation/failsafe/'>日本語</a>
+<a class='' href='../../../zh/documentation/failsafe/'>中文</a>
+<a class='' href='../../../ar/documentation/failsafe/'>عربي</a>
+<a class='' href='../../../hi/documentation/failsafe/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

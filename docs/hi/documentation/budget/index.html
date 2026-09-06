@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>फ्लैश और RAM बजट — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../../hi/hardware/'>हार्डवेयर</a>
+<a class='active' href='../../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>फ्लैश और RAM बजट</h1>
+<p class='sub-lead'>1MB फ्लैश और ~23KB हीप कहाँ जाते हैं, और 60% फ्लैश / 65% RAM सीमा के नीचे बनाए रखने का तरीका।</p>
+<h2>फ्लैश बजट</h2>
+<p>
+The 1&nbsp;MB ESP8285 flash is dominated by the <strong>WebUI</strong>: the bundled client build is ~160&nbsp;KB compressed (~16% of flash) after tree-shaking. The float runtime (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) is ~9.7&nbsp;KB — real but not the biggest lever. Current baseline sits at ~68.6% flash; the 60% target needs a ~83&nbsp;KB cut, and the WebUI is the only lever large enough to reach it.
+</p>
+<h2>RAM बजट</h2>
+<p>
+The ESP8285 exposes roughly <strong>23&nbsp;KB of heap</strong>. Config saves must never allocate a big JSON document on the heap — the ornithopter config saver streams directly to LittleFS to avoid exhausting the heap and rebooting mid-poll. Keep <code>DynamicJsonDocument</code> out of the hot path; prefer stack buffers and direct writes.
+</p>
+<h2>अनुकूलन युक्तियाँ</h2>
+<ul>
+<li>Tree-shake unused ELRS-RX pages from the WebUI bundle.</li>
+<li>Avoid <code>String</code> concatenation in loops — it fragments the heap.</li>
+<li>Stream JSON to LittleFS with <code>File::print</code> instead of building documents.</li>
+<li>Keep float formatting out of the telemetry hot path (pre-scaled integers).</li>
+<li>Prefer <code>#ifdef</code>-gated modules (Zephyrus compiles to no-ops when absent).</li>
+</ul>
+<h2>बिल्ड टारगेट</h2>
+<table>
+<tr>
+<th>Target</th>
+<th>Flash budget</th>
+<th>RAM budget</th>
+</tr>
+<tr>
+<td>PteronautOS_ESP8285_2400_RX</td>
+<td>≤ 60%</td>
+<td>≤ 65%</td>
+</tr>
+</table>
+<p>
+The manifest forbids exceeding <strong>60% flash / 65% RAM</strong> to leave margin for expansion. Measure after every feature; a green build is not a live build until it is flashed and its boot log read.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/budget/'>PT</a>
+<a class='' href='../../../en/documentation/budget/'>EN</a>
+<a class='' href='../../../es/documentation/budget/'>ES</a>
+<a class='' href='../../../fr/documentation/budget/'>FR</a>
+<a class='' href='../../../de/documentation/budget/'>DE</a>
+<a class='' href='../../../ru/documentation/budget/'>RU</a>
+<a class='' href='../../../ko/documentation/budget/'>한국어</a>
+<a class='' href='../../../ja/documentation/budget/'>日本語</a>
+<a class='' href='../../../zh/documentation/budget/'>中文</a>
+<a class='' href='../../../ar/documentation/budget/'>عربي</a>
+<a class='active' href='../../../hi/documentation/budget/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

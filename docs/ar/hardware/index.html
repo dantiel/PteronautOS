@@ -8,6 +8,7 @@
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
+<script defer src='../../assets/js/hw-table.js'></script>
 </head>
 <body class='sub-page'>
 <nav class='sub-nav'>
@@ -45,149 +46,153 @@
 </table>
 <h2>أجهزة الاستقبال المتوافقة</h2>
 <p>أي جهاز استقبال ExpressLRS 2.4 جيجاهرتز يعتمد على ESP8285 + SX1280/SX1281 مع مخارج PWM — أو جهاز CRSF مع محوّل CRSF→PWM — يمكنه تشغيل PteronautOS. الأسعار تقريبية وتختلف حسب المنطقة.</p>
+<div class='hw-toolbar'>
+<input aria-label='تصفية المستقبلات…' class='hw-filter' data-hw-filter placeholder='تصفية المستقبلات…' type='search'>
+<span class='hw-count' data-count-label='مستقبل معروض' data-hw-count></span>
+</div>
 <div class='hw-scroll'>
-<table class='hw-table'>
+<table class='hw-table' data-hw-table>
 <thead>
 <tr>
-<th>اللوحة</th>
-<th>قنوات</th>
-<th>الجهد</th>
-<th>الوزن (أصلي → معدّل)</th>
-<th>السعر</th>
+<th data-sort='board' data-type='alpha'>اللوحة</th>
+<th data-sort='ch' data-type='num'>قنوات</th>
+<th data-sort='volt' data-type='num'>الجهد</th>
+<th data-sort='weight' data-type='num'>الوزن (أصلي → معدّل)</th>
+<th data-sort='price' data-type='num'>السعر</th>
 <th>MCU · راديو</th>
 <th>ملاحظات</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>
+<td data-val='radiomaster er4'>
 <strong>RadioMaster ER4</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.6 g → ~1.0 g</td>
-<td>~$15</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.6 g → ~1.0 g</td>
+<td data-val='15'>~$15</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · SMD antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er4-i'>
 <strong>RadioMaster ER4-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>4</td>
-<td>4.5–8.4 V</td>
-<td>1.8 g → ~1.1 g</td>
-<td>~$16</td>
+<td data-val='4'>4</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.1'>1.8 g → ~1.1 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1281</td>
 <td>4× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='radiomaster er3c-i'>
 <strong>RadioMaster ER3C-i</strong>
 <span class='hw-mfr'>RadioMaster</span>
 </td>
-<td>3</td>
-<td>4.5–8.4 V</td>
-<td>1.7 g → ~1.0 g</td>
-<td>~$14</td>
+<td data-val='3'>3</td>
+<td data-val='4.5'>4.5–8.4 V</td>
+<td data-val='1.0'>1.7 g → ~1.0 g</td>
+<td data-val='14'>~$14</td>
 <td>ESP8285 · SX1281</td>
 <td>3× PWM · IPEX antenna</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel epw6 tcxo'>
 <strong>HappyModel EPW6 TCXO</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>6</td>
-<td>5–8.4 V</td>
-<td>1.49 g → ~0.9 g</td>
-<td>~$18</td>
+<td data-val='6'>6</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='0.9'>1.49 g → ~0.9 g</td>
+<td data-val='18'>~$18</td>
 <td>ESP8285 · SX1280</td>
 <td>6× PWM · TCXO · IPEX1</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv 5ch pwm/crsf'>
 <strong>BetaFPV 2.4G 5CH PWM/CRSF</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>2.5 g → ~1.5 g</td>
-<td>~$16</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.5'>2.5 g → ~1.5 g</td>
+<td data-val='16'>~$16</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='betafpv micro rx 5ch bec'>
 <strong>BetaFPV Micro RX 5CH BEC</strong>
 <span class='hw-mfr'>BetaFPV</span>
 </td>
-<td>5</td>
-<td>5–9 V</td>
-<td>3.0 g → ~1.8 g</td>
-<td>~$17</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–9 V</td>
+<td data-val='1.8'>3.0 g → ~1.8 g</td>
+<td data-val='17'>~$17</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM · 5V/9V BEC</td>
 </tr>
 <tr>
-<td>
+<td data-val='beyondfpv elrs 7ch'>
 <strong>BeyondFPV ELRS 7CH</strong>
 <span class='hw-mfr'>BeyondFPV</span>
 </td>
-<td>7</td>
-<td>5–8.4 V</td>
-<td>3.5 g → ~2.2 g</td>
-<td>~$19</td>
+<td data-val='7'>7</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='2.2'>3.5 g → ~2.2 g</td>
+<td data-val='19'>~$19</td>
 <td>ESP8285 · SX1280</td>
 <td>7× PWM + CRSF</td>
 </tr>
 <tr>
-<td>
+<td data-val='elrs 2.4g 5ch pwm'>
 <strong>ELRS 2.4G 5CH PWM</strong>
 <span class='hw-mfr'>Generic</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.8 g → ~1.6 g</td>
-<td>~$12</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.6'>2.8 g → ~1.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='cyclone elrs 2.4g'>
 <strong>CYCLONE ELRS 2.4G</strong>
 <span class='hw-mfr'>CYCLONE</span>
 </td>
-<td>5</td>
-<td>5–8.4 V</td>
-<td>2.6 g → ~1.5 g</td>
-<td>~$13</td>
+<td data-val='5'>5</td>
+<td data-val='5'>5–8.4 V</td>
+<td data-val='1.5'>2.6 g → ~1.5 g</td>
+<td data-val='13'>~$13</td>
 <td>ESP8285 · SX1280</td>
 <td>5× PWM</td>
 </tr>
 <tr>
-<td>
+<td data-val='happymodel ep2'>
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td>0</td>
-<td>5 V</td>
-<td>0.6 g</td>
-<td>~$12</td>
+<td data-val='0'>0</td>
+<td data-val='5'>5 V</td>
+<td data-val='0.6'>0.6 g</td>
+<td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
 <td>CRSF فقط — يحتاج محوّل</td>
 </tr>
 <tr>
-<td>
+<td data-val='crsf pwm 12ch adapter'>
 <strong>CRSF→PWM 12CH Adapter</strong>
 <span class='hw-mfr'>Various</span>
 </td>
-<td>12</td>
-<td>5 V</td>
-<td>2.0 g</td>
-<td>~$10</td>
+<td data-val='12'>12</td>
+<td data-val='5'>5 V</td>
+<td data-val='2.0'>2.0 g</td>
+<td data-val='10'>~$10</td>
 <td>— (passive)</td>
 <td>12× PWM عبر محوّل CRSF→PWM</td>
 </tr>
@@ -196,6 +201,7 @@
 </div>
 <p class='hw-note'>الوزن الأصلي؛ إزالة أنبوب الانكماش أو الموصلات أو الغلاف يمكن أن يخفّضه 30–60%.</p>
 <p class='hw-note'>أجهزة الاستقبال المبنية على ESP32 (ESP32-C3/S3) تستخدم بنية مختلفة وغير مدعومة بعد.</p>
+<p class='hw-note'>لا يوجد PWM أصلي؟ أي مستقبل CRSF(EP2 وEP1 وEPW6…)يمكنه تشغيل السيرفو عبر محول CRSF→PWM رخيص — انظر البرنامج التعليمي.</p>
 <h2>المواصفات الرئيسية</h2>
 <table>
 <tr>
@@ -217,9 +223,23 @@
 </table>
 <h2>التوصيل</h2>
 <p>ثلاث قنوات سيرفو إضافة إلى MPU6050 على ناقل I2C. خريطة الأطراف الكاملة وتوصيل I2C واختلافات المراجعتين v1.0/v1.1 موجودة في دليل PWMP7.</p>
+<div class='tutorial-menu'>
+<a class='tutorial-card' href='../../ar/hardware/power/'>
+<strong>الطاقة وBEC</strong>
+<p>كيفية تغذية المستقبل وMPU6050 وسيرفو الجناح من بطارية واحدة — اختيار BEC والتوصيل.</p>
+</a>
+<a class='tutorial-card' href='../../ar/hardware/telemetry/'>
+<strong>القياس عن بعد والمستشعرات</strong>
+<p>VBAT وRSSI وجودة الرابط وقياس الجيروسكوب عن بعد إلى الراديو — ما هو متاح وما هو مخطط.</p>
+</a>
+</div>
 <p>
 <a href='../../en/hardware-pwmp7/'>دليل توافق مستقبل PWMP7 ←</a>
 </p>
+<p>
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>جدول كفاءة السيرفو (OrniFlight) →</a>
+</p>
+<p class='hw-note'>لاختيار السيرفو المفصل(العزم والسرعة والكفاءة مقابل تردد الرفرفة)راجع جدول سيرفو OrniFlight المخصص — نرتبط به بدل تكراره.</p>
 <p>
 <a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>مرجع العتاد الكامل (HARDWARE.md) ←</a>
 </p>

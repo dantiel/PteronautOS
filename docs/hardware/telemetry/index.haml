@@ -1,0 +1,64 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= tel_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %h1= tel_h1
+        %p.sub-lead= tel_lead
+
+        %h2= tel_h2_vbat
+        %p
+          The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
+
+        %h2= tel_h2_rssi
+        %p
+          RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
+
+        %h2= tel_h2_gyro
+        %p
+          The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
+
+        %h2= tel_h2_future
+        %ul
+          %li Barometer (BMP280) for altitude hold and glide control.
+          %li Airspeed via a differential pressure sensor for auto-glide triggers.
+          %li Current sensor for live power consumption and pack endurance.
+          %li GPS for position logging and return-to-home experiments.
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

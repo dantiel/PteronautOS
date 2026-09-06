@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Сервоядро — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Наверх' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Наверх' type='button'>↑</button>
+<a class='home-link' href='../../../ru/' title='Главная PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../ru/tutorials/'>Учебники</a>
+<a href='../../../ru/hardware/'>Аппаратура</a>
+<a class='active' href='../../../ru/documentation/'>Документация</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Сервоядро</h1>
+<p class='sub-lead'>Диапазон длительности импульса, тримминг по функциям и ограничение скорости — низкоуровневый контракт сервопривода.</p>
+<h2>Диапазон длительности импульса</h2>
+<p>
+The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
+</p>
+<h2>Тримминг по функциям</h2>
+<p>
+<code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
+</p>
+<h2>Ограничение скорости</h2>
+<p>
+<strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
+</p>
+<p class='hw-note'>
+For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/servo-kernel/'>PT</a>
+<a class='' href='../../../en/documentation/servo-kernel/'>EN</a>
+<a class='' href='../../../es/documentation/servo-kernel/'>ES</a>
+<a class='' href='../../../fr/documentation/servo-kernel/'>FR</a>
+<a class='' href='../../../de/documentation/servo-kernel/'>DE</a>
+<a class='active' href='../../../ru/documentation/servo-kernel/'>RU</a>
+<a class='' href='../../../ko/documentation/servo-kernel/'>한국어</a>
+<a class='' href='../../../ja/documentation/servo-kernel/'>日本語</a>
+<a class='' href='../../../zh/documentation/servo-kernel/'>中文</a>
+<a class='' href='../../../ar/documentation/servo-kernel/'>عربي</a>
+<a class='' href='../../../hi/documentation/servo-kernel/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

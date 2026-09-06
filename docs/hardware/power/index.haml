@@ -1,0 +1,72 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= pwr_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %h1= pwr_h1
+        %p.sub-lead= pwr_lead
+
+        %h2= pwr_h2_servo
+        %p
+          A single wing servo can pull <strong>1–2&nbsp;A</strong> transiently at reversal; three servos plus the receiver and gyro demand a rail that never sags. Size the BEC for the <em>stall</em> current of all three servos summed, not their idle current. A 5&nbsp;V / 3&nbsp;A switching BEC is a safe baseline for most 2–4&nbsp;g micro servos; larger wings need 5&nbsp;A or more.
+
+        %h2= pwr_h2_bec
+        %p
+          Prefer a <strong>switching (buck) BEC</strong> over a linear one: linears burn the voltage drop as heat and collapse under burst load. Match the BEC voltage to the servo rating (5&nbsp;V for most micro servos, up to 9&nbsp;V for HV servos) — but keep the receiver on its own 5&nbsp;V feed if it lacks a wide-input regulator.
+
+        %h2= pwr_h2_rx
+        %p
+          Most ELRS receivers take <strong>4.5–8.4&nbsp;V</strong> (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&nbsp;V and makes its own 3.3&nbsp;V.
+
+        %h2= pwr_h2_wiring
+        %pre
+          %code
+            :preserve
+              Battery ──┬── BEC (5V) ──┬── wing L servo (5V)
+                        │              ├── wing R servo (5V)
+                        │              └── rudder servo (5V)
+                        │
+                        ├── RX (4.5–8.4V rail)
+                        └── GY-521 (5V, onboard 3.3V reg)
+
+              All GNDs tied together (single star point).
+        %p
+          Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

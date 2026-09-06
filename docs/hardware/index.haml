@@ -8,6 +8,7 @@
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
     %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+    %script{src: "#{asset_prefix}assets/js/hw-table.js", defer: true}
   %body.sub-page
     %nav.sub-nav
       .nav-progressive-blur{"aria-hidden": "true"}
@@ -41,130 +42,134 @@
 
         %h2= hw_h2_compat
         %p= hw_compat_lead
+        .hw-toolbar
+          %input.hw-filter{type: "search", placeholder: hw_sort_search, "aria-label": hw_sort_search, "data-hw-filter": true}
+          %span.hw-count{"data-hw-count": true, "data-count-label": hw_sort_count}
         .hw-scroll
-          %table.hw-table
+          %table.hw-table{"data-hw-table": true}
             %thead
               %tr
-                %th= hw_th_board
-                %th= hw_th_ch
-                %th= hw_th_volt
-                %th= hw_th_weight
-                %th= hw_th_price
+                %th{"data-sort": "board", "data-type": "alpha"}= hw_th_board
+                %th{"data-sort": "ch", "data-type": "num"}= hw_th_ch
+                %th{"data-sort": "volt", "data-type": "num"}= hw_th_volt
+                %th{"data-sort": "weight", "data-type": "num"}= hw_th_weight
+                %th{"data-sort": "price", "data-type": "num"}= hw_th_price
                 %th= hw_th_mcu
                 %th= hw_th_notes
             %tbody
               %tr
-                %td
+                %td{"data-val": "radiomaster er4"}
                   %strong RadioMaster ER4
                   %span.hw-mfr RadioMaster
-                %td 4
-                %td 4.5–8.4 V
-                %td 1.6 g → ~1.0 g
-                %td ~$15
+                %td{"data-val": "4"} 4
+                %td{"data-val": "4.5"} 4.5–8.4 V
+                %td{"data-val": "1.0"} 1.6 g → ~1.0 g
+                %td{"data-val": "15"} ~$15
                 %td ESP8285 · SX1281
                 %td 4× PWM · SMD antenna
               %tr
-                %td
+                %td{"data-val": "radiomaster er4-i"}
                   %strong RadioMaster ER4-i
                   %span.hw-mfr RadioMaster
-                %td 4
-                %td 4.5–8.4 V
-                %td 1.8 g → ~1.1 g
-                %td ~$16
+                %td{"data-val": "4"} 4
+                %td{"data-val": "4.5"} 4.5–8.4 V
+                %td{"data-val": "1.1"} 1.8 g → ~1.1 g
+                %td{"data-val": "16"} ~$16
                 %td ESP8285 · SX1281
                 %td 4× PWM · IPEX antenna
               %tr
-                %td
+                %td{"data-val": "radiomaster er3c-i"}
                   %strong RadioMaster ER3C-i
                   %span.hw-mfr RadioMaster
-                %td 3
-                %td 4.5–8.4 V
-                %td 1.7 g → ~1.0 g
-                %td ~$14
+                %td{"data-val": "3"} 3
+                %td{"data-val": "4.5"} 4.5–8.4 V
+                %td{"data-val": "1.0"} 1.7 g → ~1.0 g
+                %td{"data-val": "14"} ~$14
                 %td ESP8285 · SX1281
                 %td 3× PWM · IPEX antenna
               %tr
-                %td
+                %td{"data-val": "happymodel epw6 tcxo"}
                   %strong HappyModel EPW6 TCXO
                   %span.hw-mfr HappyModel
-                %td 6
-                %td 5–8.4 V
-                %td 1.49 g → ~0.9 g
-                %td ~$18
+                %td{"data-val": "6"} 6
+                %td{"data-val": "5"} 5–8.4 V
+                %td{"data-val": "0.9"} 1.49 g → ~0.9 g
+                %td{"data-val": "18"} ~$18
                 %td ESP8285 · SX1280
                 %td 6× PWM · TCXO · IPEX1
               %tr
-                %td
+                %td{"data-val": "betafpv 5ch pwm/crsf"}
                   %strong BetaFPV 2.4G 5CH PWM/CRSF
                   %span.hw-mfr BetaFPV
-                %td 5
-                %td 5–9 V
-                %td 2.5 g → ~1.5 g
-                %td ~$16
+                %td{"data-val": "5"} 5
+                %td{"data-val": "5"} 5–9 V
+                %td{"data-val": "1.5"} 2.5 g → ~1.5 g
+                %td{"data-val": "16"} ~$16
                 %td ESP8285 · SX1280
                 %td 5× PWM + CRSF
               %tr
-                %td
+                %td{"data-val": "betafpv micro rx 5ch bec"}
                   %strong BetaFPV Micro RX 5CH BEC
                   %span.hw-mfr BetaFPV
-                %td 5
-                %td 5–9 V
-                %td 3.0 g → ~1.8 g
-                %td ~$17
+                %td{"data-val": "5"} 5
+                %td{"data-val": "5"} 5–9 V
+                %td{"data-val": "1.8"} 3.0 g → ~1.8 g
+                %td{"data-val": "17"} ~$17
                 %td ESP8285 · SX1280
                 %td 5× PWM · 5V/9V BEC
               %tr
-                %td
+                %td{"data-val": "beyondfpv elrs 7ch"}
                   %strong BeyondFPV ELRS 7CH
                   %span.hw-mfr BeyondFPV
-                %td 7
-                %td 5–8.4 V
-                %td 3.5 g → ~2.2 g
-                %td ~$19
+                %td{"data-val": "7"} 7
+                %td{"data-val": "5"} 5–8.4 V
+                %td{"data-val": "2.2"} 3.5 g → ~2.2 g
+                %td{"data-val": "19"} ~$19
                 %td ESP8285 · SX1280
                 %td 7× PWM + CRSF
               %tr
-                %td
+                %td{"data-val": "elrs 2.4g 5ch pwm"}
                   %strong ELRS 2.4G 5CH PWM
                   %span.hw-mfr Generic
-                %td 5
-                %td 5–8.4 V
-                %td 2.8 g → ~1.6 g
-                %td ~$12
+                %td{"data-val": "5"} 5
+                %td{"data-val": "5"} 5–8.4 V
+                %td{"data-val": "1.6"} 2.8 g → ~1.6 g
+                %td{"data-val": "12"} ~$12
                 %td ESP8285 · SX1280
                 %td 5× PWM
               %tr
-                %td
+                %td{"data-val": "cyclone elrs 2.4g"}
                   %strong CYCLONE ELRS 2.4G
                   %span.hw-mfr CYCLONE
-                %td 5
-                %td 5–8.4 V
-                %td 2.6 g → ~1.5 g
-                %td ~$13
+                %td{"data-val": "5"} 5
+                %td{"data-val": "5"} 5–8.4 V
+                %td{"data-val": "1.5"} 2.6 g → ~1.5 g
+                %td{"data-val": "13"} ~$13
                 %td ESP8285 · SX1280
                 %td 5× PWM
               %tr
-                %td
+                %td{"data-val": "happymodel ep2"}
                   %strong HappyModel EP2
                   %span.hw-mfr HappyModel
-                %td 0
-                %td 5 V
-                %td 0.6 g
-                %td ~$12
+                %td{"data-val": "0"} 0
+                %td{"data-val": "5"} 5 V
+                %td{"data-val": "0.6"} 0.6 g
+                %td{"data-val": "12"} ~$12
                 %td ESP8285 · SX1280
                 %td= hw_note_crsfonly
               %tr
-                %td
+                %td{"data-val": "crsf pwm 12ch adapter"}
                   %strong CRSF→PWM 12CH Adapter
                   %span.hw-mfr Various
-                %td 12
-                %td 5 V
-                %td 2.0 g
-                %td ~$10
+                %td{"data-val": "12"} 12
+                %td{"data-val": "5"} 5 V
+                %td{"data-val": "2.0"} 2.0 g
+                %td{"data-val": "10"} ~$10
                 %td — (passive)
                 %td= hw_note_conv12
         %p.hw-note= hw_weight_note
         %p.hw-note= hw_esp32_note
+        %p.hw-note= hw_ep2_note
 
         %h2= hw_h2_specs
         %table
@@ -183,8 +188,18 @@
 
         %h2= hw_h2_wiring
         %p= hw_wiring_p
+        .tutorial-menu
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/power/"}
+            %strong= pwr_h1
+            %p= pwr_lead
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/telemetry/"}
+            %strong= tel_h1
+            %p= tel_lead
         %p
           %a{href: "#{asset_prefix}en/hardware-pwmp7/"}= hw_link_pwmp7
+        %p
+          %a{href: "https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html", target: "_blank"}= hw_link_orniflight
+        %p.hw-note= hw_servo_note
         %p
           %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= hw_link_full
     %footer

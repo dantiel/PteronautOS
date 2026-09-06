@@ -1,0 +1,65 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= fs_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %h1= fs_h1
+        %p.sub-lead= fs_lead
+
+        %h2= fs_h2_trigger
+        %p
+          Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
+
+        %h2= fs_h2_center
+        %p
+          On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
+
+        %h2= fs_h2_grace
+        %p
+          The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
+
+        %h2= fs_h2_recover
+        %p
+          Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
+
+        %aside.waveform-caution
+          %strong= doc_caution_title
+          = doc_caution_body
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit
