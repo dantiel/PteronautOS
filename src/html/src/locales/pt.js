@@ -594,6 +594,10 @@ export default {
     'ornithopter.servo.left_wing': 'Asa Esquerda',
     'ornithopter.servo.right_wing': 'Asa Direita',
     'ornithopter.servo.rudder': 'Leme',
+    'ornithopter.servo.back_left_wing': 'Asa Traseira Esquerda',
+    'ornithopter.servo.back_right_wing': 'Asa Traseira Direita',
+    'ornithopter.saving': 'Salvando...',
+    'ornithopter.saved': 'Salvo',
     'ornithopter.mixing.kernel_hint': 'Configure os parâmetros do kernel antes do mixing',
 
     // Info panel - PteronautOS section

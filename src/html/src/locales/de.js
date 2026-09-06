@@ -592,6 +592,10 @@ export default {
     'ornithopter.servo.left_wing': 'Linker Flügel',
     'ornithopter.servo.right_wing': 'Rechter Flügel',
     'ornithopter.servo.rudder': 'Seitenruder',
+    'ornithopter.servo.back_left_wing': 'Hinterer Linker Flügel',
+    'ornithopter.servo.back_right_wing': 'Hinterer Rechter Flügel',
+    'ornithopter.saving': 'Speichere...',
+    'ornithopter.saved': 'Gespeichert',
     'ornithopter.mixing.kernel_hint': 'Konfiguriere Kernel-Parameter vor dem Mixing',
 
     // Info panel - PteronautOS section
