@@ -85,12 +85,14 @@
 <input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
 </label>
 <div class='lock-ferocity'>
+<div class='lock-lines'></div>
 <button aria-pressed='false' data-control='lock' id='lock-ferocity' title='Lock Down+Up together (sum=8)' type='button'>
-<svg class='lock-icon' fill='none' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24'>
-<rect class='shackle' height='10' rx='6' ry='6' width='12' x='6' y='2'></rect>
-<rect class='body' height='10' rx='2' width='16' x='4' y='12'></rect>
+<svg class='lock-icon' fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2' viewBox='0 0 24 24'>
+<path class='shackle' d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+<rect class='body' fill='none' height='10' rx='2' width='16' x='4' y='11'></rect>
 </svg>
 </button>
+<div class='lock-lines'></div>
 </div>
 <label for='wave-up-ferocity'>
 <span>Up ferocity</span>
