@@ -58,7 +58,7 @@ bundle exec sass --watch assets/css/style.sass:assets/css/style.css
 - Haml 6.x for markup
 - Sass 3.x (indented syntax) for styles
 - Haml and Sass-generated static pages
-- CoffeeScript 2 source for interactive documentation, committed as compiled JavaScript
+- CoffeeScript 2 source for interactive documentation, compiled into the GitHub Pages deployment artifact
 - FontTools-based, reproducible Turret Road Mono build with per-glyph optical overrides
 
 ## Turret Road Mono
@@ -80,6 +80,11 @@ build, or independently with:
 ```bash
 npm run build:coffee
 ```
+
+The generated `assets/js/ferocity-waveform.js` is intentionally ignored by
+Git. GitHub Pages must use the **GitHub Actions** publishing source so the
+deployed site comes from the complete Rake build artifact rather than directly
+from the unbuilt `master:/docs` tree.
 
 ## License
 

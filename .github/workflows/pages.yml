@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '20.20.2'
           cache: npm
           cache-dependency-path: docs/package-lock.json
 
@@ -44,7 +44,7 @@ jobs:
           bundle install
           npm ci
 
-      - name: Build site (Sass + Haml PT/EN)
+      - name: Build site (Sass + Haml + CoffeeScript)
         working-directory: docs
         run: bundle exec rake build
 
