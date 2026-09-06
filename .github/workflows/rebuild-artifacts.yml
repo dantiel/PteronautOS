@@ -32,16 +32,14 @@ jobs:
       - name: Build Web UI
         run: |
           cd src/html
+          rm -rf headers
+          cp -r out headers
           npm run build:all
 
       - name: Verify reproducible artifacts
         run: |
-          artifact_snapshot="$(mktemp -d)"
-          trap 'rm -rf "$artifact_snapshot"' EXIT
-          cp -R src/html/headers/. "$artifact_snapshot/"
           cd src/html
-          npm run build:all
-          diff -qr "$artifact_snapshot" headers
+          diff -qr out headers
 
       - name: Commit updated artifacts
         run: |
