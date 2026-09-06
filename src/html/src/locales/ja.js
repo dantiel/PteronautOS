@@ -21,7 +21,7 @@ export default {
     'app.menu.update': '更新',
     'app.menu.ornithopter': 'オルニソプター',
     'app.menu.hardware': 'ハードウェアレイアウト',
-    'app.menu.zephyrus': 'Zephyrus ジャイロ',
+    'app.menu.zephyrus': 'ゼピュロス ジャイロ',
     'app.menu.servo': 'サーボ出力',
     'app.menu.debug': 'デバッグコンソール',
     'app.menu.voltage': '電圧キャリブレーション',
@@ -602,7 +602,7 @@ export default {
     'elrs.info.kernel_type': 'カーネルタイプ',
     'elrs.info.kernel_servo': 'サーボカーネル',
     'elrs.info.mixer_profile': 'ミキサープロファイル',
-    'elrs.info.zephyrus': 'Zephyrusジャイロ',
+    'elrs.info.zephyrus': 'ゼピュロス ジャイロ',
     'elrs.info.link': 'リンクステータス',
     'elrs.info.section_device': 'デバイス情報',
 
