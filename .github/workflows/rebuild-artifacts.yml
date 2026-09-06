@@ -1,12 +1,13 @@
 name: Rebuild WebUI Artifacts
 
-on:
-  workflow_dispatch:
-    inputs:
-      target:
-        description: 'Build target (all or pteronautos)'
-        required: false
-        default: 'pteronautos'
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-webui-artifacts
+  cancel-in-progress: false
 
 jobs:
   rebuild:
@@ -21,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '20.20.2'
 
       - name: Install dependencies
         run: |
@@ -31,11 +32,16 @@ jobs:
       - name: Build Web UI
         run: |
           cd src/html
-          if [ "${{ github.event.inputs.target }}" = "all" ]; then
-            npm run build:all
-          else
-            npm run build:pteronautos
-          fi
+          npm run build:all
+
+      - name: Verify reproducible artifacts
+        run: |
+          artifact_snapshot="$(mktemp -d)"
+          trap 'rm -rf "$artifact_snapshot"' EXIT
+          cp -R src/html/headers/. "$artifact_snapshot/"
+          cd src/html
+          npm run build:all
+          diff -qr "$artifact_snapshot" headers
 
       - name: Commit updated artifacts
         run: |
@@ -45,6 +51,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: rebuild WebUI artifacts [skip ci]"
+            git commit -m "chore: rebuild WebUI artifacts"
             git push
           fi
