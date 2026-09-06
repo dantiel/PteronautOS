@@ -233,7 +233,7 @@ void Zephyrus::begin() {
         return;
     }
 
-#if ZEPHYR_I2C_PRE_DETECT
+#if ZEPHYR_I2C_PRE_DETECT && defined(ARDUINO)
     pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
     delay(1);
     if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
