@@ -28,27 +28,25 @@
         %h1= doc_h1
         %p.sub-lead= doc_lead
 
-        %h2= doc_h2_manuals
-        %table
-          %tr
-            %td= "PTERONAUTOS.md"
-            %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md", target: "_blank"}= doc_manual_main
-          %tr
-            %td= "STABILIZATION.md"
-            %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"}= doc_manual_stab
-          %tr
-            %td= "WEBUI_I18N.md"
-            %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md", target: "_blank"}= doc_manual_webui
-          %tr
-            %td= "HARDWARE.md"
-            %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= doc_manual_hw
+        %h2= arch_title
+        %dl.grid
+          %dt= arch_ornithopter_title
+          %dd= arch_ornithopter_desc
+          %dt= arch_zephyrus_title
+          %dd= arch_zephyrus_desc
+          %dt= arch_servo_title
+          %dd= arch_servo_desc
+          %dt= arch_target_title
+          %dd= arch_target_desc
 
         %h2= doc_h2_articles
         .tutorial-menu
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}
+            %strong= archart_h1
+            %p= archart_lead
+          %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}
+            %strong= mix_h1
+            %p= mix_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}
             %strong= sk_h1
             %p= sk_lead
@@ -58,23 +56,6 @@
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/budget/"}
             %strong= budget_h1
             %p= budget_lead
-
-        %h2= doc_h2_concepts
-        %dl.grid
-          %dt= doc_c_ferocity
-          %dd= doc_c_ferocity_d
-          %dt= doc_c_waveform
-          %dd= doc_c_waveform_d
-          %dt= doc_c_glide
-          %dd= doc_c_glide_d
-          %dt= doc_c_flap
-          %dd= doc_c_flap_d
-          %dt= doc_c_rudder
-          %dd= doc_c_rudder_d
-          %dt= doc_c_throttle
-          %dd= doc_c_throttle_d
-          %dt= doc_c_failsafe
-          %dd= doc_c_failsafe_d
 
         %section#ferocity-waveform.waveform-docs
           %h2= doc_wave_h2
@@ -144,6 +125,42 @@
           %aside.waveform-caution
             %strong= doc_caution_title
             = doc_caution_body
+
+        %h2= doc_h2_concepts
+        %dl.grid
+          %dt= doc_c_ferocity
+          %dd= doc_c_ferocity_d
+          %dt= doc_c_waveform
+          %dd= doc_c_waveform_d
+          %dt= doc_c_glide
+          %dd= doc_c_glide_d
+          %dt= doc_c_flap
+          %dd= doc_c_flap_d
+          %dt= doc_c_rudder
+          %dd= doc_c_rudder_d
+          %dt= doc_c_throttle
+          %dd= doc_c_throttle_d
+          %dt= doc_c_failsafe
+          %dd= doc_c_failsafe_d
+
+        %h2= doc_h2_manuals
+        %table
+          %tr
+            %td= "PTERONAUTOS.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md", target: "_blank"}= doc_manual_main
+          %tr
+            %td= "STABILIZATION.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"}= doc_manual_stab
+          %tr
+            %td= "WEBUI_I18N.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md", target: "_blank"}= doc_manual_webui
+          %tr
+            %td= "HARDWARE.md"
+            %td
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= doc_manual_hw
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT

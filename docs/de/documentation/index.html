@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>Dokumentation</h1>
 <p class='sub-lead'>Das Handbuch, die Gyro-Notizen und die Web-UI-Referenz.</p>
-<h2>Handbücher</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Haupthandbuch — Architektur, Mixer, Wellenform</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Zephyr-Gyro — AHRS und PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web-UI und Übersetzungsreferenz</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Verdrahtung und Pinbelegung</a>
-</td>
-</tr>
-</table>
+<h2>Architektur</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Mischer, Wellenformerzeugung, Kanalfilterung</dd>
+<dt>Zephyr</dt>
+<dd>MPU6050 Gyroskop + Mahony AHRS + dualer PID</dd>
+<dt>ServoOutput</dt>
+<dd>PWM synchronisiert zum CRSF-Takt</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>Artikel</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../de/documentation/architecture/'>
+<strong>Architektur: Kernel &amp; Datenfluss</strong>
+<p>Wie ein CRSF-Datenstrom zu Flügelschlag und Leitwerk wird: Modulgrenzen, die zwei Misch-Kernel und die Zustandsmaschine, die den Pterosaurier am Leben hält, wenn der Link stirbt.</p>
+</a>
+<a class='tutorial-card' href='../../de/documentation/mixers/'>
+<strong>Mixer-Referenz</strong>
+<p>Von Sticks und Gyro bis zu µs auf der Leitung: die vollständige Geometrie jedes wählbaren Mixers — Flügelachsen, Ruder-Mischungen, Elevons, Trims und Begrenzungen.</p>
+</a>
 <a class='tutorial-card' href='../../de/documentation/servo-kernel/'>
 <strong>Servo-Kernel</strong>
 <p>Impulsbreiten-Hüllkurve, Trim je Funktion und Geschwindigkeitsbegrenzung — der Low-Level-Servo-Vertrag.</p>
@@ -71,23 +63,6 @@
 <p>Wohin 1MB Flash und ~23KB Heap gehen und wie man unter 60% Flash / 65% RAM bleibt.</p>
 </a>
 </div>
-<h2>Konzepte</h2>
-<dl class='grid'>
-<dt>Ferocity</dt>
-<dd>Asymmetrie zwischen Schlag und Rücklauf sowie Verweildauer — 0 ist ein reiner Sinus.</dd>
-<dt>Wellenform</dt>
-<dd>Die Flügelschlagkurve; die Amplitude ergibt sich aus Grad/s ÷ 2·Frequenz.</dd>
-<dt>Gleitwinkel</dt>
-<dd>Flügelmittelpunkt-Versatz für den Gleitflug.</dd>
-<dt>Flatter-Mittelpunkt-Versatz</dt>
-<dd>Mittelpunkt-Vorspannung während des Flügelschlags (−15…+15 Grad).</dd>
-<dt>Rudermischung</dt>
-<dd>Gier-/Roll-Mischung, die das Kammruder antreibt.</dd>
-<dt>Gas-Ferocity-Mischung</dt>
-<dd>Wie stark das Gas in die Ferocity einkoppelt.</dd>
-<dt>Failsafe</dt>
-<dd>Die Flügel kehren in die Neutralstellung zurück, wenn die Verbindung abbricht.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Geometrie der Ferocity-Wellenform</h2>
 <p>Ferocity steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Ferocity verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Ferocity verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
@@ -171,6 +146,50 @@ Exakte Diagonale
 Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garantierte Servobewegung. Vermeiden Sie extreme asymmetrische Einstellungen, bis Amplitude, Frequenz, Gestängegeometrie und Servo-Geschwindigkeitsgrenzen ohne aerodynamische Last verifiziert wurden.
 </aside>
 </section>
+<h2>Konzepte</h2>
+<dl class='grid'>
+<dt>Ferocity</dt>
+<dd>Asymmetrie zwischen Schlag und Rücklauf sowie Verweildauer — 0 ist ein reiner Sinus.</dd>
+<dt>Wellenform</dt>
+<dd>Die Flügelschlagkurve; die Amplitude ergibt sich aus Grad/s ÷ 2·Frequenz.</dd>
+<dt>Gleitwinkel</dt>
+<dd>Flügelmittelpunkt-Versatz für den Gleitflug.</dd>
+<dt>Flatter-Mittelpunkt-Versatz</dt>
+<dd>Mittelpunkt-Vorspannung während des Flügelschlags (−15…+15 Grad).</dd>
+<dt>Rudermischung</dt>
+<dd>Gier-/Roll-Mischung, die das Kammruder antreibt.</dd>
+<dt>Gas-Ferocity-Mischung</dt>
+<dd>Wie stark das Gas in die Ferocity einkoppelt.</dd>
+<dt>Failsafe</dt>
+<dd>Die Flügel kehren in die Neutralstellung zurück, wenn die Verbindung abbricht.</dd>
+</dl>
+<h2>Handbücher</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Haupthandbuch — Architektur, Mixer, Wellenform</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Zephyr-Gyro — AHRS und PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web-UI und Übersetzungsreferenz</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Verdrahtung und Pinbelegung</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

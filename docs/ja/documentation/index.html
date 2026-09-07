@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>ドキュメント</h1>
 <p class='sub-lead'>マニュアル、ジャイロのノート、Web UI リファレンス。</p>
-<h2>マニュアル</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>メインマニュアル — アーキテクチャ、ミキサー、波形</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>ゼピュロス ジャイロ — AHRS と PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web UI と翻訳リファレンス</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>配線とピン配置</a>
-</td>
-</tr>
-</table>
+<h2>アーキテクチャ</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>ミキサー、波形生成、チャンネルフィルタリング</dd>
+<dt>ゼピュロス</dt>
+<dd>MPU6050ジャイロ + Mahony AHRS + デュアルPID</dd>
+<dt>ServoOutput</dt>
+<dd>CRSFティックに同期したPWM</dd>
+<dt>ターゲット</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>記事</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../ja/documentation/architecture/'>
+<strong>アーキテクチャ：カーネルとデータフロー</strong>
+<p>CRSFストリームが羽ばたきと尾になる仕組み：モジュール境界、2つのミキサーカーネル、リンク断でも翼竜を生かす状態機械。</p>
+</a>
+<a class='tutorial-card' href='../../ja/documentation/mixers/'>
+<strong>ミキサーリファレンス</strong>
+<p>スティックとジャイロから電線上のµsまで：選択可能な全ミキサーの完全な幾何 — 翼軸、ラダーブレンド、エレボン、トリム、クランプ。</p>
+</a>
 <a class='tutorial-card' href='../../ja/documentation/servo-kernel/'>
 <strong>サーボカーネル</strong>
 <p>パルス幅エンベロープ、機能別トリム、速度制限 — 低レベルサーボ契約。</p>
@@ -71,23 +63,6 @@
 <p>1MBフラッシュと~23KBヒープの行き先、そして60%フラッシュ/65%RAM未満を維持する方法。</p>
 </a>
 </div>
-<h2>概念</h2>
-<dl class='grid'>
-<dt>Ferocity</dt>
-<dd>ストローク／復路の非対称と滞留 — 0 は純粋なサイン波。</dd>
-<dt>波形</dt>
-<dd>羽ばたき曲線。振幅は deg/s ÷ 2·周波数 から得られます。</dd>
-<dt>滑空角</dt>
-<dd>滑空飛行のための翼中心オフセット。</dd>
-<dt>羽ばたき中心オフセット</dt>
-<dd>羽ばたきストローク中の中心バイアス（−15…+15 度）。</dd>
-<dt>ラダーミキシング</dt>
-<dd>クレストラダーを駆動するヨー／ロールのブレンド。</dd>
-<dt>スロットル Ferocity ミックス</dt>
-<dd>スロットルが Ferocity に結合する度合い。</dd>
-<dt>フェイルセーフ</dt>
-<dd>リンクが切れると翼は中立に戻ります。</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Ferocity 波形の幾何学</h2>
 <p>Ferocity は半ストロークの性格とタイミングの両方を制御します。内部的には WebUI の 0–100 設定が 0–8 にマッピングされます。ダウンストロークの Ferocity が高いほど周期に占めるダウンストロークの割合が短くなり、復路の Ferocity が高いほど復路の割合が短くなります。残りの時間は反対側の半周期へ移ります — ゼロでの停止はありません。</p>
@@ -171,6 +146,50 @@
 エクスプローラーは保証されたサーボ動作ではなく、指令された数学的な波形を表します。振幅、周波数、リンケージ形状、サーボ速度限界が空力負荷なしで検証されるまで、極端な非対称設定は避けてください。
 </aside>
 </section>
+<h2>概念</h2>
+<dl class='grid'>
+<dt>Ferocity</dt>
+<dd>ストローク／復路の非対称と滞留 — 0 は純粋なサイン波。</dd>
+<dt>波形</dt>
+<dd>羽ばたき曲線。振幅は deg/s ÷ 2·周波数 から得られます。</dd>
+<dt>滑空角</dt>
+<dd>滑空飛行のための翼中心オフセット。</dd>
+<dt>羽ばたき中心オフセット</dt>
+<dd>羽ばたきストローク中の中心バイアス（−15…+15 度）。</dd>
+<dt>ラダーミキシング</dt>
+<dd>クレストラダーを駆動するヨー／ロールのブレンド。</dd>
+<dt>スロットル Ferocity ミックス</dt>
+<dd>スロットルが Ferocity に結合する度合い。</dd>
+<dt>フェイルセーフ</dt>
+<dd>リンクが切れると翼は中立に戻ります。</dd>
+</dl>
+<h2>マニュアル</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>メインマニュアル — アーキテクチャ、ミキサー、波形</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>ゼピュロス ジャイロ — AHRS と PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web UI と翻訳リファレンス</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>配線とピン配置</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

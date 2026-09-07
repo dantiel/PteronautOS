@@ -87,7 +87,7 @@ export default {
     'ornithopter.glide.ratchet_timeout_desc': 'Tempo máximo de procura antes de paragem',
     'ornithopter.save': 'Guardar Configuração',
     'ornithopter.save_hint': 'Envia kernel + mixer + params de mistura + config de planeio para /pteronautos/config',
-    'zephyrus.panel.title': 'Estabilização Zéfiro Gyro',
+    'zephyrus.panel.title': 'Estabilização do Giroscópio Zéfiro',
     'zephyrus.info.sensor': 'Sensor',
     'zephyrus.info.sensor_val': 'MPU6050 (GY-521)',
     'zephyrus.info.bus': 'Bus',

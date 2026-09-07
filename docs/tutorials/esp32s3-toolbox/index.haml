@@ -1,0 +1,232 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= s3t_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number= tut_card_s3t_number
+        %h1= s3t_h1
+        %p.sub-lead= s3t_lead
+
+        %h2= s3t_h2_dual
+        %p
+          Both personalities run on the <strong>same hardware</strong> — a Waveshare-style
+          ESP32-S3 micro board (~6&nbsp;USD, 23&nbsp;×&nbsp;18&nbsp;mm, native USB, every
+          GPIO PWM-capable). You flash one sketch or the other, depending on the task of the day:
+        %table
+          %tr
+            %th Tool
+            %th Sketch
+            %th Turns the S3 into…
+            %th Used for
+          %tr
+            %td A — Converter
+            %td
+              %code esp32s3_crsf_pwm
+            %td A rock-steady CRSF→PWM servo driver (up to 8 channels)
+            %td Driving wing + rudder servos from any CRSF-only receiver
+          %tr
+            %td B — Pocket flasher
+            %td
+              %code esp32s3_flash_bridge
+            %td A USB↔UART bridge with a boot + power-cycle jig
+            %td Flashing PteronautOS onto EP2-class receivers — no soldered FTDI
+        %p
+          Both sketches live in the repository under
+          <code>sketches/esp32s3_crsf_pwm/</code> and
+          <code>sketches/esp32s3_flash_bridge/</code> and compile with the
+          standard arduino-esp32 core.
+
+        %h2= s3t_h2_conv
+        %p
+          Flashing the converter sketch follows the exact procedure described in
+          <a href="#{asset_prefix}#{lang_dir}tutorials/crsf-converter/">Tutorial 06 — CRSF→PWM Converter</a>:
+          CRSF at 420&nbsp;000&nbsp;baud on the UART, servos on three free GPIOs,
+          a 988–2012&nbsp;µs window mapped from the 172–1811 channel range, and a
+          failsafe that centres the servos when no valid frame arrives for 500&nbsp;ms.
+        %ul
+          %li Wiring recap: RX&nbsp;TX → S3&nbsp;GPIO44, RX&nbsp;RX → S3&nbsp;GPIO43, common GND, shared 5&nbsp;V rail.
+          %li Servos: GPIO1 (left wing), GPIO2 (right wing), GPIO3 (crest rudder) — all overrideable in the sketch.
+          %li Full, CRC-checked source: <code>sketches/esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino</code>
+        %p
+          If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need
+          personality A at all — the pocket flasher below is then your only reason to own the S3.
+
+        %h2= s3t_h2_flasher
+        %p
+          <strong>The problem:</strong> EP2-class receivers (HappyModel EP2, EP1, EPW6, …) expose
+          CRSF on castellated pads and carry a tiny BOOT pad. Using an FTDI adapter means holding
+          a probe against two 1&nbsp;mm pads <em>while</em> power-cycling the receiver — awkward,
+          and you re-solder or re-clip every time the firmware needs an update.
+        %p
+          <strong>The solution:</strong> let the ESP32-S3 be the <em>flasher</em>. One GPIO holds the
+          receiver's BOOT pad low; a small P-MOSFET switches the receiver's 3.3&nbsp;V rail under
+          software control; the USB port becomes the serial port. Press one button on the S3 and it
+          performs the exact power-cycle dance that drops an ESP8285 into its ROM bootloader — then
+          esptool writes straight through the bridge. No FTDI, no probes, no repeated soldering:
+          solder the receiver's pads <em>once</em> to a short pigtail and reuse it forever.
+        %p Parts list:
+        %table
+          %tr
+            %th Part
+            %th Typical part number
+            %th Cost
+          %tr
+            %td ESP32-S3 micro board (native USB)
+            %td Waveshare ESP32-S3-Tiny / -Micro / -Nano
+            %td ~6 USD
+          %tr
+            %td P-channel logic-level MOSFET
+            %td AO3401 (SOT-23) on a small breakout
+            %td ~1 USD
+          %tr
+            %td Resistor 10&nbsp;kΩ (gate pull-up)
+            %td —
+            %td &lt;0.10 USD
+          %tr
+            %td Dupont / pigtail wires + heat-shrink
+            %td —
+            %td ~1 USD
+          %tr
+            %td ELRS receiver, pads pigtailed once
+            %td EP2 / EP1 / EPW6 (SX1280 + ESP8285)
+            %td from ~12 USD
+        %p.hw-note
+          The bridge works with every ESP8285/SX1280 ELRS receiver that exposes TX, RX, 3V3,
+          GND and a BOOT pad — the overwhelming majority of the <em>concrete boards</em> in the
+          <a href="#{asset_prefix}#{lang_dir}hardware/">hardware table</a>. It also flashes the S3
+          itself, of course: BOOT button + USB is all that needs there.
+
+        %h2= s3t_h2_wiring
+        %p
+          Wire the jig with the S3 unpowered. The MOSFET switches the receiver's 3.3&nbsp;V rail:
+          source ← S3&nbsp;3V3, drain → EP2&nbsp;3V3, gate ← S3&nbsp;GPIO10 with a 10&nbsp;kΩ pull-up
+          to 3V3 (gate high = MOSFET off). GPIO9 drives the BOOT pad.
+        %table
+          %tr
+            %th EP2 / RX pad
+            %th ESP32-S3 pin
+            %th Function
+          %tr
+            %td BOOT (RX GPIO0)
+            %td GPIO9
+            %td Boot-hold line (low = enter bootloader)
+          %tr
+            %td 3V3
+            %td MOSFET drain
+            %td Switched rail (source ← S3 3V3, gate ← GPIO10)
+          %tr
+            %td TX (CRSF out)
+            %td GPIO18 (U1RX)
+            %td RX ← TX (cross)
+          %tr
+            %td RX (CRSF in)
+            %td GPIO17 (U1TX)
+            %td TX → RX (cross)
+          %tr
+            %td GND
+            %td GND
+            %td Common ground (mandatory)
+        %pre
+          %code
+            :preserve
+              S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3
+              S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)
+              S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)
+              S3 GPIO18 ◄── EP2 TX       (U1 RX)
+              S3 GPIO17 ──► EP2 RX       (U1 TX)
+              S3 GND     ──► EP2 GND
+        %aside.waveform-caution
+          %strong Power polarity & voltage
+          — feed the receiver <strong>3.3&nbsp;V only</strong>, never 5&nbsp;V, while it is on the
+          jig. Verify the MOSFET with a voltmeter before connecting a receiver: with GPIO10 HIGH the
+          drain must read 0&nbsp;V; with GPIO10 LOW it must read 3.3&nbsp;V.
+
+        %h2= s3t_h2_mode
+        %p
+          The bridge sketch boots into <em>transparent passthrough</em> (USB ↔ UART at
+          115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, press the S3's BOOT button
+          twice within one second — or send the line <code>FLASH</code> over the USB serial. The
+          sketch then:
+        %ol
+          %li pulls GPIO9 low (BOOT pad asserted),
+          %li switches the MOSFET off for 120&nbsp;ms (receiver power off),
+          %li switches it back on and waits 800&nbsp;ms (receiver powers up inside its bootloader),
+          %li releases GPIO9 — the RX now sits in the ROM bootloader, waiting for esptool,
+          %li resumes USB↔UART passthrough so esptool can talk to it.
+        %p
+          Because the bridge cannot drive the classic DTR/RTS auto-reset lines, always flash with
+          <code>--before no_reset</code> — the power-cycle dance above <em>is</em> the reset.
+          After flashing, a <strong>single</strong> BOOT press power-cycles the receiver again so
+          it boots the new firmware; two presses within the window would merely re-enter flash mode.
+
+        %h2= s3t_h2_esptool
+        %p
+          Build the firmware (or fetch a release), then run esptool against the S3's USB serial
+          port. On macOS the port shows up as <code>/dev/cu.usbmodem*</code>:
+        %pre
+          %code
+            :preserve
+              # 1. Build PteronautOS (from the repository root)
+              pio run -e PteronautOS_ESP8285_2400_RX
+
+              # 2. Drop the RX into flash mode via the S3 (BOOT twice), then:
+              python3 -m esptool --chip esp8285 \
+                --port /dev/cu.usbmodemXXXX --baud 115200 \
+                --before no_reset write_flash \
+                --flash_mode dout --flash_size 1MB --flash_freq 40m \
+                0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+
+              # 3. Restart the RX once more (single BOOT press) to run the new firmware.
+        %p
+          The flash settings (dout, 1&nbsp;MB, 40&nbsp;MHz) match the stock ESP8285 ELRS target —
+          never use qio or a larger size. After flashing, the very same USB port shows the
+          receiver's boot log: open it at 115&nbsp;200&nbsp;baud and watch for the PteronautOS banner
+          and, once a transmitter binds, the CRSF link-up messages. The bridge doubles as your
+          field console for live telemetry.
+
+        %h2= s3t_h2_verify
+        %ul
+          %li Flash mode: BOOT twice must power-cycle the RX and leave it waiting — the 3.3&nbsp;V dips for ~120&nbsp;ms.
+          %li esptool reports <code>Chip is ESP8285</code> and finishes with <code>Hash of data verified</code>.
+          %li The boot log shows the PteronautOS banner and, with the radio on, a link-up message.
+          %li Wiggle the sticks: servos track smoothly; switch the radio off: wings centre to 1500&nbsp;µs within a second.
+          %li If the RX never enters the bootloader, check the BOOT-pad polarity (active low) and the MOSFET switching with the voltmeter test above.
+        %p
+          Once flashed, the same receiver flies — no FTDI left behind.
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

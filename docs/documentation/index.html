@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>Documentação</h1>
 <p class='sub-lead'>O manual, as notas do giroscópio e a referência da interface web.</p>
-<h2>Manuais</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manual principal — arquitectura, mixer, forma de onda</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Giroscópio Zéfiro — AHRS e PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interface web e referência de tradução</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Ligações e mapas de pinos</a>
-</td>
-</tr>
-</table>
+<h2>Arquitectura</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Mixer, waveform generation, channel filtering</dd>
+<dt>Zéfiro</dt>
+<dd>MPU6050 gyroscope + Mahony AHRS + dual PID</dd>
+<dt>ServoOutput</dt>
+<dd>PWM synchronized to CRSF tick</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>Artigos</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../documentation/architecture/'>
+<strong>Arquitetura: kernels e fluxo de dados</strong>
+<p>Como um fluxo CRSF se torna batimento de asa e cauda: fronteiras dos módulos, os dois kernels de mistura e a máquina de estados que mantém o pterossauro vivo quando o link morre.</p>
+</a>
+<a class='tutorial-card' href='../documentation/mixers/'>
+<strong>Referência de mixers</strong>
+<p>Dos sticks e do giroscópio até aos µs no fio: a geometria completa de cada mixer que o PteronautOS pode selecionar — eixos de asa, misturas do leme, elevons, trims e limites.</p>
+</a>
 <a class='tutorial-card' href='../documentation/servo-kernel/'>
 <strong>Servo Kernel</strong>
 <p>Pulse-width envelope, per-function trim and speed limiting — the low-level servo contract.</p>
@@ -71,23 +63,6 @@
 <p>Where the 1MB flash and ~23KB heap go, and how to keep the build under the 60% flash / 65% RAM limits.</p>
 </a>
 </div>
-<h2>Conceitos</h2>
-<dl class='grid'>
-<dt>Ferocidade</dt>
-<dd>Assimetria entre batida e retorno e permanência — 0 é um seno puro.</dd>
-<dt>Forma de onda</dt>
-<dd>A curva do batimento alar; a amplitude vem de graus/s ÷ 2·frequência.</dd>
-<dt>Ângulo de planeio</dt>
-<dd>Desvio do centro da asa para voo planado.</dd>
-<dt>Desvio central do batimento</dt>
-<dd>Polarização central durante a batida (−15…+15 graus).</dd>
-<dt>Mistura do leme</dt>
-<dd>Mistura de guinada/rolagem que acciona o leme de crista.</dd>
-<dt>Mistura de ferocidade do acelerador</dt>
-<dd>Quanto o acelerador se acopla à ferocidade.</dd>
-<dt>Failsafe</dt>
-<dd>As asas voltam ao neutro se o enlace cair.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Geometria da forma de onda de ferocidade</h2>
 <p>A ferocidade controla tanto o carácter como o tempo de meio-batimento. Internamente, o valor 0–100 da WebUI mapeia para 0–8. Maior ferocidade de descida encurta a fracção do ciclo da descida; maior ferocidade de retorno encurta a fracção do retorno. O tempo restante é transferido para a metade oposta — não há pausa em zero.</p>
@@ -171,6 +146,50 @@ Diagonal exacta
 O explorador descreve a forma de onda matemática comandada, não o movimento garantido do servo. Evite definições assimétricas extremas até que amplitude, frequência, geometria das ligações e limites de velocidade do servo tenham sido verificados sem carga aerodinâmica.
 </aside>
 </section>
+<h2>Conceitos</h2>
+<dl class='grid'>
+<dt>Ferocidade</dt>
+<dd>Assimetria entre batida e retorno e permanência — 0 é um seno puro.</dd>
+<dt>Forma de onda</dt>
+<dd>A curva do batimento alar; a amplitude vem de graus/s ÷ 2·frequência.</dd>
+<dt>Ângulo de planeio</dt>
+<dd>Desvio do centro da asa para voo planado.</dd>
+<dt>Desvio central do batimento</dt>
+<dd>Polarização central durante a batida (−15…+15 graus).</dd>
+<dt>Mistura do leme</dt>
+<dd>Mistura de guinada/rolagem que acciona o leme de crista.</dd>
+<dt>Mistura de ferocidade do acelerador</dt>
+<dd>Quanto o acelerador se acopla à ferocidade.</dd>
+<dt>Failsafe</dt>
+<dd>As asas voltam ao neutro se o enlace cair.</dd>
+</dl>
+<h2>Manuais</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manual principal — arquitectura, mixer, forma de onda</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Giroscópio Zéfiro — AHRS e PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interface web e referência de tradução</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Ligações e mapas de pinos</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

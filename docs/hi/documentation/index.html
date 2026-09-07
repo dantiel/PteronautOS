@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>दस्तावेज़</h1>
 <p class='sub-lead'>मैनुअल, जाइरो नोट्स और वेब UI संदर्भ।</p>
-<h2>मैनुअल</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>मुख्य मैनुअल — आर्किटेक्चर, मिक्सर, तरंगरूप</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>ज़ेफ़िरस जाइरो — AHRS और PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>वेब UI और अनुवाद संदर्भ</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>वायरिंग और पिन मैप</a>
-</td>
-</tr>
-</table>
+<h2>संरचना</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>मिक्सर, तरंगरूप निर्माण, चैनल फ़िल्टरिंग</dd>
+<dt>ज़ेफ़िरस</dt>
+<dd>MPU6050 जायरोस्कोप + Mahony AHRS + दोहरा PID</dd>
+<dt>ServoOutput</dt>
+<dd>PWM CRSF टिक के साथ समकालिक</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>लेख</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../hi/documentation/architecture/'>
+<strong>आर्किटेक्चर: कर्नेल और डेटा प्रवाह</strong>
+<p>CRSF स्ट्रीम पंख-फड़फड़ाहट और पूँछ कैसे बनती है: मॉड्यूल सीमाएँ, दो मिक्सर कर्नेल, और वह स्टेट मशीन जो लिंक टूटने पर टेरोसॉर को जीवित रखती है।</p>
+</a>
+<a class='tutorial-card' href='../../hi/documentation/mixers/'>
+<strong>मिक्सर संदर्भ</strong>
+<p>स्टिक और जायरो से तार पर µs तक: हर चयन योग्य मिक्सर की पूर्ण ज्यामिति — पंख अक्ष, रडर मिश्रण, एलेवॉन, ट्रिम और क्लैम्प।</p>
+</a>
 <a class='tutorial-card' href='../../hi/documentation/servo-kernel/'>
 <strong>सर्वो कर्नेल</strong>
 <p>पल्स-चौड़ाई एनवेलप, प्रति-फ़ंक्शन ट्रिम और गति सीमा — निम्न-स्तरीय सर्वो अनुबंध।</p>
@@ -71,23 +63,6 @@
 <p>1MB फ्लैश और ~23KB हीप कहाँ जाते हैं, और 60% फ्लैश / 65% RAM सीमा के नीचे बनाए रखने का तरीका।</p>
 </a>
 </div>
-<h2>अवधारणाएँ</h2>
-<dl class='grid'>
-<dt>फेरोसिटी</dt>
-<dd>स्ट्रोक/वापसी असममिति और ठहराव — 0 शुद्ध साइन है।</dd>
-<dt>तरंगरूप</dt>
-<dd>पंख-धड़कन वक्र; आयाम deg/s ÷ 2·आवृत्ति से आता है।</dd>
-<dt>ग्लाइड कोण</dt>
-<dd>ग्लाइडिंग उड़ान के लिए पंख केंद्र ऑफ़सेट।</dd>
-<dt>फ्लैपिंग केंद्र ऑफ़सेट</dt>
-<dd>फ्लैप स्ट्रोक के दौरान केंद्र बायस (−15…+15 डिग्री)।</dd>
-<dt>रडर मिक्सिंग</dt>
-<dd>यॉ/रोल मिश्रण जो क्रेस्ट रडर को चलाता है।</dd>
-<dt>थ्रॉटल फेरोसिटी मिक्स</dt>
-<dd>थ्रॉटल फेरोसिटी में कितना युग्मित होता है।</dd>
-<dt>फेलसेफ़</dt>
-<dd>लिंक टूटने पर पंख न्यूट्रल पर लौट आते हैं।</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>फेरोसिटी तरंगरूप ज्यामिति</h2>
 <p>फेरोसिटी आधे-स्ट्रोक के चरित्र और समय दोनों को नियंत्रित करती है। आंतरिक रूप से WebUI की 0–100 सेटिंग 0–8 पर मैप होती है। अधिक डाउनस्ट्रोक फेरोसिटी चक्र में डाउनस्ट्रोक का हिस्सा छोटा कर देती है; अधिक वापसी फेरोसिटी वापसी हिस्सा छोटा कर देती है। शेष समय विपरीत आधे में स्थानांतरित हो जाता है — शून्य पर कोई विराम नहीं होता।</p>
@@ -171,6 +146,50 @@
 एक्सप्लोरर आदेशित गणितीय तरंगरूप का वर्णन करता है, न कि गारंटीकृत सर्वो गति का। जब तक आयाम, आवृत्ति, लिंकेज ज्यामिति और सर्वो-गति सीमाएँ वायुगतिकीय भार के बिना सत्यापित न हों, तब तक अत्यधिक असममित सेटिंग से बचें।
 </aside>
 </section>
+<h2>अवधारणाएँ</h2>
+<dl class='grid'>
+<dt>फेरोसिटी</dt>
+<dd>स्ट्रोक/वापसी असममिति और ठहराव — 0 शुद्ध साइन है।</dd>
+<dt>तरंगरूप</dt>
+<dd>पंख-धड़कन वक्र; आयाम deg/s ÷ 2·आवृत्ति से आता है।</dd>
+<dt>ग्लाइड कोण</dt>
+<dd>ग्लाइडिंग उड़ान के लिए पंख केंद्र ऑफ़सेट।</dd>
+<dt>फ्लैपिंग केंद्र ऑफ़सेट</dt>
+<dd>फ्लैप स्ट्रोक के दौरान केंद्र बायस (−15…+15 डिग्री)।</dd>
+<dt>रडर मिक्सिंग</dt>
+<dd>यॉ/रोल मिश्रण जो क्रेस्ट रडर को चलाता है।</dd>
+<dt>थ्रॉटल फेरोसिटी मिक्स</dt>
+<dd>थ्रॉटल फेरोसिटी में कितना युग्मित होता है।</dd>
+<dt>फेलसेफ़</dt>
+<dd>लिंक टूटने पर पंख न्यूट्रल पर लौट आते हैं।</dd>
+</dl>
+<h2>मैनुअल</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>मुख्य मैनुअल — आर्किटेक्चर, मिक्सर, तरंगरूप</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>ज़ेफ़िरस जाइरो — AHRS और PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>वेब UI और अनुवाद संदर्भ</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>वायरिंग और पिन मैप</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

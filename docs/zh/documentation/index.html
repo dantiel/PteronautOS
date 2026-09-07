@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>文档</h1>
 <p class='sub-lead'>手册、陀螺仪说明和 Web UI 参考。</p>
-<h2>手册</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>主手册 — 架构、混控、波形</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>西风陀螺仪 — AHRS 与 PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web UI 与翻译参考</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>接线与引脚图</a>
-</td>
-</tr>
-</table>
+<h2>架构</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>混控器、波形生成、通道滤波</dd>
+<dt>西风神</dt>
+<dd>MPU6050陀螺仪 + Mahony AHRS + 双PID</dd>
+<dt>ServoOutput</dt>
+<dd>PWM同步于CRSF节拍</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>文章</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../zh/documentation/architecture/'>
+<strong>架构：内核与数据流</strong>
+<p>CRSF 数据流如何化为扑翼与尾翼：模块边界、两个混控内核，以及在链路断开时让翼龙存活的有限状态机。</p>
+</a>
+<a class='tutorial-card' href='../../zh/documentation/mixers/'>
+<strong>混控器参考</strong>
+<p>从摇杆与陀螺仪到导线上的微秒：每种可选混控器的完整几何——机翼轴、方向舵混合、升降副翼、微调与限幅。</p>
+</a>
 <a class='tutorial-card' href='../../zh/documentation/servo-kernel/'>
 <strong>舵机内核</strong>
 <p>脉宽包络、按功能的微调与速度限制——低层舵机契约。</p>
@@ -71,23 +63,6 @@
 <p>1MB Flash和~23KB堆的去向，以及如何将构建保持在60% Flash/65% RAM以下。</p>
 </a>
 </div>
-<h2>概念</h2>
-<dl class='grid'>
-<dt>力度</dt>
-<dd>行程/回程不对称与驻留 — 0 为纯正弦。</dd>
-<dt>波形</dt>
-<dd>扑翼曲线；振幅来自 度/秒 ÷ 2·频率。</dd>
-<dt>滑翔角</dt>
-<dd>滑翔飞行的机翼中心偏移。</dd>
-<dt>扑翼中心偏移</dt>
-<dd>扑翼行程中的中心偏置（−15…+15 度）。</dd>
-<dt>方向舵混控</dt>
-<dd>驱动头冠方向舵的偏航/滚转混合。</dd>
-<dt>油门力度混合</dt>
-<dd>油门耦合到力度的程度。</dd>
-<dt>失控保护</dt>
-<dd>链路丢失时，机翼回到中立位置。</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>力度波形几何</h2>
 <p>力度同时控制半行程的特性与时机。内部上，WebUI 的 0–100 设置映射到 0–8。下行程力度越高，下行程在周期中的占比越短；回程力度越高，回程占比越短。剩余时间转移到另一半 — 零点处没有停顿。</p>
@@ -171,6 +146,50 @@
 该探索器描述的是指令数学波形，而非保证的舵机运动。在振幅、频率、连杆几何和舵机速度极限未经空载验证之前，请避免极端的不对称设置。
 </aside>
 </section>
+<h2>概念</h2>
+<dl class='grid'>
+<dt>力度</dt>
+<dd>行程/回程不对称与驻留 — 0 为纯正弦。</dd>
+<dt>波形</dt>
+<dd>扑翼曲线；振幅来自 度/秒 ÷ 2·频率。</dd>
+<dt>滑翔角</dt>
+<dd>滑翔飞行的机翼中心偏移。</dd>
+<dt>扑翼中心偏移</dt>
+<dd>扑翼行程中的中心偏置（−15…+15 度）。</dd>
+<dt>方向舵混控</dt>
+<dd>驱动头冠方向舵的偏航/滚转混合。</dd>
+<dt>油门力度混合</dt>
+<dd>油门耦合到力度的程度。</dd>
+<dt>失控保护</dt>
+<dd>链路丢失时，机翼回到中立位置。</dd>
+</dl>
+<h2>手册</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>主手册 — 架构、混控、波形</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>西风陀螺仪 — AHRS 与 PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Web UI 与翻译参考</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>接线与引脚图</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

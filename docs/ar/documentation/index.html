@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>التوثيق</h1>
 <p class='sub-lead'>الدليل وملاحظات الجيروسكوب ومرجع واجهة الويب.</p>
-<h2>الأدلة</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>الدليل الرئيسي — البنية، الخلاط، شكل الموجة</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>جيروسكوب زيفيروس — AHRS و PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>واجهة الويب ومرجع الترجمة</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>التوصيلات وخرائط الأطراف</a>
-</td>
-</tr>
-</table>
+<h2>المعمارية</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>خلاط، توليد شكل موجة، تصفية القنوات</dd>
+<dt>زيفيروس</dt>
+<dd>MPU6050 جيروسكوب + Mahony AHRS + PID مزدوج</dd>
+<dt>ServoOutput</dt>
+<dd>PWM متزامن مع نبضة CRSF</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>مقالات</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../ar/documentation/architecture/'>
+<strong>البنية: النوى وتدفق البيانات</strong>
+<p>كيف يتحول تيار CRSF إلى خفقان أجنحة وذيل: حدود الوحدات، نواتا المزج، وآلة الحالات التي تُبقي التيروصور حيًا عند انقطاع الربط.</p>
+</a>
+<a class='tutorial-card' href='../../ar/documentation/mixers/'>
+<strong>مرجع المزجات</strong>
+<p>من العصي والجيروسكوب إلى ميكروثانية على السلك: الهندسة الكاملة لكل مزج قابل للاختيار — محاور الجناح، ومزج الدفة، والإلفونات، والضبط والحدود.</p>
+</a>
 <a class='tutorial-card' href='../../ar/documentation/servo-kernel/'>
 <strong>نواة السيرفو</strong>
 <p>غلاف عرض النبضة والتقليم لكل وظيفة وتحديد السرعة — عقد السيرفو منخفض المستوى.</p>
@@ -71,23 +63,6 @@
 <p>أين تذهب ذاكرة 1MB و~23KB من الكومة وكيفية إبقاء البناء دون 60% فلاش / 65% RAM.</p>
 </a>
 </div>
-<h2>المفاهيم</h2>
-<dl class='grid'>
-<dt>الشراسة</dt>
-<dd>عدم تناظر الضربة/العودة والثبات — 0 هو جيب نقي.</dd>
-<dt>شكل الموجة</dt>
-<dd>منحنى خفق الجناح؛ السعة تأتي من درجة/ث ÷ 2·التردد.</dd>
-<dt>زاوية الانزلاق</dt>
-<dd>إزاحة مركز الجناح للطيران الانزلاقي.</dd>
-<dt>إزاحة مركز الخفقان</dt>
-<dd>انحياز المركز أثناء ضربة الخفق (−15…+15 درجة).</dd>
-<dt>خلط الدفة</dt>
-<dd>مزيج الانعراج/التدحرج الذي يحرك دفة القمة.</dd>
-<dt>خلط شراسة الخانق</dt>
-<dd>مقدار اقتران الخانق بالشراسة.</dd>
-<dt>الأمان عند الفشل</dt>
-<dd>تعود الأجنحة إلى الوضع المحايد إذا انقطع الرابط.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>هندسة شكل موجة الشراسة</h2>
 <p>تتحكم الشراسة في كل من طابع وتوقيت نصف الضربة. داخليًا، يتطابق إعداد WebUI من 0–100 مع 0–8. الشراسة الأعلى للهبوط تقصّر حصة الهبوط من الدورة؛ والشراسة الأعلى للعودة تقصّر حصة العودة. يُنقل الوقت المتبقي إلى النصف المقابل — لا يوجد توقف عند الصفر.</p>
@@ -171,6 +146,50 @@
 يصف المستكشف شكل الموجة الرياضي المُوجَّه، وليس حركة سيرفو مضمونة. تجنّب الإعدادات غير المتماثلة القصوى حتى يتم التحقق من السعة والتردد وهندسة الوصلات وحدود سرعة السيرفو دون حمل هوائي.
 </aside>
 </section>
+<h2>المفاهيم</h2>
+<dl class='grid'>
+<dt>الشراسة</dt>
+<dd>عدم تناظر الضربة/العودة والثبات — 0 هو جيب نقي.</dd>
+<dt>شكل الموجة</dt>
+<dd>منحنى خفق الجناح؛ السعة تأتي من درجة/ث ÷ 2·التردد.</dd>
+<dt>زاوية الانزلاق</dt>
+<dd>إزاحة مركز الجناح للطيران الانزلاقي.</dd>
+<dt>إزاحة مركز الخفقان</dt>
+<dd>انحياز المركز أثناء ضربة الخفق (−15…+15 درجة).</dd>
+<dt>خلط الدفة</dt>
+<dd>مزيج الانعراج/التدحرج الذي يحرك دفة القمة.</dd>
+<dt>خلط شراسة الخانق</dt>
+<dd>مقدار اقتران الخانق بالشراسة.</dd>
+<dt>الأمان عند الفشل</dt>
+<dd>تعود الأجنحة إلى الوضع المحايد إذا انقطع الرابط.</dd>
+</dl>
+<h2>الأدلة</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>الدليل الرئيسي — البنية، الخلاط، شكل الموجة</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>جيروسكوب زيفيروس — AHRS و PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>واجهة الويب ومرجع الترجمة</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>التوصيلات وخرائط الأطراف</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

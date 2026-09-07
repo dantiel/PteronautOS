@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>Documentación</h1>
 <p class='sub-lead'>El manual, las notas del giroscopio y la referencia de la interfaz web.</p>
-<h2>Manuales</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manual principal — arquitectura, mezclador, forma de onda</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Giroscopio Céfiro — AHRS y PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interfaz web y referencia de traducción</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Cableado y mapas de pines</a>
-</td>
-</tr>
-</table>
+<h2>Arquitectura</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Mezclador, generación de onda, filtrado de canales</dd>
+<dt>Céfiro</dt>
+<dd>Giróscopo MPU6050 + Mahony AHRS + PID dual</dd>
+<dt>ServoOutput</dt>
+<dd>PWM sincronizado al tick CRSF</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>Artículos</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../es/documentation/architecture/'>
+<strong>Arquitectura: kernels y flujo de datos</strong>
+<p>Cómo un flujo CRSF se convierte en aleteo y cola: límites de los módulos, los dos kernels de mezcla y la máquina de estados que mantiene vivo al pterosaurio cuando el enlace muere.</p>
+</a>
+<a class='tutorial-card' href='../../es/documentation/mixers/'>
+<strong>Referencia de mezcladores</strong>
+<p>De palancas y giroscopio a µs en el hilo: la geometría completa de cada mezclador que PteronautOS puede seleccionar — ejes de ala, mezclas de timón, elevones, trims y límites.</p>
+</a>
 <a class='tutorial-card' href='../../es/documentation/servo-kernel/'>
 <strong>Kernel de servos</strong>
 <p>Envolvente de ancho de pulso, trim por función y límite de velocidad — el contrato de bajo nivel del servo.</p>
@@ -71,23 +63,6 @@
 <p>A dónde van la flash de 1MB y los ~23KB de heap, y cómo mantener la compilación bajo 60% flash / 65% RAM.</p>
 </a>
 </div>
-<h2>Conceptos</h2>
-<dl class='grid'>
-<dt>Ferocidad</dt>
-<dd>Asimetría entre golpe y retorno, y permanencia — 0 es un seno puro.</dd>
-<dt>Forma de onda</dt>
-<dd>La curva del aleteo; la amplitud sale de grados/s ÷ 2·frecuencia.</dd>
-<dt>Ángulo de planeo</dt>
-<dd>Desplazamiento del centro del ala para el vuelo planeado.</dd>
-<dt>Desplazamiento central del aleteo</dt>
-<dd>Sesgo central durante el golpe de aleteo (−15…+15 grados).</dd>
-<dt>Mezcla del timón</dt>
-<dd>Mezcla de guiñada/balanceo que acciona el timón de cresta.</dd>
-<dt>Mezcla de ferocidad del acelerador</dt>
-<dd>Cuánto se acopla el acelerador a la ferocidad.</dd>
-<dt>A prueba de fallos</dt>
-<dd>Las alas vuelven al neutro si se pierde el enlace.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Geometría de la forma de onda de ferocidad</h2>
 <p>La ferocidad controla tanto el carácter como el tiempo de medio golpe. Internamente, el ajuste 0–100 de la WebUI se mapea a 0–8. Una mayor ferocidad de descenso acorta la parte del ciclo del descenso; una mayor ferocidad de retorno acorta la parte del retorno. El tiempo restante se transfiere a la mitad opuesta: no hay pausa en cero.</p>
@@ -171,6 +146,50 @@ Diagonal exacta
 El explorador describe la forma de onda matemática comandada, no el movimiento garantizado del servo. Evita ajustes asimétricos extremos hasta que amplitud, frecuencia, geometría de varillaje y límites de velocidad del servo se hayan verificado sin carga aerodinámica.
 </aside>
 </section>
+<h2>Conceptos</h2>
+<dl class='grid'>
+<dt>Ferocidad</dt>
+<dd>Asimetría entre golpe y retorno, y permanencia — 0 es un seno puro.</dd>
+<dt>Forma de onda</dt>
+<dd>La curva del aleteo; la amplitud sale de grados/s ÷ 2·frecuencia.</dd>
+<dt>Ángulo de planeo</dt>
+<dd>Desplazamiento del centro del ala para el vuelo planeado.</dd>
+<dt>Desplazamiento central del aleteo</dt>
+<dd>Sesgo central durante el golpe de aleteo (−15…+15 grados).</dd>
+<dt>Mezcla del timón</dt>
+<dd>Mezcla de guiñada/balanceo que acciona el timón de cresta.</dd>
+<dt>Mezcla de ferocidad del acelerador</dt>
+<dd>Cuánto se acopla el acelerador a la ferocidad.</dd>
+<dt>A prueba de fallos</dt>
+<dd>Las alas vuelven al neutro si se pierde el enlace.</dd>
+</dl>
+<h2>Manuales</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manual principal — arquitectura, mezclador, forma de onda</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Giroscopio Céfiro — AHRS y PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interfaz web y referencia de traducción</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Cableado y mapas de pines</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

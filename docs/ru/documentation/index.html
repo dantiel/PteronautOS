@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>Документация</h1>
 <p class='sub-lead'>Руководство, заметки по гироскопу и справка по веб-интерфейсу.</p>
-<h2>Руководства</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Основное руководство — архитектура, микшер, форма волны</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Гироскоп Зефир — AHRS и PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Веб-интерфейс и справочник переводов</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Распайка и карты выводов</a>
-</td>
-</tr>
-</table>
+<h2>Архитектура</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Микшер, генерация волны, фильтрация каналов</dd>
+<dt>Зефир</dt>
+<dd>Гироскоп MPU6050 + Mahony AHRS + двойной PID</dd>
+<dt>ServoOutput</dt>
+<dd>ШИМ, синхронизированный с тиком CRSF</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>Статьи</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../ru/documentation/architecture/'>
+<strong>Архитектура: ядра и потоки данных</strong>
+<p>Как поток CRSF превращается во взмах крыла и хвост: границы модулей, два ядра микшера и конечный автомат, который держит птерозавра в живых при потере связи.</p>
+</a>
+<a class='tutorial-card' href='../../ru/documentation/mixers/'>
+<strong>Справочник микшеров</strong>
+<p>От стиков и гироскопа до µs на проводе: полная геометрия каждого микшера — оси крыла, смеси руля, элевоны, триммы и ограничения.</p>
+</a>
 <a class='tutorial-card' href='../../ru/documentation/servo-kernel/'>
 <strong>Сервоядро</strong>
 <p>Диапазон длительности импульса, тримминг по функциям и ограничение скорости — низкоуровневый контракт сервопривода.</p>
@@ -71,23 +63,6 @@
 <p>Куда уходят 1 МБ flash и ~23 КБ кучи, и как удержать сборку ниже 60% flash / 65% RAM.</p>
 </a>
 </div>
-<h2>Концепции</h2>
-<dl class='grid'>
-<dt>Ferocity</dt>
-<dd>Асимметрия взмаха и возврата и выдержка — 0 это чистый синус.</dd>
-<dt>Форма волны</dt>
-<dd>Кривая взмаха крыла; амплитуда получается из град/с ÷ 2·частота.</dd>
-<dt>Угол планирования</dt>
-<dd>Смещение центра крыла для планирующего полёта.</dd>
-<dt>Смещение центра взмаха</dt>
-<dd>Смещение центра во время взмаха (−15…+15 градусов).</dd>
-<dt>Микширование руля</dt>
-<dd>Смесь рыскания/крена, управляющая гребневым рулём.</dd>
-<dt>Микс газа и ferocity</dt>
-<dd>Насколько газ связан с ferocity.</dd>
-<dt>Failsafe</dt>
-<dd>Крылья возвращаются в нейтраль при потере связи.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Геометрия формы волны ferocity</h2>
 <p>Ferocity управляет и характером, и таймингом полувзмаха. Внутренне настройка WebUI 0–100 соответствует 0–8. Более высокая ferocity опускания укорачивает долю цикла опускания; более высокая ferocity возврата укорачивает долю возврата. Оставшееся время передаётся противоположной половине — паузы на нуле нет.</p>
@@ -171,6 +146,50 @@
 Обозреватель описывает заданную математическую форму волны, а не гарантированное движение сервопривода. Избегайте экстремальных асимметричных настроек, пока амплитуда, частота, геометрия тяг и пределы скорости сервопривода не проверены без аэродинамической нагрузки.
 </aside>
 </section>
+<h2>Концепции</h2>
+<dl class='grid'>
+<dt>Ferocity</dt>
+<dd>Асимметрия взмаха и возврата и выдержка — 0 это чистый синус.</dd>
+<dt>Форма волны</dt>
+<dd>Кривая взмаха крыла; амплитуда получается из град/с ÷ 2·частота.</dd>
+<dt>Угол планирования</dt>
+<dd>Смещение центра крыла для планирующего полёта.</dd>
+<dt>Смещение центра взмаха</dt>
+<dd>Смещение центра во время взмаха (−15…+15 градусов).</dd>
+<dt>Микширование руля</dt>
+<dd>Смесь рыскания/крена, управляющая гребневым рулём.</dd>
+<dt>Микс газа и ferocity</dt>
+<dd>Насколько газ связан с ferocity.</dd>
+<dt>Failsafe</dt>
+<dd>Крылья возвращаются в нейтраль при потере связи.</dd>
+</dl>
+<h2>Руководства</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Основное руководство — архитектура, микшер, форма волны</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Гироскоп Зефир — AHRS и PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Веб-интерфейс и справочник переводов</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Распайка и карты выводов</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

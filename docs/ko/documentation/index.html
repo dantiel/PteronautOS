@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>문서</h1>
 <p class='sub-lead'>매뉴얼, 자이로 노트, 웹 UI 레퍼런스.</p>
-<h2>매뉴얼</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>주 매뉴얼 — 아키텍처, 믹서, 파형</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>제피로스 자이로 — AHRS 및 PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>웹 UI 및 번역 레퍼런스</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>배선 및 핀 맵</a>
-</td>
-</tr>
-</table>
+<h2>구조</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>뱁서, 파형 생성, 채널 필터링</dd>
+<dt>제피로스</dt>
+<dd>MPU6050 자이로 + Mahony AHRS + 듀얼 PID</dd>
+<dt>ServoOutput</dt>
+<dd>CRSF 틱에 동기화된 PWM</dd>
+<dt>Target</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>문서</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../ko/documentation/architecture/'>
+<strong>아키텍처: 커널과 데이터 흐름</strong>
+<p>CRSF 스트림이 날갯짓과 꼬리가 되는 법: 모듈 경계, 두 믹서 커널, 링크가 끊겨도 익룡을 살리는 상태 머신.</p>
+</a>
+<a class='tutorial-card' href='../../ko/documentation/mixers/'>
+<strong>믹서 레퍼런스</strong>
+<p>스틱과 자이로에서 선 위의 µs까지: 선택 가능한 모든 믹서의 완전한 기하 — 날개 축, 러더 블렌드, 엘레본, 트림과 클램프.</p>
+</a>
 <a class='tutorial-card' href='../../ko/documentation/servo-kernel/'>
 <strong>서보 커널</strong>
 <p>펄스 폭 범위, 기능별 트림, 속도 제한 — 저수준 서보 계약.</p>
@@ -71,23 +63,6 @@
 <p>1MB 플래시와 ~23KB 힙이 어디로 가는지, 그리고 60% 플래시 / 65% RAM 이하로 유지하는 방법.</p>
 </a>
 </div>
-<h2>개념</h2>
-<dl class='grid'>
-<dt>퍼로시티</dt>
-<dd>스트로크/복귀 비대칭과 체류 — 0은 순수 사인파.</dd>
-<dt>파형</dt>
-<dd>날갯짓 곡선; 진폭은 deg/s ÷ 2·주파수에서 나옵니다.</dd>
-<dt>글라이드 각도</dt>
-<dd>활공 비행을 위한 날개 중심 오프셋.</dd>
-<dt>플래핑 중심 오프셋</dt>
-<dd>플랩 스트로크 중 중심 편향 (−15…+15도).</dd>
-<dt>러더 믹싱</dt>
-<dd>크레스트 러더를 구동하는 요/롤 블렌드.</dd>
-<dt>스로틀 퍼로시티 믹스</dt>
-<dd>스로틀이 퍼로시티에 결합되는 정도.</dd>
-<dt>페일세이프</dt>
-<dd>링크가 끊기면 날개가 중립으로 복귀합니다.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>퍼로시티 파형 기하학</h2>
 <p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
@@ -171,6 +146,50 @@
 익스플로러는 보장된 서보 움직임이 아니라 명령된 수학적 파형을 설명합니다. 진폭, 주파수, 링키지 기하, 서보 속도 한계가 공기역학적 부하 없이 검증될 때까지 극단적인 비대칭 설정을 피하세요.
 </aside>
 </section>
+<h2>개념</h2>
+<dl class='grid'>
+<dt>퍼로시티</dt>
+<dd>스트로크/복귀 비대칭과 체류 — 0은 순수 사인파.</dd>
+<dt>파형</dt>
+<dd>날갯짓 곡선; 진폭은 deg/s ÷ 2·주파수에서 나옵니다.</dd>
+<dt>글라이드 각도</dt>
+<dd>활공 비행을 위한 날개 중심 오프셋.</dd>
+<dt>플래핑 중심 오프셋</dt>
+<dd>플랩 스트로크 중 중심 편향 (−15…+15도).</dd>
+<dt>러더 믹싱</dt>
+<dd>크레스트 러더를 구동하는 요/롤 블렌드.</dd>
+<dt>스로틀 퍼로시티 믹스</dt>
+<dd>스로틀이 퍼로시티에 결합되는 정도.</dd>
+<dt>페일세이프</dt>
+<dd>링크가 끊기면 날개가 중립으로 복귀합니다.</dd>
+</dl>
+<h2>매뉴얼</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>주 매뉴얼 — 아키텍처, 믹서, 파형</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>제피로스 자이로 — AHRS 및 PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>웹 UI 및 번역 레퍼런스</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>배선 및 핀 맵</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

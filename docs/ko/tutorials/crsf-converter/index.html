@@ -75,6 +75,12 @@ Flash the converter with a minimal Arduino sketch. The core loop is a CRSF parse
 <p>
 A production-ready version validates the CRC, frames the stream on the 26-byte packet boundary and keeps a failsafe (if no valid frame arrives within 1&nbsp;s, hold the last known pulses or centre to 1500&nbsp;µs). PteronautOS itself already implements a centred failsafe on the RX — but a standalone converter should be fail-safe on its own.
 </p>
+<p>
+A ready-to-compile, CRC-checked implementation with failsafe and up to eight channels lives in the repository as
+<a href="https://github.com/dantiel/PteronautOS/blob/master/sketches/esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino">sketches/esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino</a>.
+If you also want to flash EP2-class receivers without an FTDI adapter, the same S3 board can become a pocket flasher —
+see <a href="../../../ko/tutorials/esp32s3-toolbox/">Tutorial 07 — ESP32-S3 Toolbox</a>.
+</p>
 <h2>검증</h2>
 <ul>
 <li>Power the RX and the ESP32-S3 from the same 5V rail.</li>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='pt'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Kit de ferramentas ESP32-S3 — conversor e flasher de bolso — PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Voltar ao topo' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Voltar ao topo' type='button'>↑</button>
+<a class='home-link' href='../../' title='Início do PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../tutorials/'>Tutoriais</a>
+<a href='../../hardware/'>Hardware</a>
+<a href='../../documentation/'>Documentação</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>Kit de ferramentas ESP32-S3</h1>
+<p class='sub-lead'>Transforma um ESP32-S3 de ~6 USD em duas ferramentas: um conversor CRSF→PWM firme como uma rocha e um flasher de bolso que instala o PteronautOS em recetores da classe EP2 sem FTDI soldado.</p>
+<h2>Uma placa, duas ferramentas</h2>
+<p>
+Both personalities run on the <strong>same hardware</strong> — a Waveshare-style
+ESP32-S3 micro board (~6&nbsp;USD, 23&nbsp;×&nbsp;18&nbsp;mm, native USB, every
+GPIO PWM-capable). You flash one sketch or the other, depending on the task of the day:
+</p>
+<table>
+<tr>
+<th>Tool</th>
+<th>Sketch</th>
+<th>Turns the S3 into…</th>
+<th>Used for</th>
+</tr>
+<tr>
+<td>A — Converter</td>
+<td>
+<code>esp32s3_crsf_pwm</code>
+</td>
+<td>A rock-steady CRSF→PWM servo driver (up to 8 channels)</td>
+<td>Driving wing + rudder servos from any CRSF-only receiver</td>
+</tr>
+<tr>
+<td>B — Pocket flasher</td>
+<td>
+<code>esp32s3_flash_bridge</code>
+</td>
+<td>A USB↔UART bridge with a boot + power-cycle jig</td>
+<td>Flashing PteronautOS onto EP2-class receivers — no soldered FTDI</td>
+</tr>
+</table>
+<p>
+Both sketches live in the repository under
+<code>sketches/esp32s3_crsf_pwm/</code> and
+<code>sketches/esp32s3_flash_bridge/</code> and compile with the
+standard arduino-esp32 core.
+</p>
+<h2>A — Conversor CRSF→PWM (recapitulação)</h2>
+<p>
+Flashing the converter sketch follows the exact procedure described in
+<a href="../../tutorials/crsf-converter/">Tutorial 06 — CRSF→PWM Converter</a>:
+CRSF at 420&nbsp;000&nbsp;baud on the UART, servos on three free GPIOs,
+a 988–2012&nbsp;µs window mapped from the 172–1811 channel range, and a
+failsafe that centres the servos when no valid frame arrives for 500&nbsp;ms.
+</p>
+<ul>
+<li>Wiring recap: RX&nbsp;TX → S3&nbsp;GPIO44, RX&nbsp;RX → S3&nbsp;GPIO43, common GND, shared 5&nbsp;V rail.</li>
+<li>Servos: GPIO1 (left wing), GPIO2 (right wing), GPIO3 (crest rudder) — all overrideable in the sketch.</li>
+<li>Full, CRC-checked source: <code>sketches/esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino</code></li>
+</ul>
+<p>
+If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need
+personality A at all — the pocket flasher below is then your only reason to own the S3.
+</p>
+<h2>B — Flasher de bolso para recetores da classe EP2</h2>
+<p>
+<strong>The problem:</strong> EP2-class receivers (HappyModel EP2, EP1, EPW6, …) expose
+CRSF on castellated pads and carry a tiny BOOT pad. Using an FTDI adapter means holding
+a probe against two 1&nbsp;mm pads <em>while</em> power-cycling the receiver — awkward,
+and you re-solder or re-clip every time the firmware needs an update.
+</p>
+<p>
+<strong>The solution:</strong> let the ESP32-S3 be the <em>flasher</em>. One GPIO holds the
+receiver's BOOT pad low; a small P-MOSFET switches the receiver's 3.3&nbsp;V rail under
+software control; the USB port becomes the serial port. Press one button on the S3 and it
+performs the exact power-cycle dance that drops an ESP8285 into its ROM bootloader — then
+esptool writes straight through the bridge. No FTDI, no probes, no repeated soldering:
+solder the receiver's pads <em>once</em> to a short pigtail and reuse it forever.
+</p>
+<p>Parts list:</p>
+<table>
+<tr>
+<th>Part</th>
+<th>Typical part number</th>
+<th>Cost</th>
+</tr>
+<tr>
+<td>ESP32-S3 micro board (native USB)</td>
+<td>Waveshare ESP32-S3-Tiny / -Micro / -Nano</td>
+<td>~6 USD</td>
+</tr>
+<tr>
+<td>P-channel logic-level MOSFET</td>
+<td>AO3401 (SOT-23) on a small breakout</td>
+<td>~1 USD</td>
+</tr>
+<tr>
+<td>Resistor 10&nbsp;kΩ (gate pull-up)</td>
+<td>—</td>
+<td>&lt;0.10 USD</td>
+</tr>
+<tr>
+<td>Dupont / pigtail wires + heat-shrink</td>
+<td>—</td>
+<td>~1 USD</td>
+</tr>
+<tr>
+<td>ELRS receiver, pads pigtailed once</td>
+<td>EP2 / EP1 / EPW6 (SX1280 + ESP8285)</td>
+<td>from ~12 USD</td>
+</tr>
+</table>
+<p class='hw-note'>
+The bridge works with every ESP8285/SX1280 ELRS receiver that exposes TX, RX, 3V3,
+GND and a BOOT pad — the overwhelming majority of the <em>concrete boards</em> in the
+<a href="../../hardware/">hardware table</a>. It also flashes the S3
+itself, of course: BOOT button + USB is all that needs there.
+</p>
+<h2>Ligação do suporte de gravação</h2>
+<p>
+Wire the jig with the S3 unpowered. The MOSFET switches the receiver's 3.3&nbsp;V rail:
+source ← S3&nbsp;3V3, drain → EP2&nbsp;3V3, gate ← S3&nbsp;GPIO10 with a 10&nbsp;kΩ pull-up
+to 3V3 (gate high = MOSFET off). GPIO9 drives the BOOT pad.
+</p>
+<table>
+<tr>
+<th>EP2 / RX pad</th>
+<th>ESP32-S3 pin</th>
+<th>Function</th>
+</tr>
+<tr>
+<td>BOOT (RX GPIO0)</td>
+<td>GPIO9</td>
+<td>Boot-hold line (low = enter bootloader)</td>
+</tr>
+<tr>
+<td>3V3</td>
+<td>MOSFET drain</td>
+<td>Switched rail (source ← S3 3V3, gate ← GPIO10)</td>
+</tr>
+<tr>
+<td>TX (CRSF out)</td>
+<td>GPIO18 (U1RX)</td>
+<td>RX ← TX (cross)</td>
+</tr>
+<tr>
+<td>RX (CRSF in)</td>
+<td>GPIO17 (U1TX)</td>
+<td>TX → RX (cross)</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND</td>
+<td>Common ground (mandatory)</td>
+</tr>
+</table>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<aside class='waveform-caution'>
+<strong>Power polarity & voltage</strong>
+— feed the receiver <strong>3.3&nbsp;V only</strong>, never 5&nbsp;V, while it is on the
+jig. Verify the MOSFET with a voltmeter before connecting a receiver: with GPIO10 HIGH the
+drain must read 0&nbsp;V; with GPIO10 LOW it must read 3.3&nbsp;V.
+</aside>
+<h2>Modo de gravação no sketch-ponte</h2>
+<p>
+The bridge sketch boots into <em>transparent passthrough</em> (USB ↔ UART at
+115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, press the S3's BOOT button
+twice within one second — or send the line <code>FLASH</code> over the USB serial. The
+sketch then:
+</p>
+<ol>
+<li>pulls GPIO9 low (BOOT pad asserted),</li>
+<li>switches the MOSFET off for 120&nbsp;ms (receiver power off),</li>
+<li>switches it back on and waits 800&nbsp;ms (receiver powers up inside its bootloader),</li>
+<li>releases GPIO9 — the RX now sits in the ROM bootloader, waiting for esptool,</li>
+<li>resumes USB↔UART passthrough so esptool can talk to it.</li>
+</ol>
+<p>
+Because the bridge cannot drive the classic DTR/RTS auto-reset lines, always flash with
+<code>--before no_reset</code> — the power-cycle dance above <em>is</em> the reset.
+After flashing, a <strong>single</strong> BOOT press power-cycles the receiver again so
+it boots the new firmware; two presses within the window would merely re-enter flash mode.
+</p>
+<h2>Gravar o PteronautOS através do S3</h2>
+<p>
+Build the firmware (or fetch a release), then run esptool against the S3's USB serial
+port. On macOS the port shows up as <code>/dev/cu.usbmodem*</code>:
+</p>
+<pre><code># 1. Build PteronautOS (from the repository root)&#x000A;pio run -e PteronautOS_ESP8285_2400_RX&#x000A;&#x000A;# 2. Drop the RX into flash mode via the S3 (BOOT twice), then:&#x000A;python3 -m esptool --chip esp8285 \&#x000A;  --port /dev/cu.usbmodemXXXX --baud 115200 \&#x000A;  --before no_reset write_flash \&#x000A;  --flash_mode dout --flash_size 1MB --flash_freq 40m \&#x000A;  0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin&#x000A;&#x000A;# 3. Restart the RX once more (single BOOT press) to run the new firmware.&#x000A;</code></pre>
+<p>
+The flash settings (dout, 1&nbsp;MB, 40&nbsp;MHz) match the stock ESP8285 ELRS target —
+never use qio or a larger size. After flashing, the very same USB port shows the
+receiver's boot log: open it at 115&nbsp;200&nbsp;baud and watch for the PteronautOS banner
+and, once a transmitter binds, the CRSF link-up messages. The bridge doubles as your
+field console for live telemetry.
+</p>
+<h2>Verificação e primeiro voo</h2>
+<ul>
+<li>Flash mode: BOOT twice must power-cycle the RX and leave it waiting — the 3.3&nbsp;V dips for ~120&nbsp;ms.</li>
+<li>esptool reports <code>Chip is ESP8285</code> and finishes with <code>Hash of data verified</code>.</li>
+<li>The boot log shows the PteronautOS banner and, with the radio on, a link-up message.</li>
+<li>Wiggle the sticks: servos track smoothly; switch the radio off: wings centre to 1500&nbsp;µs within a second.</li>
+<li>If the RX never enters the bootloader, check the BOOT-pad polarity (active low) and the MOSFET switching with the voltmeter test above.</li>
+</ul>
+<p>
+Once flashed, the same receiver flies — no FTDI left behind.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='active' href='../../tutorials/esp32s3-toolbox/'>PT</a>
+<a class='' href='../../en/tutorials/esp32s3-toolbox/'>EN</a>
+<a class='' href='../../es/tutorials/esp32s3-toolbox/'>ES</a>
+<a class='' href='../../fr/tutorials/esp32s3-toolbox/'>FR</a>
+<a class='' href='../../de/tutorials/esp32s3-toolbox/'>DE</a>
+<a class='' href='../../ru/tutorials/esp32s3-toolbox/'>RU</a>
+<a class='' href='../../ko/tutorials/esp32s3-toolbox/'>한국어</a>
+<a class='' href='../../ja/tutorials/esp32s3-toolbox/'>日本語</a>
+<a class='' href='../../zh/tutorials/esp32s3-toolbox/'>中文</a>
+<a class='' href='../../ar/tutorials/esp32s3-toolbox/'>عربي</a>
+<a class='' href='../../hi/tutorials/esp32s3-toolbox/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

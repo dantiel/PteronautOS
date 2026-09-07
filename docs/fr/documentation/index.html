@@ -29,35 +29,27 @@
 <div class='sub-content'>
 <h1>Documentation</h1>
 <p class='sub-lead'>Le manuel, les notes du gyroscope et la référence de l&#39;interface web.</p>
-<h2>Manuels</h2>
-<table>
-<tr>
-<td>PTERONAUTOS.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manuel principal — architecture, mélangeur, forme d&#39;onde</a>
-</td>
-</tr>
-<tr>
-<td>STABILIZATION.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Gyroscope Zéphyr — AHRS et PID</a>
-</td>
-</tr>
-<tr>
-<td>WEBUI_I18N.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interface web et référence de traduction</a>
-</td>
-</tr>
-<tr>
-<td>HARDWARE.md</td>
-<td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Câblage et brochage</a>
-</td>
-</tr>
-</table>
+<h2>Architecture</h2>
+<dl class='grid'>
+<dt>Ornithopter</dt>
+<dd>Mixeur, génération de forme d&#39;onde, filtrage de canaux</dd>
+<dt>Zéphyr</dt>
+<dd>Gyroscope MPU6050 + Mahony AHRS + double PID</dd>
+<dt>ServoOutput</dt>
+<dd>PWM synchronisé au tick CRSF</dd>
+<dt>Cible</dt>
+<dd>ESP8285 2400MHz RX</dd>
+</dl>
 <h2>Articles</h2>
 <div class='tutorial-menu'>
+<a class='tutorial-card' href='../../fr/documentation/architecture/'>
+<strong>Architecture : kernels et flux de données</strong>
+<p>Comment un flux CRSF devient battement d&#39;aile et empennage : frontières des modules, les deux kernels de mixage et la machine d&#39;état qui garde le ptérosaure en vie quand le lien meurt.</p>
+</a>
+<a class='tutorial-card' href='../../fr/documentation/mixers/'>
+<strong>Référence des mixers</strong>
+<p>Des manches et du gyroscope aux µs sur le fil : la géométrie complète de chaque mixer sélectionnable — axes d&#39;aile, mélanges de dérive, elevons, trims et limites.</p>
+</a>
 <a class='tutorial-card' href='../../fr/documentation/servo-kernel/'>
 <strong>Noyau servo</strong>
 <p>Enveloppe de largeur d&#39;impulsion, trim par fonction et limite de vitesse — le contrat servo bas niveau.</p>
@@ -71,23 +63,6 @@
 <p>Où vont la flash de 1 Mo et les ~23 Ko de tas, et comment rester sous 60 % flash / 65 % RAM.</p>
 </a>
 </div>
-<h2>Concepts</h2>
-<dl class='grid'>
-<dt>Férocité</dt>
-<dd>Asymétrie entre l&#39;aller et le retour, et temps de maintien — 0 est un sinus pur.</dd>
-<dt>Forme d&#39;onde</dt>
-<dd>La courbe du battement d&#39;aile ; l&#39;amplitude provient de degrés/s ÷ 2·fréquence.</dd>
-<dt>Angle de plané</dt>
-<dd>Décalage du centre de l&#39;aile pour le vol plané.</dd>
-<dt>Décalage central du battement</dt>
-<dd>Biais central pendant la course de battement (−15…+15 degrés).</dd>
-<dt>Mélange du gouvernail</dt>
-<dd>Mélange lacet/roulis qui pilote le gouvernail de crête.</dd>
-<dt>Mélange de férocité des gaz</dt>
-<dd>À quel point les gaz se couplent à la férocité.</dd>
-<dt>Sécurité intégrée</dt>
-<dd>Les ailes reviennent au neutre si la liaison est perdue.</dd>
-</dl>
 <section class='waveform-docs' id='ferocity-waveform'>
 <h2>Géométrie de la forme d&#39;onde de férocité</h2>
 <p>La férocité contrôle à la fois le caractère et le timing d&#39;une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n&#39;y a pas de pause à zéro.</p>
@@ -171,6 +146,50 @@ Diagonale exacte
 L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
 </aside>
 </section>
+<h2>Concepts</h2>
+<dl class='grid'>
+<dt>Férocité</dt>
+<dd>Asymétrie entre l&#39;aller et le retour, et temps de maintien — 0 est un sinus pur.</dd>
+<dt>Forme d&#39;onde</dt>
+<dd>La courbe du battement d&#39;aile ; l&#39;amplitude provient de degrés/s ÷ 2·fréquence.</dd>
+<dt>Angle de plané</dt>
+<dd>Décalage du centre de l&#39;aile pour le vol plané.</dd>
+<dt>Décalage central du battement</dt>
+<dd>Biais central pendant la course de battement (−15…+15 degrés).</dd>
+<dt>Mélange du gouvernail</dt>
+<dd>Mélange lacet/roulis qui pilote le gouvernail de crête.</dd>
+<dt>Mélange de férocité des gaz</dt>
+<dd>À quel point les gaz se couplent à la férocité.</dd>
+<dt>Sécurité intégrée</dt>
+<dd>Les ailes reviennent au neutre si la liaison est perdue.</dd>
+</dl>
+<h2>Manuels</h2>
+<table>
+<tr>
+<td>PTERONAUTOS.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manuel principal — architecture, mélangeur, forme d&#39;onde</a>
+</td>
+</tr>
+<tr>
+<td>STABILIZATION.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>Gyroscope Zéphyr — AHRS et PID</a>
+</td>
+</tr>
+<tr>
+<td>WEBUI_I18N.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md' target='_blank'>Interface web et référence de traduction</a>
+</td>
+</tr>
+<tr>
+<td>HARDWARE.md</td>
+<td>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md' target='_blank'>Câblage et brochage</a>
+</td>
+</tr>
+</table>
 </div>
 </main>
 <footer>

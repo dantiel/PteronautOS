@@ -13,10 +13,13 @@ PAGES = %w[
   tutorials/waveform-tuning
   tutorials/zephyrus-wiring
   tutorials/crsf-converter
+  tutorials/esp32s3-toolbox
   hardware
   hardware/power
   hardware/telemetry
   documentation
+  documentation/architecture
+  documentation/mixers
   documentation/servo-kernel
   documentation/failsafe
   documentation/budget
