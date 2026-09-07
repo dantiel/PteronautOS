@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Zéfiro: 안정화와 Ondas — PteronautOS</title>
+<title>제피로스: 안정화와 Ondas — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,7 +27,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Zéfiro: 안정화와 Ondas</h1>
+<h1>제피로스: 안정화와 Ondas</h1>
 <p class='sub-lead'>자이로에서 날갯짓으로 이어지는 다리의 이상적 설계: Ondas 호흡 변조, 스트로크 동기 피드포워드, 위상 고정 공명, 공탄성 PID 게인 변조 — 그리고 현재 펌웨어가 실제로 연결한 것을 정직하게 보여주는 지도.</p>
 <h2>계보: OrniFlight와 단순화된 Ondas</h2>
 <p>
@@ -46,7 +46,7 @@ families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz c
 with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
 exists in both projects; the firmware constants below are the airborne subset.
 </p>
-<h2>신호 경로 — Zéfiro에서 Ornithopter로</h2>
+<h2>신호 경로 — 제피로스에서 Ornithopter로</h2>
 <p>
 The bridge from the gyro to the wingbeat is deliberately short — four files, no
 dynamic allocation, no queues:
@@ -65,7 +65,7 @@ corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
 <table>
 <tr>
 <th>Field</th>
-<th>Zéfiro source</th>
+<th>Zephyrus source</th>
 <th>Consumed by</th>
 </tr>
 <tr>
@@ -311,7 +311,7 @@ wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
 </p>
 <h2>기어박스 커널 안정화</h2>
 <p>
-The gearbox kernel applies Zéfiro differently — there is no wing waveform to breathe,
+The gearbox kernel applies Zephyrus differently — there is no wing waveform to breathe,
 so the P/I/D terms modulate <em>surfaces</em> instead:
 </p>
 <table>
@@ -350,7 +350,7 @@ mechanical servos.
 </p>
 <h2>WebUI 패널 및 구성 엔드포인트</h2>
 <p>
-The ornithopter panel shows two stabilization groups when the build includes Zéfiro.
+The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
 Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
 Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
 Coefficient and Flap Coefficient. All values persist through
@@ -372,7 +372,7 @@ The ideal flight-test sequence — each step is a flight, not a slider drag:
 predictable before the gyro earns a vote.
 </li>
 <li>
-<strong>Enable Zéfiro's crest rudder</strong> (roll+yaw PID). Verify the rudder
+<strong>Enable Zephyrus's crest rudder</strong> (roll+yaw PID). Verify the rudder
 resists a gentle wing-rock before anything touches the waveform.
 </li>
 <li>
