@@ -653,6 +653,10 @@ void Zephyrus::update(uint32_t nowUs) {
         rollCorrection = 0.0f;
         yawCorrection = 0.0f;
         pitchCorrection = 0.0f;
+        pitchPTerm = 0.0f;
+        pitchITerm = 0.0f;
+        pitchDTerm = 0.0f;
+        pitchErrorRate = 0.0f;
         return;
     }
 
@@ -665,10 +669,16 @@ void Zephyrus::update(uint32_t nowUs) {
 
     // Read MPU6050
     if (!_mpuReadSensors()) {
-        // I2C failure — decay correction toward zero gracefully
+        // I2C failure — decay corrections, zero raw PID terms so the
+        // Ornithopter Ondas modulation never consumes stale values
         rollCorrection *= 0.9f;
         yawCorrection *= 0.9f;
         rudderCorrection *= 0.9f;
+        pitchCorrection *= 0.9f;
+        pitchPTerm = 0.0f;
+        pitchITerm = 0.0f;
+        pitchDTerm = 0.0f;
+        pitchErrorRate = 0.0f;
         return;
     }
 

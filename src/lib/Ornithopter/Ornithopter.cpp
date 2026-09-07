@@ -267,21 +267,48 @@ void Ornithopter::_computeServoMixer() {
         _lastUpdateUs = nowUs;
 
 #ifdef ZEPHYRUS_ENABLED
-        // STEP 7: ALL gyro values hard-zeroed (NaN guard test)
-        _osc.kGainMod = 1.0f;
-        gyroRudderCorrection = 0.0f;
-        gyroAileronCorrection = 0.0f;
-        gyroElevatorCorrection = 0.0f;
+        // ── Real Ondas wiring (Nigredo) ──────────────────────────────
+        // Zephyrus bridges the raw pitch PID terms at 250 Hz
+        // (ZephyrusFilter.h) and NaN-guards them upstream (Validatio),
+        // so the values consumed here are live and bounded.
+        // Cadence P → Phase Advance: nose-up advances the stroke phase,
+        // nose-down retards it (clamped to [0.5, 2.0]).
+        _osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;
+        if (_osc.kGainMod < 0.5f) _osc.kGainMod = 0.5f;
+        if (_osc.kGainMod > 2.0f) _osc.kGainMod = 2.0f;
 #endif
 
-        _osc.anchorGain = 0.0f;
+        _osc.anchorGain = anchorGain;  // k₂ damping delta (0→tight 10 … 100→110)
 
         float rawWave = _osc.advance(dt);
 
 #ifdef ZEPHYRUS_ENABLED
-        _ssffAccumError = 0.0f;
-        _ssffAccumCount = 0;
-        _prevFlappingSin = rawWave;
+        // ── SSFF — Stroke-Synchronous Feed-Forward ───────────────────
+        // The oscillator returns the phase angle (rad, [0, 2π)), so the
+        // sign of sin(phase) marks the half-stroke. At each reversal the
+        // error accumulated over the finished half-stroke becomes a
+        // ferocity bias for the next one (clamped to ±2.0 units).
+        float waveSin = sinf(rawWave);
+        if ((_prevFlappingSin >= 0.0f && waveSin < 0.0f) ||
+            (_prevFlappingSin < 0.0f  && waveSin >= 0.0f)) {
+            if (_ssffAccumCount > 0 && ssffGain > 0.0f) {
+                float meanError = _ssffAccumError / (float)_ssffAccumCount;
+                float bias = meanError * ssffGain * 0.00001f;
+                if (bias > 2.0f) bias = 2.0f;
+                if (bias < -2.0f) bias = -2.0f;
+                if (waveSin >= 0.0f) _ssffFerocityDownBias = bias;  // entering downstroke → bias next upstroke
+                else                 _ssffFerocityUpBias   = bias;  // entering upstroke   → bias next downstroke
+            }
+            _ssffAccumError = 0.0f;
+            _ssffAccumCount = 0;
+        } else if (ssffGain <= 0.0f) {
+            // Purificatio: zero stale biases when SSFF is disabled
+            _ssffFerocityUpBias   = 0.0f;
+            _ssffFerocityDownBias = 0.0f;
+        }
+        _ssffAccumError += gyroPitchErrorRate;
+        _ssffAccumCount++;
+        _prevFlappingSin = waveSin;
 #endif
 
         // Amplitude = throttle % of the servo-speed-limited max at this freq.
@@ -308,9 +335,18 @@ void Ornithopter::_computeServoMixer() {
         // + elevator mix + throttle mix (+ gyro).
 
 #ifdef ZEPHYRUS_ENABLED
-        float ferocitySignal = 0.0f;
-        float iBias = 0.0f;
-        float resonanceBias = 0.0f;
+        // Ferocity PD-blend: P-term + D-term → dwell ratio (clamped ±0.5).
+        float ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f
+                              + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
+        if (ferocitySignal > 0.5f) ferocitySignal = 0.5f;
+        if (ferocitySignal < -0.5f) ferocitySignal = -0.5f;
+        // Balance I → asymmetry: accumulated pitch error shifts the
+        // stroke centre (clamped to ±3.0 ferocity units).
+        float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;
+        if (iBias > 3.0f) iBias = 3.0f;
+        if (iBias < -3.0f) iBias = -3.0f;
+        // Resonance lock-in pump feeds both half-strokes symmetrically.
+        float resonanceBias = _resonanceAccum;
 
         float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
                           + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + throttleFerBoost;
@@ -351,7 +387,14 @@ void Ornithopter::_computeServoMixer() {
                                                      limiarShared, ferocityShapeMix);
 
 #ifdef ZEPHYRUS_ENABLED
-        _resonanceAccum = 0.0f;
+        // Resonance — phase-locked lock-in amplifier: accumulate
+        // errorRate × sin(phase), leaky τ = 0.15 s, clamped to ±2.0.
+        if (resonanceGain > 0.0f) {
+            _resonanceAccum += gyroPitchErrorRate * waveSin * resonanceGain * 0.01f * dt;
+            _resonanceAccum *= expf(-dt / 0.15f);
+            if (_resonanceAccum > 2.0f) _resonanceAccum = 2.0f;
+            if (_resonanceAccum < -2.0f) _resonanceAccum = -2.0f;
+        }
 #endif
 
                 float degL = amplitudeL * pulseL;
@@ -372,6 +415,16 @@ void Ornithopter::_computeServoMixer() {
     } else {
         _osc.decay(0.0f);
         _lastUpdateUs = 0;
+#ifdef ZEPHYRUS_ENABLED
+        // Glide pause: purge half-stroke accumulators so a fresh flap
+        // burst starts clean (no stale SSFF biases / resonance charge).
+        _ssffAccumError = 0.0f;
+        _ssffAccumCount = 0;
+        _ssffFerocityUpBias   = 0.0f;
+        _ssffFerocityDownBias = 0.0f;
+        _resonanceAccum = 0.0f;
+        _prevFlappingSin = 0.0f;
+#endif
         angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd) * ORNI_ANGULAR_MULTIPLIER);
         angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd) * ORNI_ANGULAR_MULTIPLIER);
     }
