@@ -20,6 +20,7 @@ PAGES = %w[
   documentation
   documentation/architecture
   documentation/mixers
+  documentation/stabilization
   documentation/servo-kernel
   documentation/failsafe
   documentation/budget

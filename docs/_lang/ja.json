@@ -334,5 +334,20 @@
   "mix_h2_wing": "翼軸ミキシング（波形カーネル）",
   "mix_h2_rudder": "ラダーミキシング（両カーネル）",
   "mix_h2_gearbox": "ギアボックス尾翼・エレボンミキシング",
-  "mix_h2_gyro": "ゼピュロス注入、トリム＆フェイルセーフ"
+  "mix_h2_gyro": "ゼピュロス注入、トリム＆フェイルセーフ",
+  "st_title": "Zéfiro: 安定化とOndas — PteronautOS",
+  "st_h1": "Zéfiro: 安定化とOndas",
+  "st_lead": "ジャイロから翼打ちへの架け橋の理想設計：Ondas呼吸変調、打撃同期フィードフォワード、位相ロック共鳴、空力弾性PIDゲイン変調——そして現在のファームウェアが実際に配線しているものを正直に示す地図。",
+  "st_h2_lineage": "系譜: OrniFlightと簡略化されたOndas",
+  "st_h2_pipeline": "信号経路 — ZéfiroからOrnithopterへ",
+  "st_h2_ondas": "Ondas変調 — 三チャンネルの呼吸",
+  "st_h2_shape": "波形整形とPDブレンド",
+  "st_h2_anchor": "アンカー減衰 (k₂)",
+  "st_h2_resonance": "共鳴 — 位相ロックポンプ",
+  "st_h2_ssff": "SSFF — 打撃同期フィードフォワード",
+  "st_h2_aero": "空力弾性PIDゲイン変調",
+  "st_h2_gearbox": "ギアボックスカーネル安定化",
+  "st_h2_webui": "WebUIパネルと設定エンドポイント",
+  "st_h2_tuning": "調整ガイド",
+  "st_h2_status": "実装状況と未解決の不整合"
 }

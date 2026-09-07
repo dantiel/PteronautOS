@@ -334,5 +334,20 @@
   "mix_h2_wing": "Mezcla de ejes del ala (kernel de onda)",
   "mix_h2_rudder": "Mezcla del timón (ambos kernels)",
   "mix_h2_gearbox": "Mezcla de cola y elevones (caja reductora)",
-  "mix_h2_gyro": "Inyección Céfiro, trims y failsafe"
+  "mix_h2_gyro": "Inyección Céfiro, trims y failsafe",
+  "st_title": "Zéfiro: Estabilización y Ondas — PteronautOS",
+  "st_h1": "Zéfiro: Estabilización y Ondas",
+  "st_lead": "El diseño ideal del puente giroscopio–aleteo: modulación respiratoria Ondas, feed-forward sincronizado con el golpe, resonancia con bloqueo de fase y modulación aeroelástica de la ganancia PID — y un mapa honesto de lo que el firmware actual realmente conecta.",
+  "st_h2_lineage": "Linaje: OrniFlight y un Ondas simplificado",
+  "st_h2_pipeline": "Flujo de señal — de Zéfiro a Ornithopter",
+  "st_h2_ondas": "Modulación Ondas — respiración de tres canales",
+  "st_h2_shape": "Modelado de onda y mezcla PD",
+  "st_h2_anchor": "Amortiguación de anclaje (k₂)",
+  "st_h2_resonance": "Resonancia — bomba con bloqueo de fase",
+  "st_h2_ssff": "SSFF — feed-forward sincronizado con el golpe",
+  "st_h2_aero": "Modulación aeroelástica de la ganancia PID",
+  "st_h2_gearbox": "Estabilización del kernel de reductor",
+  "st_h2_webui": "Panel WebUI y endpoints de configuración",
+  "st_h2_tuning": "Guía de ajuste",
+  "st_h2_status": "Estado de la implementación e inconsistencias abiertas"
 }

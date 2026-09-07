@@ -334,5 +334,20 @@
   "mix_h2_wing": "Wing axis mixing (waveform kernel)",
   "mix_h2_rudder": "Rudder mixing (both kernels)",
   "mix_h2_gearbox": "Gearbox tail & elevon mixing",
-  "mix_h2_gyro": "Zephyrus injection, trims & failsafe"
+  "mix_h2_gyro": "Zephyrus injection, trims & failsafe",
+  "st_title": "Zéfiro: Stabilization & Ondas — PteronautOS",
+  "st_h1": "Zéfiro: Stabilization & Ondas",
+  "st_lead": "The ideal design of the gyro-to-wingbeat bridge: Ondas breath modulation, stroke-synchronous feed-forward, phase-locked resonance and aeroelastic PID gain scaling — and an honest map of what the current firmware actually wires up.",
+  "st_h2_lineage": "Lineage: OrniFlight and a simplified Ondas",
+  "st_h2_pipeline": "Signal pipeline — Zéfiro to Ornithopter",
+  "st_h2_ondas": "Ondas modulation — three-channel breath",
+  "st_h2_shape": "Waveform shaping & PD-blend",
+  "st_h2_anchor": "Anchor damping (k₂)",
+  "st_h2_resonance": "Resonance — phase-locked pump",
+  "st_h2_ssff": "SSFF — stroke-synchronous feed-forward",
+  "st_h2_aero": "Aeroelastic PID gain modulation",
+  "st_h2_gearbox": "Gearbox kernel stabilization",
+  "st_h2_webui": "WebUI panel & configuration endpoints",
+  "st_h2_tuning": "Tuning guide",
+  "st_h2_status": "Implementation status & open inconsistencies"
 }

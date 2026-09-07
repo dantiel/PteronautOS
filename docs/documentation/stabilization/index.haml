@@ -1,0 +1,477 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title= st_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+    %script{src: "#{asset_prefix}assets/js/ferocity-waveform.js", defer: true}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+    %main.sub-main
+      .sub-content
+        %h1= st_h1
+        %p.sub-lead= st_lead
+
+        %h2= st_h2_lineage
+        %p
+          <strong>Ondas is not a PteronautOS invention.</strong> The wave-modulation family —
+          breath-pause cadence control, stroke-shape ferocity, asymmetric dwell, and the
+          aeroelastic coupling of wing load to PID authority — lives and evolves in the
+          <a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
+          project, whose wiki and simulator carry the advanced algorithms (including the
+          <a href="https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html" target="_blank">servo-efficiency table</a>).
+        %p
+          PteronautOS embeds a <strong>partially simplified implementation</strong>: the same
+          mathematical breath geometry, scaled to an ESP8285 with one MPU6050 and up to nine
+          servos. Where OrniFlight simulates continuous aeroelastics and explores whole envelope
+          families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz core,
+          with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
+          exists in both projects; the firmware constants below are the airborne subset.
+
+        %h2= st_h2_pipeline
+        %p
+          The bridge from the gyro to the wingbeat is deliberately short — four files, no
+          dynamic allocation, no queues:
+        %pre
+          %code
+            :preserve
+              MPU6050 raw (I2C, 1 kHz register reads)
+                ▼
+              Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s
+                ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s
+              4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate
+                ▼
+              ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*
+                ▼
+              Ornithopter::_computeServoMixer() / _computeGearboxMixer()
+                ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke
+              _f[]  →  funcMap → wing / crest-rudder / tail servos (µs)
+        %p
+          The four raw terms are written in <code>Zephyrus::update()</code> immediately after the
+          pitch PID computes its correction:
+        %pre
+          %code
+            :preserve
+              pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional
+              pitchITerm     = _pidPitch.integrator;                           // accumulated error
+              pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D
+              pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF
+        %p
+          All four are guarded by a NaN trap (if any input is NaN, all four are zeroed) so a
+          corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
+          <code>Ornithopter</code> receive the bridge data:
+
+        %table
+          %tr
+            %th Field
+            %th Zéfiro source
+            %th Consumed by
+          %tr
+            %td <code>gyroPitchPTerm</code>
+            %td <code>pitchPTerm</code>
+            %td Ondas P → phase advance (cadence channel)
+          %tr
+            %td <code>gyroPitchITerm</code>
+            %td <code>pitchITerm</code>
+            %td Ondas I → stroke asymmetry (balance channel)
+          %tr
+            %td <code>gyroPitchDTerm</code>
+            %td <code>pitchDTerm</code>
+            %td Ondas D → dwell ratio (ferocity channel)
+          %tr
+            %td <code>gyroPitchErrorRate</code>
+            %td <code>pitchErrorRate</code>
+            %td SSFF half-stroke accumulation
+          %tr
+            %td <code>gyroRudderCorrection</code>
+            %td <code>rudderCorrection</code>
+            %td Crest rudder µs offset (servo &amp; gearbox kernels)
+          %tr
+            %td <code>gyroAileronCorrection</code>
+            %td <code>rollCorrection</code> × gearbox gain
+            %td Gearbox: roll PID → V-tail aileron surfaces
+          %tr
+            %td <code>gyroElevatorCorrection</code>
+            %td <code>pitchCorrection</code> × gain × <code>aeroGainScale</code>
+            %td Gearbox: pitch PID → elevon / elevator surfaces
+
+        %h2= st_h2_ondas
+        %p
+          <em>Ondas</em> (Portuguese: "waves") is the three-channel breath system that maps the
+          pitch PID's raw P, I and D terms onto three orthogonal dimensions of the flapping
+          waveform. It is a <strong>proprioceptive loop</strong>: the gyro's sense of pitch
+          directly shapes the wing motion, and the wing motion changes the pitch the gyro feels.
+        %h3 Cadence — P → phase advance
+        %p
+          A positive pitch error (nose up) advances the oscillator phase, shortening the current
+          half-stroke; a negative error retards it. The ideal law scales the oscillator spring:
+        %pre
+          %code
+            :preserve
+              _osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;
+              // clamped to [0.5, 2.0] — phase can at most double or halve
+        %p
+          The oscillator <code>advance()</code> consumes it as
+          <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range
+          0–100, default 20.
+        %h3 Ferocity — PD blend into dwell
+        %p
+          The P and D terms are blended into a single ferocity signal that sharpens or softens
+          the waveform's dwell:
+        %pre
+          %code
+            :preserve
+              ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f
+                               + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
+              // clamped to [-0.5, 0.5], added to both stroke and return ferocity
+        %p
+          With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch
+          changes produce sharper strokes while steady flight stays sinusoidal.
+        %h3 Balance — I into asymmetry
+        %p
+          The integral term shifts the stroke centre: a persistent nose-up bias strengthens the
+          downstroke, a persistent nose-down bias strengthens the upstroke.
+        %pre
+          %code
+            :preserve
+              float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;
+              // clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer
+        %p
+          Balance is the most destabilising channel when set high — the ideal tuning guide keeps
+          it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas
+          and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code>
+          window:
+        %pre
+          %code
+            :preserve
+              strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias
+              returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias
+
+        %h2= st_h2_shape
+        %p
+          The waveform itself follows the OrniFlight stroke family: each half uses its own
+          ferocity, a shared reversal threshold keeps left/right wings in phase, and a
+          per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into
+          a rounded pyramidal path. The interactive explorer below renders the commanded
+          geometry for any down/up ferocity pair — the same curve the mixer requests each tick.
+        %p= doc_wave_p1
+        %p= doc_wave_p2
+
+        .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
+          .waveform-controls
+            %label{for: "st-wave-down-ferocity"}
+              %span= doc_wave_down
+              %output{"data-value": "down", for: "st-wave-down-ferocity"} 8.0
+              %input#st-wave-down-ferocity{"data-control": "down", type: "range", min: "0", max: "8", step: "0.1", value: "8"}
+            .lock-ferocity
+              .lock-lines
+              %button#st-lock-ferocity{"data-control": "lock", type: "button", title: doc_lock_title, "aria-pressed": "false"}
+                %svg.lock-icon{viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round"}
+                  %path.shackle{d: "M7 11V7a5 5 0 0 1 10 0v4"}
+                  %rect.body{x: "4", y: "11", width: "16", height: "10", rx: "2", fill: "none"}
+              .lock-lines
+            %label{for: "st-wave-up-ferocity"}
+              %span= doc_wave_up
+              %output{"data-value": "up", for: "st-wave-up-ferocity"} 0.0
+              %input#st-wave-up-ferocity{"data-control": "up", type: "range", min: "0", max: "8", step: "0.1", value: "0"}
+            %label{for: "st-wave-shape-mix"}
+              %span= doc_wave_mix
+              %output{"data-value": "mix", for: "st-wave-shape-mix"} 100%
+              %input#st-wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
+          .waveform-presets{"aria-label": doc_presets_label}
+            %button{type: "button", "data-preset": "8,0,100"}= doc_preset_extreme
+            %button{type: "button", "data-preset": "7,1,100"}= doc_preset_near
+            %button{type: "button", "data-preset": "8,6,100"}= doc_preset_high
+            %button{type: "button", "data-preset": "8,6,50"}= doc_preset_mixed
+          %p.waveform-metric{"data-waveform-metric": true, "aria-live": "polite"}
+          .waveform-chart
+            %h3= doc_chart_whole
+            .waveform-legend
+              %span
+                %i.current
+                = doc_legend_current
+              %span
+                %i.direct
+                = doc_legend_direct
+              %span
+                %i.boundary
+                = doc_legend_reversal
+            %svg{"data-chart": "cycle", role: "img", "aria-label": doc_chart_aria_cycle}
+          .waveform-chart
+            %h3= doc_chart_halves
+            .waveform-legend
+              %span
+                %i.down
+                = doc_legend_down
+              %span
+                %i.up
+                = doc_legend_up
+              %span
+                %i.direct
+                = doc_legend_diagonal
+            %svg{"data-chart": "halves", role: "img", "aria-label": doc_chart_aria_halves}
+        %aside.waveform-caution
+          %strong= doc_caution_title
+          = doc_caution_body
+        %h3= doc_read_h3
+        %p= doc_read_p
+
+        %h2= st_h2_anchor
+        %p
+          The oscillator's damping is exposed as a tunable anchor. The base law is a damped
+          spring toward the cadence target:
+        %pre
+          %code
+            :preserve
+              kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)
+              error = kGain * kGainMod * cadenceTarget
+                    - kDamp * cadence;
+        %p
+          At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the
+          commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm
+          harder and rejecting perturbations. Tuning range 0–100.
+
+        %h2= st_h2_resonance
+        %p
+          Resonance is a phase-locked lock-in amplifier: it multiplies the pitch error rate by
+          <code>sin(oscillator phase)</code> and accumulates — reinforcing the stroke exactly
+          when a correction is most effective, damping it when it would fight the wing.
+        %pre
+          %code
+            :preserve
+              _resonanceAccum += gyroPitchErrorRate * sinf(_osc.phase)
+                               * resonanceGain * 0.01f * dt;
+              _resonanceAccum *= expf(-dt / 0.15f);        // leaky integrator, τ = 0.15 s
+              clamp(_resonanceAccum, -2.0f, 2.0f);
+        %p
+          The accumulated value is injected into both stroke and return ferocity for the next
+          frame. At <code>resonanceGain = 0</code> (default) the whole path is disabled. The
+          leaky decay prevents runaway accumulation during sustained disturbance.
+
+        %h2= st_h2_ssff
+        %p
+          Stroke-synchronous feed-forward is philosophically different from every PID term:
+          it corrects the <em>next</em> half-stroke from what the gyro measured during the
+          <em>current</em> one. At each zero-crossing of the flapping sine (wing reversal), the
+          mean pitch error rate of the finished half-stroke becomes a bias on the opposite
+          half's ferocity.
+        %pre
+          %code
+            :preserve
+              // zero-cross detected: finished one half-stroke, starting the next
+              meanError = _ssffAccumError / count;
+              bias      = meanError * ssffGain * 0.00001f;   // clamped ±2.0
+              // upstroke just ended        → bias feeds the downstroke (power stroke)
+              // downstroke just ended      → bias feeds the upstroke (recovery)
+        %p
+          Up-bias is applied to the downstroke (correcting for error accumulated on the
+          preceding upstroke); down-bias to the upstroke. When <code>ssffGain</code> drops to
+          zero the biases are explicitly cleared so a WebUI disable never leaves stale values in
+          the waveform. The accumulator is 32-bit and reset per half-stroke — at 250 Hz it
+          would need ~24 days of continuous flapping to overflow, which is not a practical
+          concern.
+
+        %h2= st_h2_aero
+        %p
+          All Ondas and SSFF modulation is scaled by a coefficient that knows whether the
+          ornithopter is <em>flapping</em> or <em>gliding</em> — aeroelastic gain modulation.
+          In the servo (waveform) kernel the selector is the flapping gate with its 50 µs
+          hysteresis:
+        %pre
+          %code
+            :preserve
+              aeroGainScale = isFlapping ? (aeroFlapCoeff  * 0.01f)
+                                         : (aeroGlideCoeff * 0.01f);
+        %p
+          In the gearbox kernel the selector is the motor state
+          (<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Defaults:
+        %table
+          %tr
+            %th Coefficient
+            %th Default
+            %th Range
+            %th When active
+          %tr
+            %td <code>aeroGlideCoeff</code>
+            %td 40
+            %td 0–100
+            %td Wings still — glide, or gearbox motor off
+          %tr
+            %td <code>aeroFlapCoeff</code>
+            %td 40
+            %td 0–100
+            %td Wings flapping — or gearbox motor running
+        %p
+          Scaling to 0–1 makes the 0–100 slider the <em>authority</em> of the gyro over the
+          wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
+
+        %h2= st_h2_gearbox
+        %p
+          The gearbox kernel applies Zéfiro differently — there is no wing waveform to breathe,
+          so the P/I/D terms modulate <em>surfaces</em> instead:
+        %table
+          %tr
+            %th Authority
+            %th Servo (waveform) kernel
+            %th Gearbox kernel
+          %tr
+            %td Crest rudder
+            %td roll + yaw combined
+            %td yaw only (roll/pitch go to legs)
+          %tr
+            %td Wing waveform
+            %td Full Ondas / SSFF breath modulation
+            %td —
+          %tr
+            %td Leg ailerons (V-tail)
+            %td —
+            %td roll PID → aileron side of elevon mix
+          %tr
+            %td Leg elevons / elevator
+            %td —
+            %td pitch PID × <code>aeroGainScale</code> → elevator side
+        %p
+          Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>)
+          before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is
+          inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by
+          the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
+          mechanical servos.
+
+        %h2= st_h2_webui
+        %p
+          The ornithopter panel shows two stabilization groups when the build includes Zéfiro.
+          Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
+          Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
+          Coefficient and Flap Coefficient. All values persist through
+          <code>POST /pteronautos/config</code> and stream back through
+          <code>GET /pteronautos/state</code>:
+        %pre
+          %code
+            :preserve
+              {
+                "ornithopter": {
+                  "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,
+                  "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,
+                  "ssff_gain": 0.0,
+                  "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,
+                  "aero_gain_scale": 0.4
+                }
+              }
+        %p
+          <code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and
+          clamps every field to <code>[0, 100]</code> server-side.
+
+        %h2= st_h2_tuning
+        %p
+          The ideal flight-test sequence — each step is a flight, not a slider drag:
+        %ol
+          %li
+            <strong>Zero every gain.</strong> Fly manual only; the airframe must be stable and
+            predictable before the gyro earns a vote.
+          %li
+            <strong>Enable Zéfiro's crest rudder</strong> (roll+yaw PID). Verify the rudder
+            resists a gentle wing-rock before anything touches the waveform.
+          %li
+            <strong>Cadence (P→Phase)</strong> from 10 upward. Too high = jerky wings, phase
+            hunting; too low = nothing. Right = wings feel "connected" to pitch.
+          %li
+            <strong>Ferocity D (D→Dwell)</strong> from 10. Too high = the waveform oscillates
+            between sharp and soft; right = rapid pitch changes sharpen the stroke, steady
+            flight stays sinusoidal.
+          %li
+            <strong>Ferocity P</strong> (optional) from 5 — blends P authority into the dwell.
+          %li
+            <strong>Balance (I→Asymmetry) last, low.</strong> This is the most destabilizing
+            channel; 5–15 only. It counters persistent drift, never transient bumps.
+          %li
+            <strong>SSFF</strong> from 5, only after cadence and ferocity hold. Too high =
+            over-correction and half-stroke flutter; right = visible damping of pitch
+            oscillation amplitude.
+          %li
+            <strong>Aeroelastic coefficients last.</strong> Tune glide first (wings still), then
+            flap. Keep the gyro an authoritative copilot, not a nervous pilot.
+        %aside.waveform-caution
+          %strong= doc_caution_title
+          = doc_caution_body
+
+        %h2= st_h2_status
+        %p
+          <strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
+          laws above are the <em>design</em>; the code contains the full parameter surface, the
+          constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding
+          block currently disconnects most of the gyro from the servo kernel:
+        %pre
+          %code
+            :preserve
+              // Ornithopter.cpp:269-275  (inside the flapping branch)
+              #ifdef ZEPHYRUS_ENABLED
+                  // STEP 7: ALL gyro values hard-zeroed (NaN guard test)
+                  _osc.kGainMod = 1.0f;              // cadence channel OFF
+                  gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping
+                  gyroAileronCorrection = 0.0f;
+                  gyroElevatorCorrection= 0.0f;
+              #endif
+        %p
+          Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this
+          block means today's servo-kernel behaviour is:
+        %ul
+          %li
+            <strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as
+            parameters and in the bridge, but their consumption sites
+            (<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>,
+            <code>resonanceBias</code>) are pinned to zero or reset every frame
+            (Ornithopter.cpp:282–284, 311–313, 354).
+          %li
+            <strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping
+            branch</em>, so the rudder correction currently acts only in the glide branch — the
+            opposite of what flight needs (most disturbances arrive mid-flap).
+          %li
+            <strong>The gearbox kernel is the live exception.</strong> It reads
+            <code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> /
+            <code>gyroRudderCorrection</code> and applies them with clamps (lines 436–451) — the
+            STEP-7 zeroing block lives only in the servo kernel.
+        %p
+          This is not a criticism of the math — it is a <em>known, named</em> state: the
+          stabilization modules are compiled in, parameterized, bridged, and waiting for the
+          STEP-7 scaffolding to be removed and replaced by a real NaN policy (the
+          <code>Validatio</code> guards already give the MPU data a clean path). Until then,
+          treat the Ondas/SSFF/resonance tuning guide above as the flight-ready specification,
+          verified against Zephyrus.cpp:729–737 and OrnithopterWaveform.h, but not yet airborne.
+        %p
+          The authoritative design record remains
+          <a href="https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md" target="_blank">STABILIZATION.md</a>;
+          its sibling project
+          <a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
+          holds the continuously advanced ONDAS research.
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+      %p.credit= footer_credit

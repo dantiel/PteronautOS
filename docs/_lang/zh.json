@@ -334,5 +334,20 @@
   "mix_h2_wing": "机翼轴混控（波形内核）",
   "mix_h2_rudder": "方向舵混控（两种内核）",
   "mix_h2_gearbox": "齿轮箱尾翼与升降副翼混控",
-  "mix_h2_gyro": "西风注入、微调与失控保护"
+  "mix_h2_gyro": "西风注入、微调与失控保护",
+  "st_title": "Zéfiro：稳定化与Ondas — PteronautOS",
+  "st_h1": "Zéfiro：稳定化与Ondas",
+  "st_lead": "陀螺仪到扑翼的桥梁的理想设计：Ondas 呼吸调制、与行程同步的前馈、锁相共振与气动弹性 PID 增益调制——以及对当前固件实际接线情况的诚实地图。",
+  "st_h2_lineage": "谱系：OrniFlight 与简化的 Ondas",
+  "st_h2_pipeline": "信号链路——从 Zéfiro 到 Ornithopter",
+  "st_h2_ondas": "Ondas 调制——三通道呼吸",
+  "st_h2_shape": "波形整形与 PD 混合",
+  "st_h2_anchor": "锚定阻尼 (k₂)",
+  "st_h2_resonance": "共振——锁相泵",
+  "st_h2_ssff": "SSFF——与行程同步的前馈",
+  "st_h2_aero": "气动弹性 PID 增益调制",
+  "st_h2_gearbox": "齿轮箱内核稳定化",
+  "st_h2_webui": "WebUI 面板与配置端点",
+  "st_h2_tuning": "调参指南",
+  "st_h2_status": "实现状态与未解决的不一致"
 }
