@@ -106,7 +106,7 @@
   "doc_c_failsafe_d": "As asas voltam ao neutro se o enlace cair.",
   "doc_wave_h2": "Geometria da forma de onda de ferocidade",
   "doc_wave_p1": "A ferocidade controla tanto o carácter como o tempo de meio-batimento. Internamente, o valor 0–100 da WebUI mapeia para 0–8. Maior ferocidade de descida encurta a fracção do ciclo da descida; maior ferocidade de retorno encurta a fracção do retorno. O tempo restante é transferido para a metade oposta — não há pausa em zero.",
-  "doc_wave_p2": "O controlo Ferocity Shape por perfil selecciona o carácter de alta ferocidade. A 0% favorece uma forma finita de patamar/quadrada. A 100% favorece um percurso piramidal arredondado. Cada metade continua a usar a sua própria ferocidade, pelo que uma metade de baixa ferocidade permanece alongada e sinusoidal, enquanto uma metade de alta ferocidade se aproxima de uma travessia diagonal directa.",
+  "doc_wave_p2": "O controlo Forma da Ferocidade por perfil selecciona o carácter de alta ferocidade. A 0% favorece uma forma finita de patamar/quadrada. A 100% favorece um percurso piramidal arredondado. Cada metade continua a usar a sua própria ferocidade, pelo que uma metade de baixa ferocidade permanece alongada e sinusoidal, enquanto uma metade de alta ferocidade se aproxima de uma travessia diagonal directa.",
   "doc_wave_down": "Ferocidade de descida",
   "doc_wave_up": "Ferocidade de subida",
   "doc_wave_mix": "Mistura de forma",

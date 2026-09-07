@@ -64,13 +64,13 @@
 </a>
 </div>
 <section class='waveform-docs' id='ferocity-waveform'>
-<h2>Geometrie der Ferocity-Wellenform</h2>
-<p>Ferocity steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Ferocity verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Ferocity verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
-<p>Die profilbezogene Ferocity-Shape-Steuerung wählt den Hoch-Ferocity-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Ferocity, sodass eine Hälfte mit niedriger Ferocity gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Ferocity sich einer direkten diagonalen Traverse nähert.</p>
+<h2>Geometrie der Heftigkeits-Wellenform</h2>
+<p>Heftigkeit steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Heftigkeit verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Heftigkeit verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
+<p>Die profilbezogene Heftigkeitsform-Steuerung wählt den Hoch-Heftigkeits-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Heftigkeit, sodass eine Hälfte mit niedriger Heftigkeit gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Heftigkeit sich einer direkten diagonalen Traverse nähert.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Schlagzyklus-Phase' data-i18n-axis-half='Lokale Halbschlag-Phase' data-i18n-axis-wing='Flügelposition' data-i18n-lock-oppose='Opposition: Regler komplementär (Summe=8) (klicken zum Wechseln)' data-i18n-lock-sync='Sync: Beide Regler bewegen sich gemeinsam (klicken zum Wechseln)' data-i18n-lock-unlocked='Entsperrt (klicken zum Wechseln)' data-i18n-metric='Zeitverteilung: Abschlag {down}% · Aufschlag {up}% · Spitzen-Phasengeschwindigkeits-Verhältnis {ratio}×'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
-<span>Abschlag-Ferocity</span>
+<span>Abschlag-Heftigkeit</span>
 <output data-value='down' for='wave-down-ferocity'>8.0</output>
 <input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
 </label>
@@ -85,7 +85,7 @@
 <div class='lock-lines'></div>
 </div>
 <label for='wave-up-ferocity'>
-<span>Aufschlag-Ferocity</span>
+<span>Aufschlag-Heftigkeit</span>
 <output data-value='up' for='wave-up-ferocity'>0.0</output>
 <input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
 </label>
@@ -140,7 +140,7 @@ Exakte Diagonale
 </div>
 </div>
 <h3>Extreme Kombinationen lesen</h3>
-<p>Eine 7 / 1-Kombination erzeugt klar einen kurzen, spitzen Abschlag und einen langen sinusförmigen Rücklauf. Exakte und nahezu maximale Werte erfordern Sorgfalt: Das aktuelle Dauergesetz nutzt den unter Ferocity 8 verbleibenden Betrag. Folglich weist 8 / 0 dem Abschlag nur etwa 0,125 % des Zyklus zu, während selbst 8 / 6 etwa 0,5 % zuweist. Die Position bleibt kontinuierlich, aber die angeforderte Geschwindigkeit und Beschleunigung können physikalisch unerreichbar werden.</p>
+<p>Eine 7 / 1-Kombination erzeugt klar einen kurzen, spitzen Abschlag und einen langen sinusförmigen Rücklauf. Exakte und nahezu maximale Werte erfordern Sorgfalt: Das aktuelle Dauergesetz nutzt den unter Heftigkeit 8 verbleibenden Betrag. Folglich weist 8 / 0 dem Abschlag nur etwa 0,125 % des Zyklus zu, während selbst 8 / 6 etwa 0,5 % zuweist. Die Position bleibt kontinuierlich, aber die angeforderte Geschwindigkeit und Beschleunigung können physikalisch unerreichbar werden.</p>
 <aside class='waveform-caution'>
 <strong>Vor dem Flug auf dem Prüfstand testen.</strong>
 Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garantierte Servobewegung. Vermeiden Sie extreme asymmetrische Einstellungen, bis Amplitude, Frequenz, Gestängegeometrie und Servo-Geschwindigkeitsgrenzen ohne aerodynamische Last verifiziert wurden.
@@ -148,7 +148,7 @@ Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garanti
 </section>
 <h2>Konzepte</h2>
 <dl class='grid'>
-<dt>Ferocity</dt>
+<dt>Heftigkeit</dt>
 <dd>Asymmetrie zwischen Schlag und Rücklauf sowie Verweildauer — 0 ist ein reiner Sinus.</dd>
 <dt>Wellenform</dt>
 <dd>Die Flügelschlagkurve; die Amplitude ergibt sich aus Grad/s ÷ 2·Frequenz.</dd>
@@ -158,8 +158,8 @@ Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garanti
 <dd>Mittelpunkt-Vorspannung während des Flügelschlags (−15…+15 Grad).</dd>
 <dt>Rudermischung</dt>
 <dd>Gier-/Roll-Mischung, die das Kammruder antreibt.</dd>
-<dt>Gas-Ferocity-Mischung</dt>
-<dd>Wie stark das Gas in die Ferocity einkoppelt.</dd>
+<dt>Gas-Heftigkeits-Mischung</dt>
+<dd>Wie stark das Gas in die Heftigkeit einkoppelt.</dd>
 <dt>Failsafe</dt>
 <dd>Die Flügel kehren in die Neutralstellung zurück, wenn die Verbindung abbricht.</dd>
 </dl>

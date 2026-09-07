@@ -106,7 +106,7 @@
   "doc_c_failsafe_d": "Les ailes reviennent au neutre si la liaison est perdue.",
   "doc_wave_h2": "Géométrie de la forme d'onde de férocité",
   "doc_wave_p1": "La férocité contrôle à la fois le caractère et le timing d'une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n'y a pas de pause à zéro.",
-  "doc_wave_p2": "Le réglage Ferocity Shape par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.",
+  "doc_wave_p2": "Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.",
   "doc_wave_down": "Férocité de descente",
   "doc_wave_up": "Férocité de montée",
   "doc_wave_mix": "Mélange de forme",

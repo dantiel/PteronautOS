@@ -64,13 +64,13 @@
 </a>
 </div>
 <section class='waveform-docs' id='ferocity-waveform'>
-<h2>Ferocity 波形の幾何学</h2>
-<p>Ferocity は半ストロークの性格とタイミングの両方を制御します。内部的には WebUI の 0–100 設定が 0–8 にマッピングされます。ダウンストロークの Ferocity が高いほど周期に占めるダウンストロークの割合が短くなり、復路の Ferocity が高いほど復路の割合が短くなります。残りの時間は反対側の半周期へ移ります — ゼロでの停止はありません。</p>
-<p>プロファイルごとの Ferocity Shape コントロールは、高 Ferocity の性格を選択します。0% では有限のプラトー／矩形形状を、100% では丸みを帯びたピラミッド状の経路を好みます。各半周期は依然として独自の Ferocity を使うため、低 Ferocity の半周期は伸長して正弦波的になり、高 Ferocity の半周期は直接的な対角線の走行に近づきます。</p>
+<h2>強度波形の幾何学</h2>
+<p>強度は半ストロークの性格とタイミングの両方を制御します。内部的には WebUI の 0–100 設定が 0–8 にマッピングされます。ダウンストロークの強度が高いほど周期に占めるダウンストロークの割合が短くなり、復路の強度が高いほど復路の割合が短くなります。残りの時間は反対側の半周期へ移ります — ゼロでの停止はありません。</p>
+<p>プロファイルごとの強度シェイプコントロールは、高強度の性格を選択します。0% では有限のプラトー／矩形形状を、100% では丸みを帯びたピラミッド状の経路を好みます。各半周期は依然として独自の強度を使うため、低強度の半周期は伸長して正弦波的になり、高強度の半周期は直接的な対角線の走行に近づきます。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='羽ばたき周期の位相' data-i18n-axis-half='ローカル半ストローク位相' data-i18n-axis-wing='翼位置' data-i18n-lock-oppose='反対：スライダーが相補的（合計=8）（クリックで切替）' data-i18n-lock-sync='同期：両スライダーが一緒に動く（クリックで切替）' data-i18n-lock-unlocked='ロック解除（クリックで切替）' data-i18n-metric='時間配分：ダウン {down}% ・アップ {up}% ・ピーク位相速度比 {ratio}×'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
-<span>ダウン Ferocity</span>
+<span>ダウン強度</span>
 <output data-value='down' for='wave-down-ferocity'>8.0</output>
 <input data-control='down' id='wave-down-ferocity' max='8' min='0' step='0.1' type='range' value='8'>
 </label>
@@ -85,7 +85,7 @@
 <div class='lock-lines'></div>
 </div>
 <label for='wave-up-ferocity'>
-<span>アップ Ferocity</span>
+<span>アップ強度</span>
 <output data-value='up' for='wave-up-ferocity'>0.0</output>
 <input data-control='up' id='wave-up-ferocity' max='8' min='0' step='0.1' type='range' value='0'>
 </label>
@@ -140,7 +140,7 @@
 </div>
 </div>
 <h3>極端な組み合わせを読む</h3>
-<p>7 / 1 の組み合わせは、明らかに短く尖ったダウンストロークと長い正弦波の復路を生みます。正確な値やほぼ最大の値には注意が必要です。現在の持続時間則は ferocity 8 未満の残量を使います。そのため 8 / 0 は周期の約 0.125% しかダウンストロークに割り当てず、8 / 6 でさえ約 0.5% を割り当てます。位置は連続的ですが、要求される速度と加速度は物理的に到達不能になり得ます。</p>
+<p>7 / 1 の組み合わせは、明らかに短く尖ったダウンストロークと長い正弦波の復路を生みます。正確な値やほぼ最大の値には注意が必要です。現在の持続時間則は強度 8 未満の残量を使います。そのため 8 / 0 は周期の約 0.125% しかダウンストロークに割り当てず、8 / 6 でさえ約 0.5% を割り当てます。位置は連続的ですが、要求される速度と加速度は物理的に到達不能になり得ます。</p>
 <aside class='waveform-caution'>
 <strong>飛行前にベンチテストを。</strong>
 エクスプローラーは保証されたサーボ動作ではなく、指令された数学的な波形を表します。振幅、周波数、リンケージ形状、サーボ速度限界が空力負荷なしで検証されるまで、極端な非対称設定は避けてください。
@@ -148,7 +148,7 @@
 </section>
 <h2>概念</h2>
 <dl class='grid'>
-<dt>Ferocity</dt>
+<dt>強度</dt>
 <dd>ストローク／復路の非対称と滞留 — 0 は純粋なサイン波。</dd>
 <dt>波形</dt>
 <dd>羽ばたき曲線。振幅は deg/s ÷ 2·周波数 から得られます。</dd>
@@ -158,8 +158,8 @@
 <dd>羽ばたきストローク中の中心バイアス（−15…+15 度）。</dd>
 <dt>ラダーミキシング</dt>
 <dd>クレストラダーを駆動するヨー／ロールのブレンド。</dd>
-<dt>スロットル Ferocity ミックス</dt>
-<dd>スロットルが Ferocity に結合する度合い。</dd>
+<dt>スロットル強度ミックス</dt>
+<dd>スロットルが強度に結合する度合い。</dd>
 <dt>フェイルセーフ</dt>
 <dd>リンクが切れると翼は中立に戻ります。</dd>
 </dl>
