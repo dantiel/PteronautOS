@@ -30,62 +30,52 @@
 <h1>Wellenform-Tuning</h1>
 <p class='sub-lead'>Forme den Flügelschlag mit Heftigkeit, Amplitude, Frequenz und Gleitwinkel passend zu Flügel und Zelle.</p>
 <p>
-Explore the parameters live with the <a href="../../../de/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+Erkunde die Parameter live mit dem 
+<a href='../../../de/documentation/#ferocity-waveform'>Ferocity-Waveform-Explorer</a>
+ bevor du die Firmware anfasst — dasselbe Modell treibt den Mixer an.
 </p>
 <h2>Heftigkeit (Schlag-Asymmetrie)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;Ferocity&lt;/strong&gt; ist die Asymmetrie von Schlag/Rückkehr. Bei &lt;code&gt;0&lt;/code&gt; ist die Welle ein reiner Sinus — gleiche Zeit auf und ab. Höhere Down-Ferocity macht den Abschlag schneller und den Aufschlag-Dwell länger (und umgekehrt für Up-Ferocity). Das verschiebt, &lt;em&gt;wo&lt;/em&gt; Schub entsteht: schneller Abschlag + langsame Erholung imitiert den Kraftschlag eines echten Vogels und ist die wirksamste Gefühlsänderung überhaupt.</p>
+<p>Beginne bei &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; für einen kraftvollen Abschlag, dann mische Up-Ferocity in kleinen Schritten hinzu. Zu viel Asymmetrie lässt die Flügel bei der Umkehr schnappen — hörbar als Klicken und sichtbar als Servo-Wärme.</p>
 <h2>Amplitude und Frequenz</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>Die Amplitude wird nicht direkt gesetzt; sie ergibt sich aus &lt;strong&gt;Frequenz&lt;/strong&gt; und &lt;strong&gt;Schlaggeschwindigkeit&lt;/strong&gt;. Höhere Schlagfrequenz verkürzt bei gegebener Geschwindigkeit den Hub, niedrigere verlängert ihn. Der Kernel deckelt die Amplitude, sodass der Servo die 988–2012&amp;nbsp;µs-Hülle nie verlässt. Stimme die Frequenz auf die natürliche Schlag-Resonanz des Flugwerks ab — zu hohe Frequenz verschwendet Energie, zu niedrige fällt unter den wirksamen Auftrieb.</p>
+<p>Der &lt;strong&gt;Shape-Mix&lt;/strong&gt;-Schieber blendet den reinen Sinus Richtung Trapez (mehr Dwell an den Umkehrpunkten). Höherer Mix = knackigere Umkehrungen und mehr Schub an den Extremen; niedrigerer Mix = weicherer, effizienterer Reiseflug.</p>
 <h2>Gleit- und Schlagwinkel</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;Gleitwinkel&lt;/strong&gt; und &lt;strong&gt;Schlagwinkel&lt;/strong&gt; sind beide &lt;em&gt;Zentrums-Offsets&lt;/em&gt; (int8, ±15°), keine Amplitude. Glide setzt den gemeinsamen Flügelwinkel, wenn das Gas Gleitflug befiehlt; Flapping verschiebt das Zentrum des Schlags. Damit kannst du den Flügel für langsamen Flug vs. schnellen Reiseflug ausrichten, ohne das mechanische Gestänge anzufassen.</p>
 <h2>Start-Presets</h2>
 <table>
 <tr>
 <th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>ab / auf</th>
+<th>Mix</th>
+<th>Charakter</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>Extrem</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>Harter Kraftschlag, aggressiv</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>Fast-Sinus</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>Ausgewogen, am natürlichsten</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>Hohe Verweildauer</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>Langer Umkehr-Dwell, schwebend</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>Gemischt</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>Weicher Mix, Reiseflug-Effizienz</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>Beginne mit &lt;strong&gt;Fast-Sinus&lt;/strong&gt;, bestätige stabilen Flug, und gehe nur dann Richtung &lt;strong&gt;Extrem&lt;/strong&gt;, wenn du Punch willst. Jedes Flugwerk hat einen anderen Sweet Spot — ändere immer nur einen Parameter.</p>
 </div>
 </main>
 <footer>

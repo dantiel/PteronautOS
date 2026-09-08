@@ -30,50 +30,42 @@
 <h1>发射机配置</h1>
 <p class='sub-lead'>绑定ELRS遥控、映射四个控制通道并设置与舵机内核匹配的行程。</p>
 <h2>绑定</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>将接收机置于绑定模式(以配置的绑定口令供电，或使用 WebUI/按钮)，并在遥控器上启动 &lt;strong&gt;Bind&lt;/strong&gt; 操作。默认绑定口令 &lt;code&gt;darographix&lt;/code&gt; 产生固定 UID；绑定成功由常亮的链路 LED 以及 WebUI 状态轮询中的实时通道动作来确认。</p>
 <h2>通道映射</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>遥控通道</th>
+<th>PteronautOS 角色</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>副翼(横滚)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>升降舵(俯仰)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>油门(扑翼驱动)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>方向舵(偏航/冠)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>按此顺序映射四个控制通道。PteronautOS 按 CRSF 顺序读取它们，因此请让 CH1–CH4 保持默认的 AETR 布局(若在配置中重排了它们，则与混控器的期望保持一致)。</p>
 <h2>行程与方向</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>将遥控输出设为 &lt;strong&gt;±100%&lt;/strong&gt;(CRSF 172–1811&amp;nbsp;µs，围绕 992&amp;nbsp;µs 中心)。&lt;em&gt;不要&lt;/em&gt;使用扩展限位——伺服内核已经映射完整的 988–2012&amp;nbsp;µs 脉冲包络，裁剪遥控只会浪费分辨率。副微调必须保持为零；中立值按设计为 1500&amp;nbsp;µs。</p>
 <h2>速率与指数曲线</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>从 &lt;strong&gt;100% 速率与 0% 指数&lt;/strong&gt; 开始。扑翼权限主要由波形幅度而非摇杆行程决定，因此激进的遥控速率只会让飞行器变得神经质。一旦滑翔与扑翼良好，可添加温和的指数(15–25%)以获得更柔和的中位，仅在横滚响应过度指挥机翼时才降低速率。</p>
 <h2>验证</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>摇杆打满右——右翼抬起，左翼落下。</li>
+<li>摇杆打满后(抬头)——两翼抬起机头。</li>
+<li>油门推高——扑翼频率升高；拉低——降低或滑翔。</li>
+<li>方向舵向右——冠向右偏转。</li>
+<li>关闭发射机——所有舵面居中(失控保护)。</li>
 </ul>
 </div>
 </main>

@@ -30,50 +30,42 @@
 <h1>Configuration de l&#39;émetteur</h1>
 <p class='sub-lead'>Relie une radio ELRS, mappe les quatre voies et règle des débattements alignés sur le noyau servo.</p>
 <h2>Binding</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>Mettez le récepteur en mode liaison (alimentez avec la phrase de liaison configurée, ou utilisez la WebUI / le bouton) et lancez l’action &lt;strong&gt;Bind&lt;/strong&gt; sur la radio. La phrase de liaison par défaut &lt;code&gt;darographix&lt;/code&gt; donne un UID fixe ; une liaison réussie est confirmée par une LED de liaison fixe et un mouvement de canal en direct dans le sondage d’état WebUI.</p>
 <h2>Mappage des voies</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>Canal radio</th>
+<th>Rôle PteronautOS</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>Aileron (roulis)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>Profondeur (tangage)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>Gaz (entraînement du battement)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>Direction (lacet / crête)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>Mappez les quatre commandes dans cet ordre. PteronautOS les lit dans l’ordre CRSF, donc gardez CH1–CH4 dans la disposition AETR par défaut (ou faites correspondre ce que le mixeur attend si vous les avez réordonnés dans la config).</p>
 <h2>Débattements et sens</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>Réglez la sortie radio à &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs autour d’un centre de 992&amp;nbsp;µs). N’utilisez &lt;em&gt;pas&lt;/em&gt; de limites étendues — le noyau servo mappe déjà l’enveloppe d’impulsion complète de 988–2012&amp;nbsp;µs et écrêter la radio ne fait que gaspiller la résolution. Le sub-trim doit rester à zéro ; le neutre est 1500&amp;nbsp;µs par conception.</p>
 <h2>Taux et expo</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>Commencez avec &lt;strong&gt;100% de rates et 0% d’expo&lt;/strong&gt;. L’autorité du battement est dominée par l’amplitude de la forme d’onde, pas par le débattement du manche, donc des rates radio agressifs ne font que rendre l’aéronef nerveux. Une fois qu’il plane et bat bien, ajoutez un expo léger (15–25%) pour un centre plus doux, et ne réduisez les rates que si la réponse en roulis sur-commande les ailes.</p>
 <h2>Vérification</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>Manche à fond à droite — aile droite monte, gauche descend.</li>
+<li>Manche à fond en arrière (cabré) — les deux ailes lèvent le nez.</li>
+<li>Gaz vers le haut — la fréquence de battement augmente ; vers le bas — diminue ou plane.</li>
+<li>Direction à droite — la crête dévie à droite.</li>
+<li>Émetteur coupé — toutes les surfaces se centrent (failsafe).</li>
 </ul>
 </div>
 </main>

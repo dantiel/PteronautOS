@@ -30,50 +30,42 @@
 <h1>ट्रांसमीटर कॉन्फ़िगरेशन</h1>
 <p class='sub-lead'>ELRS रेडियो बाइंड करें, चार नियंत्रण चैनल मैप करें और सर्वो कर्नेल से मेल खाते एंडपॉइंट सेट करें।</p>
 <h2>बाइंडिंग</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>रिसीवर को बाइंड मोड में रखें(कॉन्फ़िगर किए गए बाइंड फ्रेज़ के साथ पावर, या WebUI / बटन का उपयोग करें) और रेडियो पर &lt;strong&gt;Bind&lt;/strong&gt; क्रिया शुरू करें। डिफ़ॉल्ट बाइंड फ्रेज़ &lt;code&gt;darographix&lt;/code&gt; एक निश्चित UID देता है; सफल बाइंड की पुष्टि ठोस लिंक LED और WebUI स्थिति पोल में लाइव चैनल गति से होती है।</p>
 <h2>चैनल मैपिंग</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>रेडियो चैनल</th>
+<th>PteronautOS भूमिका</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>एलेरॉन(रोल)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>एलेवेटर(पिच)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>थ्रॉटल(फ्लैप ड्राइव)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>रडर(यॉ / क्रेस्ट)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>चार नियंत्रणों को उसी क्रम में मैप करें। PteronautOS उन्हें CRSF क्रम में पढ़ता है, इसलिए CH1–CH4 को डिफ़ॉल्ट AETR लेआउट में रखें(या यदि कॉन्फ़िग में पुनः क्रमित किया है तो मिक्सर की अपेक्षा से मिलाएँ)।</p>
 <h2>एंडपॉइंट और दिशा</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>रेडियो आउटपुट को &lt;strong&gt;±100%&lt;/strong&gt; पर सेट करें(CRSF 172–1811&amp;nbsp;µs, 992&amp;nbsp;µs केंद्र के आसपास)। विस्तारित सीमाएँ &lt;em&gt;न&lt;/em&gt; उपयोग करें — सर्वो कर्नेल पहले से ही पूरे 988–2012&amp;nbsp;µs पल्स एनवेलप को मैप करता है, और रेडियो को काटना केवल रिज़ॉल्यूशन बर्बाद करता है। सब-ट्रिम शून्य रहना चाहिए; न्यूट्रल डिज़ाइन से 1500&amp;nbsp;µs है।</p>
 <h2>रेट्स और एक्सपो</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>&lt;strong&gt;100% रेट और 0% एक्सपो&lt;/strong&gt; से शुरू करें। फ्लैप अथॉरिटी पर तरंगरूप आयाम का दबदबा है, स्टिक थ्रो का नहीं, इसलिए आक्रामक रेडियो रेट केवल विमान को चंचल बनाते हैं। जब यह अच्छी तरह ग्लाइड और फ्लैप करने लगे, तो नरम केंद्र के लिए हल्का एक्सपो(15–25%) जोड़ें, और केवल तभी रेट घटाएँ जब रोल प्रतिक्रिया पंखों को अधिक कमांड करे।</p>
 <h2>सत्यापन</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>स्टिक पूरा दायाँ — दायाँ पंख उठता है, बायाँ गिरता है।</li>
+<li>स्टिक पूरा पीछे(पिच अप)— दोनों पंख नाक उठाते हैं।</li>
+<li>थ्रॉटल ऊपर — फ्लैप आवृत्ति बढ़ती है; नीचे — घटती है या ग्लाइड।</li>
+<li>रडर दायाँ — क्रेस्ट दाईं ओर विक्षेपित होता है।</li>
+<li>ट्रांसमीटर बंद — सभी सतहें केंद्रित(फेलसेफ)।</li>
 </ul>
 </div>
 </main>

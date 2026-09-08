@@ -30,50 +30,42 @@
 <h1>Sender-Konfiguration</h1>
 <p class='sub-lead'>Binde ein ELRS-Funkgerät, ordne die vier Steuerkanäle zu und setze Endpunkte passend zum Servo-Kernel.</p>
 <h2>Binding</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>Versetze den Empfänger in den Bind-Modus (Strom mit der konfigurierten Bind-Phrase, oder über WebUI / Taste) und starte die &lt;strong&gt;Bind&lt;/strong&gt;-Aktion am Radio. Die Standard-Bind-Phrase &lt;code&gt;darographix&lt;/code&gt; ergibt eine feste UID; ein erfolgreicher Bind wird durch eine dauerhafte Link-LED und Live-Kanalbewegung im WebUI-Status-Poll bestätigt.</p>
 <h2>Kanalzuordnung</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>Funkkanal</th>
+<th>PteronautOS-Rolle</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>Querruder (Rollen)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>Höhenruder (Nicken)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>Gas (Flügelschlag-Antrieb)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>Seitenruder (Gieren / Kamm)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>Ordne die vier Steuerungen in dieser Reihenfolge zu. PteronautOS liest sie in CRSF-Reihenfolge, also halte CH1–CH4 im Standard-AETR-Layout (oder passe es an das an, was der Mixer erwartet, falls du sie in der Config umsortiert hast).</p>
 <h2>Endpunkte und Richtung</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>Stelle den Radio-Ausgang auf &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs um ein 992&amp;nbsp;µs-Zentrum). Nutze &lt;em&gt;keine&lt;/em&gt; erweiterten Limits — der Servo-Kernel mappt bereits die volle 988–2012&amp;nbsp;µs-Pulshülle, und das Beschneiden des Radios verschwendet nur Auflösung. Sub-Trim muss null bleiben; Neutral ist per Design 1500&amp;nbsp;µs.</p>
 <h2>Raten und Expo</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>Beginne mit &lt;strong&gt;100% Rates und 0% Expo&lt;/strong&gt;. Die Flügelschlag-Autorität wird von der Wellenform-Amplitude dominiert, nicht vom Stick-Weg — aggressive Radio-Rates machen das Fluggerät nur nervös. Sobald es gut gleitet und schlägt, füge mildes Expo (15–25%) für ein weicheres Zentrum hinzu, und reduziere Rates nur, wenn die Roll-Antwort die Flügel übersteuert.</p>
 <h2>Prüfung</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>Stick voll rechts — rechter Flügel hebt, linker senkt.</li>
+<li>Stick voll zurück (nicken hoch) — beide Flügel heben die Nase.</li>
+<li>Gas hoch — Schlagfrequenz steigt; runter — sinkt oder Gleitflug.</li>
+<li>Seitenruder rechts — Kamm schlägt rechts aus.</li>
+<li>Sender aus — alle Flächen zentrieren (Failsafe).</li>
 </ul>
 </div>
 </main>

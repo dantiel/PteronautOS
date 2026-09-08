@@ -30,50 +30,42 @@
 <h1>Configuración del transmisor</h1>
 <p class='sub-lead'>Vincula una radio ELRS, mapea los cuatro canales y define límites que coincidan con el kernel de servos.</p>
 <h2>Binding</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>Pon el receptor en modo bind (alimenta con la frase de bind configurada, o usa la WebUI / botón) e inicia la acción &lt;strong&gt;Bind&lt;/strong&gt; en la radio. La frase de bind por defecto &lt;code&gt;darographix&lt;/code&gt; produce un UID fijo; un bind correcto se confirma con un LED de enlace fijo y movimiento de canal en vivo en el sondeo de estado de la WebUI.</p>
 <h2>Mapeo de canales</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>Canal de radio</th>
+<th>Rol en PteronautOS</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>Alerón (alabeo)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>Elevador (cabeceo)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>Acelerador (accionamiento del aleteo)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>Timón (guiñada / cresta)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>Mapea los cuatro controles en ese orden. PteronautOS los lee en orden CRSF, así que mantén CH1–CH4 en la disposición AETR por defecto (o haz coincidir lo que el mezclador espera si los reordenaste en la configuración).</p>
 <h2>Límites y dirección</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>Ajusta la salida de la radio a &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs alrededor de un centro de 992&amp;nbsp;µs). &lt;em&gt;No&lt;/em&gt; uses límites extendidos — el núcleo de servo ya mapea la envolvente completa de pulso de 988–2012&amp;nbsp;µs y recortar la radio solo desperdicia resolución. El sub-trim debe permanecer en cero; el neutro es 1500&amp;nbsp;µs por diseño.</p>
 <h2>Tasas y expo</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>Empieza con &lt;strong&gt;100% de rates y 0% de expo&lt;/strong&gt;. La autoridad del aleteo la domina la amplitud de la forma de onda, no el recorrido del stick, así que unos rates agresivos en la radio solo vuelven la aeronave nerviosa. Cuando planee y aletee bien, añade un expo suave (15–25%) para un centro más blando, y reduce rates solo si la respuesta de alabeo sobre-comanda las alas.</p>
 <h2>Verificación</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>Stick a tope a la derecha — ala derecha sube, izquierda baja.</li>
+<li>Stick a tope atrás (cabeceo arriba) — ambas alas levantan el morro.</li>
+<li>Acelerador arriba — la frecuencia de aleteo aumenta; abajo — disminuye o planea.</li>
+<li>Timón a la derecha — la cresta deflecta a la derecha.</li>
+<li>Transmisor apagado — todas las superficies centran (failsafe).</li>
 </ul>
 </div>
 </main>

@@ -30,50 +30,42 @@
 <h1>إعداد جهاز الإرسال</h1>
 <p class='sub-lead'>اربط راديو ELRS وعيّن قنوات التحكم الأربع واضبط نقاط نهاية تطابق نواة السيرفو.</p>
 <h2>الربط</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>ضع المستقبِل في وضع الربط (زوّده بالطاقة مع عبارة الربط المُعدّة، أو استخدم WebUI / الزر) وابدأ إجراء &lt;strong&gt;Bind&lt;/strong&gt; على الراديو. تعطي عبارة الربط الافتراضية &lt;code&gt;darographix&lt;/code&gt; معرّف UID ثابتاً؛ ويُؤكَّد الربط الناجح بمصباح رابط ثابت وحركة قنوات حية في استطلاع حالة WebUI.</p>
 <h2>تخطيط القنوات</h2>
 <table>
 <tr>
-<th>Radio channel</th>
-<th>PteronautOS role</th>
+<th>قناة الراديو</th>
+<th>دور PteronautOS</th>
 </tr>
 <tr>
 <td>CH1</td>
-<td>Aileron (roll)</td>
+<td>جنيح (التفاف)</td>
 </tr>
 <tr>
 <td>CH2</td>
-<td>Elevator (pitch)</td>
+<td>مصعد (الانحدار)</td>
 </tr>
 <tr>
 <td>CH3</td>
-<td>Throttle (flap drive)</td>
+<td>خانق (قيادة الرفرفة)</td>
 </tr>
 <tr>
 <td>CH4</td>
-<td>Rudder (yaw / crest)</td>
+<td>دفة (انعراج / عرف)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>عيّن أدوات التحكم الأربعة بهذا الترتيب. يقرؤها PteronautOS بترتيب CRSF، لذا أبقِ CH1–CH4 في تخطيط AETR الافتراضي (أو طابِق ما يتوقعه الخلاط إذا أعدت ترتيبها في الإعداد).</p>
 <h2>نقاط النهاية والاتجاه</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>اضبط خرج الراديو على &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;ميكروثانية حول مركز 992&amp;nbsp;ميكروثانية). &lt;em&gt;لا&lt;/em&gt; تستخدم حدوداً موسعة — فنواة المؤازرة تعيّن بالفعل كامل غلاف النبضة 988–2012&amp;nbsp;ميكروثانية، وقصّ الراديو يهدر الدقة فقط. يجب أن يبقى التقليم الفرعي صفراً؛ فالمحايد هو 1500&amp;nbsp;ميكروثانية تصميماً.</p>
 <h2>المعدلات والمنحنى</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>ابدأ بـ &lt;strong&gt;معدلات 100% وإكسبو 0%&lt;/strong&gt;. تهيمن سعة شكل الموجة على سلطة الرفرفة لا مسار العصا، لذا فإن المعدلات العدوانية في الراديو تجعل الطائرة متوترة فحسب. وعندما تنزلق وترفرف جيداً، أضف إكسبو خفيفاً (15–25%) لمركز أكثر نعومة، واخفض المعدلات فقط إذا كانت استجابة الالتفاف تفرط في توجيه الأجنحة.</p>
 <h2>التحقق</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>العصا يميناً بالكامل — الجناح الأيمن يرتفع والأيسر ينخفض.</li>
+<li>العصا للخلف بالكامل (رفع المقدمة) — كلا الجناحين يرفع المقدمة.</li>
+<li>الخانق لأعلى — يزداد تردد الرفرفة؛ ولأسفل — ينخفض أو ينزلق.</li>
+<li>الدفة يميناً — تنحرف العرف يميناً.</li>
+<li>المرسل مطفأ — تتموضع جميع الأسطح في المنتصف (أمان الإخفاق).</li>
 </ul>
 </div>
 </main>

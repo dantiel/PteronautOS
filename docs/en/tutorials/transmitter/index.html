@@ -30,9 +30,7 @@
 <h1>Transmitter Configuration</h1>
 <p class='sub-lead'>Bind an ELRS radio, map the four control channels and set endpoints that match the servo kernel.</p>
 <h2>Binding</h2>
-<p>
-Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
-</p>
+<p>Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the &lt;strong&gt;Bind&lt;/strong&gt; action on the radio. The default bind phrase &lt;code&gt;darographix&lt;/code&gt; yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.</p>
 <h2>Channel mapping</h2>
 <table>
 <tr>
@@ -56,24 +54,18 @@ Put the receiver in bind mode (power with the bind phrase configured, or use the
 <td>Rudder (yaw / crest)</td>
 </tr>
 </table>
-<p>
-Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
-</p>
+<p>Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).</p>
 <h2>Endpoints &amp; direction</h2>
-<p>
-Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
-</p>
+<p>Set the radio output to &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs around a 992&amp;nbsp;µs centre). Do &lt;em&gt;not&lt;/em&gt; use extended limits — the servo kernel already maps the full 988–2012&amp;nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&amp;nbsp;µs by design.</p>
 <h2>Rates &amp; expo</h2>
-<p>
-Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
-</p>
+<p>Start with &lt;strong&gt;100% rates and 0% expo&lt;/strong&gt;. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.</p>
 <h2>Verification</h2>
 <ul>
-<li>Stick full right → right wing rises, left falls.</li>
-<li>Stick full back (pitch up) → both wings raise the nose.</li>
-<li>Throttle up → flap frequency increases; down → decreases or glide.</li>
-<li>Rudder right → crest deflects right.</li>
-<li>Transmitter off → all surfaces centre (failsafe).</li>
+<li>Stick full right — right wing rises, left falls.</li>
+<li>Stick full back (pitch up) — both wings raise the nose.</li>
+<li>Throttle up — flap frequency increases; down — decreases or glide.</li>
+<li>Rudder right — crest deflects right.</li>
+<li>Transmitter off — all surfaces centre (failsafe).</li>
 </ul>
 </div>
 </main>

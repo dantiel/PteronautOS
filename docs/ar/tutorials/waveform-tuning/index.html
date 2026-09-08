@@ -30,62 +30,52 @@
 <h1>ضبط شكل الموجة</h1>
 <p class='sub-lead'>شكّل ضربة الجناح بالشراسة والسعة والتردد وزاوية الانزلاق لتلائم جناحك وهيكلك.</p>
 <p>
-Explore the parameters live with the <a href="../../../ar/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+استكشف المعاملات مباشرةً باستخدام 
+<a href='../../../ar/documentation/#ferocity-waveform'>مستكشف شكل موجة الشراسة</a>
+ قبل لمس البرنامج الثابت — فالنموذج نفسه يحرّك الخلاط.
 </p>
 <h2>الشراسة(عدم تناظر الضربة)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;الشراسة&lt;/strong&gt; هي عدم تناظر الشوط/العودة. عند &lt;code&gt;0&lt;/code&gt; تكون الموجة جيبية نقية — وقت متساوٍ صعوداً وهبوطاً. رفع شراسة النزول يجعل شوط النزول أسرع وثبات الصعود أطول(والعكس لشراسة الصعود). وهذا يزيح &lt;em&gt;موضع&lt;/em&gt; إنتاج الدفع: نزول سريع + تعافٍ بطيء يحاكي ضربة القوة لطائر حقيقي وهو أكثر تغييرات الإحساس فعالية.</p>
+<p>ابدأ من &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; لنزول قوي، ثم امزج شراسة الصعود بخطوات صغيرة. الإفراط في عدم التناظر يجعل الأجنحة تنقطع فجأة عند الانعكاس — مسموع كنقرة ومرئي كحرارة المؤازرة.</p>
 <h2>السعة والتردد</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>لا تُضبط السعة مباشرةً؛ بل تنبثق من &lt;strong&gt;التردد&lt;/strong&gt; و&lt;strong&gt;سرعة الشوط&lt;/strong&gt;. رفع تردد الرفرفة يقصّر الشوط لسرعة معينة، وخفضه يطيل الشوط. يحدّد النواة السعة بحيث لا يغادر المؤازرة غلاف 988–2012&amp;nbsp;ميكروثانية أبداً. اضبط التردد على الرنين الطبيعي لرفرفة الهيكل — فالتردد المرتفع جداً يهدر الطاقة، والمنخفض جداً يهبط دون الرفع الفعال.</p>
+<p>يمزج منزلق &lt;strong&gt;shape mix&lt;/strong&gt; الجيب النقي نحو شبه منحرف(ثبات أكبر عند نقطتي الانعكاس). مزج أعلى = انعكاسات أوضح ودفع أكبر عند الطرفين؛ ومزج أقل = إبحار أكثر نعومة وكفاءة.</p>
 <h2>زوايا الانزلاق والرفرفة</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;زاوية الانزلاق&lt;/strong&gt; و&lt;strong&gt;زاوية الرفرفة&lt;/strong&gt; كلاهما &lt;em&gt;إزاحات مركز&lt;/em&gt; (int8, ±15°) لا سعة. يحدد الانزلاق زاوية الجناح المشتركة عندما يأمر الخانق بالانزلاق؛ وتزيح الرفرفة مركز شوط الرفرفة. تتيحان لك تحييز الجناح للطيران البطيء مقابل الإبحار السريع دون لمس الوصلة الميكانيكية.</p>
 <h2>إعدادات البدء المسبقة</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>الإعداد المسبق</th>
+<th>نزول / صعود</th>
+<th>مزج</th>
+<th>الطابع</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>متطرف</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>ضربة قوة قوية، عدوانية</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>شبه جيبي</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>متوازن، الأكثر طبيعية</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>ثبات عالٍ</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>ثبات انعكاس طويل، عائم</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>مختلط</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>مزج ناعم، كفاءة إبحار</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>ابدأ بـ &lt;strong&gt;شبه الجيبي&lt;/strong&gt;، وأكّد استقرار الطيران، ثم انتقل نحو &lt;strong&gt;المتطرف&lt;/strong&gt; فقط إذا أردت قوة ضاربة. لكل هيكل نقطة مثالية مختلفة — غيّر معاملاً واحداً في كل مرة.</p>
 </div>
 </main>
 <footer>

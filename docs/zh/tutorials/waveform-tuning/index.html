@@ -30,62 +30,52 @@
 <h1>波形调校</h1>
 <p class='sub-lead'>用凶猛度、幅度、频率和滑翔角塑造扑翼行程，匹配你的机翼与机身。</p>
 <p>
-Explore the parameters live with the <a href="../../../zh/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+在修改固件之前，请先用 
+<a href='../../../zh/documentation/#ferocity-waveform'>烈度波形探索器</a>
+ 进行实时探索——同一模型驱动混控器。
 </p>
 <h2>凶猛度（行程不对称）</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;烈度&lt;/strong&gt; 是行程/回程的不对称性。在 &lt;code&gt;0&lt;/code&gt; 时波形为纯正弦——上下时间相等。提高下扑烈度使下行程更快、上行程驻留更长(上扑烈度则反之)。这改变了推力产生的&lt;em&gt;位置&lt;/em&gt;：快速下扑 + 缓慢回程模仿真实鸟类的动力行程，是最有效的手感变化。</p>
+<p>从 &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; 开始以获得有力的下扑，然后小步混入上扑烈度。过大的不对称会让机翼在反转时“啪”地骤断——可闻为咔哒声，可见为舵机发热。</p>
 <h2>幅度与频率</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>幅度并非直接设定；它由&lt;strong&gt;频率&lt;/strong&gt;与&lt;strong&gt;行程速度&lt;/strong&gt;涌现而来。在给定速度下提高扑翼频率会缩短行程，降低则加长行程。内核会封顶幅度，使舵机绝不离开 988–2012&amp;nbsp;µs 包络。请将频率调至机体的自然扑翼共振——频率过高浪费能量，过低则跌至有效升力之下。</p>
+<p>&lt;strong&gt;形状混合&lt;/strong&gt; 滑块将纯正弦向梯形混合(在反转点驻留更长)。混合越高 = 反转越干脆、两端推力越大；混合越低 = 巡航越平滑、越高效。</p>
 <h2>滑翔与扑翼角度</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;滑翔角&lt;/strong&gt; 与 &lt;strong&gt;扑翼角&lt;/strong&gt; 都是&lt;em&gt;中心偏移&lt;/em&gt;(int8, ±15°)，而非幅度。滑翔在油门指令滑翔时设置公共机翼角度；扑翼则移动扑翼行程的中心。它们让你在不触碰机械连杆的情况下，为低速飞行与快速巡航偏置机翼。</p>
 <h2>起始预设</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>预设</th>
+<th>下 / 上</th>
+<th>混合</th>
+<th>特性</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>极限</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>强力动力行程，激进</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>近正弦</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>均衡，最自然</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>高驻留</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>长反转驻留，漂浮</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>混合</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>柔和混合，巡航效率</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>从 &lt;strong&gt;近正弦&lt;/strong&gt; 开始，确认飞行稳定后，仅当你想要冲击力时才向 &lt;strong&gt;极限&lt;/strong&gt; 推进。每个机体都有不同的甜蜜点——一次只更改一个参数。</p>
 </div>
 </main>
 <footer>

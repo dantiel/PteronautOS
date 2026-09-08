@@ -30,62 +30,52 @@
 <h1>वेवफॉर्म ट्यूनिंग</h1>
 <p class='sub-lead'>फेरोसिटी, आयाम, आवृत्ति और ग्लाइड कोण से फ्लैप स्ट्रोक को अपने पंख और एयरफ्रेम के अनुसार ढालें।</p>
 <p>
-Explore the parameters live with the <a href="../../../hi/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+पैरामीटर को लाइव देखें 
+<a href='../../../hi/documentation/#ferocity-waveform'>फेरोसिटी वेवफॉर्म एक्सप्लोरर</a>
+ का उपयोग करें — वही मॉडल मिक्सर चलाता है।
 </p>
 <h2>फेरोसिटी (स्ट्रोक विषमता)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;फेरोसिटी&lt;/strong&gt; स्ट्रोक/वापसी की विषमता है। &lt;code&gt;0&lt;/code&gt; पर तरंग शुद्ध साइन है — ऊपर-नीचे समान समय। डाउन-फेरोसिटी बढ़ाने से डाउनस्ट्रोक तेज़ और अपस्ट्रोक ड्वेल लंबा होता है(अप-फेरोसिटी के लिए विपरीत)। यह थ्रस्ट उत्पन्न होने के &lt;em&gt;स्थान&lt;/em&gt; को खिसकाता है: तेज़ डाउनस्ट्रोक + धीमी रिकवरी असली पक्षी के पावर स्ट्रोक की नकल करती है और सबसे प्रभावी अनुभव परिवर्तन है।</p>
+<p>शक्तिशाली डाउनस्ट्रोक के लिए &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; से शुरू करें, फिर अप-फेरोसिटी को छोटे चरणों में मिलाएँ। बहुत अधिक विषमता उलटाव पर पंखों को झटका देती है — क्लिक के रूप में सुनाई देती है और सर्वो गर्मी के रूप में दिखती है।</p>
 <h2>आयाम और आवृत्ति</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>आयाम सीधे सेट नहीं होता; यह &lt;strong&gt;आवृत्ति&lt;/strong&gt; और &lt;strong&gt;स्ट्रोक गति&lt;/strong&gt; से उभरता है। फ्लैप आवृत्ति बढ़ाने से दी गई गति पर स्ट्रोक छोटा होता है, घटाने से लंबा होता है। कर्नेल आयाम को सीमित करता है ताकि सर्वो कभी 988–2012&amp;nbsp;µs एनवेलप से बाहर न जाए। आवृत्ति को एयरफ्रेम की प्राकृतिक फ्लैप अनुनाद पर ट्यून करें — बहुत अधिक आवृत्ति ऊर्जा बर्बाद करती है, बहुत कम प्रभावी लिफ्ट से नीचे गिरती है।</p>
+<p>&lt;strong&gt;शेप मिक्स&lt;/strong&gt; स्लाइडर शुद्ध साइन को ट्रेपेज़ॉइड की ओर मिलाता है(उलटाव बिंदुओं पर अधिक ड्वेल)। अधिक मिक्स = तीखे उलटाव और चरम पर अधिक थ्रस्ट; कम मिक्स = चिकनी, अधिक कुशल क्रूज़।</p>
 <h2>ग्लाइड और फ्लैपिंग कोण</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;ग्लाइड कोण&lt;/strong&gt; और &lt;strong&gt;फ्लैपिंग कोण&lt;/strong&gt; दोनों &lt;em&gt;केंद्र ऑफ़सेट&lt;/em&gt;(int8, ±15°) हैं, आयाम नहीं। ग्लाइड सामान्य पंख कोण सेट करता है जब थ्रॉटल ग्लाइड कमांड करता है; फ्लैपिंग फ्लैप स्ट्रोक के केंद्र को खिसकाता है। ये यांत्रिक लिंकेज छुए बिना धीमी उड़ान बनाम तेज़ क्रूज़ के लिए पंख को झुकाने देते हैं।</p>
 <h2>शुरुआती प्रीसेट</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>प्रीसेट</th>
+<th>डाउन / अप</th>
+<th>मिक्स</th>
+<th>विशेषता</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>एक्सट्रीम</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>कठोर पावर स्ट्रोक, आक्रामक</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>नियर-साइन</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>संतुलित, सबसे स्वाभाविक</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>हाई ड्वेल</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>लंबा उलटाव ड्वेल, हल्का</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>मिश्रित</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>नरम मिश्रण, क्रूज़ दक्षता</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>&lt;strong&gt;नियर-साइन&lt;/strong&gt; से शुरू करें, स्थिर उड़ान की पुष्टि करें, फिर पंच चाहिए तभी &lt;strong&gt;एक्सट्रीम&lt;/strong&gt; की ओर बढ़ें। हर एयरफ्रेम का अलग स्वीट स्पॉट होता है — एक समय में एक ही पैरामीटर बदलें।</p>
 </div>
 </main>
 <footer>

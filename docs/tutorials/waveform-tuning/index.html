@@ -30,62 +30,52 @@
 <h1>Ajuste da Forma de Onda</h1>
 <p class='sub-lead'>Molde o batimento com ferocidade, amplitude, frequência e ângulo de planeio para se ajustar à sua asa e estrutura.</p>
 <p>
-Explore the parameters live with the <a href="../../documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+Explore os parâmetros ao vivo com o 
+<a href='../../documentation/#ferocity-waveform'>explorador de forma de onda de ferocidade</a>
+ antes de mexer no firmware — o mesmo modelo aciona o mixer.
 </p>
 <h2>Ferocidade (assimetria do batimento)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;Ferocidade&lt;/strong&gt; é a assimetria de curso/retorno. Em &lt;code&gt;0&lt;/code&gt; a onda é um seno puro — tempo igual subindo e descendo. Aumentar a ferocidade de descida torna o curso descendente mais rápido e a permanência da subida mais longa (e vice-versa para a ferocidade de subida). Isso desloca &lt;em&gt;onde&lt;/em&gt; o empuxo é produzido: descida rápida + recuperação lenta imita o golpe de potência de um pássaro real e é a mudança de sensação mais eficaz.</p>
+<p>Comece com &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; para uma descida potente, depois misture a ferocidade de subida em pequenos passos. Assimetria demais faz as asas estalarem na reversão — audível como um clique e visível como calor no servo.</p>
 <h2>Amplitude e frequência</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>A amplitude não é definida diretamente; ela emerge da &lt;strong&gt;frequência&lt;/strong&gt; e da &lt;strong&gt;velocidade do curso&lt;/strong&gt;. Aumentar a frequência do batimento encurta o curso para uma dada velocidade; diminuí-la alonga o curso. O kernel limita a amplitude para que o servo nunca saia do envelope de 988–2012&amp;nbsp;µs. Ajuste a frequência para a ressonância natural de batimento da aeronave — frequência alta demais desperdiça energia, baixa demais cai abaixo da sustentação efetiva.</p>
+<p>O controle &lt;strong&gt;shape mix&lt;/strong&gt; mistura o seno puro em direção a um trapezoide (mais permanência nos pontos de reversão). Mix mais alto = reversões mais nítidas e mais empuxo nos extremos; mix mais baixo = cruzeiro mais suave e eficiente.</p>
 <h2>Ângulo de planeio e batimento</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;Ângulo de planeio&lt;/strong&gt; e &lt;strong&gt;ângulo de batimento&lt;/strong&gt; são ambos &lt;em&gt;deslocamentos de centro&lt;/em&gt; (int8, ±15°), não amplitude. O planeio define o ângulo comum das asas quando o acelerador comanda o planeio; o batimento desloca o centro do curso do flap. Eles permitem polarizar a asa para voo lento vs. cruzeiro rápido sem tocar na ligação mecânica.</p>
 <h2>Presets iniciais</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>Predefinição</th>
+<th>descida / subida</th>
+<th>mistura</th>
+<th>Caráter</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>Extremo</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>Golpe de potência forte, agressivo</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>Quase-seno</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>Equilibrado, mais natural</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>Alta permanência</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>Permanência longa na reversão, flutuante</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>Misto</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>Mistura suave, eficiência de cruzeiro</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>Comece com &lt;strong&gt;Quase-seno&lt;/strong&gt;, confirme voo estável e depois vá para &lt;strong&gt;Extremo&lt;/strong&gt; apenas se quiser agressividade. Cada aeronave tem um ponto ideal diferente — mude um parâmetro por vez.</p>
 </div>
 </main>
 <footer>

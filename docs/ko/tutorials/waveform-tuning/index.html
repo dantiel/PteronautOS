@@ -30,62 +30,52 @@
 <h1>파형 튜닝</h1>
 <p class='sub-lead'>퍼로시티, 진폭, 주파수, 글라이드 각도로 날갯짓을 다듬어 날개와 기체에 맞추세요.</p>
 <p>
-Explore the parameters live with the <a href="../../../ko/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+매개변수를 실시간으로 탐색하세요: 
+<a href='../../../ko/documentation/#ferocity-waveform'>맹렬함 파형 탐색기</a>
+ 펌웨어를 만지기 전에 — 같은 모델이 믹서를 구동합니다.
 </p>
 <h2>퍼로시티(스트로크 비대칭)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;맹렬함&lt;/strong&gt;은 스트로크/복귀 비대칭입니다. &lt;code&gt;0&lt;/code&gt;이면 파형은 순수 사인파입니다(상하 시간 동일). 다운 맹렬함을 올리면 다운스트로크가 빨라지고 업스트로크 드웰이 길어집니다(업 맹렬함은 반대). 이는 추력이 생기는 &lt;em&gt;위치&lt;/em&gt;를 이동시킵니다. 빠른 다운스트로크 + 느린 복귀는 실제 새의 파워 스트로크를 흉내 내며 가장 효과적인 느낌 변화입니다.</p>
+<p>강력한 다운스트로크를 위해 &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt;에서 시작한 뒤 업 맹렬함을 작은 단계로 섞으세요. 비대칭이 과하면 반전 시 날개가 톡 끊어집니다. 클릭 소리로 들리고 서보 발열로 보입니다.</p>
 <h2>진폭과 주파수</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>진폭은 직접 설정되지 않습니다. &lt;strong&gt;주파수&lt;/strong&gt;와 &lt;strong&gt;스트로크 속도&lt;/strong&gt;에서 나옵니다. 플랩 주파수를 올리면 주어진 속도에서 스트로크가 짧아지고, 내리면 길어집니다. 커널은 서보가 988–2012&amp;nbsp;µs 엔벨로프를 벗어나지 않도록 진폭을 제한합니다. 기체의 자연 플랩 공명에 주파수를 맞추세요. 너무 높으면 에너지를 낭비하고, 너무 낮으면 유효 양력 아래로 떨어집니다.</p>
+<p>&lt;strong&gt;셰이프 믹스&lt;/strong&gt; 슬라이더는 순수 사인을 사다리꼴로 블렌드합니다(반전점에서 드웰 증가). 믹스가 높으면 반전이 더 선명하고 극단에서 추력이 커집니다. 믹스가 낮으면 더 부드럽고 효율적인 순항입니다.</p>
 <h2>글라이드 및 플래핑 각도</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;글라이드 각도&lt;/strong&gt;와 &lt;strong&gt;플래핑 각도&lt;/strong&gt;는 모두 &lt;em&gt;중심 오프셋&lt;/em&gt;(int8, ±15°)이지 진폭이 아닙니다. 글라이드는 스로틀이 글라이드를 명령할 때 공통 날개 각도를 설정하고, 플래핑은 플랩 스트로크 중심을 이동시킵니다. 기계적 링키지를 건드리지 않고 느린 비행 대 빠른 순항으로 날개를 편향시킬 수 있습니다.</p>
 <h2>시작 프리셋</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
-<th>mix</th>
-<th>Character</th>
+<th>프리셋</th>
+<th>다운 / 업</th>
+<th>믹스</th>
+<th>특성</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>익스트림</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>강한 파워 스트로크, 공격적</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>근사 사인</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>균형 잡힘, 가장 자연스러움</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>높은 드웰</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>긴 반전 드웰, 부유함</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>혼합</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>부드러운 블렌드, 순항 효율</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>&lt;strong&gt;근사 사인&lt;/strong&gt;으로 시작해 안정 비행을 확인하고, 펀치를 원할 때만 &lt;strong&gt;익스트림&lt;/strong&gt;으로 이동하세요. 모든 기체는 저마다 다른 최적점을 갖습니다. 한 번에 한 매개변수만 바꾸세요.</p>
 </div>
 </main>
 <footer>

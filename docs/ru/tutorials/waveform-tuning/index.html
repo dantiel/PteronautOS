@@ -30,62 +30,52 @@
 <h1>Настройка формы волны</h1>
 <p class='sub-lead'>Сформируйте взмах с помощью ярости, амплитуды, частоты и угла планирования под ваше крыло и планер.</p>
 <p>
-Explore the parameters live with the <a href="../../../ru/documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+Исследуйте параметры вживую с помощью 
+<a href='../../../ru/documentation/#ferocity-waveform'>обозреватель формы волны свирепости</a>
+ прежде чем трогать прошивку — та же модель управляет микшером.
 </p>
 <h2>Ярость (асимметрия взмаха)</h2>
-<p>
-<strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-</p>
-<p>
-Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
-</p>
+<p>&lt;strong&gt;Свирепость&lt;/strong&gt; — это асимметрия хода/возврата. При &lt;code&gt;0&lt;/code&gt; волна — чистый синус, равное время вверх и вниз. Повышение свирепости вниз делает ход вниз быстрее, а удержание вверх дольше (и наоборот для свирепости вверх). Это сдвигает &lt;em&gt;место&lt;/em&gt; производства тяги: быстрый ход вниз + медленный возврат имитирует силовой взмах настоящей птицы и является самой эффективной сменой ощущения.</p>
+<p>Начните с &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; для мощного хода вниз, затем подмешивайте свирепость вверх малыми шагами. Слишком большая асимметрия заставляет крылья щёлкать при реверсе — слышно как щелчок и видно как нагрев серво.</p>
 <h2>Амплитуда и частота</h2>
-<p>
-Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-</p>
-<p>
-The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
-</p>
+<p>Амплитуда не задаётся напрямую; она возникает из &lt;strong&gt;частоты&lt;/strong&gt; и &lt;strong&gt;скорости хода&lt;/strong&gt;. Повышение частоты взмаха укорачивает ход при данной скорости, понижение удлиняет ход. Ядро ограничивает амплитуду, чтобы серво никогда не покидало конверт 988–2012&amp;nbsp;мкс. Настраивайте частоту под естественный резонанс взмаха планера — слишком высокая частота тратит энергию, слишком низкая падает ниже эффективной подъёмной силы.</p>
+<p>Ползунок &lt;strong&gt;shape mix&lt;/strong&gt; подмешивает чистый синус к трапеции (больше удержания в точках реверса). Выше mix = чётче реверсы и больше тяги на краях; ниже mix = плавнее и эффективнее крейсерский режим.</p>
 <h2>Углы планирования и взмаха</h2>
-<p>
-<strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
-</p>
+<p>&lt;strong&gt;Угол планирования&lt;/strong&gt; и &lt;strong&gt;угол взмаха&lt;/strong&gt; — это &lt;em&gt;смещения центра&lt;/em&gt; (int8, ±15°), а не амплитуда. Планирование задаёт общий угол крыла, когда газ командует планирование; взмах сдвигает центр хода взмаха. Они позволяют смещать крыло для медленного полёта против быстрого крейсерского, не трогая механическую тягу.</p>
 <h2>Стартовые пресеты</h2>
 <table>
 <tr>
-<th>Preset</th>
-<th>down / up</th>
+<th>Пресет</th>
+<th>вниз / вверх</th>
 <th>mix</th>
-<th>Character</th>
+<th>Характер</th>
 </tr>
 <tr>
-<td>Extreme</td>
+<td>Экстрим</td>
 <td>8 / 0</td>
 <td>100%</td>
-<td>Hard power stroke, aggressive</td>
+<td>Жёсткий силовой ход, агрессивный</td>
 </tr>
 <tr>
-<td>Near-sine</td>
+<td>Почти синус</td>
 <td>7 / 1</td>
 <td>100%</td>
-<td>Balanced, most natural</td>
+<td>Сбалансированный, самый естественный</td>
 </tr>
 <tr>
-<td>High dwell</td>
+<td>Высокое удержание</td>
 <td>8 / 6</td>
 <td>100%</td>
-<td>Long reversal dwell, floaty</td>
+<td>Долгое удержание при реверсе, плавучее</td>
 </tr>
 <tr>
-<td>Mixed</td>
+<td>Смешанный</td>
 <td>8 / 6</td>
 <td>50%</td>
-<td>Soft blend, cruise efficiency</td>
+<td>Мягкое смешение, эффективность крейсера</td>
 </tr>
 </table>
-<p>
-Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
-</p>
+<p>Начните с &lt;strong&gt;Почти синуса&lt;/strong&gt;, подтвердите стабильный полёт, затем переходите к &lt;strong&gt;Экстриму&lt;/strong&gt; только если нужен удар. У каждого планера своя золотая точка — меняйте по одному параметру за раз.</p>
 </div>
 </main>
 <footer>

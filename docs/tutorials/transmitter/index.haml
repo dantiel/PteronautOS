@@ -29,44 +29,40 @@
         %p.sub-lead= tx_lead
 
         %h2= tx_h2_bind
-        %p
-          Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. The default bind phrase <code>darographix</code> yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.
+        %p= tx_p1
 
         %h2= tx_h2_channels
         %table
           %tr
-            %th Radio channel
-            %th PteronautOS role
+            %th= tx_th_ch
+            %th= tx_th_role
           %tr
             %td CH1
-            %td Aileron (roll)
+            %td= tx_td_ch1
           %tr
             %td CH2
-            %td Elevator (pitch)
+            %td= tx_td_ch2
           %tr
             %td CH3
-            %td Throttle (flap drive)
+            %td= tx_td_ch3
           %tr
             %td CH4
-            %td Rudder (yaw / crest)
-        %p
-          Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).
+            %td= tx_td_ch4
+        %p= tx_p2
 
         %h2= tx_h2_endpoints
-        %p
-          Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.
+        %p= tx_p3
 
         %h2= tx_h2_rates
-        %p
-          Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.
+        %p= tx_p4
 
         %h2= tx_h2_verify
         %ul
-          %li Stick full right → right wing rises, left falls.
-          %li Stick full back (pitch up) → both wings raise the nose.
-          %li Throttle up → flap frequency increases; down → decreases or glide.
-          %li Rudder right → crest deflects right.
-          %li Transmitter off → all surfaces centre (failsafe).
+          %li= tx_li1
+          %li= tx_li2
+          %li= tx_li3
+          %li= tx_li4
+          %li= tx_li5
 
     %footer
       .lang-switch

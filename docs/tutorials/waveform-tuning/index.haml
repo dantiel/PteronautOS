@@ -28,53 +28,49 @@
         %h1= wave_h1
         %p.sub-lead= wave_lead
         %p
-          Explore the parameters live with the <a href="#{asset_prefix}#{lang_dir}documentation/#ferocity-waveform">ferocity waveform explorer</a> before touching the firmware — the same model drives the mixer.
+          = wave_p1_a
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/#ferocity-waveform"}= wave_p1_link
+          = wave_p1_b
 
         %h2= wave_h2_ferocity
-        %p
-          <strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.
-        %p
-          Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.
+        %p= wave_p2
+        %p= wave_p3
 
         %h2= wave_h2_amplitude
-        %p
-          Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.
-        %p
-          The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.
+        %p= wave_p4
+        %p= wave_p5
 
         %h2= wave_h2_glide
-        %p
-          <strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.
+        %p= wave_p6
 
         %h2= wave_h2_presets
         %table
           %tr
-            %th Preset
-            %th down / up
-            %th mix
-            %th Character
+            %th= wave_th_preset
+            %th= wave_th_downup
+            %th= wave_th_mix
+            %th= wave_th_char
           %tr
-            %td Extreme
+            %td= wave_preset_extreme
             %td 8 / 0
             %td 100%
-            %td Hard power stroke, aggressive
+            %td= wave_preset_extreme_desc
           %tr
-            %td Near-sine
+            %td= wave_preset_near
             %td 7 / 1
             %td 100%
-            %td Balanced, most natural
+            %td= wave_preset_near_desc
           %tr
-            %td High dwell
+            %td= wave_preset_high
             %td 8 / 6
             %td 100%
-            %td Long reversal dwell, floaty
+            %td= wave_preset_high_desc
           %tr
-            %td Mixed
+            %td= wave_preset_mixed
             %td 8 / 6
             %td 50%
-            %td Soft blend, cruise efficiency
-        %p
-          Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.
+            %td= wave_preset_mixed_desc
+        %p= wave_p7
 
     %footer
       .lang-switch
