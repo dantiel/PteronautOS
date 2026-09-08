@@ -30,7 +30,7 @@ def run_case(key, value, needle, defines):
         return None
     out = f"/tmp/yoshi_guard_{abs(hash((key, value)))}.ino"
     open(out, "w").write(txt[:m.start(2)] + b2 + txt[m.end(2):])
-    r = subprocess.run(["clang++", "-fsyntax-only", "-std=gnu++17", "-I", "tools/stub",
+    r = subprocess.run(["clang++", "-fsyntax-only", "-std=gnu++17", "-I", "tools/stub", "-I", "sketches/yoshimitsu/src", "-I", "sketches/yoshimitsu/src",
                         "-DBOARD_CUSTOM", *defines, "-x", "c++", out],
                        capture_output=True, text=True)
     ok = needle in r.stderr
@@ -43,7 +43,7 @@ def run_case(key, value, needle, defines):
 def run_platform_guard():
     out = "/tmp/yoshi_guard_platform.ino"
     open(out, "w").write(open(SKETCH).read())
-    r = subprocess.run(["clang++", "-fsyntax-only", "-std=gnu++17", "-I", "tools/stub",
+    r = subprocess.run(["clang++", "-fsyntax-only", "-std=gnu++17", "-I", "tools/stub", "-I", "sketches/yoshimitsu/src", "-I", "sketches/yoshimitsu/src",
                         "-x", "c++", out], capture_output=True, text=True)
     needle = "YOSHIMITSU targets ESP32-S3 or RP2040 only"
     ok = needle in r.stderr
