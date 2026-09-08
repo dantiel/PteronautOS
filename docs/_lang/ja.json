@@ -349,5 +349,6 @@
   "st_h2_gearbox": "ギアボックスカーネル安定化",
   "st_h2_webui": "WebUIパネルと設定エンドポイント",
   "st_h2_tuning": "調整ガイド",
-  "st_h2_status": "実装状況と未解決の不整合"
+  "st_h2_status": "実装状況と未解決の不整合",
+  "s3t_h2_hermes": "HERMES — 統合ファームウェア"
 }

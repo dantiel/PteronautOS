@@ -32,13 +32,20 @@
         %p
           Both personalities run on the <strong>same hardware</strong> — a Waveshare-style
           ESP32-S3 micro board (~6&nbsp;USD, 23&nbsp;×&nbsp;18&nbsp;mm, native USB, every
-          GPIO PWM-capable). You flash one sketch or the other, depending on the task of the day:
+          GPIO PWM-capable). The two faces now live in <strong>one combined sketch — HERMES</strong>,
+          with the two standalone sketches still available if you want only one tool:
         %table
           %tr
             %th Tool
             %th Sketch
             %th Turns the S3 into…
             %th Used for
+          %tr
+            %td HERMES (combined)
+            %td
+              %code esp32s3_hermes
+            %td Both faces in one — converter <em>and</em> flasher, GPIO0 double-tap to switch
+            %td One permanent harness for flying <em>and</em> flashing
           %tr
             %td A — Converter
             %td
@@ -52,10 +59,45 @@
             %td A USB↔UART bridge with a boot + power-cycle jig
             %td Flashing PteronautOS onto EP2-class receivers — no soldered FTDI
         %p
-          Both sketches live in the repository under
+          All three sketches live in the repository under
+          <code>sketches/esp32s3_hermes/</code>,
           <code>sketches/esp32s3_crsf_pwm/</code> and
           <code>sketches/esp32s3_flash_bridge/</code> and compile with the
           standard arduino-esp32 core.
+
+        %h2= s3t_h2_hermes
+        %p
+          <strong>HERMES</strong> — the Hermetic Shinobi — is the recommended firmware: one board,
+          two faces. It boots in <strong>FACE&nbsp;I</strong> (converter) and switches to
+          <strong>FACE&nbsp;II</strong> (flasher) with a GPIO0 double-tap. The BOOT button is the
+          single control surface:
+        %table
+          %tr
+            %th Face
+            %th Gesture
+            %th Action
+          %tr
+            %td FACE I (converter)
+            %td double-tap
+            %td enter FACE II (flasher)
+          %tr
+            %td FACE II (flasher)
+            %td single tap
+            %td restart the receiver (run the new firmware)
+          %tr
+            %td FACE II (flasher)
+            %td double-tap
+            %td drop the receiver into its bootloader (flash mode)
+          %tr
+            %td FACE II (flasher)
+            %td long-press 2 s
+            %td return to FACE I (converter)
+        %p
+          The wiring is <strong>one permanent harness</strong> — the same six wires serve both
+          faces, so you never re-wire between flying and flashing. In FACE&nbsp;II the USB↔UART
+          path is a <em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP
+          traffic passes through untouched. Full source:
+          <code>sketches/esp32s3_hermes/esp32s3_hermes.ino</code>.
 
         %h2= s3t_h2_conv
         %p

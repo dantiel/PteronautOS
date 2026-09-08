@@ -349,5 +349,6 @@
   "st_h2_gearbox": "기어박스 커널 안정화",
   "st_h2_webui": "WebUI 패널 및 구성 엔드포인트",
   "st_h2_tuning": "튜닝 가이드",
-  "st_h2_status": "구현 상태 및 미해결 불일치"
+  "st_h2_status": "구현 상태 및 미해결 불일치",
+  "s3t_h2_hermes": "HERMES — 통합 펼웨어"
 }

@@ -33,7 +33,8 @@
 <p>
 Both personalities run on the <strong>same hardware</strong> — a Waveshare-style
 ESP32-S3 micro board (~6&nbsp;USD, 23&nbsp;×&nbsp;18&nbsp;mm, native USB, every
-GPIO PWM-capable). You flash one sketch or the other, depending on the task of the day:
+GPIO PWM-capable). The two faces now live in <strong>one combined sketch — HERMES</strong>,
+with the two standalone sketches still available if you want only one tool:
 </p>
 <table>
 <tr>
@@ -41,6 +42,14 @@ GPIO PWM-capable). You flash one sketch or the other, depending on the task of t
 <th>Sketch</th>
 <th>Turns the S3 into…</th>
 <th>Used for</th>
+</tr>
+<tr>
+<td>HERMES (combined)</td>
+<td>
+<code>esp32s3_hermes</code>
+</td>
+<td>Both faces in one — converter <em>and</em> flasher, GPIO0 double-tap to switch</td>
+<td>One permanent harness for flying <em>and</em> flashing</td>
 </tr>
 <tr>
 <td>A — Converter</td>
@@ -60,10 +69,52 @@ GPIO PWM-capable). You flash one sketch or the other, depending on the task of t
 </tr>
 </table>
 <p>
-Both sketches live in the repository under
+All three sketches live in the repository under
+<code>sketches/esp32s3_hermes/</code>,
 <code>sketches/esp32s3_crsf_pwm/</code> and
 <code>sketches/esp32s3_flash_bridge/</code> and compile with the
 standard arduino-esp32 core.
+</p>
+<h2>HERMES — संयुक्त फर्मवेयर</h2>
+<p>
+<strong>HERMES</strong> — the Hermetic Shinobi — is the recommended firmware: one board,
+two faces. It boots in <strong>FACE&nbsp;I</strong> (converter) and switches to
+<strong>FACE&nbsp;II</strong> (flasher) with a GPIO0 double-tap. The BOOT button is the
+single control surface:
+</p>
+<table>
+<tr>
+<th>Face</th>
+<th>Gesture</th>
+<th>Action</th>
+</tr>
+<tr>
+<td>FACE I (converter)</td>
+<td>double-tap</td>
+<td>enter FACE II (flasher)</td>
+</tr>
+<tr>
+<td>FACE II (flasher)</td>
+<td>single tap</td>
+<td>restart the receiver (run the new firmware)</td>
+</tr>
+<tr>
+<td>FACE II (flasher)</td>
+<td>double-tap</td>
+<td>drop the receiver into its bootloader (flash mode)</td>
+</tr>
+<tr>
+<td>FACE II (flasher)</td>
+<td>long-press 2 s</td>
+<td>return to FACE I (converter)</td>
+</tr>
+</table>
+<p>
+The wiring is <strong>one permanent harness</strong> — the same six wires serve both
+faces, so you never re-wire between flying and flashing. In FACE&nbsp;II the USB↔UART
+path is a <em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP
+traffic passes through untouched. Full source:
+<code>sketches/esp32s3_hermes/esp32s3_hermes.ino</code>.
 </p>
 <h2>A — CRSF→PWM कन्वर्टर (पुनरावलोकन)</h2>
 <p>

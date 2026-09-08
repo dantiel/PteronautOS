@@ -27,7 +27,7 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>टेलीमेट्री और सेंसर</h1>
-<p class='sub-lead'>VBAT, RSSI, लिंक गुणवत्ता और जाइरो टेलीमेट्री रेडियो तक — क्या उपलब्ध है और क्या योजनाबद्ध है।</p>
+<p class='sub-lead'>VBAT, RSSI, लिंक गुणवत्ता और जायरो टेलीमेट्री रेडियो तक — क्या उपलब्ध है और क्या योजनाबद्ध है।</p>
 <h2>VBAT</h2>
 <p>
 The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
@@ -36,7 +36,7 @@ The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and re
 <p>
 RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
 </p>
-<h2>जाइरो टेलीमेट्री</h2>
+<h2>जायरो टेलीमेट्री</h2>
 <p>
 The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
 </p>

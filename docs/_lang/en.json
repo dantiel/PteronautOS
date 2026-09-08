@@ -349,5 +349,6 @@
   "st_h2_gearbox": "Gearbox kernel stabilization",
   "st_h2_webui": "WebUI panel & configuration endpoints",
   "st_h2_tuning": "Tuning guide",
-  "st_h2_status": "Implementation status & open inconsistencies"
+  "st_h2_status": "Implementation status & open inconsistencies",
+  "s3t_h2_hermes": "HERMES — the combined firmware"
 }

@@ -349,5 +349,6 @@
   "st_h2_gearbox": "Estabilização do kernel de caixa de engrenagens",
   "st_h2_webui": "Painel WebUI e endpoints de configuração",
   "st_h2_tuning": "Guia de ajuste",
-  "st_h2_status": "Estado da implementação e inconsistências em aberto"
+  "st_h2_status": "Estado da implementação e inconsistências em aberto",
+  "s3t_h2_hermes": "HERMES — o firmware combinado"
 }
