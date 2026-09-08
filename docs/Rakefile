@@ -12,8 +12,7 @@ PAGES = %w[
   tutorials/transmitter
   tutorials/waveform-tuning
   tutorials/zephyrus-wiring
-  tutorials/crsf-converter
-  tutorials/esp32s3-toolbox
+  tutorials/yoshimitsu
   hardware
   hardware/power
   hardware/telemetry

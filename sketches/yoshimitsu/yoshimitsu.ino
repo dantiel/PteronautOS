@@ -84,7 +84,7 @@
 //  and the receiver's ELRS debug bytes passed through verbatim. When muted
 //  (`MUTE` / `JIGUANG 0`) it is silent as a lamb — exactly like Yoshimitsu,
 //  but in its own persona. The 極光 sigil is written everywhere: hermetically
-//  encrypted behind the compile gate YOSHI_JIGUANG (1 = omnipresent, 0 = not
+//  encrypted behind the compile gate JIGUANG (1 = omnipresent, 0 = not
 //  a single 極光 byte compiled in). In MEDITATION the sponge-head becomes
 //  JIGUANG the administrator — the transparent flasher bridge stays, but when
 //  the wire is idle it takes commands from the USB-serial heaven (STATUS,
@@ -148,8 +148,8 @@
 // Hermetic compile gate. 1 = omnipresent: the 極光 sigil is written everywhere
 // and the storyteller may speak. 0 = hermetically deactivated: the lamb — not
 // one 極光 byte is compiled in, MEDITATION stays a pure flasher bridge.
-#if !defined(YOSHI_JIGUANG)
-  #define YOSHI_JIGUANG 1
+#if !defined(JIGUANG)
+  #define JIGUANG 1
 #endif
 
 // =============================================================================
@@ -459,7 +459,7 @@ static bool gyroConnected = false;
 //  lamb; wake it and the 極光 sigil is everywhere. It never seizes the stance.
 // =============================================================================
 
-#if YOSHI_JIGUANG
+#if JIGUANG
 #define JIG_SIGIL "極光 "       // the storyteller's sigil — JIGUANG / jiguang / 極光
 #define JIG_CRSF_MS 250        // level-2 CRSF scroll cadence (~4 Hz)
 
@@ -521,6 +521,34 @@ static void printHighscore() {             // explicit `SCORE` — the ronin's l
   jigCmd(); Serial.print("bridge overflows ... "); Serial.print(bridgeOverflows); Serial.println();
   jigCmd(); Serial.print("uptime ............. "); Serial.print(millis() / 1000UL); Serial.println(" s");
   jigCmd(); Serial.println("════════════════════════════════");
+}
+
+// `LEGEND` — the easter egg: the entire legend as one ASCII scroll. The ronin's
+// whole story in a single unbroken scroll — stances, cheatcodes, the throne and
+// the sigil that never dies. JIGUANG / jiguang / 極光 never dies.
+static void jigLegend() {
+  jigCmd(); Serial.println("════════════════════════════════════════════════");
+  jigCmd(); Serial.println("   JIGUANG (極光) — THE LEGEND · ONE ASCII SCROLL");
+  jigCmd(); Serial.println("════════════════════════════════════════════════");
+  jigCmd(); Serial.println();
+  jigCmd(); Serial.println("  YOSHIMITSU — the Hermetic Shinobi. One soul, two boards,");
+  jigCmd(); Serial.println("  six stances. Configure once, flash once, never look back.");
+  jigCmd(); Serial.println();
+  for (uint8_t s = 0; s < STANCE_COUNT; s++) { jigSay(0, STANCE_TALE[s]); }
+  jigCmd(); Serial.println();
+  jigCmd(); Serial.println("  YOSHI   — the aurora cheatcode, always on: every stance breathes");
+  jigCmd(); Serial.println("           its own colour and rhythm, read across the room.");
+  jigCmd(); Serial.println("  JIGUANG — the storyteller / commentator / administrator. In MEDITATION");
+  jigCmd(); Serial.println("           the sponge-head is the throne: commands from the USB-serial");
+  jigCmd(); Serial.println("           heaven, esptool's SLIP yields it back to the flasher bridge.");
+  jigCmd(); Serial.println("  The bridge is transparent. The parry is the CRC. The levitation is the");
+  jigCmd(); Serial.println("  gyro. The pose never seizes while the legend is told — 極光 never dies.");
+  jigCmd(); Serial.println();
+  jigCmd(); Serial.println("  Cheatcodes: KINCHO · MANJI · FLEA · MEDITATION · NSS · BACK · POSE n");
+  jigCmd(); Serial.println("              JIGUANG n · MUTE · CRSF · SCORE · ELRS · LEGEND");
+  jigCmd(); Serial.println("════════════════════════════════════════════════");
+  jigCmd(); Serial.println("  JIGUANG / jiguang / 極光 never dies. Never look back.");
+  jigCmd(); Serial.println("════════════════════════════════════════════════");
 }
 
 // Level-3 omni: relay the receiver's ELRS debug bytes verbatim to the console.
@@ -606,7 +634,7 @@ static void pumpRgb() {
   uint32_t ms = millis();
   uint32_t c  = 0;
 
-#if YOSHI_JIGUANG
+#if JIGUANG
   if (jigLevel >= 3) {
     c = jiguang(ms);                        // JIGUANG omni — the storyteller wears the aurora
   } else
@@ -1043,7 +1071,7 @@ static void printStatus() {
 #endif
   Serial.print(" · receiver power = ");
   Serial.print(rxPowered ? "ON" : "OFF");
-#if YOSHI_JIGUANG
+#if JIGUANG
   Serial.print(" · JIGUANG voice = "); Serial.print((int)jigLevel);
 #endif
   Serial.println();
@@ -1067,11 +1095,12 @@ static void printHelp() {
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
-#if YOSHI_JIGUANG
+#if JIGUANG
   Serial.println("JIGUANG (極光) — the storyteller / commentator / administrator:");
   Serial.println("  JIGUANG      toggle the voice (lamb ↔ tale)");
   Serial.println("  JIGUANG 0..3 set level: 0 lamb · 1 tale · 2 scroll · 3 omni");
   Serial.println("  MUTE         silence the storyteller (the lamb)");
+  Serial.println("  LEGEND       the whole legend as one ASCII scroll (the easter egg)");
   Serial.println("  CRSF         print the 16-channel scroll (raw → µs)");
   Serial.println("  SCORE        arcade HIGHSCORE ledger (frames, failsafes, bridge)");
   Serial.println("  ELRS         toggle the receiver's debug passthrough (omni)");
@@ -1123,7 +1152,7 @@ static void enterStance(Stance next) {
       rxPower(true);                       // receiver powered so esptool sees it
       Serial.println("YOSHIMITSU: MEDITATION — the sponge-head, ready to be flashed.");
       Serial.println("YOSHIMITSU:   the bridge is live. Exit: long-press BOOT (ESP32) or RESET (RP2040).");
-#if YOSHI_JIGUANG
+#if JIGUANG
       medAdmin = true;                     // the sponge-head wakes as the administrator
       jigCmd();
       Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type STATUS / CRSF / SCORE / POSE.");
@@ -1170,7 +1199,7 @@ static void runCommand(const char* line) {
   if      (strncmp(line, "KINCHO", 6) == 0) enterStance(STANCE_KINCHO);
   else if (strncmp(line, "MANJI",  5) == 0 || strncmp(line, "GYRO", 4) == 0) enterStance(STANCE_MANJI_DRAGONFLY);
   else if (strncmp(line, "JIGUANG", 7) == 0) {
-#if YOSHI_JIGUANG
+#if JIGUANG
     // JIGUANG (極光) — the storyteller/administrator. `JIGUANG` toggles the
     // voice (lamb ↔ tale); `JIGUANG n` sets the level 0..3. It never seizes
     // the stance: CRSF, servos and the bridge keep obeying the pose.
@@ -1185,10 +1214,11 @@ static void runCommand(const char* line) {
                  : jigLevel == 2 ? " — 2 scroll (+ CRSF readout)."
                                  : " — 3 omni (+ ELRS passthrough).");
 #else
-    Serial.println("YOSHIMITSU: JIGUANG (極光) is hermetically deactivated — recompile with YOSHI_JIGUANG=1.");
+    Serial.println("YOSHIMITSU: JIGUANG (極光) is hermetically deactivated — recompile with JIGUANG=1.");
 #endif
   }
-#if YOSHI_JIGUANG
+#if JIGUANG
+  else if (strncmp(line, "LEGEND", 6) == 0) jigLegend();
   else if (strncmp(line, "MUTE", 4) == 0) {
     jigLevel = 0;
     jigCmd(); Serial.println("the lamb sleeps. 極光 is silent.");
@@ -1242,7 +1272,7 @@ static void parseConsoleLine() {
   }
 }
 
-#if YOSHI_JIGUANG
+#if JIGUANG
 // MEDITATION — the sponge-head is JIGUANG's throne. By default it is the admin
 // console (line parsing); the instant esptool's SLIP (0xC0) speaks, it yields
 // to the byte-exact flasher bridge and stays there until MEDITATION re-enters.
@@ -1274,7 +1304,7 @@ static void handleMeditationUsb() {
 
 static void handleUsb() {
   if (stance == STANCE_MEDITATION) {
-#if YOSHI_JIGUANG
+#if JIGUANG
     handleMeditationUsb();
 #else
     pumpBridge();
@@ -1488,7 +1518,7 @@ void loop() {
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
     if (stance != STANCE_NSS) pumpCrsf();     // NSS drives servos manually, no CRSF
   }
-#if YOSHI_JIGUANG
+#if JIGUANG
   if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) {
     if (jigLevel >= 2 && millis() - lastJigCrsfMs >= JIG_CRSF_MS) {
       lastJigCrsfMs = millis();

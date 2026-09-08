@@ -163,4 +163,4 @@ needs to be touched again.
 
 Full illustrated tutorial lives in the docs site:
 
-- Tutorial 07 — [YOSHIMITSU · the Hermetic Shinobi](../docs/tutorials/esp32s3-toolbox/index.html)
+- Tutorial 06 — [YOSHIMITSU · the Complete Solution](../docs/tutorials/yoshimitsu/index.html)
