@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='de'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — Verdrahtung &amp; Flashen</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Nach oben scrollen' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Nach oben scrollen' type='button'>↑</button>
+<a class='home-link' href='../../../de/' title='PteronautOS-Startseite'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../de/tutorials/'>Tutorials</a>
+<a href='../../../de/hardware/'>Hardware</a>
+<a href='../../../de/documentation/'>Dokumentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>Companion-Compute-Modus</h1>
+<p class='sub-lead'>Gib dem Schwert eine Hand: Verdrahte den RP2040-Tiny als Companion-Kern.</p>
+<h2>Was du brauchst</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — die Hand</li>
+<li>MPU6050-Gyro (GY-521) — I2C</li>
+<li>drei Servos — Flügel L/R, Krista-Ruder</li>
+<li>PteronautOS-Empfänger, geflasht mit der Companion-Brücke</li>
+</ul>
+<h2>Verdrahte das Gyro</h2>
+<p>Das MPU6050 verbindet sich direkt mit dem I2C des RP2040 — SDA und SCL — nicht mit dem Empfänger. Das Gyro gehört zur Hand.</p>
+<h2>Flashe beide Boards</h2>
+<p>Flashe PteronautOS normal, dann flashe den YOSHIMITSU-Sketch für den RP2040-Tiny. Der Companion-Kern aktiviert sich über das Admin-Flag, nicht über ein zweites Firmware-Image.</p>
+<h2>Companion-Modus aktivieren</h2>
+<p>Setze COMPANION_MODE im Sketch auf 1, baue neu und flashe. Nach dem Neustart erwacht die Hand.</p>
+<h2>Prüfen</h2>
+<p>Öffne die USB-Konsole und lies die JIGUANG-Erzählung: Die Stance ist MEDITATION, die Brücke steht, und das Gyro meldet sich von der Hand — nicht vom Empfänger.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='active' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

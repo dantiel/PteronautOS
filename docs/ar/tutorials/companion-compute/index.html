@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — التوصيل والوميض</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ar/tutorials/'>دروس</a>
+<a href='../../../ar/hardware/'>العتاد</a>
+<a href='../../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>وضع الحوسبة المرافقة</h1>
+<p class='sub-lead'>أعطِ السيف يداً: وصّل RP2040-Tiny كنواة مرافقة.</p>
+<h2>ما تحتاجه</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — اليد</li>
+<li>جيروسكوب MPU6050 (GY-521) — I2C</li>
+<li>ثلاثة مؤازرات — جناح يسار/يمين، دفة العرف</li>
+<li>مستقبل PteronautOS، وميض بجسر مرافق</li>
+</ul>
+<h2>وصّل الجيروسكوب</h2>
+<p>يتصل MPU6050 مباشرة بـ I2C الخاص بـ RP2040 — SDA وSCL — لا بالمستقبل. الجيروسكوب ينتمي إلى اليد.</p>
+<h2>ومّض اللوحتين</h2>
+<p>ومّض PteronautOS كالعادة، ثم ومّض رسم YOSHIMITSU لـ RP2040-Tiny. تتفعّل النواة المرافقة عبر العلم الإداري، لا عبر صورة برمجية ثانية.</p>
+<h2>فعّل الوضع المرافق</h2>
+<p>اجعل COMPANION_MODE يساوي 1 في الرسم، وأعد البناء وومّض. عند إعادة التشغيل تستيقظ اليد.</p>
+<h2>تحقق</h2>
+<p>افتح منفذ USB واقرأ حكاية JIGUANG: الوضعية هي MEDITATION، والجسر قائم، والجيروسكوب يبلّغ من اليد — لا من المستقبل.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='active' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

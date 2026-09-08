@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ko'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — 배선 및 플래싱</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='맨 위로' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='맨 위로' type='button'>↑</button>
+<a class='home-link' href='../../../ko/' title='PteronautOS 홈'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ko/tutorials/'>튜토리얼</a>
+<a href='../../../ko/hardware/'>하드웨어</a>
+<a href='../../../ko/documentation/'>문서</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>컴패니언 컴퓨트 모드</h1>
+<p class='sub-lead'>칼에 손을 주세요: RP2040-Tiny를 컴패니언 코어로 배선하세요.</p>
+<h2>필요한 것</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — 손</li>
+<li>MPU6050 자이로(GY-521) — I2C</li>
+<li>서보 셋 — 날개 좌/우, 볏 방향타</li>
+<li>컴패니언 브리지로 플래시된 PteronautOS 수신기</li>
+</ul>
+<h2>자이로 배선</h2>
+<p>MPU6050은 수신기가 아니라 RP2040의 I2C — SDA와 SCL — 에 직접 연결됩니다. 자이로는 손에 속합니다.</p>
+<h2>두 보드 플래시</h2>
+<p>PteronautOS를 평소처럼 플래시한 다음 RP2040-Tiny용 YOSHIMITSU 스케치를 플래시합니다. 컴패니언 코어는 두 번째 펌웨어 이미지가 아니라 관리자 플래그로 활성화됩니다.</p>
+<h2>컴패니언 모드 활성화</h2>
+<p>스케치에서 COMPANION_MODE를 1로 설정하고 다시 빌드해 플래시합니다. 재부팅하면 손이 깨어납니다.</p>
+<h2>확인</h2>
+<p>USB 콘솔을 열고 JIGUANG 이야기를 읽으세요: 자세는 MEDITATION, 브리지는 켜져 있고, 자이로는 수신기가 아니라 손에서 보고합니다.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='active' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

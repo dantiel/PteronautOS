@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='pt'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — ligação e flashing</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Voltar ao topo' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Voltar ao topo' type='button'>↑</button>
+<a class='home-link' href='../../' title='Início do PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../tutorials/'>Tutoriais</a>
+<a href='../../hardware/'>Hardware</a>
+<a href='../../documentation/'>Documentação</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>Modo Companion Compute</h1>
+<p class='sub-lead'>Dá uma mão à espada: liga o RP2040-Tiny como núcleo companion.</p>
+<h2>O que precisas</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — a mão</li>
+<li>Giroscópio MPU6050 (GY-521) — I2C</li>
+<li>três servos — asa L/R, leme de crista</li>
+<li>Receptor PteronautOS, gravado com a ponte companion</li>
+</ul>
+<h2>Liga o giroscópio</h2>
+<p>O MPU6050 liga-se diretamente ao I2C do RP2040 — SDA e SCL — e não ao receptor. O giroscópio pertence à mão.</p>
+<h2>Grava as duas placas</h2>
+<p>Grava o PteronautOS normalmente e depois grava o sketch YOSHIMITSU para o RP2040-Tiny. O núcleo companion ativa-se pela flag de administrador, não por uma segunda imagem de firmware.</p>
+<h2>Ativa o modo companion</h2>
+<p>Define COMPANION_MODE para 1 no sketch, recompila e grava. Ao reiniciar, a mão desperta.</p>
+<h2>Verifica</h2>
+<p>Abre a consola USB e lê a lenda JIGUANG: a stance é MEDITATION, a ponte está ativa e o giroscópio reporta da mão — não do receptor.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='active' href='../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

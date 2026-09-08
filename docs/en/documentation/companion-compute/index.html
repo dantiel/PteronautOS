@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — YOSHIMITSU ↔ PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Scroll to top' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Scroll to top' type='button'>↑</button>
+<a class='home-link' href='../../../en/' title='PteronautOS home'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../en/tutorials/'>Tutorials</a>
+<a href='../../../en/hardware/'>Hardware</a>
+<a class='active' href='../../../en/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>Companion Compute Mode</h1>
+<p class='sub-lead'>The symbiosis: PteronautOS is the spirit, YOSHIMITSU is the hand. Two boards, one flight — split across the bridge by a single admin flag.</p>
+<h2>Architecture</h2>
+<p>In companion mode the two MCUs stop being a receiver and a converter and become one brain with two halves. This diagram is the eternal map:</p>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<h2>Why the gyro stays on the RP2040</h2>
+<p>The MPU6050 is physically wired to the RP2040 — so the PID is computed there too. Shipping raw gyro samples over the bridge to PteronautOS, only to PID them and ship corrections back, would be pure latency devotion. The hand that holds the gyro corrects the stroke: Zephyrus lives on the companion, not on the receiver.</p>
+<h2>The split</h2>
+<p>Each half computes what it is closest to.</p>
+<table>
+<tr>
+<th>Role</th>
+<th>Board</th>
+<th>Duty</th>
+</tr>
+<tr>
+<td>
+<strong>PTERONAUTOS</strong>
+</td>
+<td>
+<code>ESP8285</code>
+</td>
+<td>CRSF RX decode + mixer intent (waveform soul) — what is shortly before</td>
+</tr>
+<tr>
+<td>
+<strong>YOSHIMITSU</strong>
+</td>
+<td>
+<code>RP2040-Tiny</code>
+</td>
+<td>gyro + PID (Zephyrus, local) + companion compute + PIO servo-PWM — what is closer to muscle memory</td>
+</tr>
+</table>
+<h2>Two cores, two hands</h2>
+<p>The RP2040-Tiny is the only ELRS-PWM platform with hardware PIO state machines — eight of them — for glitch-free servo PWM. Its two Cortex-M0+ cores split cleanly:</p>
+<ul>
+<li>
+<strong>Core1 · companion compute</strong>
+ — mixer + flapping offload: the trajectory the hand will trace.
+</li>
+<li>
+<strong>Core0 · muscle memory</strong>
+ — PIO servo-PWM: the samples that actually move the wing and the crest rudder.
+</li>
+</ul>
+<h2>The admin flag</h2>
+<p>A single compile-time flag — COMPANION_MODE — decides whether YOSHIMITSU stays a silent converter or wakes as the companion core. Off, it is KINCHO; on, it is the hand.</p>
+<h2>Why it is a cheatcode</h2>
+<p>No other ELRS-PWM board carries a dual-core with hardware PIO. For the price of the tiny board you get two cores — one pure muscle, one companion computer. Elsewhere you would pay more and always be weaker.</p>
+<p>Cheaper, and always stronger: this is the hermetical shinobi&#39;s answer to the market.</p>
+<h2>Helicopter or flapping — the same stroke</h2>
+<p>From the sword&#39;s view, helicopter or flapping is the same: the mixer emits a canonical trajectory — channel to servo path — and the hand never asks which vehicle it carries. Back-turned — the pose flies on, only the gaze changes.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/companion-compute/'>PT</a>
+<a class='active' href='../../../en/documentation/companion-compute/'>EN</a>
+<a class='' href='../../../es/documentation/companion-compute/'>ES</a>
+<a class='' href='../../../fr/documentation/companion-compute/'>FR</a>
+<a class='' href='../../../de/documentation/companion-compute/'>DE</a>
+<a class='' href='../../../ru/documentation/companion-compute/'>RU</a>
+<a class='' href='../../../ko/documentation/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/documentation/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/documentation/companion-compute/'>中文</a>
+<a class='' href='../../../ar/documentation/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/documentation/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

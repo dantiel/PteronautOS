@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — wiring &amp; flashing</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Scroll to top' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Scroll to top' type='button'>↑</button>
+<a class='home-link' href='../../../en/' title='PteronautOS home'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../en/tutorials/'>Tutorials</a>
+<a href='../../../en/hardware/'>Hardware</a>
+<a href='../../../en/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>Companion Compute Mode</h1>
+<p class='sub-lead'>Give the sword a hand: wire the RP2040-Tiny as the companion core.</p>
+<h2>What you need</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — the hand</li>
+<li>MPU6050 gyro (GY-521) — I2C</li>
+<li>three servos — wing L/R, crest rudder</li>
+<li>PteronautOS receiver, flashed with the companion bridge</li>
+</ul>
+<h2>Wire the gyro</h2>
+<p>The MPU6050 connects directly to the RP2040&#39;s I2C — SDA and SCL — not to the receiver. The gyro belongs to the hand.</p>
+<h2>Flash both boards</h2>
+<p>Flash PteronautOS normally, then flash the YOSHIMITSU sketch for the RP2040-Tiny. The companion core activates through the admin flag, not through a second firmware image.</p>
+<h2>Enable companion mode</h2>
+<p>Set COMPANION_MODE to 1 in the sketch, rebuild, and flash. Reboot and the hand wakes.</p>
+<h2>Verify</h2>
+<p>Open the USB console and read the JIGUANG tale: the stance is MEDITATION, the bridge is up, and the gyro reports from the hand — not from the receiver.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='active' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

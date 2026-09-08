@@ -13,11 +13,13 @@ PAGES = %w[
   tutorials/waveform-tuning
   tutorials/zephyrus-wiring
   tutorials/yoshimitsu
+  tutorials/companion-compute
   hardware
   hardware/power
   hardware/telemetry
   documentation
   documentation/architecture
+  documentation/companion-compute
   documentation/mixers
   documentation/stabilization
   documentation/servo-kernel

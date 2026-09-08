@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — подключение и прошивка</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Наверх' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Наверх' type='button'>↑</button>
+<a class='home-link' href='../../../ru/' title='Главная PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ru/tutorials/'>Учебники</a>
+<a href='../../../ru/hardware/'>Аппаратура</a>
+<a href='../../../ru/documentation/'>Документация</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>Режим Companion Compute</h1>
+<p class='sub-lead'>Дай мечу руку: подключи RP2040-Tiny как ядро companion.</p>
+<h2>Что понадобится</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — рука</li>
+<li>Гироскоп MPU6050 (GY-521) — I2C</li>
+<li>три серво — крыло L/R, гребневой руль</li>
+<li>Приёмник PteronautOS, прошитый мостом companion</li>
+</ul>
+<h2>Подключи гироскоп</h2>
+<p>MPU6050 подключается напрямую к I2C RP2040 — SDA и SCL — а не к приёмнику. Гироскоп принадлежит руке.</p>
+<h2>Прошей обе платы</h2>
+<p>Прошей PteronautOS как обычно, затем прошей скетч YOSHIMITSU для RP2040-Tiny. Ядро companion активируется флагом администратора, а не вторым образом прошивки.</p>
+<h2>Включи режим companion</h2>
+<p>Установи COMPANION_MODE в 1 в скетче, пересобери и прошей. После перезагрузки рука пробуждается.</p>
+<h2>Проверка</h2>
+<p>Открой USB-консоль и прочти легенду JIGUANG: стойка — MEDITATION, мост поднят, а гироскоп отчитывается от руки — не от приёмника.</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='active' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

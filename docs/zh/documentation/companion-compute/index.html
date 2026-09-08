@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='zh'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — YOSHIMITSU ↔ PteronautOS</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='回到顶部' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='回到顶部' type='button'>↑</button>
+<a class='home-link' href='../../../zh/' title='PteronautOS 首页'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../zh/tutorials/'>教程</a>
+<a href='../../../zh/hardware/'>硬件</a>
+<a class='active' href='../../../zh/documentation/'>文档</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>伴随计算模式</h1>
+<p class='sub-lead'>共生: PteronautOS 是精神, YOSHIMITSU 是手。两块板, 一次飞行 — 由一个管理员标志在桥的两侧分开。</p>
+<h2>架构</h2>
+<p>在伴随模式下, 两块 MCU 不再是接收器和转换器, 而成为拥有两半的一个大脑。此图即永恒地图:</p>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<h2>陀螺仪为何留在 RP2040</h2>
+<p>MPU6050 在物理上连接到 RP2040 — 因此 PID 也在那里计算。把原始陀螺采样经桥发送到 PteronautOS, 只为了在那里做 PID 并回传修正, 纯属对延迟的献祭。握着陀螺仪的手纠正击打: Zephyrus 活在伴随板上, 而非接收机上。</p>
+<h2>划分</h2>
+<p>每一半都计算离自己最近的东西。</p>
+<table>
+<tr>
+<th>角色</th>
+<th>板卡</th>
+<th>职责</th>
+</tr>
+<tr>
+<td>
+<strong>PTERONAUTOS</strong>
+</td>
+<td>
+<code>ESP8285</code>
+</td>
+<td>CRSF RX 解码 + 混控意图(波形之魂) — 即稍早之前</td>
+</tr>
+<tr>
+<td>
+<strong>YOSHIMITSU</strong>
+</td>
+<td>
+<code>RP2040-Tiny</code>
+</td>
+<td>陀螺仪 + PID(Zephyrus, 本地) + 伴随计算 + PIO 舵机-PWM — 更接近肌肉记忆</td>
+</tr>
+</table>
+<h2>两核, 两手</h2>
+<p>RP2040-Tiny 是唯一拥有硬件 PIO 状态机 — 共八个 — 以实现无毛刺舵机-PWM 的 ELRS-PWM 平台。它的两个 Cortex-M0+ 核心划分清晰:</p>
+<ul>
+<li>
+<strong>Core1 · 伴随计算</strong>
+ — 混控 + 扑翼卸载: 手将划出的轨迹。
+</li>
+<li>
+<strong>Core0 · 肌肉记忆</strong>
+ — PIO 舵机-PWM: 真正驱动翼与冠舵的采样。
+</li>
+</ul>
+<h2>管理员标志</h2>
+<p>一个编译期标志 — COMPANION_MODE — 决定 YOSHIMITSU 是保持沉默转换器, 还是作为伴随核心苏醒。关闭即是 KINCHO; 开启即是手。</p>
+<h2>为何是作弊码</h2>
+<p>没有其他 ELRS-PWM 板搭载带硬件 PIO 的双核。以这块小板的价格, 你得到两个核心 — 一个纯肌肉, 一个伴随计算机。在别处你要花更多, 却永远更弱。</p>
+<p>更便宜, 且永远更强: 这是隐士忍者对市场的回答。</p>
+<h2>直升机或扑翼 — 同一击</h2>
+<p>从剑的视角看, 直升机或扑翼并无分别: 混控器发出规范轨迹 — 通道到舵机之路 — 而手从不问自己承载何种载具。背身而立 — 姿态继续飞行, 唯有目光变换。</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/companion-compute/'>PT</a>
+<a class='' href='../../../en/documentation/companion-compute/'>EN</a>
+<a class='' href='../../../es/documentation/companion-compute/'>ES</a>
+<a class='' href='../../../fr/documentation/companion-compute/'>FR</a>
+<a class='' href='../../../de/documentation/companion-compute/'>DE</a>
+<a class='' href='../../../ru/documentation/companion-compute/'>RU</a>
+<a class='' href='../../../ko/documentation/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/documentation/companion-compute/'>日本語</a>
+<a class='active' href='../../../zh/documentation/companion-compute/'>中文</a>
+<a class='' href='../../../ar/documentation/companion-compute/'>عربي</a>
+<a class='' href='../../../hi/documentation/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

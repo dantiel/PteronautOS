@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Companion Compute — वायरिंग और फ़्लैशिंग</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../../hi/hardware/'>हार्डवेयर</a>
+<a href='../../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>07</p>
+<h1>कम्पैनियन कम्प्यूट मोड</h1>
+<p class='sub-lead'>तलवार को हाथ दो: RP2040-Tiny को कम्पैनियन कोर बनाकर जोड़ो।</p>
+<h2>तुम्हें क्या चाहिए</h2>
+<ul>
+<li>Waveshare RP2040-Tiny — हाथ</li>
+<li>MPU6050 जाइरो (GY-521) — I2C</li>
+<li>तीन सर्वो — पंख बाएँ/दाएँ, शिखर-पतवार</li>
+<li>PteronautOS रिसीवर, कम्पैनियन पुल से फ़्लैश किया हुआ</li>
+</ul>
+<h2>जाइरो जोड़ो</h2>
+<p>MPU6050 सीधे RP2040 के I2C — SDA और SCL — से जुड़ता है, रिसीवर से नहीं। जाइरो हाथ का है।</p>
+<h2>दोनों बोर्ड फ़्लैश करो</h2>
+<p>PteronautOS को सामान्य रूप से फ़्लैश करो, फिर RP2040-Tiny के लिए YOSHIMITSU स्केच फ़्लैश करो। कम्पैनियन कोर व्यवस्थापक फ़्लैग से सक्रिय होता है, दूसरी फ़र्मवेयर छवि से नहीं।</p>
+<h2>कम्पैनियन मोड चालू करो</h2>
+<p>स्केच में COMPANION_MODE को 1 करो, फिर से बनाओ और फ़्लैश करो। रीबूट होते ही हाथ जागता है।</p>
+<h2>सत्यापित करो</h2>
+<p>USB कंसोल खोलो और JIGUANG की कथा पढ़ो: मुद्रा MEDITATION है, पुल चालू है, और जाइरो हाथ से — रिसीवर से नहीं — रिपोर्ट करता है।</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/companion-compute/'>PT</a>
+<a class='' href='../../../en/tutorials/companion-compute/'>EN</a>
+<a class='' href='../../../es/tutorials/companion-compute/'>ES</a>
+<a class='' href='../../../fr/tutorials/companion-compute/'>FR</a>
+<a class='' href='../../../de/tutorials/companion-compute/'>DE</a>
+<a class='' href='../../../ru/tutorials/companion-compute/'>RU</a>
+<a class='' href='../../../ko/tutorials/companion-compute/'>한국어</a>
+<a class='' href='../../../ja/tutorials/companion-compute/'>日本語</a>
+<a class='' href='../../../zh/tutorials/companion-compute/'>中文</a>
+<a class='' href='../../../ar/tutorials/companion-compute/'>عربي</a>
+<a class='active' href='../../../hi/tutorials/companion-compute/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>
