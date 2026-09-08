@@ -76,12 +76,15 @@
 //  Always on, always millis()-driven, throttled so it never disturbs the
 //  byte-exact flasher bridge.
 //
-//  JIGUANG (極光 · the aurora) — the standalone RGB cheatcode. JIGUANG /
-//  jiguang / 極光 never dies: where YOSHI paints the stance's story, JIGUANG
-//  is the raw, unbound aurora borealis itself — a full-spectrum psychedelic
-//  drift that obeys no pose. Type `JIGUANG` on the USB console and the ronin
-//  lets go of his stance for 30 s, breathing pure northern light before
-//  YOSHI returns. It is the sky behind every pose.
+//  JIGUANG (極光 · the aurora) — the invincible codex: every cheatcode in
+//  one scroll. Type `JIGUANG` on the USB console and the ronin unrolls the
+//  complete solution — all six stances, YOSHI, the BOOT gestures and the
+//  RESET-tap table — without moving a finger. It is a facet of the story,
+//  a way of viewing the whole legend, never a demon that seizes the input:
+//  the stance keeps flying, CRSF and servos untouched. With YOSHI_RGB the
+//  light becomes the lens — one slow wheel that weaves every stance colour
+//  into a single unbroken breath. It is the part of Yoshimitsu that cannot
+//  lose: the whole story seen at once.
 //
 //  // homage to the Manji-clan shinobi of the soul — never print in docs.
 //
@@ -417,10 +420,11 @@ static uint32_t lastBridgeMs   = 0;
 static Adafruit_NeoPixel rgb(1, RGB_LED_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
-// JIGUANG (極光 · the aurora) — the standalone RGB cheatcode's trance timer.
-// JIGUANG / jiguang / 極光 never dies: this deadline is its only state.
-#define JIGUANG_TRANCE_MS 30000            // 30 s of pure aurora, then YOSHI returns
-static uint32_t jiguangUntil = 0;          // 0 = no trance; else millis() deadline
+// JIGUANG (極光 · the aurora) — the invincible codex's lens flag. JIGUANG /
+// jiguang / 極光 never dies: this bool is its only state. It changes the
+// VIEW (the LED lens), never the stance — CRSF, servos and the bridge keep
+// obeying the pose while the whole story is seen at once.
+static bool jiguangLens = false;           // true = lens on (the union aurora)
 
 #if YOSHI_GYRO
 static bool gyroConnected = false;
@@ -471,16 +475,16 @@ static uint32_t dimColor(uint32_t c, uint8_t k) {
   return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
 }
 
-// JIGUANG (極光 · the aurora) — the pure, unbound northern light. Unlike YOSHI
-// (which paints the stance's story), JIGUANG is a free-running, full-spectrum
-// psychedelic drift that obeys no pose. JIGUANG / jiguang / 極光 never dies.
+// JIGUANG (極光 · the aurora) — the invincible lens. A facet of the story:
+// one slow full-spectrum wheel that weaves every stance colour — KINCHO
+// green, the MANJI spin, FLEA amber, MEDITATION violet, NSS blue — into a
+// single unbroken breath. A pure function of time that seizes nothing.
+// JIGUANG / jiguang / 極光 never dies.
 static uint32_t jiguang(uint32_t ms) {
-  uint8_t wave    = triWave(ms + ((ms >> 4) & 0xFF), 900);  // slow curtain
-  uint8_t shimmer = (uint8_t)((ms >> 2) & 0x3F);            // fast ripple
-  uint8_t k       = (uint8_t)((wave + shimmer) >> 1);
-  if (k < 28) k = 28;                                       // the aurora never sleeps
-  return (wave > 200) ? dimColor(0x7000FF, k)               // violet fringe at the peak
-                      : dimColor(0x00FF70, k);              // green-teal core
+  uint8_t h    = (uint8_t)((ms / 24) & 0xFF);   // the whole story as one wheel
+  uint8_t wave = triWave(ms, 4200);             // the breath of the codex
+  uint8_t k    = (uint8_t)(32 + wave / 4);      // dim enough to feel, never dark
+  return dimColor(hueWheel(h), k);
 }
 
 static uint32_t rgbLast   = 0xFFFFFFFF;   // sentinel → force first paint
@@ -491,10 +495,9 @@ static void pumpRgb() {
   uint32_t ms = millis();
   uint32_t c  = 0;
 
-  if (jiguangUntil && (ms < jiguangUntil)) {
-    c = jiguang(ms);                        // JIGUANG — the unbound aurora, temporarily
+  if (jiguangLens) {
+    c = jiguang(ms);                        // JIGUANG — the lens: every colour in one wheel
   } else {
-    if (jiguangUntil) jiguangUntil = 0;     // trance over — YOSHI returns to the stance
     switch (stance) {
     case STANCE_KINCHO: {                    // sword stance — the parry
       uint8_t k = (uint8_t)(24 + triWave(ms, 2200) / 3);   // slow green breath
@@ -934,7 +937,7 @@ static void printHelp() {
   Serial.println("  NSS/BENCH    No-Sword bench — direct servo, no radio");
   Serial.println("  BACK/TURN    deceptive idle — the UART mirror, never looks back");
   Serial.println("  POSE <n>     jump to stance 0..5");
-  Serial.println("  JIGUANG      the standalone aurora — pure northern light (a trance, not a stance)");
+  Serial.println("  JIGUANG      the invincible codex — every cheatcode in one scroll (a lens, never a takeover)");
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
@@ -957,6 +960,7 @@ static void enterStance(Stance next) {
   if (next == stance && next != STANCE_FLEA) return;
 
   stance = next;
+  jiguangLens = false;                      // any stance command lowers the lens
 
   switch (stance) {
     case STANCE_KINCHO:
@@ -1025,12 +1029,31 @@ static void runCommand(const char* line) {
   if      (strncmp(line, "KINCHO", 6) == 0) enterStance(STANCE_KINCHO);
   else if (strncmp(line, "MANJI",  5) == 0 || strncmp(line, "GYRO", 4) == 0) enterStance(STANCE_MANJI_DRAGONFLY);
   else if (strncmp(line, "JIGUANG", 7) == 0) {
+    // The invincible codex — all cheatcodes in one scroll. A facet of the
+    // story: it never seizes the stance, never sharpens the CRSF edge. The
+    // pose keeps flying; only the view changes (the LED lens, where a
+    // WS2812B lives). JIGUANG / jiguang / 極光 never dies.
+    Serial.println("YOSHIMITSU: JIGUANG (極光) — the invincible codex. All cheatcodes in one scroll:");
+    Serial.println("YOSHIMITSU:   KINCHO        CRSF→PWM converter (the parry)");
+    Serial.println("YOSHIMITSU:   MANJI         converter + Zephyrus gyro (the levitation)");
+    Serial.println("YOSHIMITSU:   FLEA          the lift — power-cycle jig → MEDITATION");
+    Serial.println("YOSHIMITSU:   MEDITATION    pocket flasher (the sponge-head, ready to be flashed)");
+    Serial.println("YOSHIMITSU:   NSS           no-sword bench — direct servo, no RF");
+    Serial.println("YOSHIMITSU:   BACK          deceptive idle — the UART mirror, never looks back");
+    Serial.println("YOSHIMITSU:   YOSHI         the always-on stance aurora (WS2812B)");
+    Serial.println("YOSHIMITSU:   JIGUANG       this scroll — the whole story seen at once");
+    Serial.println("YOSHIMITSU:   RESET-taps    1=MANJI 2=NSS 3=BACK 4=MEDITATION 5=KINCHO (RP2040)");
+    Serial.println("YOSHIMITSU:   BOOT          double-tap cycles · long-press MEDITATION (ESP32-S3)");
 #if YOSHI_RGB
-    jiguangUntil = millis() + JIGUANG_TRANCE_MS;
-    Serial.println("YOSHIMITSU: JIGUANG (極光) — the unbound aurora breathes for 30 s, then YOSHI returns.");
+    jiguangLens = !jiguangLens;
+    Serial.print("YOSHIMITSU: the light lens is now ");
+    Serial.println(jiguangLens
+      ? "ON — one slow wheel weaving every stance colour into a single breath."
+      : "OFF — YOSHI paints the stance's own story again.");
 #else
-    Serial.println("YOSHIMITSU: JIGUANG (極光) — no onboard WS2812B, the aurora sleeps.");
+    Serial.println("YOSHIMITSU: no onboard WS2812B — the codex is ink only.");
 #endif
+    Serial.println("YOSHIMITSU: the stance is untouched: CRSF, servos and the bridge keep obeying the pose.");
   }
   else if (strncmp(line, "FLEA",   4) == 0 || strncmp(line, "JIG", 3) == 0)  enterStance(STANCE_FLEA);
   else if (strncmp(line, "MEDITATION", 10) == 0 || strncmp(line, "MED", 3) == 0 ||
