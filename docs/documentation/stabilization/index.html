@@ -31,128 +31,109 @@
 <p class='sub-lead'>O desenho ideal da ponte giroscópio–batimento: modulação respiratória Ondas, feed-forward síncrono ao golpe, ressonância com bloqueio de fase e modulação aeroelástica do ganho PID — e um mapa honesto do que o firmware atual realmente liga.</p>
 <h2>Linhagem: OrniFlight e um Ondas simplificado</h2>
 <p>
-<strong>Ondas is not a PteronautOS invention.</strong> The wave-modulation family —
-breath-pause cadence control, stroke-shape ferocity, asymmetric dwell, and the
-aeroelastic coupling of wing load to PID authority — lives and evolves in the
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-project, whose wiki and simulator carry the advanced algorithms (including the
-<a href="https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html" target="_blank">servo-efficiency table</a>).
+<strong>Ondas não é uma invenção do PteronautOS.</strong> A família de modulação de onda — controlo de cadência respiração-pausa, ferocidade de forma de batida, dwell assimétrico e o acoplamento aeroelástico da carga alar à autoridade PID — vive e evolui no 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ projeto, cuja wiki e simulador carregam os algoritmos avançados (incluindo a 
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>servo-efficiency table</a>
+).
 </p>
-<p>
-PteronautOS embeds a <strong>partially simplified implementation</strong>: the same
-mathematical breath geometry, scaled to an ESP8285 with one MPU6050 and up to nine
-servos. Where OrniFlight simulates continuous aeroelastics and explores whole envelope
-families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz core,
-with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
-exists in both projects; the firmware constants below are the airborne subset.
-</p>
+<p>O PteronautOS incorpora uma <strong>implementação parcialmente simplificada</strong>: a mesma geometria matemática de respiração, escalada para um ESP8285 com um MPU6050 e até nove servos. Onde o OrniFlight simula aeroelástica contínua e explora famílias de envelope completas offline, o PteronautOS tem de decidir <em>em ticks de 4 ms</em>, num núcleo de 80 MHz, com a pilha de rádio ExpressLRS a partilhar o mesmo silício. Cada ganho neste artigo existe em ambos os projetos; as constantes de firmware abaixo são o subconjunto aéreo.</p>
 <h2>Fluxo do sinal — Zéfiros para Ornithopter</h2>
-<p>
-The bridge from the gyro to the wingbeat is deliberately short — four files, no
-dynamic allocation, no queues:
-</p>
+<p>A ponte do giroscópio ao batimento alar é deliberadamente curta — quatro ficheiros, sem alocação dinâmica, sem filas:</p>
 <pre><code>MPU6050 raw (I2C, 1 kHz register reads)&#x000A;  ▼&#x000A;Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s&#x000A;  ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s&#x000A;4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate&#x000A;  ▼&#x000A;ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*&#x000A;  ▼&#x000A;Ornithopter::_computeServoMixer() / _computeGearboxMixer()&#x000A;  ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke&#x000A;_f[]  →  funcMap → wing / crest-rudder / tail servos (µs)&#x000A;</code></pre>
-<p>
-The four raw terms are written in <code>Zephyrus::update()</code> immediately after the
-pitch PID computes its correction:
-</p>
+<p>Os quatro termos brutos são escritos em <code>Zephyrus::update()</code> imediatamente após o PID de arfagem calcular a sua correção:</p>
 <pre><code>pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional&#x000A;pitchITerm     = _pidPitch.integrator;                           // accumulated error&#x000A;pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D&#x000A;pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF&#x000A;</code></pre>
-<p>
-All four are guarded by a NaN trap (if any input is NaN, all four are zeroed) so a
-corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
-<code>Ornithopter</code> receive the bridge data:
-</p>
+<p>Os quatro são protegidos por uma armadilha NaN (se qualquer entrada for NaN, os quatro são zerados) para que um frame I²C corrompido nunca chegue à aritmética do mixer. Sete campos em <code>Ornithopter</code> recebem os dados da ponte:</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Zephyrus source</th>
-<th>Consumed by</th>
+<th>Campo</th>
+<th>Fonte Zephyrus</th>
+<th>Consumido por</th>
 </tr>
 <tr>
-<td><code>gyroPitchPTerm</code></td>
-<td><code>pitchPTerm</code></td>
-<td>Ondas P → phase advance (cadence channel)</td>
+<td>
+<code>gyroPitchPTerm</code>
+</td>
+<td>
+<code>pitchPTerm</code>
+</td>
+<td>Ondas P → avanço de fase (canal de cadência)</td>
 </tr>
 <tr>
-<td><code>gyroPitchITerm</code></td>
-<td><code>pitchITerm</code></td>
-<td>Ondas I → stroke asymmetry (balance channel)</td>
+<td>
+<code>gyroPitchITerm</code>
+</td>
+<td>
+<code>pitchITerm</code>
+</td>
+<td>Ondas I → assimetria de batida (canal de equilíbrio)</td>
 </tr>
 <tr>
-<td><code>gyroPitchDTerm</code></td>
-<td><code>pitchDTerm</code></td>
-<td>Ondas D → dwell ratio (ferocity channel)</td>
+<td>
+<code>gyroPitchDTerm</code>
+</td>
+<td>
+<code>pitchDTerm</code>
+</td>
+<td>Ondas D → razão de dwell (canal de ferocidade)</td>
 </tr>
 <tr>
-<td><code>gyroPitchErrorRate</code></td>
-<td><code>pitchErrorRate</code></td>
-<td>SSFF half-stroke accumulation</td>
+<td>
+<code>gyroPitchErrorRate</code>
+</td>
+<td>
+<code>pitchErrorRate</code>
+</td>
+<td>Acumulação de meia-batida SSFF</td>
 </tr>
 <tr>
-<td><code>gyroRudderCorrection</code></td>
-<td><code>rudderCorrection</code></td>
-<td>Crest rudder µs offset (servo &amp; gearbox kernels)</td>
+<td>
+<code>gyroRudderCorrection</code>
+</td>
+<td>
+<code>rudderCorrection</code>
+</td>
+<td>Offset µs do leme de crista (kernels servo e caixa)</td>
 </tr>
 <tr>
-<td><code>gyroAileronCorrection</code></td>
-<td><code>rollCorrection</code> × gearbox gain</td>
-<td>Gearbox: roll PID → V-tail aileron surfaces</td>
+<td>
+<code>gyroAileronCorrection</code>
+</td>
+<td>
+<code>rollCorrection</code>
+× gearbox gain
+</td>
+<td>Caixa: PID de rolagem → superfícies aileron da cauda V</td>
 </tr>
 <tr>
-<td><code>gyroElevatorCorrection</code></td>
-<td><code>pitchCorrection</code> × gain × <code>aeroGainScale</code></td>
-<td>Gearbox: pitch PID → elevon / elevator surfaces</td>
+<td>
+<code>gyroElevatorCorrection</code>
+</td>
+<td>
+<code>pitchCorrection</code>
+× gain ×
+<code>aeroGainScale</code>
+</td>
+<td>Caixa: PID de arfagem → superfícies elevon / profundor</td>
 </tr>
 </table>
 <h2>Modulação Ondas — respiração de três canais</h2>
-<p>
-<em>Ondas</em> (Portuguese: "waves") is the three-channel breath system that maps the
-pitch PID's raw P, I and D terms onto three orthogonal dimensions of the flapping
-waveform. It is a <strong>proprioceptive loop</strong>: the gyro's sense of pitch
-directly shapes the wing motion, and the wing motion changes the pitch the gyro feels.
-</p>
-<h3>Cadence — P → phase advance</h3>
-<p>
-A positive pitch error (nose up) advances the oscillator phase, shortening the current
-half-stroke; a negative error retards it. The ideal law scales the oscillator spring:
-</p>
+<p><em>Ondas</em> (português: "ondas") é o sistema de respiração de três canais que mapeia os termos brutos P, I e D do PID de arfagem em três dimensões ortogonais da forma de onda de batimento. É um <strong>ciclo proprioceptivo</strong>: o sentido de arfagem do giroscópio molda diretamente o movimento da asa, e o movimento da asa muda a arfagem que o giroscópio sente.</p>
+<h3>Cadência — P → avanço de fase</h3>
+<p>Um erro de arfagem positivo (nariz para cima) avança a fase do oscilador, encurtando a meia-batida atual; um erro negativo atrasa-a. A lei ideal escala a mola do oscilador:</p>
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
-<p>
-The oscillator <code>advance()</code> consumes it as
-<code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range
-0–100, default 20.
-</p>
-<h3>Ferocity — PD blend into dwell</h3>
-<p>
-The P and D terms are blended into a single ferocity signal that sharpens or softens
-the waveform's dwell:
-</p>
+<p>O <code>advance()</code> do oscilador consome-o como <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Faixa de afinação 0–100, padrão 20.</p>
+<h3>Ferocidade — mistura PD no dwell</h3>
+<p>Os termos P e D são misturados num único sinal de ferocidade que aguça ou suaviza o dwell da forma de onda:</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
-<p>
-With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch
-changes produce sharper strokes while steady flight stays sinusoidal.
-</p>
-<h3>Balance — I into asymmetry</h3>
-<p>
-The integral term shifts the stroke centre: a persistent nose-up bias strengthens the
-downstroke, a persistent nose-down bias strengthens the upstroke.
-</p>
+<p>Com <code>ferocityPGain = 0</code> (o padrão) o comportamento é só D — mudanças rápidas de arfagem produzem batidas mais aguçadas enquanto o voo estável permanece sinusoidal.</p>
+<h3>Equilíbrio — I em assimetria</h3>
+<p>O termo integral desloca o centro da batida: um viés persistente de nariz para cima fortalece a batida descendente, um viés persistente de nariz para baixo fortalece a ascendente.</p>
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
-<p>
-Balance is the most destabilising channel when set high — the ideal tuning guide keeps
-it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas
-and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code>
-window:
-</p>
+<p>O equilíbrio é o canal mais desestabilizador quando alto — o guia de afinação ideal mantém-no baixo (5–15) e adiciona-o por último. A aplicação de ferocidade, combinando comando do piloto, Ondas e viés SSFF, mantém a autoridade do piloto sobre a janela completa <code>[1.0, 8.0]</code>:</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
 <h2>Modelagem da onda e mistura PD</h2>
-<p>
-The waveform itself follows the OrniFlight stroke family: each half uses its own
-ferocity, a shared reversal threshold keeps left/right wings in phase, and a
-per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into
-a rounded pyramidal path. The interactive explorer below renders the commanded
-geometry for any down/up ferocity pair — the same curve the mixer requests each tick.
-</p>
+<p>A forma de onda em si segue a família de batidas OrniFlight: cada metade usa a sua própria ferocidade, um limiar de reversão partilhado mantém as asas esquerda/direita em fase, e uma <em>mistura de forma</em> por perfil transmuta continuamente uma batida plana de dwell/plateau num caminho piramidal arredondado. O explorador interativo abaixo renderiza a geometria comandada para qualquer par de ferocidade descida/subida — a mesma curva que o mixer pede a cada tick.</p>
 <p>A ferocidade controla tanto o carácter como o tempo de meio-batimento. Internamente, o valor 0–100 da WebUI mapeia para 0–8. Maior ferocidade de descida encurta a fracção do ciclo da descida; maior ferocidade de retorno encurta a fracção do retorno. O tempo restante é transferido para a metade oposta — não há pausa em zero.</p>
 <p>O controlo Forma da Ferocidade por perfil selecciona o carácter de alta ferocidade. A 0% favorece uma forma finita de patamar/quadrada. A 100% favorece um percurso piramidal arredondado. Cada metade continua a usar a sua própria ferocidade, pelo que uma metade de baixa ferocidade permanece alongada e sinusoidal, enquanto uma metade de alta ferocidade se aproxima de uma travessia diagonal directa.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Fase do ciclo de batimento' data-i18n-axis-half='Fase local de meio-batimento' data-i18n-axis-wing='Posição da asa' data-i18n-lock-oppose='Opor: sliders complementares (soma=8) (clique para alternar)' data-i18n-lock-sync='Sincronizar: ambos os sliders movem-se juntos (clique para alternar)' data-i18n-lock-unlocked='Desbloqueado (clique para alternar)' data-i18n-metric='Alocação de tempo: descida {down}% · subida {up}% · razão de velocidade de fase de pico {ratio}×'>
@@ -234,223 +215,110 @@ O explorador descreve a forma de onda matemática comandada, não o movimento ga
 <h3>Ler combinações extremas</h3>
 <p>Uma combinação 7 / 1 produz claramente uma descida curta e pontiaguda e um retorno sinusoidal longo. Valores exactos e quase máximos exigem cuidado: a lei de duração actual usa a quantidade restante abaixo da ferocidade 8. Consequentemente, 8 / 0 atribui apenas cerca de 0,125% do ciclo à descida, enquanto até 8 / 6 atribui cerca de 0,5%. A posição permanece contínua, mas a velocidade e a aceleração pedidas podem tornar-se fisicamente inatingíveis.</p>
 <h2>Amortecimento de âncora (k₂)</h2>
-<p>
-The oscillator's damping is exposed as a tunable anchor. The base law is a damped
-spring toward the cadence target:
-</p>
+<p>O amortecimento do oscilador é exposto como uma âncora afinável. A lei base é uma mola amortecida em direção ao alvo de cadência:</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
-<p>
-At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the
-commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm
-harder and rejecting perturbations. Tuning range 0–100.
-</p>
+<p>Com <code>anchorGain = 0</code> (padrão) o amortecimento é apertado — convergência rápida para a cadência comandada. Valores maiores elevam k₂ até 110 no ganho 100, travando o ritmo com mais força e rejeitando perturbações. Faixa de afinação 0–100.</p>
 <h2>Ressonância — bomba com bloqueio de fase</h2>
-<p>
-Resonance is a phase-locked lock-in amplifier: it multiplies the pitch error rate by
-<code>sin(oscillator phase)</code> and accumulates — reinforcing the stroke exactly
-when a correction is most effective, damping it when it would fight the wing.
-</p>
+<p>A ressonância é um amplificador lock-in travado em fase: multiplica a taxa de erro de arfagem por <code>sin(fase do oscilador)</code> e acumula — reforçando a batida exatamente quando uma correção é mais eficaz, amortecendo-a quando lutaria contra a asa.</p>
 <pre><code>_resonanceAccum += gyroPitchErrorRate * sinf(_osc.phase)&#x000A;                 * resonanceGain * 0.01f * dt;&#x000A;_resonanceAccum *= expf(-dt / 0.15f);        // leaky integrator, τ = 0.15 s&#x000A;clamp(_resonanceAccum, -2.0f, 2.0f);&#x000A;</code></pre>
-<p>
-The accumulated value is injected into both stroke and return ferocity for the next
-frame. At <code>resonanceGain = 0</code> (default) the whole path is disabled. The
-leaky decay prevents runaway accumulation during sustained disturbance.
-</p>
+<p>O valor acumulado é injetado na ferocidade de batida e de retorno para o próximo frame. Com <code>resonanceGain = 0</code> (padrão) todo o caminho está desativado. O decaimento com fuga impede acumulação descontrolada durante perturbação sustentada.</p>
 <h2>SSFF — feed-forward síncrono ao golpe</h2>
-<p>
-Stroke-synchronous feed-forward is philosophically different from every PID term:
-it corrects the <em>next</em> half-stroke from what the gyro measured during the
-<em>current</em> one. At each zero-crossing of the flapping sine (wing reversal), the
-mean pitch error rate of the finished half-stroke becomes a bias on the opposite
-half's ferocity.
-</p>
+<p>O feed-forward síncrono de batida é filosoficamente diferente de todos os termos PID: corrige a <em>próxima</em> meia-batida a partir do que o giroscópio mediu durante a <em>atual</em>. Em cada cruzamento de zero do seno de batimento (reversão da asa), a taxa média de erro de arfagem da meia-batida concluída torna-se um viés na ferocidade da metade oposta.</p>
 <pre><code>// zero-cross detected: finished one half-stroke, starting the next&#x000A;meanError = _ssffAccumError / count;&#x000A;bias      = meanError * ssffGain * 0.00001f;   // clamped ±2.0&#x000A;// upstroke just ended        → bias feeds the downstroke (power stroke)&#x000A;// downstroke just ended      → bias feeds the upstroke (recovery)&#x000A;</code></pre>
-<p>
-Up-bias is applied to the downstroke (correcting for error accumulated on the
-preceding upstroke); down-bias to the upstroke. When <code>ssffGain</code> drops to
-zero the biases are explicitly cleared so a WebUI disable never leaves stale values in
-the waveform. The accumulator is 32-bit and reset per half-stroke — at 250 Hz it
-would need ~24 days of continuous flapping to overflow, which is not a practical
-concern.
-</p>
+<p>O viés de subida é aplicado à batida descendente (corrigindo o erro acumulado na ascendente anterior); o viés de descida à ascendente. Quando <code>ssffGain</code> cai para zero, os viés são explicitamente limpos para que uma desativação na WebUI nunca deixe valores obsoletos na forma de onda. O acumulador é de 32 bits e reiniciado por meia-batida — a 250 Hz precisaria de ~24 dias de batimento contínuo para transbordar, o que não é uma preocupação prática.</p>
 <h2>Modulação aeroelástica do ganho PID</h2>
-<p>
-All Ondas and SSFF modulation is scaled by a coefficient that knows whether the
-ornithopter is <em>flapping</em> or <em>gliding</em> — aeroelastic gain modulation.
-In the servo (waveform) kernel the selector is the flapping gate with its 50 µs
-hysteresis:
-</p>
+<p>Toda a modulação Ondas e SSFF é escalada por um coeficiente que sabe se o ornitóptero está <em>batendo</em> ou <em>planando</em> — modulação de ganho aeroelástica. No kernel servo (forma de onda) o seletor é a porta de batimento com a sua histerese de 50 µs:</p>
 <pre><code>aeroGainScale = isFlapping ? (aeroFlapCoeff  * 0.01f)&#x000A;                           : (aeroGlideCoeff * 0.01f);&#x000A;</code></pre>
-<p>
-In the gearbox kernel the selector is the motor state
-(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Defaults:
-</p>
+<p>No kernel de caixa o seletor é o estado do motor (<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Padrões:</p>
 <table>
 <tr>
-<th>Coefficient</th>
-<th>Default</th>
-<th>Range</th>
-<th>When active</th>
+<th>Coeficiente</th>
+<th>Padrão</th>
+<th>Faixa</th>
+<th>Quando ativo</th>
 </tr>
 <tr>
-<td><code>aeroGlideCoeff</code></td>
+<td>
+<code>aeroGlideCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings still — glide, or gearbox motor off</td>
+<td>Asas paradas — planagem, ou motor de caixa desligado</td>
 </tr>
 <tr>
-<td><code>aeroFlapCoeff</code></td>
+<td>
+<code>aeroFlapCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings flapping — or gearbox motor running</td>
+<td>Asas batendo — ou motor de caixa a funcionar</td>
 </tr>
 </table>
-<p>
-Scaling to 0–1 makes the 0–100 slider the <em>authority</em> of the gyro over the
-wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
-</p>
-<h2>Estabilização do kernel de caixa de engrenagens</h2>
-<p>
-The gearbox kernel applies Zephyrus differently — there is no wing waveform to breathe,
-so the P/I/D terms modulate <em>surfaces</em> instead:
-</p>
+<p>Escalar para 0–1 torna o slider 0–100 a <em>autoridade</em> do giroscópio sobre a asa: a 100 o giroscópio detém totalmente a modulação, a 0 está desligado. Autoridade por kernel:</p>
 <table>
 <tr>
-<th>Authority</th>
-<th>Servo (waveform) kernel</th>
-<th>Gearbox kernel</th>
+<th>Autoridade</th>
+<th>Kernel servo (forma de onda)</th>
+<th>Kernel de caixa</th>
 </tr>
 <tr>
-<td>Crest rudder</td>
-<td>roll + yaw combined</td>
-<td>yaw only (roll/pitch go to legs)</td>
+<td>Leme de crista</td>
+<td>rolagem + guinada combinadas</td>
+<td>só guinada (rolagem/arfagem vão para as pernas)</td>
 </tr>
 <tr>
-<td>Wing waveform</td>
-<td>Full Ondas / SSFF breath modulation</td>
+<td>Forma de onda da asa</td>
+<td>Modulação de respiração completa Ondas / SSFF</td>
 <td>—</td>
 </tr>
 <tr>
-<td>Leg ailerons (V-tail)</td>
+<td>Ailerons de perna (cauda V)</td>
 <td>—</td>
-<td>roll PID → aileron side of elevon mix</td>
+<td>PID de rolagem → lado aileron da mistura elevon</td>
 </tr>
 <tr>
-<td>Leg elevons / elevator</td>
+<td>Elevons de perna / profundor</td>
 <td>—</td>
-<td>pitch PID × <code>aeroGainScale</code> → elevator side</td>
+<td>PID de arfagem × <code>aeroGainScale</code> → lado profundor</td>
 </tr>
 </table>
-<p>
-Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>)
-before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is
-inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by
-the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
-mechanical servos.
-</p>
+<p>As correções PID de caixa são limitadas a ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) antes da mistura; o caminho do leme de crista é limitado a ±200 µs. Um frame de atraso é inerente: <code>aeroGainScale</code> é calculado no mixer de caixa mas consumido pela <em>próxima</em> <code>zephyrusUpdate()</code> — 4 ms a 250 Hz, negligenciável para servos mecânicos.</p>
 <h2>Painel WebUI e endpoints de configuração</h2>
-<p>
-The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
-Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
-Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
-Coefficient and Flap Coefficient. All values persist through
-<code>POST /pteronautos/config</code> and stream back through
-<code>GET /pteronautos/state</code>:
-</p>
+<p>O painel do ornitóptero mostra dois grupos de estabilização quando a build inclui Zephyrus. Sliders Ondas &amp; SSFF (0–100): Cadência P→Fase, Ferocidade D→Dwell, Ferocidade P→Dwell, Equilíbrio I→Assimetria, Âncora k₂, Ressonância, Ganho SSFF. Grupo aeroelástico: Coeficiente de Planagem e Coeficiente de Batimento. Todos os valores persistem através de <code>POST /pteronautos/config</code> e voltam por <code>GET /pteronautos/state</code>:</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
-<p>
-<code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and
-clamps every field to <code>[0, 100]</code> server-side.
-</p>
+<p><code>aero_gain_scale</code> é calculado e somente leitura. O POST aceita atualizações parciais e limita cada campo a <code>[0, 100]</code> no servidor.</p>
 <h2>Guia de ajuste</h2>
-<p>
-The ideal flight-test sequence — each step is a flight, not a slider drag:
-</p>
+<p>A sequência ideal de teste em voo — cada passo é um voo, não um arrasto de slider:</p>
 <ol>
-<li>
-<strong>Zero every gain.</strong> Fly manual only; the airframe must be stable and
-predictable before the gyro earns a vote.
-</li>
-<li>
-<strong>Enable Zephyrus's crest rudder</strong> (roll+yaw PID). Verify the rudder
-resists a gentle wing-rock before anything touches the waveform.
-</li>
-<li>
-<strong>Cadence (P→Phase)</strong> from 10 upward. Too high = jerky wings, phase
-hunting; too low = nothing. Right = wings feel "connected" to pitch.
-</li>
-<li>
-<strong>Ferocity D (D→Dwell)</strong> from 10. Too high = the waveform oscillates
-between sharp and soft; right = rapid pitch changes sharpen the stroke, steady
-flight stays sinusoidal.
-</li>
-<li>
-<strong>Ferocity P</strong> (optional) from 5 — blends P authority into the dwell.
-</li>
-<li>
-<strong>Balance (I→Asymmetry) last, low.</strong> This is the most destabilizing
-channel; 5–15 only. It counters persistent drift, never transient bumps.
-</li>
-<li>
-<strong>SSFF</strong> from 5, only after cadence and ferocity hold. Too high =
-over-correction and half-stroke flutter; right = visible damping of pitch
-oscillation amplitude.
-</li>
-<li>
-<strong>Aeroelastic coefficients last.</strong> Tune glide first (wings still), then
-flap. Keep the gyro an authoritative copilot, not a nervous pilot.
-</li>
+<li><strong>Zere todos os ganhos.</strong> Voe só manual; a aeronave tem de estar estável e previsível antes de o giroscópio ganhar um voto.</li>
+<li><strong>Ative o leme de crista do Zephyrus</strong> (PID rolagem+guinada). Verifique que o leme resiste a um balanço suave da asa antes de qualquer coisa tocar na forma de onda.</li>
+<li><strong>Cadência (P→Fase)</strong> a partir de 10. Demasiado alto = asas aos solavancos, caça de fase; demasiado baixo = nada. Certo = asas sentem-se "ligadas" à arfagem.</li>
+<li><strong>Ferocidade D (D→Dwell)</strong> a partir de 10. Demasiado alto = a forma de onda oscila entre aguçado e suave; certo = mudanças rápidas de arfagem aguçam a batida, voo estável permanece sinusoidal.</li>
+<li><strong>Ferocidade P</strong> (opcional) a partir de 5 — mistura a autoridade P no dwell.</li>
+<li><strong>Equilíbrio (I→Assimetria) por último, baixo.</strong> Este é o canal mais desestabilizador; só 5–15. Contraria deriva persistente, nunca solavancos transitórios.</li>
+<li><strong>SSFF</strong> a partir de 5, só depois de cadência e ferocidade assentarem. Demasiado alto = sobrecorreção e flutter de meia-batida; certo = amortecimento visível da amplitude de oscilação de arfagem.</li>
+<li><strong>Coeficientes aeroelásticos por último.</strong> Afine a planagem primeiro (asas paradas), depois o batimento. Mantenha o giroscópio um copiloto autoritário, não um piloto nervoso.</li>
 </ol>
 <aside class='waveform-caution'>
 <strong>Teste em bancada antes do voo.</strong>
 O explorador descreve a forma de onda matemática comandada, não o movimento garantido do servo. Evite definições assimétricas extremas até que amplitude, frequência, geometria das ligações e limites de velocidade do servo tenham sido verificados sem carga aerodinâmica.
 </aside>
 <h2>Estado da implementação e inconsistências em aberto</h2>
-<p>
-<strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
-laws above are the <em>design</em>; the code contains the full parameter surface, the
-constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding
-block currently disconnects most of the gyro from the servo kernel:
-</p>
+<p><strong>Mapa honesto, firmware atual (Ornithopter.cpp @ 72c63020).</strong> As leis ideais acima são o <em>design</em>; o código contém a superfície completa de parâmetros, as constantes, os sliders da WebUI e o shim de ponte — mas um bloco de andaime de teste em voo desliga atualmente a maior parte do giroscópio do kernel servo:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>
-Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this
-block means today's servo-kernel behaviour is:
-</p>
+<p>Cometido com o trabalho de i18n como um teste de guarda NaN &quot;STEP 7&quot; e nunca revertido, este bloco significa que o comportamento atual do kernel servo é:</p>
 <ul>
-<li>
-<strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as
-parameters and in the bridge, but their consumption sites
-(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>,
-<code>resonanceBias</code>) are pinned to zero or reset every frame
-(Ornithopter.cpp:282–284, 311–313, 354).
-</li>
-<li>
-<strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping
-branch</em>, so the rudder correction currently acts only in the glide branch — the
-opposite of what flight needs (most disturbances arrive mid-flap).
-</li>
-<li>
-<strong>The gearbox kernel is the live exception.</strong> It reads
-<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> /
-<code>gyroRudderCorrection</code> and applies them with clamps (lines 436–451) — the
-STEP-7 zeroing block lives only in the servo kernel.
-</li>
+<li><strong>Cadência, Ferocidade-PD, Equilíbrio, Ressonância, SSFF</strong> — todos presentes como parâmetros e na ponte, mas os seus locais de consumo (<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>) estão fixados a zero ou reiniciados a cada frame (Ornithopter.cpp:282–284, 311–313, 354).</li>
+<li><strong>A estabilização do leme de crista</strong> é zerada <em>dentro do ramo de batimento</em>, pelo que a correção do leme atua atualmente apenas no ramo de planagem — o oposto do que o voo precisa (a maioria das perturbações chega a meio da batida).</li>
+<li><strong>O kernel de caixa é a exceção viva.</strong> Lê <code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> / <code>gyroRudderCorrection</code> e aplica-os com limites (linhas 436–451) — o bloco de zeragem STEP-7 vive apenas no kernel servo.</li>
 </ul>
+<p>Isto não é uma crítica à matemática — é um estado <em>conhecido e nomeado</em>: os módulos de estabilização estão compilados, parametrizados, em ponte, e à espera de que o andaime STEP-7 seja removido e substituído por uma política NaN real (as guardas <code>Validatio</code> já dão aos dados do MPU um caminho limpo). Até lá, trate o guia de afinação Ondas/SSFF/ressonância acima como a especificação pronta para voo, verificada contra Zephyrus.cpp:729–737 e OrnithopterWaveform.h, mas ainda não aérea.</p>
 <p>
-This is not a criticism of the math — it is a <em>known, named</em> state: the
-stabilization modules are compiled in, parameterized, bridged, and waiting for the
-STEP-7 scaffolding to be removed and replaced by a real NaN policy (the
-<code>Validatio</code> guards already give the MPU data a clean path). Until then,
-treat the Ondas/SSFF/resonance tuning guide above as the flight-ready specification,
-verified against Zephyrus.cpp:729–737 and OrnithopterWaveform.h, but not yet airborne.
-</p>
-<p>
-The authoritative design record remains
-<a href="https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md" target="_blank">STABILIZATION.md</a>;
-its sibling project
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-holds the continuously advanced ONDAS research.
+O registo de design autoritativo permanece 
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>STABILIZATION.md</a>
+; o seu projeto irmão 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ mantém a investigação ONDAS continuamente avançada.
 </p>
 </div>
 </main>

@@ -31,128 +31,109 @@
 <p class='sub-lead'>자이로에서 날갯짓으로 이어지는 다리의 이상적 설계: Ondas 호흡 변조, 스트로크 동기 피드포워드, 위상 고정 공명, 공탄성 PID 게인 변조 — 그리고 현재 펌웨어가 실제로 연결한 것을 정직하게 보여주는 지도.</p>
 <h2>계보: OrniFlight와 단순화된 Ondas</h2>
 <p>
-<strong>Ondas is not a PteronautOS invention.</strong> The wave-modulation family —
-breath-pause cadence control, stroke-shape ferocity, asymmetric dwell, and the
-aeroelastic coupling of wing load to PID authority — lives and evolves in the
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-project, whose wiki and simulator carry the advanced algorithms (including the
-<a href="https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html" target="_blank">servo-efficiency table</a>).
+<strong>Ondas는 PteronautOS의 발명이 아닙니다.</strong> 파 변조 패밀리 — 호흡-일시정지 케이던스 제어, 스트로크 형태 격렬도, 비대칭 드웰, PID 권위에 대한 날개 하중의 공탄성 결합 — 은 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ 프로젝트에서, 그 위키와 시뮬레이터가 고급 알고리즘을 담고 있습니다(포함: 
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>servo-efficiency table</a>
+).
 </p>
-<p>
-PteronautOS embeds a <strong>partially simplified implementation</strong>: the same
-mathematical breath geometry, scaled to an ESP8285 with one MPU6050 and up to nine
-servos. Where OrniFlight simulates continuous aeroelastics and explores whole envelope
-families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz core,
-with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
-exists in both projects; the firmware constants below are the airborne subset.
-</p>
+<p>PteronautOS는 <strong>부분적으로 단순화된 구현</strong>을 내장합니다: 동일한 수학적 호흡 기하를 ESP8285 하나, MPU6050 하나, 최대 9개 서보로 스케일. OrniFlight가 연속 공탄성을 시뮬레이션하고 전체 엔벨로프 패밀리를 오프라인으로 탐구하는 반면, PteronautOS는 <em>4 ms 틱 안에</em>, 80 MHz 코어에서, ExpressLRS 라디오 스택과 같은 실리콘을 공유하며 결정해야 합니다. 이 문서의 모든 게인은 두 프로젝트 모두에 존재하며, 아래 펌웨어 상수는 비행용 하위 집합입니다.</p>
 <h2>신호 경로 — 제피로스에서 Ornithopter로</h2>
-<p>
-The bridge from the gyro to the wingbeat is deliberately short — four files, no
-dynamic allocation, no queues:
-</p>
+<p>자이로에서 날갯짓까지의 브리지는 의도적으로 짧습니다 — 파일 4개, 동적 할당 없음, 큐 없음:</p>
 <pre><code>MPU6050 raw (I2C, 1 kHz register reads)&#x000A;  ▼&#x000A;Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s&#x000A;  ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s&#x000A;4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate&#x000A;  ▼&#x000A;ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*&#x000A;  ▼&#x000A;Ornithopter::_computeServoMixer() / _computeGearboxMixer()&#x000A;  ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke&#x000A;_f[]  →  funcMap → wing / crest-rudder / tail servos (µs)&#x000A;</code></pre>
-<p>
-The four raw terms are written in <code>Zephyrus::update()</code> immediately after the
-pitch PID computes its correction:
-</p>
+<p>네 원시 항은 피치 PID가 보정을 계산한 직후 <code>Zephyrus::update()</code>에 기록됩니다:</p>
 <pre><code>pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional&#x000A;pitchITerm     = _pidPitch.integrator;                           // accumulated error&#x000A;pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D&#x000A;pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF&#x000A;</code></pre>
-<p>
-All four are guarded by a NaN trap (if any input is NaN, all four are zeroed) so a
-corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
-<code>Ornithopter</code> receive the bridge data:
-</p>
+<p>네 값은 모두 NaN 트랩으로 보호됩니다(입력 중 하나라도 NaN이면 네 값 모두 0) — 손상된 I²C 프레임이 믹서 산술에 도달할 수 없습니다. <code>Ornithopter</code>의 7개 필드가 브리지 데이터를 받습니다:</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Zephyrus source</th>
-<th>Consumed by</th>
+<th>필드</th>
+<th>Zephyrus 소스</th>
+<th>소비처</th>
 </tr>
 <tr>
-<td><code>gyroPitchPTerm</code></td>
-<td><code>pitchPTerm</code></td>
-<td>Ondas P → phase advance (cadence channel)</td>
+<td>
+<code>gyroPitchPTerm</code>
+</td>
+<td>
+<code>pitchPTerm</code>
+</td>
+<td>Ondas P → 위상 전진(케이던스 채널)</td>
 </tr>
 <tr>
-<td><code>gyroPitchITerm</code></td>
-<td><code>pitchITerm</code></td>
-<td>Ondas I → stroke asymmetry (balance channel)</td>
+<td>
+<code>gyroPitchITerm</code>
+</td>
+<td>
+<code>pitchITerm</code>
+</td>
+<td>Ondas I → 스트로크 비대칭(밸런스 채널)</td>
 </tr>
 <tr>
-<td><code>gyroPitchDTerm</code></td>
-<td><code>pitchDTerm</code></td>
-<td>Ondas D → dwell ratio (ferocity channel)</td>
+<td>
+<code>gyroPitchDTerm</code>
+</td>
+<td>
+<code>pitchDTerm</code>
+</td>
+<td>Ondas D → 드웰 비율(격렬도 채널)</td>
 </tr>
 <tr>
-<td><code>gyroPitchErrorRate</code></td>
-<td><code>pitchErrorRate</code></td>
-<td>SSFF half-stroke accumulation</td>
+<td>
+<code>gyroPitchErrorRate</code>
+</td>
+<td>
+<code>pitchErrorRate</code>
+</td>
+<td>SSFF 반스트로크 누적</td>
 </tr>
 <tr>
-<td><code>gyroRudderCorrection</code></td>
-<td><code>rudderCorrection</code></td>
-<td>Crest rudder µs offset (servo &amp; gearbox kernels)</td>
+<td>
+<code>gyroRudderCorrection</code>
+</td>
+<td>
+<code>rudderCorrection</code>
+</td>
+<td>크레스트 러더 µs 오프셋(서보 및 기어박스 커널)</td>
 </tr>
 <tr>
-<td><code>gyroAileronCorrection</code></td>
-<td><code>rollCorrection</code> × gearbox gain</td>
-<td>Gearbox: roll PID → V-tail aileron surfaces</td>
+<td>
+<code>gyroAileronCorrection</code>
+</td>
+<td>
+<code>rollCorrection</code>
+× gearbox gain
+</td>
+<td>기어박스: 롤 PID → V-테일 에일러론 면</td>
 </tr>
 <tr>
-<td><code>gyroElevatorCorrection</code></td>
-<td><code>pitchCorrection</code> × gain × <code>aeroGainScale</code></td>
-<td>Gearbox: pitch PID → elevon / elevator surfaces</td>
+<td>
+<code>gyroElevatorCorrection</code>
+</td>
+<td>
+<code>pitchCorrection</code>
+× gain ×
+<code>aeroGainScale</code>
+</td>
+<td>기어박스: 피치 PID → 엘레본/엘리베이터 면</td>
 </tr>
 </table>
 <h2>Ondas 변조 — 3채널 호흡</h2>
-<p>
-<em>Ondas</em> (Portuguese: "waves") is the three-channel breath system that maps the
-pitch PID's raw P, I and D terms onto three orthogonal dimensions of the flapping
-waveform. It is a <strong>proprioceptive loop</strong>: the gyro's sense of pitch
-directly shapes the wing motion, and the wing motion changes the pitch the gyro feels.
-</p>
-<h3>Cadence — P → phase advance</h3>
-<p>
-A positive pitch error (nose up) advances the oscillator phase, shortening the current
-half-stroke; a negative error retards it. The ideal law scales the oscillator spring:
-</p>
+<p><em>Ondas</em>(포르투갈어: "파도")는 피치 PID의 원시 P, I, D 항을 플래핑 파형의 세 직교 차원에 매핑하는 3채널 호흡 시스템입니다. 이는 <strong>고유수용 루프</strong>입니다: 자이로의 피치 감각이 날개 움직임을 직접 형성하고, 날개 움직임이 자이로가 느끼는 피치를 바꿉니다.</p>
+<h3>케이던스 — P → 위상 전진</h3>
+<p>양의 피치 오류(기수 상승)는 오실레이터 위상을 전진시켜 현재 반스트로크를 줄이고, 음의 오류는 지연시킵니다. 이상 법칙은 오실레이터 스프링을 스케일합니다:</p>
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
-<p>
-The oscillator <code>advance()</code> consumes it as
-<code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range
-0–100, default 20.
-</p>
-<h3>Ferocity — PD blend into dwell</h3>
-<p>
-The P and D terms are blended into a single ferocity signal that sharpens or softens
-the waveform's dwell:
-</p>
+<p>오실레이터의 <code>advance()</code>가 이를 <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>로 소비합니다. 튜닝 범위 0–100, 기본 20.</p>
+<h3>격렬도 — PD 블렌드를 드웰로</h3>
+<p>P와 D 항은 파형의 드웰을 날카롭게 하거나 부드럽게 하는 단일 격렬도 신호로 혼합됩니다:</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
-<p>
-With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch
-changes produce sharper strokes while steady flight stays sinusoidal.
-</p>
-<h3>Balance — I into asymmetry</h3>
-<p>
-The integral term shifts the stroke centre: a persistent nose-up bias strengthens the
-downstroke, a persistent nose-down bias strengthens the upstroke.
-</p>
+<p><code>ferocityPGain = 0</code>(기본)이면 D-전용 동작입니다 — 빠른 피치 변화는 더 날카로운 스트로크를 만들고 정상 비행은 정현파로 유지됩니다.</p>
+<h3>밸런스 — I를 비대칭으로</h3>
+<p>적분 항은 스트로크 중심을 이동시킵니다: 지속적인 기수 상승 편향은 다운스트로크를, 지속적인 기수 하강 편향은 업스트로크를 강화합니다.</p>
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
-<p>
-Balance is the most destabilising channel when set high — the ideal tuning guide keeps
-it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas
-and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code>
-window:
-</p>
+<p>밸런스는 높게 설정하면 가장 불안정하게 만드는 채널입니다 — 이상적인 튜닝 가이드는 낮게(5–15) 유지하고 마지막에 추가합니다. 파일럿 명령, Ondas, SSFF 편향을 결합한 격렬도 적용은 전체 <code>[1.0, 8.0]</code> 창에서 파일럿 권위를 유지합니다:</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
 <h2>파형 성형과 PD 블렌드</h2>
-<p>
-The waveform itself follows the OrniFlight stroke family: each half uses its own
-ferocity, a shared reversal threshold keeps left/right wings in phase, and a
-per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into
-a rounded pyramidal path. The interactive explorer below renders the commanded
-geometry for any down/up ferocity pair — the same curve the mixer requests each tick.
-</p>
+<p>파형 자체는 OrniFlight 스트로크 패밀리를 따릅니다: 각 반쪽은 자신의 격렬도를 쓰고, 공유 반전 임계값이 좌우 날개를 동기화하며, 프로파일별 <em>형태 믹스</em>가 평평한 드웰/고원 스트로크를 둥근 피라미드 경로로 계속 변환합니다. 아래 인터랙티브 탐색기는 임의의 다운/업 격렬도 쌍에 대해 명령된 기하를 렌더링합니다 — 믹서가 매 틱 요청하는 바로 그 곡선입니다.</p>
 <p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
 <p>프로필별 퍼로시티 형태 컨트롤은 고퍼로시티 특성을 선택합니다. 0%에서는 유한한 플래토/사각 형태를, 100%에서는 둥근 피라미드 경로를 선호합니다. 각 절반은 여전히 자신의 퍼로시티를 사용하므로, 저퍼로시티 절반은 길쭉하고 사인파에 가깝게 유지되고, 고퍼로시티 절반은 직접적인 대각선 이동에 가까워집니다.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×'>
@@ -234,223 +215,110 @@ geometry for any down/up ferocity pair — the same curve the mixer requests eac
 <h3>극단 조합 읽기</h3>
 <p>7 / 1 조합은 분명히 짧고 뾰족한 다운스트로크와 긴 사인파 복귀를 만듭니다. 정확하거나 최대에 가까운 값은 주의가 필요합니다. 현재 지속시간 법칙은 퍼로시티 8 아래 남은 양을 사용합니다. 따라서 8 / 0은 주기의 약 0.125%만 다운스트로크에 할당하고, 8 / 6조차 약 0.5%를 할당합니다. 위치는 연속적이지만, 요청된 속도와 가속도는 물리적으로 도달 불가능해질 수 있습니다.</p>
 <h2>앵커 감쇠 (k₂)</h2>
-<p>
-The oscillator's damping is exposed as a tunable anchor. The base law is a damped
-spring toward the cadence target:
-</p>
+<p>오실레이터의 감쇠는 튜닝 가능한 앵커로 노출됩니다. 기본 법칙은 케이던스 목표를 향한 감쇠 스프링입니다:</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
-<p>
-At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the
-commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm
-harder and rejecting perturbations. Tuning range 0–100.
-</p>
+<p><code>anchorGain = 0</code>(기본)이면 감쇠가 팽팽합니다 — 명령된 케이던스로 빠른 수렴. 값이 높을수록 게인 100에서 k₂가 110을 향해 올라, 리듬을 더 단단히 잠그고 섭동을 거부합니다. 튜닝 범위 0–100.</p>
 <h2>공명 — 위상 고정 펌프</h2>
-<p>
-Resonance is a phase-locked lock-in amplifier: it multiplies the pitch error rate by
-<code>sin(oscillator phase)</code> and accumulates — reinforcing the stroke exactly
-when a correction is most effective, damping it when it would fight the wing.
-</p>
+<p>공진은 위상 고정 록인 증폭기입니다: 피치 오류율을 <code>sin(오실레이터 위상)</code>으로 곱해 누적합니다 — 보정이 가장 효과적인 순간 정확히 스트로크를 강화하고, 날개와 싸울 때는 감쇠합니다.</p>
 <pre><code>_resonanceAccum += gyroPitchErrorRate * sinf(_osc.phase)&#x000A;                 * resonanceGain * 0.01f * dt;&#x000A;_resonanceAccum *= expf(-dt / 0.15f);        // leaky integrator, τ = 0.15 s&#x000A;clamp(_resonanceAccum, -2.0f, 2.0f);&#x000A;</code></pre>
-<p>
-The accumulated value is injected into both stroke and return ferocity for the next
-frame. At <code>resonanceGain = 0</code> (default) the whole path is disabled. The
-leaky decay prevents runaway accumulation during sustained disturbance.
-</p>
+<p>누적 값은 다음 프레임의 스트로크 및 복귀 격렬도에 주입됩니다. <code>resonanceGain = 0</code>(기본)이면 전체 경로가 비활성화됩니다. 누설 감쇠는 지속 교란 중 폭주 누적을 방지합니다.</p>
 <h2>SSFF — 스트로크 동기 피드포워드</h2>
-<p>
-Stroke-synchronous feed-forward is philosophically different from every PID term:
-it corrects the <em>next</em> half-stroke from what the gyro measured during the
-<em>current</em> one. At each zero-crossing of the flapping sine (wing reversal), the
-mean pitch error rate of the finished half-stroke becomes a bias on the opposite
-half's ferocity.
-</p>
+<p>스트로크 동기 피드포워드는 모든 PID 항과 철학적으로 다릅니다: <em>현재</em> 반스트로크 동안 자이로가 측정한 값으로 <em>다음</em> 반스트로크를 보정합니다. 플래핑 사인의 각 영점 교차(날개 반전)에서, 끝난 반스트로크의 평균 피치 오류율이 반대쪽 절반의 격렬도에 대한 편향이 됩니다.</p>
 <pre><code>// zero-cross detected: finished one half-stroke, starting the next&#x000A;meanError = _ssffAccumError / count;&#x000A;bias      = meanError * ssffGain * 0.00001f;   // clamped ±2.0&#x000A;// upstroke just ended        → bias feeds the downstroke (power stroke)&#x000A;// downstroke just ended      → bias feeds the upstroke (recovery)&#x000A;</code></pre>
-<p>
-Up-bias is applied to the downstroke (correcting for error accumulated on the
-preceding upstroke); down-bias to the upstroke. When <code>ssffGain</code> drops to
-zero the biases are explicitly cleared so a WebUI disable never leaves stale values in
-the waveform. The accumulator is 32-bit and reset per half-stroke — at 250 Hz it
-would need ~24 days of continuous flapping to overflow, which is not a practical
-concern.
-</p>
+<p>업 편향은 다운스트로크에 적용되고(이전 업스트로크에 누적된 오류 보정), 다운 편향은 업스트로크에 적용됩니다. <code>ssffGain</code>이 0이 되면 편향이 명시적으로 지워져 WebUI 비활성화가 파형에 낡은 값을 남기지 않습니다. 누산기는 32비트이고 반스트로크마다 리셋 — 250 Hz에서 오버플로하려면 ~24일 연속 플래핑이 필요하므로 실질적 우려가 아닙니다.</p>
 <h2>공탄성 PID 게인 변조</h2>
-<p>
-All Ondas and SSFF modulation is scaled by a coefficient that knows whether the
-ornithopter is <em>flapping</em> or <em>gliding</em> — aeroelastic gain modulation.
-In the servo (waveform) kernel the selector is the flapping gate with its 50 µs
-hysteresis:
-</p>
+<p>모든 Ondas 및 SSFF 변조는 오르니톱터가 <em>플래핑</em> 중인지 <em>글라이딩</em> 중인지 아는 계수로 스케일됩니다 — 공탄성 게인 변조. 서보(파형) 커널에서 선택기는 50 µs 히스테리시스를 가진 플랩 게이트입니다:</p>
 <pre><code>aeroGainScale = isFlapping ? (aeroFlapCoeff  * 0.01f)&#x000A;                           : (aeroGlideCoeff * 0.01f);&#x000A;</code></pre>
-<p>
-In the gearbox kernel the selector is the motor state
-(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Defaults:
-</p>
+<p>기어박스 커널에서 선택기는 모터 상태(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>)입니다. 기본값:</p>
 <table>
 <tr>
-<th>Coefficient</th>
-<th>Default</th>
-<th>Range</th>
-<th>When active</th>
+<th>계수</th>
+<th>기본값</th>
+<th>범위</th>
+<th>활성 시</th>
 </tr>
 <tr>
-<td><code>aeroGlideCoeff</code></td>
+<td>
+<code>aeroGlideCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings still — glide, or gearbox motor off</td>
+<td>날개 정지 — 글라이드, 또는 기어박스 모터 꺼짐</td>
 </tr>
 <tr>
-<td><code>aeroFlapCoeff</code></td>
+<td>
+<code>aeroFlapCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings flapping — or gearbox motor running</td>
+<td>날개 플래핑 — 또는 기어박스 모터 구동 중</td>
 </tr>
 </table>
-<p>
-Scaling to 0–1 makes the 0–100 slider the <em>authority</em> of the gyro over the
-wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
-</p>
-<h2>기어박스 커널 안정화</h2>
-<p>
-The gearbox kernel applies Zephyrus differently — there is no wing waveform to breathe,
-so the P/I/D terms modulate <em>surfaces</em> instead:
-</p>
+<p>0–1로 스케일하면 0–100 슬라이더가 날개에 대한 자이로의 <em>권위</em>가 됩니다: 100에서 자이로가 변조를 완전히 소유하고, 0에서 꺼집니다. 커널별 권위:</p>
 <table>
 <tr>
-<th>Authority</th>
-<th>Servo (waveform) kernel</th>
-<th>Gearbox kernel</th>
+<th>권위</th>
+<th>서보(파형) 커널</th>
+<th>기어박스 커널</th>
 </tr>
 <tr>
-<td>Crest rudder</td>
-<td>roll + yaw combined</td>
-<td>yaw only (roll/pitch go to legs)</td>
+<td>크레스트 러더</td>
+<td>롤 + 요 결합</td>
+<td>요만(롤/피치는 다리로)</td>
 </tr>
 <tr>
-<td>Wing waveform</td>
-<td>Full Ondas / SSFF breath modulation</td>
+<td>날개 파형</td>
+<td>전체 Ondas/SSFF 호흡 변조</td>
 <td>—</td>
 </tr>
 <tr>
-<td>Leg ailerons (V-tail)</td>
+<td>다리 에일러론(V-테일)</td>
 <td>—</td>
-<td>roll PID → aileron side of elevon mix</td>
+<td>롤 PID → 엘레본 믹스의 에일러론 측</td>
 </tr>
 <tr>
-<td>Leg elevons / elevator</td>
+<td>다리 엘레본/엘리베이터</td>
 <td>—</td>
-<td>pitch PID × <code>aeroGainScale</code> → elevator side</td>
+<td>피치 PID × <code>aeroGainScale</code> → 엘리베이터 측</td>
 </tr>
 </table>
-<p>
-Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>)
-before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is
-inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by
-the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
-mechanical servos.
-</p>
+<p>기어박스 PID 보정은 믹싱 전 ±250 µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)로 클램프되고, 크레스트 러더 경로는 ±200 µs로 클램프됩니다. 한 프레임 지연이 본질적입니다: <code>aeroGainScale</code>은 기어박스 믹서에서 계산되지만 <em>다음</em> <code>zephyrusUpdate()</code>가 소비합니다 — 250 Hz에서 4 ms, 기계식 서보에는 무시 가능합니다.</p>
 <h2>WebUI 패널 및 구성 엔드포인트</h2>
-<p>
-The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
-Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
-Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
-Coefficient and Flap Coefficient. All values persist through
-<code>POST /pteronautos/config</code> and stream back through
-<code>GET /pteronautos/state</code>:
-</p>
+<p>오르니톱터 패널은 빌드에 Zephyrus가 포함될 때 두 안정화 그룹을 표시합니다. Ondas 및 SSFF 슬라이더(0–100): 케이던스 P→위상, 격렬도 D→드웰, 격렬도 P→드웰, 밸런스 I→비대칭, 앵커 k₂, 공진, SSFF 게인. 공탄성 그룹: 글라이드 계수와 플랩 계수. 모든 값은 <code>POST /pteronautos/config</code>로 영속되고 <code>GET /pteronautos/state</code>로 스트리밍됩니다:</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
-<p>
-<code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and
-clamps every field to <code>[0, 100]</code> server-side.
-</p>
+<p><code>aero_gain_scale</code>은 계산되며 읽기 전용입니다. POST는 부분 업데이트를 허용하고 서버 측에서 모든 필드를 <code>[0, 100]</code>으로 클램프합니다.</p>
 <h2>튜닝 가이드</h2>
-<p>
-The ideal flight-test sequence — each step is a flight, not a slider drag:
-</p>
+<p>이상적인 비행 시험 순서 — 각 단계는 슬라이더 드래그가 아니라 비행입니다:</p>
 <ol>
-<li>
-<strong>Zero every gain.</strong> Fly manual only; the airframe must be stable and
-predictable before the gyro earns a vote.
-</li>
-<li>
-<strong>Enable Zephyrus's crest rudder</strong> (roll+yaw PID). Verify the rudder
-resists a gentle wing-rock before anything touches the waveform.
-</li>
-<li>
-<strong>Cadence (P→Phase)</strong> from 10 upward. Too high = jerky wings, phase
-hunting; too low = nothing. Right = wings feel "connected" to pitch.
-</li>
-<li>
-<strong>Ferocity D (D→Dwell)</strong> from 10. Too high = the waveform oscillates
-between sharp and soft; right = rapid pitch changes sharpen the stroke, steady
-flight stays sinusoidal.
-</li>
-<li>
-<strong>Ferocity P</strong> (optional) from 5 — blends P authority into the dwell.
-</li>
-<li>
-<strong>Balance (I→Asymmetry) last, low.</strong> This is the most destabilizing
-channel; 5–15 only. It counters persistent drift, never transient bumps.
-</li>
-<li>
-<strong>SSFF</strong> from 5, only after cadence and ferocity hold. Too high =
-over-correction and half-stroke flutter; right = visible damping of pitch
-oscillation amplitude.
-</li>
-<li>
-<strong>Aeroelastic coefficients last.</strong> Tune glide first (wings still), then
-flap. Keep the gyro an authoritative copilot, not a nervous pilot.
-</li>
+<li><strong>모든 게인을 0으로.</strong> 수동으로만 비행; 자이로가 표를 얻기 전에 기체가 안정적이고 예측 가능해야 합니다.</li>
+<li><strong>Zephyrus의 크레스트 러더를 활성화</strong>(롤+요 PID). 파형을 건드리기 전에 러더가 부드러운 날개 흔들림에 저항하는지 확인하세요.</li>
+<li><strong>케이던스(P→위상)</strong> 10부터 위로. 너무 높음 = 덜컹이는 날개, 위상 헌팅; 너무 낮음 = 없음. 적정 = 날개가 피치에 "연결된" 느낌.</li>
+<li><strong>격렬도 D(D→드웰)</strong> 10부터. 너무 높음 = 파형이 날카로움과 부드러움 사이 진동; 적정 = 빠른 피치 변화가 스트로크를 날카롭게, 정상 비행은 정현파 유지.</li>
+<li><strong>격렬도 P</strong>(선택) 5부터 — P 권위를 드웰에 혼합.</li>
+<li><strong>밸런스(I→비대칭) 마지막에, 낮게.</strong> 가장 불안정하게 만드는 채널; 5–15만. 지속 드리프트를 상쇄하지 일시적 충격은 아님.</li>
+<li><strong>SSFF</strong> 5부터, 케이던스와 격렬도가 유지된 후에만. 너무 높음 = 과보정과 반스트로크 플러터; 적정 = 피치 진동 진폭의 가시적 감쇠.</li>
+<li><strong>공탄성 계수는 마지막에.</strong> 먼저 글라이드(날개 정지)를 튜닝하고 그 다음 플랩. 자이로를 권위 있는 부조종사로 유지하되 불안한 조종사가 되지 않게 하세요.</li>
 </ol>
 <aside class='waveform-caution'>
 <strong>비행 전 벤치 테스트.</strong>
 익스플로러는 보장된 서보 움직임이 아니라 명령된 수학적 파형을 설명합니다. 진폭, 주파수, 링키지 기하, 서보 속도 한계가 공기역학적 부하 없이 검증될 때까지 극단적인 비대칭 설정을 피하세요.
 </aside>
 <h2>구현 상태 및 미해결 불일치</h2>
-<p>
-<strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
-laws above are the <em>design</em>; the code contains the full parameter surface, the
-constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding
-block currently disconnects most of the gyro from the servo kernel:
-</p>
+<p><strong>정직한 지도, 현재 펌웨어(Ornithopter.cpp @ 72c63020).</strong> 위의 이상 법칙은 <em>설계</em>입니다; 코드는 전체 파라미터 표면, 상수, WebUI 슬라이더, 브리지 심을 포함하지만 — 비행 시험 스캐폴딩 블록이 현재 자이로 대부분을 서보 커널에서 분리합니다:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>
-Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this
-block means today's servo-kernel behaviour is:
-</p>
+<p>i18n 작업과 함께 &quot;STEP 7&quot; NaN-가드 테스트로 커밋되고 롤백된 적 없는 이 블록은 오늘날의 서보 커널 동작이 다음과 같음을 의미합니다:</p>
 <ul>
-<li>
-<strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as
-parameters and in the bridge, but their consumption sites
-(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>,
-<code>resonanceBias</code>) are pinned to zero or reset every frame
-(Ornithopter.cpp:282–284, 311–313, 354).
-</li>
-<li>
-<strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping
-branch</em>, so the rudder correction currently acts only in the glide branch — the
-opposite of what flight needs (most disturbances arrive mid-flap).
-</li>
-<li>
-<strong>The gearbox kernel is the live exception.</strong> It reads
-<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> /
-<code>gyroRudderCorrection</code> and applies them with clamps (lines 436–451) — the
-STEP-7 zeroing block lives only in the servo kernel.
-</li>
+<li><strong>케이던스, 격렬도-PD, 밸런스, 공진, SSFF</strong> — 모두 파라미터와 브리지에 존재하지만, 소비 지점(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>)이 0으로 고정되거나 매 프레임 리셋됩니다(Ornithopter.cpp:282–284, 311–313, 354).</li>
+<li><strong>크레스트 러더 안정화</strong>는 <em>플래핑 분기 내부에서</em> 0이 되므로, 러더 보정은 현재 글라이드 분기에서만 작동합니다 — 비행에 필요한 것과 반대입니다(대부분의 교란이 플랩 중간에 도달).</li>
+<li><strong>기어박스 커널이 살아있는 예외입니다.</strong> <code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> / <code>gyroRudderCorrection</code>을 읽고 클램프와 함께 적용합니다(라인 436–451) — STEP-7 제로화 블록은 서보 커널에만 존재합니다.</li>
 </ul>
+<p>이는 수학에 대한 비판이 아니라 <em>알려지고 명명된</em> 상태입니다: 안정화 모듈은 컴파일되고, 매개변수화되고, 브리지되며, STEP-7 스캐폴딩이 제거되고 실제 NaN 정책으로 교체되기를 기다리고 있습니다(<code>Validatio</code> 가드가 이미 MPU 데이터에 깨끗한 경로를 제공). 그때까지 위의 Ondas/SSFF/공진 튜닝 가이드를 비행 준비 사양으로 취급하세요. Zephyrus.cpp:729–737 및 OrnithopterWaveform.h와 검증되었지만 아직 비행 전입니다.</p>
 <p>
-This is not a criticism of the math — it is a <em>known, named</em> state: the
-stabilization modules are compiled in, parameterized, bridged, and waiting for the
-STEP-7 scaffolding to be removed and replaced by a real NaN policy (the
-<code>Validatio</code> guards already give the MPU data a clean path). Until then,
-treat the Ondas/SSFF/resonance tuning guide above as the flight-ready specification,
-verified against Zephyrus.cpp:729–737 and OrnithopterWaveform.h, but not yet airborne.
-</p>
-<p>
-The authoritative design record remains
-<a href="https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md" target="_blank">STABILIZATION.md</a>;
-its sibling project
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-holds the continuously advanced ONDAS research.
+권위 있는 설계 기록은 
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>STABILIZATION.md</a>
+; 그 자매 프로젝트 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ 지속적으로 발전하는 ONDAS 연구를 담고 있습니다.
 </p>
 </div>
 </main>

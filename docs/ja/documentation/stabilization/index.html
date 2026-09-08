@@ -31,128 +31,109 @@
 <p class='sub-lead'>ジャイロから翼打ちへの架け橋の理想設計：Ondas呼吸変調、打撃同期フィードフォワード、位相ロック共鳴、空力弾性PIDゲイン変調——そして現在のファームウェアが実際に配線しているものを正直に示す地図。</p>
 <h2>系譜: OrniFlightと簡略化されたOndas</h2>
 <p>
-<strong>Ondas is not a PteronautOS invention.</strong> The wave-modulation family —
-breath-pause cadence control, stroke-shape ferocity, asymmetric dwell, and the
-aeroelastic coupling of wing load to PID authority — lives and evolves in the
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-project, whose wiki and simulator carry the advanced algorithms (including the
-<a href="https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html" target="_blank">servo-efficiency table</a>).
+<strong>Ondas は PteronautOS の発明ではありません。</strong> 波変調ファミリー — 呼吸ポーズのケイデンス制御、ストローク形状の猛度、非対称ドウェル、翼荷重と PID 効きの空力弾性結合 — は 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ プロジェクトで、その wiki とシミュレーターが高度なアルゴリズムを担っています(含む: 
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>servo-efficiency table</a>
+).
 </p>
-<p>
-PteronautOS embeds a <strong>partially simplified implementation</strong>: the same
-mathematical breath geometry, scaled to an ESP8285 with one MPU6050 and up to nine
-servos. Where OrniFlight simulates continuous aeroelastics and explores whole envelope
-families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz core,
-with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
-exists in both projects; the firmware constants below are the airborne subset.
-</p>
+<p>PteronautOS は <strong>部分的に簡略化した実装</strong>を内包します:同じ数学的な呼吸幾何を、ESP8285 1 個 + MPU6050 1 個 + 最大 9 サーボへスケールしたものです。OrniFlight が連続空力弾性をシミュレートし、エンベロープ族全体をオフラインで探索する一方、PteronautOS は <em>4 ms ティック内</em>で、80 MHz コア上で、ExpressLRS 無線スタックと同じシリコンを共有しながら判断しなければなりません。本記事の各ゲインは両プロジェクトに存在し、下記のファームウェア定数は飛行用サブセットです。</p>
 <h2>信号経路 — ゼピュロスからOrnithopterへ</h2>
-<p>
-The bridge from the gyro to the wingbeat is deliberately short — four files, no
-dynamic allocation, no queues:
-</p>
+<p>ジャイロから羽ばたきへの橋渡しは意図的に短く — 4 ファイル、動的確保なし、キューなし:</p>
 <pre><code>MPU6050 raw (I2C, 1 kHz register reads)&#x000A;  ▼&#x000A;Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s&#x000A;  ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s&#x000A;4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate&#x000A;  ▼&#x000A;ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*&#x000A;  ▼&#x000A;Ornithopter::_computeServoMixer() / _computeGearboxMixer()&#x000A;  ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke&#x000A;_f[]  →  funcMap → wing / crest-rudder / tail servos (µs)&#x000A;</code></pre>
-<p>
-The four raw terms are written in <code>Zephyrus::update()</code> immediately after the
-pitch PID computes its correction:
-</p>
+<p>4 つの生項は、ピッチ PID が補正を計算した直後に <code>Zephyrus::update()</code> へ書き込まれます:</p>
 <pre><code>pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional&#x000A;pitchITerm     = _pidPitch.integrator;                           // accumulated error&#x000A;pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D&#x000A;pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF&#x000A;</code></pre>
-<p>
-All four are guarded by a NaN trap (if any input is NaN, all four are zeroed) so a
-corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
-<code>Ornithopter</code> receive the bridge data:
-</p>
+<p>4 つすべてが NaN トラップで保護され(どれかの入力が NaN なら 4 つともゼロ化)、壊れた I²C フレームがミキサー演算へ届くことはありません。<code>Ornithopter</code> 上の 7 つのフィールドがブリッジデータを受け取ります:</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Zephyrus source</th>
-<th>Consumed by</th>
+<th>フィールド</th>
+<th>Zephyrus ソース</th>
+<th>消費先</th>
 </tr>
 <tr>
-<td><code>gyroPitchPTerm</code></td>
-<td><code>pitchPTerm</code></td>
-<td>Ondas P → phase advance (cadence channel)</td>
+<td>
+<code>gyroPitchPTerm</code>
+</td>
+<td>
+<code>pitchPTerm</code>
+</td>
+<td>Ondas P → 位相進み(ケイデンスチャンネル)</td>
 </tr>
 <tr>
-<td><code>gyroPitchITerm</code></td>
-<td><code>pitchITerm</code></td>
-<td>Ondas I → stroke asymmetry (balance channel)</td>
+<td>
+<code>gyroPitchITerm</code>
+</td>
+<td>
+<code>pitchITerm</code>
+</td>
+<td>Ondas I → ストローク非対称(バランスチャンネル)</td>
 </tr>
 <tr>
-<td><code>gyroPitchDTerm</code></td>
-<td><code>pitchDTerm</code></td>
-<td>Ondas D → dwell ratio (ferocity channel)</td>
+<td>
+<code>gyroPitchDTerm</code>
+</td>
+<td>
+<code>pitchDTerm</code>
+</td>
+<td>Ondas D → ドウェル比(猛度チャンネル)</td>
 </tr>
 <tr>
-<td><code>gyroPitchErrorRate</code></td>
-<td><code>pitchErrorRate</code></td>
-<td>SSFF half-stroke accumulation</td>
+<td>
+<code>gyroPitchErrorRate</code>
+</td>
+<td>
+<code>pitchErrorRate</code>
+</td>
+<td>SSFF 半ストローク累積</td>
 </tr>
 <tr>
-<td><code>gyroRudderCorrection</code></td>
-<td><code>rudderCorrection</code></td>
-<td>Crest rudder µs offset (servo &amp; gearbox kernels)</td>
+<td>
+<code>gyroRudderCorrection</code>
+</td>
+<td>
+<code>rudderCorrection</code>
+</td>
+<td>冠舵 µs オフセット(サーボ &amp; ギアボックスカーネル)</td>
 </tr>
 <tr>
-<td><code>gyroAileronCorrection</code></td>
-<td><code>rollCorrection</code> × gearbox gain</td>
-<td>Gearbox: roll PID → V-tail aileron surfaces</td>
+<td>
+<code>gyroAileronCorrection</code>
+</td>
+<td>
+<code>rollCorrection</code>
+× gearbox gain
+</td>
+<td>ギアボックス:ロール PID → V テールのエルロン面</td>
 </tr>
 <tr>
-<td><code>gyroElevatorCorrection</code></td>
-<td><code>pitchCorrection</code> × gain × <code>aeroGainScale</code></td>
-<td>Gearbox: pitch PID → elevon / elevator surfaces</td>
+<td>
+<code>gyroElevatorCorrection</code>
+</td>
+<td>
+<code>pitchCorrection</code>
+× gain ×
+<code>aeroGainScale</code>
+</td>
+<td>ギアボックス:ピッチ PID → エレボン／エレベーター面</td>
 </tr>
 </table>
 <h2>Ondas変調 — 三チャンネルの呼吸</h2>
-<p>
-<em>Ondas</em> (Portuguese: "waves") is the three-channel breath system that maps the
-pitch PID's raw P, I and D terms onto three orthogonal dimensions of the flapping
-waveform. It is a <strong>proprioceptive loop</strong>: the gyro's sense of pitch
-directly shapes the wing motion, and the wing motion changes the pitch the gyro feels.
-</p>
-<h3>Cadence — P → phase advance</h3>
-<p>
-A positive pitch error (nose up) advances the oscillator phase, shortening the current
-half-stroke; a negative error retards it. The ideal law scales the oscillator spring:
-</p>
+<p><em>Ondas</em>(ポルトガル語「波」)は、ピッチ PID の生の P・I・D 項を羽ばたき波形の 3 つの直交次元へ対応付ける 3 チャンネルの呼吸システムです。これは <strong>固有受容ループ</strong>です:ジャイロのピッチ感覚が翼の動きを直接形作り、翼の動きがジャイロの感じるピッチを変えます。</p>
+<h3>ケイデンス — P → 位相進み</h3>
+<p>正のピッチ誤差(機首上げ)はオシレーター位相を進め、現在の半ストロークを短縮します。負の誤差は遅らせます。理想則はオシレーターのバネをスケールします:</p>
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
-<p>
-The oscillator <code>advance()</code> consumes it as
-<code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range
-0–100, default 20.
-</p>
-<h3>Ferocity — PD blend into dwell</h3>
-<p>
-The P and D terms are blended into a single ferocity signal that sharpens or softens
-the waveform's dwell:
-</p>
+<p>オシレーターの <code>advance()</code> はそれを <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code> として消費します。チューニング範囲 0–100、既定 20。</p>
+<h3>猛度 — PD ブレンドをドウェルへ</h3>
+<p>P 項と D 項は、波形のドウェルを鋭くまたは柔らかくする単一の猛度信号へブレンドされます:</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
-<p>
-With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch
-changes produce sharper strokes while steady flight stays sinusoidal.
-</p>
-<h3>Balance — I into asymmetry</h3>
-<p>
-The integral term shifts the stroke centre: a persistent nose-up bias strengthens the
-downstroke, a persistent nose-down bias strengthens the upstroke.
-</p>
+<p><code>ferocityPGain = 0</code>(既定)では D のみの挙動です — 急なピッチ変化はより鋭いストロークを生み、定常飛行は正弦波のままです。</p>
+<h3>バランス — I を非対称へ</h3>
+<p>積分項はストローク中心をずらします:持続的な機首上げバイアスはダウンストロークを、持続的な機首下げバイアスはアップストロークを強めます。</p>
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
-<p>
-Balance is the most destabilising channel when set high — the ideal tuning guide keeps
-it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas
-and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code>
-window:
-</p>
+<p>バランスは高く設定すると最も不安定化させるチャンネルです — 理想的なチューニングガイドは低く(5–15)保ち、最後に加えます。パイロット指令、Ondas、SSFF バイアスを組み合わせた猛度適用は、全 <code>[1.0, 8.0]</code> ウィンドウでパイロットの効きを保ちます:</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
 <h2>波形整形とPDブレンド</h2>
-<p>
-The waveform itself follows the OrniFlight stroke family: each half uses its own
-ferocity, a shared reversal threshold keeps left/right wings in phase, and a
-per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into
-a rounded pyramidal path. The interactive explorer below renders the commanded
-geometry for any down/up ferocity pair — the same curve the mixer requests each tick.
-</p>
+<p>波形自体は OrniFlight ストローク族に従います:各半周期は独自の猛度を用い、共有の反転閾値が左右翼を同位相に保ち、プロファイル別の <em>形状ミックス</em>が平坦なドウェル/プラトーストロークを丸みのあるピラミッド経路へ連続変態させます。下のインタラクティブ・エクスプローラーは、任意のダウン/アップ猛度ペアに対する指令ジオメトリ — ミキサーが毎ティック要求するのと同じ曲線 — を描画します。</p>
 <p>強度は半ストロークの性格とタイミングの両方を制御します。内部的には WebUI の 0–100 設定が 0–8 にマッピングされます。ダウンストロークの強度が高いほど周期に占めるダウンストロークの割合が短くなり、復路の強度が高いほど復路の割合が短くなります。残りの時間は反対側の半周期へ移ります — ゼロでの停止はありません。</p>
 <p>プロファイルごとの強度シェイプコントロールは、高強度の性格を選択します。0% では有限のプラトー／矩形形状を、100% では丸みを帯びたピラミッド状の経路を好みます。各半周期は依然として独自の強度を使うため、低強度の半周期は伸長して正弦波的になり、高強度の半周期は直接的な対角線の走行に近づきます。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='羽ばたき周期の位相' data-i18n-axis-half='ローカル半ストローク位相' data-i18n-axis-wing='翼位置' data-i18n-lock-oppose='反対：スライダーが相補的（合計=8）（クリックで切替）' data-i18n-lock-sync='同期：両スライダーが一緒に動く（クリックで切替）' data-i18n-lock-unlocked='ロック解除（クリックで切替）' data-i18n-metric='時間配分：ダウン {down}% ・アップ {up}% ・ピーク位相速度比 {ratio}×'>
@@ -234,223 +215,110 @@ geometry for any down/up ferocity pair — the same curve the mixer requests eac
 <h3>極端な組み合わせを読む</h3>
 <p>7 / 1 の組み合わせは、明らかに短く尖ったダウンストロークと長い正弦波の復路を生みます。正確な値やほぼ最大の値には注意が必要です。現在の持続時間則は強度 8 未満の残量を使います。そのため 8 / 0 は周期の約 0.125% しかダウンストロークに割り当てず、8 / 6 でさえ約 0.5% を割り当てます。位置は連続的ですが、要求される速度と加速度は物理的に到達不能になり得ます。</p>
 <h2>アンカー減衰 (k₂)</h2>
-<p>
-The oscillator's damping is exposed as a tunable anchor. The base law is a damped
-spring toward the cadence target:
-</p>
+<p>オシレーターの減衰はチューニング可能なアンカーとして公開されます。基本則はケイデンス目標へ向かう減衰バネです:</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
-<p>
-At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the
-commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm
-harder and rejecting perturbations. Tuning range 0–100.
-</p>
+<p><code>anchorGain = 0</code>(既定)では減衰がきつく — 指令ケイデンスへ急速に収束します。値が高いほど、ゲイン 100 で k₂ が 110 へ向かって上がり、リズムをより強く固定して外乱を拒否します。チューニング範囲 0–100。</p>
 <h2>共鳴 — 位相ロックポンプ</h2>
-<p>
-Resonance is a phase-locked lock-in amplifier: it multiplies the pitch error rate by
-<code>sin(oscillator phase)</code> and accumulates — reinforcing the stroke exactly
-when a correction is most effective, damping it when it would fight the wing.
-</p>
+<p>共振は位相同期ロックイン増幅器です:ピッチ誤差率に <code>sin(オシレーター位相)</code> を乗じて累積します — 補正が最も効果的な瞬間にストロークを強化し、翼と逆らうときは減衰させます。</p>
 <pre><code>_resonanceAccum += gyroPitchErrorRate * sinf(_osc.phase)&#x000A;                 * resonanceGain * 0.01f * dt;&#x000A;_resonanceAccum *= expf(-dt / 0.15f);        // leaky integrator, τ = 0.15 s&#x000A;clamp(_resonanceAccum, -2.0f, 2.0f);&#x000A;</code></pre>
-<p>
-The accumulated value is injected into both stroke and return ferocity for the next
-frame. At <code>resonanceGain = 0</code> (default) the whole path is disabled. The
-leaky decay prevents runaway accumulation during sustained disturbance.
-</p>
+<p>累積値は次フレームのストロークおよび復帰の猛度へ注入されます。<code>resonanceGain = 0</code>(既定)では経路全体が無効です。リーキー減衰は持続的な外乱中の暴走累積を防ぎます。</p>
 <h2>SSFF — 打撃同期フィードフォワード</h2>
-<p>
-Stroke-synchronous feed-forward is philosophically different from every PID term:
-it corrects the <em>next</em> half-stroke from what the gyro measured during the
-<em>current</em> one. At each zero-crossing of the flapping sine (wing reversal), the
-mean pitch error rate of the finished half-stroke becomes a bias on the opposite
-half's ferocity.
-</p>
+<p>ストローク同期フィードフォワードは、あらゆる PID 項と哲学的に異なります:<em>現在</em>の半ストローク中にジャイロが測定した値から <em>次</em>の半ストロークを補正します。羽ばたきサインの各ゼロ交差(翼反転)で、完了した半ストロークの平均ピッチ誤差率が反対側半分の猛度へのバイアスになります。</p>
 <pre><code>// zero-cross detected: finished one half-stroke, starting the next&#x000A;meanError = _ssffAccumError / count;&#x000A;bias      = meanError * ssffGain * 0.00001f;   // clamped ±2.0&#x000A;// upstroke just ended        → bias feeds the downstroke (power stroke)&#x000A;// downstroke just ended      → bias feeds the upstroke (recovery)&#x000A;</code></pre>
-<p>
-Up-bias is applied to the downstroke (correcting for error accumulated on the
-preceding upstroke); down-bias to the upstroke. When <code>ssffGain</code> drops to
-zero the biases are explicitly cleared so a WebUI disable never leaves stale values in
-the waveform. The accumulator is 32-bit and reset per half-stroke — at 250 Hz it
-would need ~24 days of continuous flapping to overflow, which is not a practical
-concern.
-</p>
+<p>アップバイアスはダウンストロークへ適用され(直前のアップストロークで累積した誤差を補正)、ダウンバイアスはアップストロークへ適用されます。<code>ssffGain</code> がゼロに落ちるとバイアスは明示的にクリアされ、WebUI での無効化が波形に古い値を残すことはありません。アキュムレータは 32 ビットで半ストロークごとにリセット — 250 Hz ではオーバーフローに ~24 日間の連続羽ばたきが必要で、実用上の問題ではありません。</p>
 <h2>空力弾性PIDゲイン変調</h2>
-<p>
-All Ondas and SSFF modulation is scaled by a coefficient that knows whether the
-ornithopter is <em>flapping</em> or <em>gliding</em> — aeroelastic gain modulation.
-In the servo (waveform) kernel the selector is the flapping gate with its 50 µs
-hysteresis:
-</p>
+<p>すべての Ondas および SSFF 変調は、オーニソプターが <em>羽ばたいている</em>か <em>滑空している</em>かを知る係数でスケールされます — 空力弾性ゲイン変調。サーボ(波形)カーネルでは、セレクターは 50 µs ヒステリシス付きのフラップゲートです:</p>
 <pre><code>aeroGainScale = isFlapping ? (aeroFlapCoeff  * 0.01f)&#x000A;                           : (aeroGlideCoeff * 0.01f);&#x000A;</code></pre>
-<p>
-In the gearbox kernel the selector is the motor state
-(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Defaults:
-</p>
+<p>ギアボックス・カーネルでは、セレクターはモーター状態(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>)です。既定値:</p>
 <table>
 <tr>
-<th>Coefficient</th>
-<th>Default</th>
-<th>Range</th>
-<th>When active</th>
+<th>係数</th>
+<th>既定値</th>
+<th>範囲</th>
+<th>有効時</th>
 </tr>
 <tr>
-<td><code>aeroGlideCoeff</code></td>
+<td>
+<code>aeroGlideCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings still — glide, or gearbox motor off</td>
+<td>翼静止 — グライド、またはギアボックスモーター停止</td>
 </tr>
 <tr>
-<td><code>aeroFlapCoeff</code></td>
+<td>
+<code>aeroFlapCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings flapping — or gearbox motor running</td>
+<td>翼が羽ばたく — またはギアボックスモーター稼働</td>
 </tr>
 </table>
-<p>
-Scaling to 0–1 makes the 0–100 slider the <em>authority</em> of the gyro over the
-wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
-</p>
-<h2>ギアボックスカーネル安定化</h2>
-<p>
-The gearbox kernel applies Zephyrus differently — there is no wing waveform to breathe,
-so the P/I/D terms modulate <em>surfaces</em> instead:
-</p>
+<p>0–1 へのスケーリングにより、0–100 スライダーは翼に対するジャイロの <em>効き</em>になります:100 でジャイロが変調を完全に所有し、0 でオフ。カーネル別の効き:</p>
 <table>
 <tr>
-<th>Authority</th>
-<th>Servo (waveform) kernel</th>
-<th>Gearbox kernel</th>
+<th>効き</th>
+<th>サーボ(波形)カーネル</th>
+<th>ギアボックス・カーネル</th>
 </tr>
 <tr>
-<td>Crest rudder</td>
-<td>roll + yaw combined</td>
-<td>yaw only (roll/pitch go to legs)</td>
+<td>冠舵</td>
+<td>ロール + ヨー結合</td>
+<td>ヨーのみ(ロール/ピッチは脚へ)</td>
 </tr>
 <tr>
-<td>Wing waveform</td>
-<td>Full Ondas / SSFF breath modulation</td>
+<td>翼波形</td>
+<td>全 Ondas / SSFF 呼吸変調</td>
 <td>—</td>
 </tr>
 <tr>
-<td>Leg ailerons (V-tail)</td>
+<td>脚エルロン(V テール)</td>
 <td>—</td>
-<td>roll PID → aileron side of elevon mix</td>
+<td>ロール PID → エレボンミックスのエルロン側</td>
 </tr>
 <tr>
-<td>Leg elevons / elevator</td>
+<td>脚エレボン／エレベーター</td>
 <td>—</td>
-<td>pitch PID × <code>aeroGainScale</code> → elevator side</td>
+<td>ピッチ PID × <code>aeroGainScale</code> → エレベーター側</td>
 </tr>
 </table>
-<p>
-Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>)
-before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is
-inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by
-the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
-mechanical servos.
-</p>
+<p>ギアボックス PID 補正はミックス前に ±250 µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)へクランプされ、冠舵経路は ±200 µs へクランプされます。1 フレームの遅延は本質的です:<code>aeroGainScale</code> はギアボックスミキサーで計算されますが、<em>次</em>の <code>zephyrusUpdate()</code> が消費します — 250 Hz で 4 ms、機械式サーボには無視できます。</p>
 <h2>WebUIパネルと設定エンドポイント</h2>
-<p>
-The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
-Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
-Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
-Coefficient and Flap Coefficient. All values persist through
-<code>POST /pteronautos/config</code> and stream back through
-<code>GET /pteronautos/state</code>:
-</p>
+<p>オーニソプターパネルは、ビルドに Zephyrus が含まれる場合に 2 つの安定化グループを表示します。Ondas &amp; SSFF スライダー(0–100):ケイデンス P→位相、猛度 D→ドウェル、猛度 P→ドウェル、バランス I→非対称、アンカー k₂、共振、SSFF ゲイン。空力弾性グループ:グライド係数とフラップ係数。すべての値は <code>POST /pteronautos/config</code> で永続化され、<code>GET /pteronautos/state</code> でストリームバックされます:</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
-<p>
-<code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and
-clamps every field to <code>[0, 100]</code> server-side.
-</p>
+<p><code>aero_gain_scale</code> は計算され読み取り専用です。POST は部分更新を受け付け、サーバー側で全フィールドを <code>[0, 100]</code> にクランプします。</p>
 <h2>調整ガイド</h2>
-<p>
-The ideal flight-test sequence — each step is a flight, not a slider drag:
-</p>
+<p>理想的な飛行試験シーケンス — 各ステップはスライダー操作ではなく飛行です:</p>
 <ol>
-<li>
-<strong>Zero every gain.</strong> Fly manual only; the airframe must be stable and
-predictable before the gyro earns a vote.
-</li>
-<li>
-<strong>Enable Zephyrus's crest rudder</strong> (roll+yaw PID). Verify the rudder
-resists a gentle wing-rock before anything touches the waveform.
-</li>
-<li>
-<strong>Cadence (P→Phase)</strong> from 10 upward. Too high = jerky wings, phase
-hunting; too low = nothing. Right = wings feel "connected" to pitch.
-</li>
-<li>
-<strong>Ferocity D (D→Dwell)</strong> from 10. Too high = the waveform oscillates
-between sharp and soft; right = rapid pitch changes sharpen the stroke, steady
-flight stays sinusoidal.
-</li>
-<li>
-<strong>Ferocity P</strong> (optional) from 5 — blends P authority into the dwell.
-</li>
-<li>
-<strong>Balance (I→Asymmetry) last, low.</strong> This is the most destabilizing
-channel; 5–15 only. It counters persistent drift, never transient bumps.
-</li>
-<li>
-<strong>SSFF</strong> from 5, only after cadence and ferocity hold. Too high =
-over-correction and half-stroke flutter; right = visible damping of pitch
-oscillation amplitude.
-</li>
-<li>
-<strong>Aeroelastic coefficients last.</strong> Tune glide first (wings still), then
-flap. Keep the gyro an authoritative copilot, not a nervous pilot.
-</li>
+<li><strong>全ゲインをゼロに。</strong> 手動のみで飛ばします。ジャイロが票を得る前に機体は安定かつ予測可能でなければなりません。</li>
+<li><strong>Zephyrus の冠舵を有効化</strong>(ロール+ヨー PID)。波形に何か触れる前に、舵が穏やかな翼の揺れに抵抗することを確認します。</li>
+<li><strong>ケイデンス(P→位相)</strong> を 10 から上げます。高すぎ = ギクシャクした翼、位相ハンチング;低すぎ = 何もなし。適正 = 翼がピッチに「つながった」感覚。</li>
+<li><strong>猛度 D(D→ドウェル)</strong> を 10 から。高すぎ = 波形が鋭い/柔らかいを往復;適正 = 急なピッチ変化がストロークを鋭くし、定常飛行は正弦波のまま。</li>
+<li><strong>猛度 P</strong>(オプション)を 5 から — P の効きをドウェルへブレンド。</li>
+<li><strong>バランス(I→非対称)は最後に、低く。</strong> これが最も不安定化させるチャンネル;5–15 のみ。持続的ドリフトには対抗し、一時的な突き上げには対抗しません。</li>
+<li><strong>SSFF</strong> を 5 から、ケイデンスと猛度が保ててから。高すぎ = 過補正と半ストロークのフラッター;適正 = ピッチ振動振幅の目に見える減衰。</li>
+<li><strong>空力弾性係数は最後に。</strong> まずグライド(翼静止)を、次にフラップをチューニング。ジャイロを権威ある副操縦士に保ち、神経質な操縦士にしないでください。</li>
 </ol>
 <aside class='waveform-caution'>
 <strong>飛行前にベンチテストを。</strong>
 エクスプローラーは保証されたサーボ動作ではなく、指令された数学的な波形を表します。振幅、周波数、リンケージ形状、サーボ速度限界が空力負荷なしで検証されるまで、極端な非対称設定は避けてください。
 </aside>
 <h2>実装状況と未解決の不整合</h2>
-<p>
-<strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
-laws above are the <em>design</em>; the code contains the full parameter surface, the
-constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding
-block currently disconnects most of the gyro from the servo kernel:
-</p>
+<p><strong>正直な地図、現行ファームウェア(Ornithopter.cpp @ 72c63020)。</strong> 上記の理想則は <em>設計</em>です。コードはパラメータ表面全体、定数、WebUI スライダー、ブリッジシムを含みますが — 飛行試験用の足場ブロックが現在ジャイロの大部分をサーボカーネルから切り離しています:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>
-Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this
-block means today's servo-kernel behaviour is:
-</p>
+<p>i18n 作業とともに「STEP 7」NaN ガードテストとしてコミットされ、一度もロールバックされていないこのブロックは、現在のサーボカーネル挙動が以下であることを意味します:</p>
 <ul>
-<li>
-<strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as
-parameters and in the bridge, but their consumption sites
-(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>,
-<code>resonanceBias</code>) are pinned to zero or reset every frame
-(Ornithopter.cpp:282–284, 311–313, 354).
-</li>
-<li>
-<strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping
-branch</em>, so the rudder correction currently acts only in the glide branch — the
-opposite of what flight needs (most disturbances arrive mid-flap).
-</li>
-<li>
-<strong>The gearbox kernel is the live exception.</strong> It reads
-<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> /
-<code>gyroRudderCorrection</code> and applies them with clamps (lines 436–451) — the
-STEP-7 zeroing block lives only in the servo kernel.
-</li>
+<li><strong>ケイデンス、猛度-PD、バランス、共振、SSFF</strong> — すべてパラメータとブリッジに存在しますが、消費箇所(<code>kGainMod</code>、<code>ferocitySignal</code>、<code>iBias</code>、<code>resonanceBias</code>)はゼロ固定されるか毎フレームリセットされます(Ornithopter.cpp:282–284、311–313、354)。</li>
+<li><strong>冠舵の安定化</strong>は <em>羽ばたき分岐の内側で</em>ゼロ化されるため、舵補正は現在グライド分岐でのみ働きます — 飛行に必要なものとは逆です(ほとんどの外乱は羽ばたきの最中に到来)。</li>
+<li><strong>ギアボックス・カーネルが生きた例外です。</strong> <code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> / <code>gyroRudderCorrection</code> を読み、クランプ付きで適用します(行 436–451)— STEP-7 ゼロ化ブロックはサーボカーネルにのみ存在します。</li>
 </ul>
+<p>これは数学への批判ではなく、<em>既知の、名前の付いた</em>状態です:安定化モジュールはコンパイルされ、パラメータ化され、ブリッジされ、STEP-7 足場が取り除かれて本物の NaN ポリシーに置き換えられるのを待っています(<code>Validatio</code> ガードが既に MPU データへきれいな経路を与えています)。それまでは、上記の Ondas/SSFF/共振チューニングガイドを、Zephyrus.cpp:729–737 および OrnithopterWaveform.h と照合済みだが未飛行の、飛行準備仕様として扱ってください。</p>
 <p>
-This is not a criticism of the math — it is a <em>known, named</em> state: the
-stabilization modules are compiled in, parameterized, bridged, and waiting for the
-STEP-7 scaffolding to be removed and replaced by a real NaN policy (the
-<code>Validatio</code> guards already give the MPU data a clean path). Until then,
-treat the Ondas/SSFF/resonance tuning guide above as the flight-ready specification,
-verified against Zephyrus.cpp:729–737 and OrnithopterWaveform.h, but not yet airborne.
-</p>
-<p>
-The authoritative design record remains
-<a href="https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md" target="_blank">STABILIZATION.md</a>;
-its sibling project
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-holds the continuously advanced ONDAS research.
+正式な設計記録は 
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>STABILIZATION.md</a>
+;その姉妹プロジェクト 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ が継続的に進化する ONDAS 研究を保持しています。
 </p>
 </div>
 </main>

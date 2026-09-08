@@ -31,128 +31,109 @@
 <p class='sub-lead'>陀螺仪到扑翼的桥梁的理想设计：Ondas 呼吸调制、与行程同步的前馈、锁相共振与气动弹性 PID 增益调制——以及对当前固件实际接线情况的诚实地图。</p>
 <h2>谱系：OrniFlight 与简化的 Ondas</h2>
 <p>
-<strong>Ondas is not a PteronautOS invention.</strong> The wave-modulation family —
-breath-pause cadence control, stroke-shape ferocity, asymmetric dwell, and the
-aeroelastic coupling of wing load to PID authority — lives and evolves in the
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-project, whose wiki and simulator carry the advanced algorithms (including the
-<a href="https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html" target="_blank">servo-efficiency table</a>).
+<strong>Ondas 并非 PteronautOS 的发明。</strong>波调制族——呼吸-停顿节拍控制、冲程形状凶猛度、非对称停留，以及翼载荷与 PID 权限的气动弹性耦合——生存并演化于 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ 项目中，其 wiki 与模拟器承载了高级算法（包括 
+<a href='https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html' target='_blank'>servo-efficiency table</a>
+）。
 </p>
-<p>
-PteronautOS embeds a <strong>partially simplified implementation</strong>: the same
-mathematical breath geometry, scaled to an ESP8285 with one MPU6050 and up to nine
-servos. Where OrniFlight simulates continuous aeroelastics and explores whole envelope
-families offline, PteronautOS must decide <em>in 4 ms ticks</em>, on an 80 MHz core,
-with the ExpressLRS radio stack sharing the same silicon. Every gain in this article
-exists in both projects; the firmware constants below are the airborne subset.
-</p>
+<p>PteronautOS 内嵌一个<strong>部分简化的实现</strong>：同样的数学呼吸几何，缩放至一颗 ESP8285、一个 MPU6050 与最多九个伺服器。OrniFlight 离线模拟连续气动弹性并探索整个包络族，而 PteronautOS 必须在 <em>4 ms 节拍内</em>、在 80 MHz 内核上、与 ExpressLRS 无线栈共享同一硅片作出决策。本文中的每个增益都存在于两个项目中；下面的固件常量是机载子集。</p>
 <h2>信号链路——从 泽菲罗斯 到 Ornithopter</h2>
-<p>
-The bridge from the gyro to the wingbeat is deliberately short — four files, no
-dynamic allocation, no queues:
-</p>
+<p>从陀螺仪到扑翼的桥梁被刻意做短——四个文件、无动态分配、无队列：</p>
 <pre><code>MPU6050 raw (I2C, 1 kHz register reads)&#x000A;  ▼&#x000A;Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s&#x000A;  ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s&#x000A;4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate&#x000A;  ▼&#x000A;ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*&#x000A;  ▼&#x000A;Ornithopter::_computeServoMixer() / _computeGearboxMixer()&#x000A;  ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke&#x000A;_f[]  →  funcMap → wing / crest-rudder / tail servos (µs)&#x000A;</code></pre>
-<p>
-The four raw terms are written in <code>Zephyrus::update()</code> immediately after the
-pitch PID computes its correction:
-</p>
+<p>四个原始项在俯仰 PID 计算出修正后立即写入 <code>Zephyrus::update()</code>：</p>
 <pre><code>pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional&#x000A;pitchITerm     = _pidPitch.integrator;                           // accumulated error&#x000A;pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D&#x000A;pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF&#x000A;</code></pre>
-<p>
-All four are guarded by a NaN trap (if any input is NaN, all four are zeroed) so a
-corrupted I²C frame can never reach the mixer arithmetic. Seven fields on
-<code>Ornithopter</code> receive the bridge data:
-</p>
+<p>四者均受 NaN 陷阱保护（任一输入为 NaN 即全部清零），使损坏的 I²C 帧永远无法到达混控算术。<code>Ornithopter</code> 上的七个字段接收桥接数据：</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Zephyrus source</th>
-<th>Consumed by</th>
+<th>字段</th>
+<th>Zephyrus 源</th>
+<th>消费方</th>
 </tr>
 <tr>
-<td><code>gyroPitchPTerm</code></td>
-<td><code>pitchPTerm</code></td>
-<td>Ondas P → phase advance (cadence channel)</td>
+<td>
+<code>gyroPitchPTerm</code>
+</td>
+<td>
+<code>pitchPTerm</code>
+</td>
+<td>Ondas P → 相位提前（节拍通道）</td>
 </tr>
 <tr>
-<td><code>gyroPitchITerm</code></td>
-<td><code>pitchITerm</code></td>
-<td>Ondas I → stroke asymmetry (balance channel)</td>
+<td>
+<code>gyroPitchITerm</code>
+</td>
+<td>
+<code>pitchITerm</code>
+</td>
+<td>Ondas I → 冲程非对称（平衡通道）</td>
 </tr>
 <tr>
-<td><code>gyroPitchDTerm</code></td>
-<td><code>pitchDTerm</code></td>
-<td>Ondas D → dwell ratio (ferocity channel)</td>
+<td>
+<code>gyroPitchDTerm</code>
+</td>
+<td>
+<code>pitchDTerm</code>
+</td>
+<td>Ondas D → 停留比（凶猛度通道）</td>
 </tr>
 <tr>
-<td><code>gyroPitchErrorRate</code></td>
-<td><code>pitchErrorRate</code></td>
-<td>SSFF half-stroke accumulation</td>
+<td>
+<code>gyroPitchErrorRate</code>
+</td>
+<td>
+<code>pitchErrorRate</code>
+</td>
+<td>SSFF 半冲程累积</td>
 </tr>
 <tr>
-<td><code>gyroRudderCorrection</code></td>
-<td><code>rudderCorrection</code></td>
-<td>Crest rudder µs offset (servo &amp; gearbox kernels)</td>
+<td>
+<code>gyroRudderCorrection</code>
+</td>
+<td>
+<code>rudderCorrection</code>
+</td>
+<td>冠舵 µs 偏移（伺服与变速箱内核）</td>
 </tr>
 <tr>
-<td><code>gyroAileronCorrection</code></td>
-<td><code>rollCorrection</code> × gearbox gain</td>
-<td>Gearbox: roll PID → V-tail aileron surfaces</td>
+<td>
+<code>gyroAileronCorrection</code>
+</td>
+<td>
+<code>rollCorrection</code>
+× gearbox gain
+</td>
+<td>变速箱：横滚 PID → V 尾副翼面</td>
 </tr>
 <tr>
-<td><code>gyroElevatorCorrection</code></td>
-<td><code>pitchCorrection</code> × gain × <code>aeroGainScale</code></td>
-<td>Gearbox: pitch PID → elevon / elevator surfaces</td>
+<td>
+<code>gyroElevatorCorrection</code>
+</td>
+<td>
+<code>pitchCorrection</code>
+× gain ×
+<code>aeroGainScale</code>
+</td>
+<td>变速箱：俯仰 PID → 升降副翼/升降舵面</td>
 </tr>
 </table>
 <h2>Ondas 调制——三通道呼吸</h2>
-<p>
-<em>Ondas</em> (Portuguese: "waves") is the three-channel breath system that maps the
-pitch PID's raw P, I and D terms onto three orthogonal dimensions of the flapping
-waveform. It is a <strong>proprioceptive loop</strong>: the gyro's sense of pitch
-directly shapes the wing motion, and the wing motion changes the pitch the gyro feels.
-</p>
-<h3>Cadence — P → phase advance</h3>
-<p>
-A positive pitch error (nose up) advances the oscillator phase, shortening the current
-half-stroke; a negative error retards it. The ideal law scales the oscillator spring:
-</p>
+<p><em>Ondas</em>（葡萄牙语“波”）是一个三通道呼吸系统，将俯仰 PID 的原始 P、I、D 项映射到扑翼波形的三个正交维度。它是一个<strong>本体感受回路</strong>：陀螺仪对俯仰的感知直接塑造机翼运动，而机翼运动又改变陀螺仪感知到的俯仰。</p>
+<h3>节拍 — P → 相位提前</h3>
+<p>正俯仰误差（机头上仰）使振荡器相位提前，缩短当前半冲程；负误差使其延迟。理想定律缩放振荡器弹簧：</p>
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
-<p>
-The oscillator <code>advance()</code> consumes it as
-<code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range
-0–100, default 20.
-</p>
-<h3>Ferocity — PD blend into dwell</h3>
-<p>
-The P and D terms are blended into a single ferocity signal that sharpens or softens
-the waveform's dwell:
-</p>
+<p>振荡器的 <code>advance()</code> 将其消费为 <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>。调校范围 0–100，默认 20。</p>
+<h3>凶猛度 — PD 混合进入停留</h3>
+<p>P 与 D 项被混合为单一凶猛度信号，使波形的停留锐化或柔化：</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
-<p>
-With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch
-changes produce sharper strokes while steady flight stays sinusoidal.
-</p>
-<h3>Balance — I into asymmetry</h3>
-<p>
-The integral term shifts the stroke centre: a persistent nose-up bias strengthens the
-downstroke, a persistent nose-down bias strengthens the upstroke.
-</p>
+<p>当 <code>ferocityPGain = 0</code>（默认）时行为为纯 D——快速俯仰变化产生更锐利的冲程，而稳定飞行保持正弦。</p>
+<h3>平衡 — I 进入非对称</h3>
+<p>积分项移动冲程中心：持续的机头上仰偏置强化下冲程，持续的机头下俯偏置强化上冲程。</p>
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
-<p>
-Balance is the most destabilising channel when set high — the ideal tuning guide keeps
-it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas
-and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code>
-window:
-</p>
+<p>平衡在设高时是最不稳定的通道——理想调校指南保持其低值（5–15）并最后加入。凶猛度应用结合飞行员指令、Ondas 与 SSFF 偏置，在完整 <code>[1.0, 8.0]</code> 窗口内保持飞行员的权限：</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
 <h2>波形整形与 PD 混合</h2>
-<p>
-The waveform itself follows the OrniFlight stroke family: each half uses its own
-ferocity, a shared reversal threshold keeps left/right wings in phase, and a
-per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into
-a rounded pyramidal path. The interactive explorer below renders the commanded
-geometry for any down/up ferocity pair — the same curve the mixer requests each tick.
-</p>
+<p>波形本身遵循 OrniFlight 冲程族：每半程使用各自的凶猛度，共享反转阈值保持左右机翼同相，而按配置文件的<em>形状混合</em>持续将平坦的停留/平台冲程转化为圆润的金字塔路径。下方的交互式探索器为任意下/上凶猛度对渲染指令几何——即混控器每个节拍所请求的同一条曲线。</p>
 <p>力度同时控制半行程的特性与时机。内部上，WebUI 的 0–100 设置映射到 0–8。下行程力度越高，下行程在周期中的占比越短；回程力度越高，回程占比越短。剩余时间转移到另一半 — 零点处没有停顿。</p>
 <p>每个配置文件的力度形状控件选择高力度特性。0% 时偏向有限平台/方形；100% 时偏向圆角金字塔路径。每一半仍使用自己的力度，因此低力度的一半保持拉长且正弦，而高力度的一半趋近于直接的对角线穿越。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='扑翼周期相位' data-i18n-axis-half='局部半行程相位' data-i18n-axis-wing='机翼位置' data-i18n-lock-oppose='相反：滑块互补（合计=8）（点击切换）' data-i18n-lock-sync='同步：两个滑块一起移动（点击切换）' data-i18n-lock-unlocked='已解锁（点击切换）' data-i18n-metric='时间分配：下 {down}% · 上 {up}% · 峰值相位速度比 {ratio}×'>
@@ -234,223 +215,110 @@ geometry for any down/up ferocity pair — the same curve the mixer requests eac
 <h3>解读极端组合</h3>
 <p>7 / 1 组合明显产生短而尖的下行程和长的正弦回程。精确值和近最大值需要谨慎：当前时长法则使用力度 8 以下的剩余量。因此，8 / 0 仅将周期约 0.125% 分配给下行程，而即使 8 / 6 也仅分配约 0.5%。位置保持连续，但所需的速度和加速度可能在物理上无法达到。</p>
 <h2>锚定阻尼 (k₂)</h2>
-<p>
-The oscillator's damping is exposed as a tunable anchor. The base law is a damped
-spring toward the cadence target:
-</p>
+<p>振荡器的阻尼作为可调锚点暴露。基本定律是朝向节拍目标的阻尼弹簧：</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
-<p>
-At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the
-commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm
-harder and rejecting perturbations. Tuning range 0–100.
-</p>
+<p>当 <code>anchorGain = 0</code>（默认）时阻尼紧绷——快速收敛到指令节拍。更高值在增益 100 时把 k₂ 推向 110，更紧地锁定节奏并抑制扰动。调校范围 0–100。</p>
 <h2>共振——锁相泵</h2>
-<p>
-Resonance is a phase-locked lock-in amplifier: it multiplies the pitch error rate by
-<code>sin(oscillator phase)</code> and accumulates — reinforcing the stroke exactly
-when a correction is most effective, damping it when it would fight the wing.
-</p>
+<p>共振是一个锁相锁定放大器：它将俯仰误差率乘以 <code>sin(振荡器相位)</code> 并累积——在修正最有效时恰好强化冲程，在会与机翼对抗时加以阻尼。</p>
 <pre><code>_resonanceAccum += gyroPitchErrorRate * sinf(_osc.phase)&#x000A;                 * resonanceGain * 0.01f * dt;&#x000A;_resonanceAccum *= expf(-dt / 0.15f);        // leaky integrator, τ = 0.15 s&#x000A;clamp(_resonanceAccum, -2.0f, 2.0f);&#x000A;</code></pre>
-<p>
-The accumulated value is injected into both stroke and return ferocity for the next
-frame. At <code>resonanceGain = 0</code> (default) the whole path is disabled. The
-leaky decay prevents runaway accumulation during sustained disturbance.
-</p>
+<p>累积值被注入下一帧的冲程与回复凶猛度。当 <code>resonanceGain = 0</code>（默认）时整条路径禁用。泄漏衰减可防止持续扰动期间的失控累积。</p>
 <h2>SSFF——与行程同步的前馈</h2>
-<p>
-Stroke-synchronous feed-forward is philosophically different from every PID term:
-it corrects the <em>next</em> half-stroke from what the gyro measured during the
-<em>current</em> one. At each zero-crossing of the flapping sine (wing reversal), the
-mean pitch error rate of the finished half-stroke becomes a bias on the opposite
-half's ferocity.
-</p>
+<p>冲程同步前馈在理念上不同于任何 PID 项：它根据陀螺仪在<em>当前</em>半冲程中测得的值来修正<em>下一个</em>半冲程。在扑翼正弦的每个过零点（机翼反转），已完成半冲程的平均俯仰误差率成为对面半程凶猛度的偏置。</p>
 <pre><code>// zero-cross detected: finished one half-stroke, starting the next&#x000A;meanError = _ssffAccumError / count;&#x000A;bias      = meanError * ssffGain * 0.00001f;   // clamped ±2.0&#x000A;// upstroke just ended        → bias feeds the downstroke (power stroke)&#x000A;// downstroke just ended      → bias feeds the upstroke (recovery)&#x000A;</code></pre>
-<p>
-Up-bias is applied to the downstroke (correcting for error accumulated on the
-preceding upstroke); down-bias to the upstroke. When <code>ssffGain</code> drops to
-zero the biases are explicitly cleared so a WebUI disable never leaves stale values in
-the waveform. The accumulator is 32-bit and reset per half-stroke — at 250 Hz it
-would need ~24 days of continuous flapping to overflow, which is not a practical
-concern.
-</p>
+<p>上偏置施加于下冲程（修正上一上冲程累积的误差）；下偏置施加于上冲程。当 <code>ssffGain</code> 降为零时偏置被显式清除，因此 WebUI 禁用绝不会在波形中留下陈旧值。累加器为 32 位并每半冲程复位——在 250 Hz 下需约 24 天连续扑翼才会溢出，这并非实际担忧。</p>
 <h2>气动弹性 PID 增益调制</h2>
-<p>
-All Ondas and SSFF modulation is scaled by a coefficient that knows whether the
-ornithopter is <em>flapping</em> or <em>gliding</em> — aeroelastic gain modulation.
-In the servo (waveform) kernel the selector is the flapping gate with its 50 µs
-hysteresis:
-</p>
+<p>所有 Ondas 与 SSFF 调制都由一个知道扑翼机处于<em>扑翼</em>还是<em>滑翔</em>状态的系数缩放——气动弹性增益调制。在伺服（波形）内核中，选择器是带 50 µs 滞回的扑翼闸门：</p>
 <pre><code>aeroGainScale = isFlapping ? (aeroFlapCoeff  * 0.01f)&#x000A;                           : (aeroGlideCoeff * 0.01f);&#x000A;</code></pre>
-<p>
-In the gearbox kernel the selector is the motor state
-(<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>). Defaults:
-</p>
+<p>在变速箱内核中，选择器是电机状态（<code>armed &amp;&amp; throttleNorm &gt; 0.1f</code>）。默认值：</p>
 <table>
 <tr>
-<th>Coefficient</th>
-<th>Default</th>
-<th>Range</th>
-<th>When active</th>
+<th>系数</th>
+<th>默认</th>
+<th>范围</th>
+<th>生效时</th>
 </tr>
 <tr>
-<td><code>aeroGlideCoeff</code></td>
+<td>
+<code>aeroGlideCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings still — glide, or gearbox motor off</td>
+<td>机翼静止——滑翔，或变速箱电机关闭</td>
 </tr>
 <tr>
-<td><code>aeroFlapCoeff</code></td>
+<td>
+<code>aeroFlapCoeff</code>
+</td>
 <td>40</td>
 <td>0–100</td>
-<td>Wings flapping — or gearbox motor running</td>
+<td>机翼扑动——或变速箱电机运转</td>
 </tr>
 </table>
-<p>
-Scaling to 0–1 makes the 0–100 slider the <em>authority</em> of the gyro over the
-wing: 40 % is a respectful copilot, 100 % is the gyro flying the waveform.
-</p>
-<h2>齿轮箱内核稳定化</h2>
-<p>
-The gearbox kernel applies Zephyrus differently — there is no wing waveform to breathe,
-so the P/I/D terms modulate <em>surfaces</em> instead:
-</p>
+<p>缩放至 0–1 使 0–100 滑块成为陀螺仪对机翼的<em>权限</em>：100 时陀螺仪完全掌控调制，0 时关闭。按内核划分的权限：</p>
 <table>
 <tr>
-<th>Authority</th>
-<th>Servo (waveform) kernel</th>
-<th>Gearbox kernel</th>
+<th>权限</th>
+<th>伺服（波形）内核</th>
+<th>变速箱内核</th>
 </tr>
 <tr>
-<td>Crest rudder</td>
-<td>roll + yaw combined</td>
-<td>yaw only (roll/pitch go to legs)</td>
+<td>冠舵</td>
+<td>横滚 + 偏航结合</td>
+<td>仅偏航（横滚/俯仰去往腿）</td>
 </tr>
 <tr>
-<td>Wing waveform</td>
-<td>Full Ondas / SSFF breath modulation</td>
+<td>机翼波形</td>
+<td>完整 Ondas / SSFF 呼吸调制</td>
 <td>—</td>
 </tr>
 <tr>
-<td>Leg ailerons (V-tail)</td>
+<td>腿副翼（V 尾）</td>
 <td>—</td>
-<td>roll PID → aileron side of elevon mix</td>
+<td>横滚 PID → 升降副翼混合的副翼侧</td>
 </tr>
 <tr>
-<td>Leg elevons / elevator</td>
+<td>腿升降副翼/升降舵</td>
 <td>—</td>
-<td>pitch PID × <code>aeroGainScale</code> → elevator side</td>
+<td>俯仰 PID × <code>aeroGainScale</code> → 升降舵侧</td>
 </tr>
 </table>
-<p>
-Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>)
-before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is
-inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by
-the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
-mechanical servos.
-</p>
+<p>变速箱 PID 修正在混合前钳制于 ±250 µs（<code>ZEPHYR_GEARBOX_CLAMP_US</code>）；冠舵路径钳制于 ±200 µs。一帧延迟是固有的：<code>aeroGainScale</code> 在变速箱混控器中计算，但由<em>下一个</em><code>zephyrusUpdate()</code> 消费——250 Hz 下 4 ms，对机械伺服器可忽略。</p>
 <h2>WebUI 面板与配置端点</h2>
-<p>
-The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
-Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
-Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide
-Coefficient and Flap Coefficient. All values persist through
-<code>POST /pteronautos/config</code> and stream back through
-<code>GET /pteronautos/state</code>:
-</p>
+<p>当构建包含 Zephyrus 时，扑翼机面板显示两个稳定组。Ondas 与 SSFF 滑块（0–100）：节拍 P→相位、凶猛度 D→停留、凶猛度 P→停留、平衡 I→非对称、锚点 k₂、共振、SSFF 增益。气动弹性组：滑翔系数与扑翼系数。所有值通过 <code>POST /pteronautos/config</code> 持久化，并经 <code>GET /pteronautos/state</code> 流回：</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
-<p>
-<code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and
-clamps every field to <code>[0, 100]</code> server-side.
-</p>
+<p><code>aero_gain_scale</code> 为计算所得且只读。POST 接受部分更新并在服务器端将每个字段钳制到 <code>[0, 100]</code>。</p>
 <h2>调参指南</h2>
-<p>
-The ideal flight-test sequence — each step is a flight, not a slider drag:
-</p>
+<p>理想的飞行测试序列——每一步是一次飞行，而非拖动滑块：</p>
 <ol>
-<li>
-<strong>Zero every gain.</strong> Fly manual only; the airframe must be stable and
-predictable before the gyro earns a vote.
-</li>
-<li>
-<strong>Enable Zephyrus's crest rudder</strong> (roll+yaw PID). Verify the rudder
-resists a gentle wing-rock before anything touches the waveform.
-</li>
-<li>
-<strong>Cadence (P→Phase)</strong> from 10 upward. Too high = jerky wings, phase
-hunting; too low = nothing. Right = wings feel "connected" to pitch.
-</li>
-<li>
-<strong>Ferocity D (D→Dwell)</strong> from 10. Too high = the waveform oscillates
-between sharp and soft; right = rapid pitch changes sharpen the stroke, steady
-flight stays sinusoidal.
-</li>
-<li>
-<strong>Ferocity P</strong> (optional) from 5 — blends P authority into the dwell.
-</li>
-<li>
-<strong>Balance (I→Asymmetry) last, low.</strong> This is the most destabilizing
-channel; 5–15 only. It counters persistent drift, never transient bumps.
-</li>
-<li>
-<strong>SSFF</strong> from 5, only after cadence and ferocity hold. Too high =
-over-correction and half-stroke flutter; right = visible damping of pitch
-oscillation amplitude.
-</li>
-<li>
-<strong>Aeroelastic coefficients last.</strong> Tune glide first (wings still), then
-flap. Keep the gyro an authoritative copilot, not a nervous pilot.
-</li>
+<li><strong>将所有增益归零。</strong>仅手动飞行；在陀螺仪获得投票权之前，机架必须稳定且可预测。</li>
+<li><strong>启用 Zephyrus 的冠舵</strong>（横滚+偏航 PID）。在触碰波形之前，验证方向舵能抵抗轻微晃翼。</li>
+<li><strong>节拍（P→相位）</strong>从 10 起向上。过高 = 机翼抖动、相位搜索；过低 = 无效。合适 = 机翼感觉与俯仰“相连”。</li>
+<li><strong>凶猛度 D（D→停留）</strong>从 10 起。过高 = 波形在锐利与柔和间振荡；合适 = 快速俯仰变化锐化冲程，稳定飞行保持正弦。</li>
+<li><strong>凶猛度 P</strong>（可选）从 5 起——将 P 权限混入停留。</li>
+<li><strong>平衡（I→非对称）最后、低值。</strong>这是最不稳定的通道；仅 5–15。它对抗持续漂移，而从不针对瞬时颠簸。</li>
+<li><strong>SSFF</strong> 从 5 起，仅在节拍与凶猛度稳定之后。过高 = 过度修正与半冲程颤振；合适 = 俯仰振荡幅度的可见阻尼。</li>
+<li><strong>气动弹性系数最后。</strong>先调滑翔（机翼静止），再调扑翼。让陀螺仪做一个权威的副驾驶，而非紧张的飞行员。</li>
 </ol>
 <aside class='waveform-caution'>
 <strong>飞行前先做台架测试。</strong>
 该探索器描述的是指令数学波形，而非保证的舵机运动。在振幅、频率、连杆几何和舵机速度极限未经空载验证之前，请避免极端的不对称设置。
 </aside>
 <h2>实现状态与未解决的不一致</h2>
-<p>
-<strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
-laws above are the <em>design</em>; the code contains the full parameter surface, the
-constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding
-block currently disconnects most of the gyro from the servo kernel:
-</p>
+<p><strong>如实地图，当前固件（Ornithopter.cpp @ 72c63020）。</strong>上文的理想定律是<em>设计</em>；代码包含完整的参数面、常量、WebUI 滑块与桥接垫片——但一个飞行测试脚手架块目前将大部分陀螺仪与伺服内核断开：</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>
-Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this
-block means today's servo-kernel behaviour is:
-</p>
+<p>该块作为“STEP 7”NaN 守卫测试随 i18n 工作一起提交且从未回滚，意味着如今的伺服内核行为为：</p>
 <ul>
-<li>
-<strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as
-parameters and in the bridge, but their consumption sites
-(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>,
-<code>resonanceBias</code>) are pinned to zero or reset every frame
-(Ornithopter.cpp:282–284, 311–313, 354).
-</li>
-<li>
-<strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping
-branch</em>, so the rudder correction currently acts only in the glide branch — the
-opposite of what flight needs (most disturbances arrive mid-flap).
-</li>
-<li>
-<strong>The gearbox kernel is the live exception.</strong> It reads
-<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> /
-<code>gyroRudderCorrection</code> and applies them with clamps (lines 436–451) — the
-STEP-7 zeroing block lives only in the servo kernel.
-</li>
+<li><strong>节拍、凶猛度-PD、平衡、共振、SSFF</strong>——均以参数形式存在于桥接中，但其消费点（<code>kGainMod</code>、<code>ferocitySignal</code>、<code>iBias</code>、<code>resonanceBias</code>）被钉为零或每帧复位（Ornithopter.cpp:282–284、311–313、354）。</li>
+<li><strong>冠舵稳定</strong>在<em>扑翼分支内部</em>被清零，因此方向舵修正目前仅在滑翔分支中生效——与飞行所需相反（大多数扰动在扑翼中途到来）。</li>
+<li><strong>变速箱内核是活着的例外。</strong>它读取 <code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code> / <code>gyroRudderCorrection</code> 并带钳制应用它们（第 436–451 行）——STEP-7 清零块只存在于伺服内核。</li>
 </ul>
+<p>这不是对数学的批评——而是一个<em>已知、已命名</em>的状态：稳定模块已编译、已参数化、已桥接，正等待移除 STEP-7 脚手架并替换为真正的 NaN 策略（<code>Validatio</code> 守卫已为 MPU 数据提供干净路径）。在此之前，请将上文的 Ondas/SSFF/共振调校指南视为可飞行的规范，已对照 Zephyrus.cpp:729–737 与 OrnithopterWaveform.h 验证，但尚未升空。</p>
 <p>
-This is not a criticism of the math — it is a <em>known, named</em> state: the
-stabilization modules are compiled in, parameterized, bridged, and waiting for the
-STEP-7 scaffolding to be removed and replaced by a real NaN policy (the
-<code>Validatio</code> guards already give the MPU data a clean path). Until then,
-treat the Ondas/SSFF/resonance tuning guide above as the flight-ready specification,
-verified against Zephyrus.cpp:729–737 and OrnithopterWaveform.h, but not yet airborne.
-</p>
-<p>
-The authoritative design record remains
-<a href="https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md" target="_blank">STABILIZATION.md</a>;
-its sibling project
-<a href="https://dantiel.github.io/OrniFlight/" target="_blank">OrniFlight</a>
-holds the continuously advanced ONDAS research.
+权威设计记录仍是 
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md' target='_blank'>STABILIZATION.md</a>
+；其姊妹项目 
+<a href='https://dantiel.github.io/OrniFlight/' target='_blank'>OrniFlight</a>
+ 承载着持续推进的 ONDAS 研究。
 </p>
 </div>
 </main>
