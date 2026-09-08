@@ -33,10 +33,10 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Mode Companion Compute</h1>
-<p class='sub-lead'>La symbiose : PteronautOS est l&#39;esprit, YOSHIMITSU est la main. Deux cartes, un vol — séparées par le pont par un seul drapeau administrateur.</p>
+<p class='sub-lead'>La symbiose : PteronautOS est l&#39;esprit, YOSHIMITSU est la main. Deux cartes, un vol — divisé par le pont par une seule commande d&#39;administration : MUSHIN (無心).</p>
 <h2>Architecture</h2>
 <p>En mode companion, les deux MCU cessent d&#39;être un récepteur et un convertisseur et deviennent un cerveau à deux moitiés. Ce diagramme est la carte éternelle :</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>Pourquoi le gyroscope reste sur le RP2040</h2>
 <p>Le MPU6050 est physiquement câblé au RP2040 — le PID y est donc aussi calculé. Envoyer des échantillons bruts de gyroscope par le pont vers PteronautOS, uniquement pour les réguler là-bas et renvoyer des corrections, serait pure dévotion à la latence. La main qui tient le gyroscope corrige le coup : Zephyrus vit sur le companion, pas sur le récepteur.</p>
 <h2>La répartition</h2>
@@ -78,8 +78,8 @@
  — PIO servo-PWM : les échantillons qui meuvent réellement l&#39;aile et le gouvernail de crête.
 </li>
 </ul>
-<h2>Le drapeau administrateur</h2>
-<p>Un seul drapeau de compilation — COMPANION_MODE — décide si YOSHIMITSU reste un convertisseur silencieux ou s&#39;éveille en cœur companion. Éteint, c&#39;est KINCHO ; allumé, c&#39;est la main.</p>
+<h2>MUSHIN — le cheatcode de la mémoire musculaire</h2>
+<p>MUSHIN (無心, l&#39;esprit vide) décide si YOSHIMITSU reste un convertisseur silencieux ou s&#39;éveille comme la main compagne. Il démarre armé — le cheatcode; la console d&#39;administration JIGUANG le commande par le port USB : MUSHIN rend compte, MUSHIN ON/OFF arme ou désarme. Le choix persiste en flash (octet 6 de l&#39;EEPROM sur le RP2040) — configuration par commande, pas par recompilation.</p>
 <h2>Pourquoi c&#39;est un cheatcode</h2>
 <p>Aucune autre carte ELRS-PWM ne porte un dual-core avec PIO matériel. Pour le prix de la petite carte, tu obtiens deux cœurs — un pur muscle, un ordinateur companion. Ailleurs, tu paierais plus et serais toujours plus faible.</p>
 <p>Moins cher, et toujours plus fort : voilà la réponse du shinobi hermétique au marché.</p>

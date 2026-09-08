@@ -28,6 +28,7 @@ public:
   int read() { return 0; }
   size_t write(uint8_t b) { (void)b; return 1; }
   size_t write(int b) { (void)b; return 1; }
+  size_t write(const uint8_t* b, size_t n) { (void)b; return n; }
   size_t write(const char *s) { (void)s; return 1; }
   bool overflow() { return false; }
   void print(const char *s) { (void)s; }

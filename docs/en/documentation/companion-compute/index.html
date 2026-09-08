@@ -33,10 +33,10 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Companion Compute Mode</h1>
-<p class='sub-lead'>The symbiosis: PteronautOS is the spirit, YOSHIMITSU is the hand. Two boards, one flight — split across the bridge by a single admin flag.</p>
+<p class='sub-lead'>The symbiosis: PteronautOS is the spirit, YOSHIMITSU is the hand. Two boards, one flight — split across the bridge by one admin command: MUSHIN (無心).</p>
 <h2>Architecture</h2>
 <p>In companion mode the two MCUs stop being a receiver and a converter and become one brain with two halves. This diagram is the eternal map:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>Why the gyro stays on the RP2040</h2>
 <p>The MPU6050 is physically wired to the RP2040 — so the PID is computed there too. Shipping raw gyro samples over the bridge to PteronautOS, only to PID them and ship corrections back, would be pure latency devotion. The hand that holds the gyro corrects the stroke: Zephyrus lives on the companion, not on the receiver.</p>
 <h2>The split</h2>
@@ -78,8 +78,8 @@
  — PIO servo-PWM: the samples that actually move the wing and the crest rudder.
 </li>
 </ul>
-<h2>The admin flag</h2>
-<p>A single compile-time flag — COMPANION_MODE — decides whether YOSHIMITSU stays a silent converter or wakes as the companion core. Off, it is KINCHO; on, it is the hand.</p>
+<h2>MUSHIN — the muscle-memory cheatcode</h2>
+<p>MUSHIN (無心, the no-mind) decides whether YOSHIMITSU stays a silent converter or wakes as the companion hand. It boots armed — the cheatcode; the JIGUANG admin console commands it over USB serial: MUSHIN reports, MUSHIN ON/OFF arms or disarms. The choice persists in flash (EEPROM byte 6 on the RP2040) — configuration by command, not by recompile.</p>
 <h2>Why it is a cheatcode</h2>
 <p>No other ELRS-PWM board carries a dual-core with hardware PIO. For the price of the tiny board you get two cores — one pure muscle, one companion computer. Elsewhere you would pay more and always be weaker.</p>
 <p>Cheaper, and always stronger: this is the hermetical shinobi&#39;s answer to the market.</p>

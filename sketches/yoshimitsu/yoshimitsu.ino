@@ -449,6 +449,19 @@ static uint8_t jigLevel = 0;               // boots as the lamb — JIGUANG wake
 static bool gyroConnected = false;
 #endif
 
+// MUSHIN (無心) — the muscle-memory mode. The geist (PteronautOS) plans the
+// wave and sends servo intents across the bridge UART; the hand applies the
+// local Zephyrus gyro PID and drives PWM at the muscle. The same two wires as
+// the flasher bridge: MEDITATION carries esptool's SLIP, the converter stances
+// carry MUSHIN. Boots ON (the cheatcode); admin-configurable via MUSHIN ON/OFF
+// and persisted in flash (EEPROM byte 6 on RP2040).
+static bool     mushin               = true;
+static bool     mushinLinked         = false;  // an intent frame holds the link
+static uint16_t mushinIntent[SERVO_COUNT_MAX]; // µs per servo from the geist
+static uint32_t mushinLastIntentMs   = 0;
+static uint32_t mushinLastAnnounceMs = 0;
+static uint32_t mushinFrames         = 0;      // xor-clean intent frames
+
 // =============================================================================
 //  JIGUANG (極光 · the aurora) — the storyteller / commentator / administrator
 // -----------------------------------------------------------------------------
@@ -541,10 +554,16 @@ static void jigLegend() {
   jigCmd(); Serial.println("  JIGUANG — the storyteller / commentator / administrator. In MEDITATION");
   jigCmd(); Serial.println("           the sponge-head is the throne: commands from the USB-serial");
   jigCmd(); Serial.println("           heaven, esptool's SLIP yields it back to the flasher bridge.");
+  jigCmd(); Serial.println("  MUSHIN 無心 — the muscle-memory mode. PteronautOS plans the wave");
+  jigCmd(); Serial.println("           (the geist), the hand strikes here: intents cross the bridge,");
+  jigCmd(); Serial.println("           the local gyro PID holds the crest, PIO PWM answers at the");
+  jigCmd(); Serial.println("           muscle. Dual-core, glitchless — no other ELRS PWM board can");
+  jigCmd(); Serial.println("           wear this cheatcode.");
   jigCmd(); Serial.println("  The bridge is transparent. The parry is the CRC. The levitation is the");
   jigCmd(); Serial.println("  gyro. The pose never seizes while the legend is told — 極光 never dies.");
   jigCmd(); Serial.println();
   jigCmd(); Serial.println("  Cheatcodes: KINCHO · MANJI · FLEA · MEDITATION · NSS · BACK · POSE n");
+  jigCmd(); Serial.println("              MUSHIN ON/OFF · 無心 the no-mind bridge, admin-configurable");
   jigCmd(); Serial.println("              JIGUANG n · MUTE · CRSF · SCORE · ELRS · LEGEND");
   jigCmd(); Serial.println("════════════════════════════════════════════════");
   jigCmd(); Serial.println("  JIGUANG / jiguang / 極光 never dies. Never look back.");
@@ -785,6 +804,7 @@ static void applyChannels() {
 #endif
 
   for (uint8_t i = 0; i < servoCount; i++) {
+    if (mushinLinked) continue;          // MUSHIN — the hand obeys the geist's intents
     int32_t pwm = mapRaw(channel[CHANNEL_TO_SERVO[i]]);
 #if YOSHI_GYRO
     if (i == GYRO_CORRECTION_SERVO) pwm += gyroUs;
@@ -805,6 +825,150 @@ static void detachServos() {
   for (uint8_t i = 0; i < SERVO_COUNT_MAX; i++) {
     if (servos[i].attached()) servos[i].detach();
   }
+}
+
+// =============================================================================
+//  MUSHIN (無心) — the muscle-memory mode · protocol v0 skeleton
+// -----------------------------------------------------------------------------
+//  Frame on the bridge UART: [0x9B][len][type][payload…][xor] with xor over
+//  len+type+payload. 0x01 = geist→hand servo intents (n × uint16 µs),
+//  0x02 = hand→geist announce (version, servo count, gyro), 0x03 = hand→geist
+//  gyro telemetry. The bridge is the same two wires as the flasher — in the
+//  converter stances they speak MUSHIN, in MEDITATION they carry esptool's
+//  SLIP untouched. No dynamic memory, no delay(), never blocking.
+// =============================================================================
+
+#define MUSHIN_SYNC      0x9B        // 無心 — the no-mind sync
+#define MUSHIN_VER       0
+#define MUSHIN_INTENT    0x01        // geist → hand: servo intents
+#define MUSHIN_ANNOUNCE  0x02        // hand → geist: version + posture
+#define MUSHIN_TELEMETRY 0x03        // hand → geist: gyro rate + correction
+#define MUSHIN_MAX_PAY   16          // 8 servos × 2 bytes
+#define MUSHIN_LINK_MS   500         // intents stale after this → CRSF path resumes
+
+enum : uint8_t { MS_IDLE, MS_LEN, MS_TYPE, MS_PAY, MS_XOR };
+static uint8_t msState = MS_IDLE, msLen = 0, msType = 0, msIdx = 0, msXor = 0;
+static uint8_t msBuf[MUSHIN_MAX_PAY];
+
+// The dual tongue: JIGUANG narrates the MUSHIN link when awake; without the
+// storyteller compiled in, the hand works in silence (as it should).
+static void mushinTale(const char* s) {
+#if JIGUANG
+  jigSay(1, s);
+#else
+  (void)s;
+#endif
+}
+
+static void mushinParse(uint8_t b) {
+  switch (msState) {
+    case MS_IDLE:
+      if (b == MUSHIN_SYNC) { msState = MS_LEN; msXor = 0; }
+      break;
+    case MS_LEN:
+      msLen = b; msXor ^= b;
+      msState = (msLen <= MUSHIN_MAX_PAY) ? MS_TYPE : MS_IDLE;
+      break;
+    case MS_TYPE:
+      msType = b; msXor ^= b; msIdx = 0;
+      msState = MS_PAY;
+      break;
+    case MS_PAY:
+      msBuf[msIdx++] = b; msXor ^= b;
+      if (msIdx >= msLen) msState = MS_XOR;
+      break;
+    case MS_XOR:
+      msState = MS_IDLE;
+      if (b != msXor) return;
+      if (msType == MUSHIN_INTENT) {
+        uint8_t n = (uint8_t)(msLen / 2);
+        if (n > servoCount) n = servoCount;
+        for (uint8_t i = 0; i < n; i++)
+          mushinIntent[i] = (uint16_t)(msBuf[2 * i] | (msBuf[2 * i + 1] << 8));
+        if (!mushinLinked) mushinTale("MUSHIN linked — the geist's intent arrives; the hand strikes before the thought.");
+        mushinLinked = true;
+        mushinLastIntentMs = millis();
+        mushinFrames++;
+      }
+      break;
+  }
+}
+
+static void mushinSend(uint8_t type, const uint8_t* p, uint8_t n) {
+  uint8_t hdr[3] = { MUSHIN_SYNC, n, type };
+  uint8_t x = (uint8_t)(n ^ type);
+  BRIDGE_SERIAL.write(hdr, 3);
+  for (uint8_t i = 0; i < n; i++) { BRIDGE_SERIAL.write(p[i]); x ^= p[i]; }
+  BRIDGE_SERIAL.write(x);
+  bridgeRxToUsb += n;                   // the muscle also keeps the ledger honest
+}
+
+// The hand calls out once per second: who it is, how many servos it holds,
+// whether the gyro is linked — and the crest telemetry the geist may watch.
+static void mushinAnnounce() {
+  uint8_t p[6];
+  p[0] = MUSHIN_VER;
+  p[1] = servoCount;
+  p[2] = (uint8_t)(YOSHI_RP2040 ? 1 : 0);
+  p[3] = (uint8_t)(stance == STANCE_MANJI_DRAGONFLY ? 1 : 0);
+#if YOSHI_GYRO
+  p[4] = gyroConnected ? 1 : 0;
+#else
+  p[4] = 0;
+#endif
+  p[5] = mushinLinked ? 1 : 0;
+  mushinSend(MUSHIN_ANNOUNCE, p, 6);
+
+  int32_t rate = 0, corr = 0;
+#if YOSHI_GYRO
+  if (gyroConnected) {
+    rate = gyroZRate();
+    corr = -(rate * GYRO_GAIN) / GYRO_SCALE_LSB;
+  }
+#endif
+  uint8_t t[6];
+  t[0] = (uint8_t)(rate & 0xFF);  t[1] = (uint8_t)((rate >> 8) & 0xFF);
+  t[2] = (uint8_t)(corr & 0xFF);  t[3] = (uint8_t)((corr >> 8) & 0xFF);
+  t[4] = mushinLinked ? 1 : 0;    t[5] = MUSHIN_VER;
+  mushinSend(MUSHIN_TELEMETRY, t, 6);
+}
+
+// The muscle layer: intents from the geist override the local CRSF path while
+// the link is fresh; the local gyro PID holds the crest (MANJI only). If the
+// wire falls quiet, the hand returns to its own CRSF muscle — grace in
+// degradation, never a dead wing.
+static void mushinApply() {
+  if (!mushinLinked || millis() - mushinLastIntentMs > MUSHIN_LINK_MS) {
+    if (mushinLinked) {
+      mushinLinked = false;
+      mushinTale("MUSHIN link quiet — the hand returns to its own CRSF muscle.");
+    }
+    return;
+  }
+#if YOSHI_GYRO
+  int32_t gyroUs = 0;
+  if (stance == STANCE_MANJI_DRAGONFLY && gyroConnected)
+    gyroUs = -(gyroZRate() * GYRO_GAIN) / GYRO_SCALE_LSB;
+#endif
+  for (uint8_t i = 0; i < servoCount; i++) {
+    int32_t pwm = mushinIntent[i];
+    if (pwm < PWM_MIN || pwm > PWM_MAX) pwm = 1500;   // never trust a broken intent
+#if YOSHI_GYRO
+    if (i == GYRO_CORRECTION_SERVO) pwm += gyroUs;
+#endif
+    servos[i].writeMicroseconds((int)constrain(pwm, (int32_t)PWM_MIN, (int32_t)PWM_MAX));
+  }
+}
+
+static void mushinPoll() {
+  if (!mushin) return;
+  if (stance != STANCE_KINCHO && stance != STANCE_MANJI_DRAGONFLY) return;
+  while (BRIDGE_SERIAL.available()) mushinParse((uint8_t)BRIDGE_SERIAL.read());
+  if (millis() - mushinLastAnnounceMs >= 1000) {
+    mushinLastAnnounceMs = millis();
+    mushinAnnounce();
+  }
+  if (mushinLinked) mushinApply();
 }
 
 static void pumpCrsf() {
@@ -1071,6 +1235,9 @@ static void printStatus() {
 #endif
   Serial.print(" · receiver power = ");
   Serial.print(rxPowered ? "ON" : "OFF");
+  Serial.print(" · MUSHIN (無心) = ");
+  Serial.print(mushin ? "ON" : "OFF");
+  if (mushin && mushinLinked) { Serial.print(" linked · "); Serial.print(mushinFrames); Serial.print(" intents"); }
 #if JIGUANG
   Serial.print(" · JIGUANG voice = "); Serial.print((int)jigLevel);
 #endif
@@ -1092,6 +1259,8 @@ static void printHelp() {
   Serial.println("  NSS/BENCH    No-Sword bench — direct servo, no radio");
   Serial.println("  BACK/TURN    deceptive idle — the UART mirror, never looks back");
   Serial.println("  POSE <n>     jump to stance 0..5");
+  Serial.println("  MUSHIN       muscle-memory mode (無心): the geist plans, the hand strikes");
+  Serial.println("  MUSHIN ON/OFF/?  arm / disarm / report the no-mind bridge");
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
@@ -1155,7 +1324,7 @@ static void enterStance(Stance next) {
 #if JIGUANG
       medAdmin = true;                     // the sponge-head wakes as the administrator
       jigCmd();
-      Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type STATUS / CRSF / SCORE / POSE.");
+      Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type STATUS / MUSHIN / CRSF / SCORE / POSE.");
 #endif
       break;
 
@@ -1249,6 +1418,37 @@ static void runCommand(const char* line) {
     int n = atoi(line + 4);
     if (n >= 0 && n < STANCE_COUNT) enterStance((Stance)n);
     else Serial.println("YOSHIMITSU: POSE must be 0..5.");
+  }
+  else if (strncmp(line, "MUSHIN", 6) == 0) {
+    // MUSHIN (無心) — the muscle-memory mode. `MUSHIN` reports, `MUSHIN ON|OFF`
+    // arms/disarms the no-mind bridge and persists the choice in flash. The
+    // flasher bridge in MEDITATION is never touched by this.
+    const char* a = line + 6;
+    while (*a == ' ') a++;
+    if (*a == '\0' || *a == '?') {
+      Serial.print("YOSHIMITSU: MUSHIN (無心) = ");
+      Serial.print(mushin ? "ON" : "OFF");
+      Serial.print(mushinLinked ? " · linked · " : " · listening · ");
+      Serial.print(mushinFrames); Serial.println(" intent frames");
+      return;
+    }
+    bool v = mushin;
+    if      (strncmp(a, "ON",  2) == 0 || *a == '1') v = true;
+    else if (strncmp(a, "OFF", 3) == 0 || *a == '0') v = false;
+    else { Serial.println("YOSHIMITSU: MUSHIN ON|OFF|? — 無心 the muscle-memory mode."); return; }
+    if (v != mushin) {
+      mushin = v;
+#if YOSHI_RP2040
+      EEPROM.begin(16); EEPROM.write(6, mushin ? 1 : 0); EEPROM.commit();
+#endif
+      mushinLinked = false;                    // re-link on the next intent
+    }
+    Serial.println(mushin
+      ? "YOSHIMITSU: MUSHIN (無心) ON — the hand strikes before the thought; the bridge speaks the no-mind protocol."
+      : "YOSHIMITSU: MUSHIN (無心) OFF — the mind stands alone; the bridge keeps silence (flasher only).");
+    mushinTale(mushin
+      ? "MUSHIN 無心 — intents cross the wire; the hand obeys before the thought arrives."
+      : "MUSHIN 無心 folds — the hand sleeps until the geist calls again.");
   }
   else if (strncmp(line, "STATUS", 6) == 0) printStatus();
   else if (strncmp(line, "HELP",   4) == 0) printHelp();
@@ -1417,6 +1617,9 @@ static const Stance TAP_STANCE[5] = {
 static void applyResetTapStance() {
   EEPROM.begin(16);
   uint32_t now = rtcSeconds();
+  uint8_t m = EEPROM.read(6);              // MUSHIN persistence: 1 = strike on boot
+  if (m == 0) mushin = false;
+  else if (m == 1) mushin = true;
   if (EEPROM.read(0) != NVM_MAGIC) {
     EEPROM.write(0, NVM_MAGIC);
     EEPROM.write(1, 0);
@@ -1517,6 +1720,7 @@ void loop() {
     pumpMirror();
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
     if (stance != STANCE_NSS) pumpCrsf();     // NSS drives servos manually, no CRSF
+  mushinPoll();                       // MUSHIN — the muscle-memory layer (no-op when off)
   }
 #if JIGUANG
   if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) {

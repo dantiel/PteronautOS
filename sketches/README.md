@@ -44,6 +44,8 @@ the board.
 ```
 KINCHO | MANJI | FLEA | MEDITATION | NSS | BACK | POSE <n> | STATUS | HELP
 SERVO i us     (NSS only — drive servo i to microseconds)
+MUSHIN         muscle-memory mode (無心) report  — companion compute
+MUSHIN ON/OFF  arm / disarm the no-mind bridge (persisted in flash)
 ```
 
 - **ESP32-S3** (GPIO0 BOOT button): double-tap cycles KINCHO → MANJI → NSS → BACK;

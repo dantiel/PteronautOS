@@ -33,10 +33,10 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>कम्पैनियन कम्प्यूट मोड</h1>
-<p class='sub-lead'>सहजीवन: PteronautOS आत्मा है, YOSHIMITSU हाथ है। दो बोर्ड, एक उड़ान — एक व्यवस्थापक फ़्लैग से पुल के दोनों ओर बँटे हुए।</p>
+<p class='sub-lead'>सहजीवन: PteronautOS आत्मा है, YOSHIMITSU हाथ है। दो बोर्ड, एक उड़ान — एक ही एडमिन आदेश MUSHIN (無心) से पुल के आर-पार बँटे।</p>
 <h2>आर्किटेक्चर</h2>
 <p>कम्पैनियन मोड में दोनों MCU रिसीवर और कन्वर्टर होना छोड़कर दो हिस्सों वाला एक मस्तिष्क बन जाते हैं। यह आरेख शाश्वत नक़्शा है:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>जाइरो RP2040 पर ही क्यों रहता है</h2>
 <p>MPU6050 भौतिक रूप से RP2040 से जुड़ा है — इसलिए PID भी वहीं गणना होती है। कच्चे जाइरो सैंपल पुल से PteronautOS को भेजना, सिर्फ़ वहाँ PID करके सुधार वापस भेजने के लिए, विशुद्ध विलंब-पूजा है। जाइरो थामने वाला हाथ ही प्रहार सुधारता है: Zephyrus रिसीवर पर नहीं, कम्पैनियन पर रहता है।</p>
 <h2>विभाजन</h2>
@@ -78,8 +78,8 @@
  — PIO servo-PWM: वे सैंपल जो वास्तव में पंख और शिखर-पतवार चलाते हैं।
 </li>
 </ul>
-<h2>व्यवस्थापक फ़्लैग</h2>
-<p>एक कम्पाइल-समय फ़्लैग — COMPANION_MODE — तय करता है कि YOSHIMITSU मूक कन्वर्टर बना रहे या कम्पैनियन कोर बनकर जागे। बंद, तो KINCHO; चालू, तो हाथ।</p>
+<h2>MUSHIN — मांसपेशी-स्मृति का चीटकोड</h2>
+<p>MUSHIN (無心, खाली मन) तय करता है कि YOSHIMITSU एक मूक कन्वर्टर बना रहे या साथी हाथ बनकर जागे। वह सशस्त्र बूट होता है — यही चीटकोड है; JIGUANG एडमिन कंसोल USB सीरियल से आदेश देता है: MUSHIN रिपोर्ट करता है, MUSHIN ON/OFF हथियार चढ़ाता या उतारता है। चुनाव फ्लैश में बना रहता है (RP2040 पर EEPROM बाइट 6) — रीकम्पाइल से नहीं, आदेश से विन्यास।</p>
 <h2>यह चीटकोड क्यों है</h2>
 <p>कोई और ELRS-PWM बोर्ड हार्डवेयर PIO वाला डुअल-कोर नहीं रखता। छोटे बोर्ड की क़ीमत में दो कोर — एक शुद्ध मांसपेशी, एक कम्पैनियन कंप्यूटर — मिलते हैं। कहीं और तुम ज़्यादा चुकाकर भी हमेशा कमज़ोर रहोगे।</p>
 <p>सस्ता, और हमेशा मज़बूत: यही बाज़ार को गुप्त शिनोबी का उत्तर है।</p>

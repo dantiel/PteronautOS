@@ -39,9 +39,9 @@
 <h2>Wire the gyro</h2>
 <p>The MPU6050 connects directly to the RP2040&#39;s I2C — SDA and SCL — not to the receiver. The gyro belongs to the hand.</p>
 <h2>Flash both boards</h2>
-<p>Flash PteronautOS normally, then flash the YOSHIMITSU sketch for the RP2040-Tiny. The companion core activates through the admin flag, not through a second firmware image.</p>
-<h2>Enable companion mode</h2>
-<p>Set COMPANION_MODE to 1 in the sketch, rebuild, and flash. Reboot and the hand wakes.</p>
+<p>Flash PteronautOS normally, then flash the YOSHIMITSU sketch for the RP2040-Tiny. The companion hand wakes through the MUSHIN command (無心) — one firmware, one scroll.</p>
+<h2>Arm MUSHIN</h2>
+<p>MUSHIN (無心) boots armed by default — the hand strikes before the thought. Open the USB serial console and type MUSHIN to report, MUSHIN ON/OFF to arm or disarm. No reflash: the choice persists in flash and the flasher bridge in MEDITATION is never touched.</p>
 <h2>Verify</h2>
 <p>Open the USB console and read the JIGUANG tale: the stance is MEDITATION, the bridge is up, and the gyro reports from the hand — not from the receiver.</p>
 </div>
