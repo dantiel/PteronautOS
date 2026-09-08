@@ -29,11 +29,11 @@
 <h1>舵机内核</h1>
 <p class='sub-lead'>脉宽包络、按功能的微调与速度限制——低层舵机契约。</p>
 <h2>脉宽包络</h2>
-<p>伺服内核通过由 &lt;code&gt;servoMinUs&lt;/code&gt;(默认 &lt;strong&gt;988&lt;/strong&gt;)与 &lt;code&gt;servoMaxUs&lt;/code&gt;(默认 &lt;strong&gt;2012&lt;/strong&gt;)定义的全局包络，将归一化角度(−1…+1)映射为脉冲宽度。这取代了旧的编译期常量，使 0°/180° 行程无需重新构建即可适配任意舵机。数值被限制在 &lt;code&gt;[500…1490]&lt;/code&gt; 与 &lt;code&gt;[1510…2500]&lt;/code&gt;，并强制 &lt;code&gt;min &amp;lt; max&lt;/code&gt;。</p>
+<p>伺服内核通过由 <code>servoMinUs</code>(默认 <strong>988</strong>)与 <code>servoMaxUs</code>(默认 <strong>2012</strong>)定义的全局包络，将归一化角度(−1…+1)映射为脉冲宽度。这取代了旧的编译期常量，使 0°/180° 行程无需重新构建即可适配任意舵机。数值被限制在 <code>[500…1490]</code> 与 <code>[1510…2500]</code>，并强制 <code>min &lt; max</code>。</p>
 <h2>按功能的微调</h2>
-<p>&lt;code&gt;servoTrimUs[]&lt;/code&gt; 是混合后应用的、按 &lt;em&gt;ServoFunc&lt;/em&gt; 的校正(±300&amp;nbsp;µs)。它涵盖机翼对(索引 1/2)、方向舵(3)与后翼(8/9)。用它来归零单一舵面上半个齿的舵臂偏移——而不是去纠正机体不平衡，那属于混控器或陀螺仪的职责。</p>
+<p><code>servoTrimUs[]</code> 是混合后应用的、按 <em>ServoFunc</em> 的校正(±300&nbsp;µs)。它涵盖机翼对(索引 1/2)、方向舵(3)与后翼(8/9)。用它来归零单一舵面上半个齿的舵臂偏移——而不是去纠正机体不平衡，那属于混控器或陀螺仪的职责。</p>
 <h2>速度限制</h2>
-<p>&lt;strong&gt;舵机速度&lt;/strong&gt; 限制每个 tick 的脉冲变化率，平滑剧烈反转并保护减速箱免受冲击载荷。它是对指令位置的低通，因此低值也会柔化扑翼反转——请依据行程上下端的 &lt;em&gt;咔哒声&lt;/em&gt; 来调校。太慢则机翼滞后于波形；太快则冲击重新出现。</p>
+<p><strong>舵机速度</strong> 限制每个 tick 的脉冲变化率，平滑剧烈反转并保护减速箱免受冲击载荷。它是对指令位置的低通，因此低值也会柔化扑翼反转——请依据行程上下端的 <em>咔哒声</em> 来调校。太慢则机翼滞后于波形；太快则冲击重新出现。</p>
 <p class='hw-note'>完整的脉冲/微调/速度参数列表与 JSON 键，请参阅固件中的伺服内核说明与 WebUI 参考。</p>
 </div>
 </main>

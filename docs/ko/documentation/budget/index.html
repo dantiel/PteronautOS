@@ -29,16 +29,16 @@
 <h1>플래시 및 RAM 예산</h1>
 <p class='sub-lead'>1MB 플래시와 ~23KB 힙이 어디로 가는지, 그리고 60% 플래시 / 65% RAM 이하로 유지하는 방법.</p>
 <h2>플래시 예산</h2>
-<p>1&amp;nbsp;MB ESP8285 플래시는 &lt;strong&gt;WebUI&lt;/strong&gt;가 지배합니다. 번들 클라이언트 빌드는 트리셰이킹 후 ~160&amp;nbsp;KB 압축(~플래시의 16%)입니다. 부동소수점 런타임(&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …)은 ~9.7&amp;nbsp;KB로 실제지만 가장 큰 지렛대는 아닙니다. 현재 기준선은 플래시 ~68.6%이며, 60% 목표에는 ~83&amp;nbsp;KB 절감이 필요하고 WebUI만이 이를 달성할 만큼 큰 지렛대입니다.</p>
+<p>1&nbsp;MB ESP8285 플래시는 <strong>WebUI</strong>가 지배합니다. 번들 클라이언트 빌드는 트리셰이킹 후 ~160&nbsp;KB 압축(~플래시의 16%)입니다. 부동소수점 런타임(<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …)은 ~9.7&nbsp;KB로 실제지만 가장 큰 지렛대는 아닙니다. 현재 기준선은 플래시 ~68.6%이며, 60% 목표에는 ~83&nbsp;KB 절감이 필요하고 WebUI만이 이를 달성할 만큼 큰 지렛대입니다.</p>
 <h2>RAM 예산</h2>
-<p>ESP8285는 약 &lt;strong&gt;23&amp;nbsp;KB의 힙&lt;/strong&gt;을 노출합니다. 설정 저장은 힙에 큰 JSON 문서를 할당해선 안 됩니다. 오르니톱터 설정 저장기는 힙 고갈과 폴 중 재부팅을 피하려 LittleFS로 직접 스트리밍합니다. &lt;code&gt;DynamicJsonDocument&lt;/code&gt;를 핫 경로에서 제외하고, 스택 버퍼와 직접 쓰기를 선호하세요.</p>
+<p>ESP8285는 약 <strong>23&nbsp;KB의 힙</strong>을 노출합니다. 설정 저장은 힙에 큰 JSON 문서를 할당해선 안 됩니다. 오르니톱터 설정 저장기는 힙 고갈과 폴 중 재부팅을 피하려 LittleFS로 직접 스트리밍합니다. <code>DynamicJsonDocument</code>를 핫 경로에서 제외하고, 스택 버퍼와 직접 쓰기를 선호하세요.</p>
 <h2>최적화 팁</h2>
 <ul>
 <li>WebUI 번들에서 사용하지 않는 ELRS-RX 페이지를 트리셰이킹하세요.</li>
-<li>루프에서 &lt;code&gt;String&lt;/code&gt; 연결을 피하세요. 힙을 단편화합니다.</li>
-<li>문서를 만드는 대신 &lt;code&gt;File::print&lt;/code&gt;로 JSON을 LittleFS에 스트리밍하세요.</li>
+<li>루프에서 <code>String</code> 연결을 피하세요. 힙을 단편화합니다.</li>
+<li>문서를 만드는 대신 <code>File::print</code>로 JSON을 LittleFS에 스트리밍하세요.</li>
 <li>텔레메트리 핫 경로에서 부동소수점 포맷을 제외하세요(미리 스케일된 정수 사용).</li>
-<li>&lt;code&gt;#ifdef&lt;/code&gt;로 게이트된 모듈을 선호하세요(부재 시 Zephyrus는 no-op으로 컴파일됨).</li>
+<li><code>#ifdef</code>로 게이트된 모듈을 선호하세요(부재 시 Zephyrus는 no-op으로 컴파일됨).</li>
 </ul>
 <h2>빌드 타겟</h2>
 <table>
@@ -53,7 +53,7 @@
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>매니페스트는 확장 여유를 남기려 &lt;strong&gt;플래시 60% / RAM 65%&lt;/strong&gt; 초과를 금지합니다. 각 기능 후 측정하세요. 그린 빌드는 플래시되고 부트 로그를 읽기 전까지 살아있는 빌드가 아닙니다.</p>
+<p>매니페스트는 확장 여유를 남기려 <strong>플래시 60% / RAM 65%</strong> 초과를 금지합니다. 각 기능 후 측정하세요. 그린 빌드는 플래시되고 부트 로그를 읽기 전까지 살아있는 빌드가 아닙니다.</p>
 </div>
 </main>
 <footer>

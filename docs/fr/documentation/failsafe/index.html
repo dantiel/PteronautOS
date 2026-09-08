@@ -29,11 +29,11 @@
 <h1>Comportement failsafe</h1>
 <p class='sub-lead'>Ce qui se passe en cas de perte de liaison — ailes centrées, dérive centrée, dégradation gracieuse.</p>
 <h2>Conditions de déclenchement</h2>
-<p>Le failsafe s’engage quand la liaison CRSF signale une connexion perdue ou des données de canal obsolètes au-delà du timeout configuré. Le failsafe propre à la radio n’est &lt;em&gt;pas&lt;/em&gt; la source de vérité — PteronautOS réimpose son propre failsafe centré afin que le comportement soit identique quelle que soit la marque de radio ou le mode de liaison.</p>
+<p>Le failsafe s’engage quand la liaison CRSF signale une connexion perdue ou des données de canal obsolètes au-delà du timeout configuré. Le failsafe propre à la radio n’est <em>pas</em> la source de vérité — PteronautOS réimpose son propre failsafe centré afin que le comportement soit identique quelle que soit la marque de radio ou le mode de liaison.</p>
 <h2>Sortie centrée</h2>
-<p>Au déclenchement, chaque servo revient à &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; et la sortie de forme d’onde est supprimée. Les ailes se centrent, la gouverne de crête se centre. Les lectures de canal &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; sont remises à zéro pour que le sondage d’état WebUI montre la vérité neutre.</p>
+<p>Au déclenchement, chaque servo revient à <strong>1500&nbsp;µs</strong> et la sortie de forme d’onde est supprimée. Les ailes se centrent, la gouverne de crête se centre. Les lectures de canal <code>voiceAileron/Elevator/Throttle/Rudder</code> sont remises à zéro pour que le sondage d’état WebUI montre la vérité neutre.</p>
 <h2>Dégradation gracieuse</h2>
-<p>La règle de conception est &lt;em&gt;la grâce dans la dégradation&lt;/em&gt; : un MPU6050 défaillant ne doit pas faire tomber l’aéronef. Zephyrus se désactive en cas de panne du gyro et le mixeur Ornithopter continue de voler sur la seule entrée des manches — le chemin de failsafe et le chemin du gyro sont indépendants, donc une panne ne se propage jamais dans l’autre.</p>
+<p>La règle de conception est <em>la grâce dans la dégradation</em> : un MPU6050 défaillant ne doit pas faire tomber l’aéronef. Zephyrus se désactive en cas de panne du gyro et le mixeur Ornithopter continue de voler sur la seule entrée des manches — le chemin de failsafe et le chemin du gyro sont indépendants, donc une panne ne se propage jamais dans l’autre.</p>
 <h2>Récupération</h2>
 <p>La récupération est automatique : lorsque des trames CRSF valides reprennent, le mixeur se réengage au tick suivant et les servos suivent à nouveau les canaux en direct. Il n’y a ni réinitialisation manuelle ni verrouillage — la transition est une seule rampe douce vers les positions commandées.</p>
 <aside class='waveform-caution'>

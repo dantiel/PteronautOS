@@ -29,16 +29,16 @@
 <h1>Presupuesto de Flash y RAM</h1>
 <p class='sub-lead'>A dónde van la flash de 1MB y los ~23KB de heap, y cómo mantener la compilación bajo 60% flash / 65% RAM.</p>
 <h2>Presupuesto de Flash</h2>
-<p>El flash de 1&amp;nbsp;MB del ESP8285 está dominado por la &lt;strong&gt;WebUI&lt;/strong&gt;: el build de cliente empaquetado ocupa ~160&amp;nbsp;KB comprimidos (~16% del flash) tras el tree-shaking. El runtime de float (&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …) es ~9,7&amp;nbsp;KB — real pero no la mayor palanca. La base actual ronda el 68,6% de flash; la meta del 60% exige un recorte de ~83&amp;nbsp;KB, y la WebUI es la única palanca lo bastante grande para lograrlo.</p>
+<p>El flash de 1&nbsp;MB del ESP8285 está dominado por la <strong>WebUI</strong>: el build de cliente empaquetado ocupa ~160&nbsp;KB comprimidos (~16% del flash) tras el tree-shaking. El runtime de float (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) es ~9,7&nbsp;KB — real pero no la mayor palanca. La base actual ronda el 68,6% de flash; la meta del 60% exige un recorte de ~83&nbsp;KB, y la WebUI es la única palanca lo bastante grande para lograrlo.</p>
 <h2>Presupuesto de RAM</h2>
-<p>El ESP8285 expone aproximadamente &lt;strong&gt;23&amp;nbsp;KB de heap&lt;/strong&gt;. Los guardados de configuración nunca deben asignar un documento JSON grande en el heap — el guardador de config del ornitóptero escribe directamente a LittleFS para no agotar el heap y reiniciar a mitad del sondeo. Mantén &lt;code&gt;DynamicJsonDocument&lt;/code&gt; fuera de la vía caliente; prefiere buffers de pila y escrituras directas.</p>
+<p>El ESP8285 expone aproximadamente <strong>23&nbsp;KB de heap</strong>. Los guardados de configuración nunca deben asignar un documento JSON grande en el heap — el guardador de config del ornitóptero escribe directamente a LittleFS para no agotar el heap y reiniciar a mitad del sondeo. Mantén <code>DynamicJsonDocument</code> fuera de la vía caliente; prefiere buffers de pila y escrituras directas.</p>
 <h2>Consejos de optimización</h2>
 <ul>
 <li>Elimina (tree-shake) páginas ELRS-RX no usadas del bundle de la WebUI.</li>
-<li>Evita la concatenación de &lt;code&gt;String&lt;/code&gt; en bucles — fragmenta el heap.</li>
-<li>Transmite JSON a LittleFS con &lt;code&gt;File::print&lt;/code&gt; en lugar de construir documentos.</li>
+<li>Evita la concatenación de <code>String</code> en bucles — fragmenta el heap.</li>
+<li>Transmite JSON a LittleFS con <code>File::print</code> en lugar de construir documentos.</li>
 <li>Mantén el formateo de float fuera de la vía caliente de telemetría (enteros pre-escalados).</li>
-<li>Prefiere módulos protegidos por &lt;code&gt;#ifdef&lt;/code&gt; (Zephyrus compila a no-ops cuando está ausente).</li>
+<li>Prefiere módulos protegidos por <code>#ifdef</code> (Zephyrus compila a no-ops cuando está ausente).</li>
 </ul>
 <h2>Objetivos de compilación</h2>
 <table>
@@ -53,7 +53,7 @@
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>El manifiesto prohíbe superar &lt;strong&gt;60% de flash / 65% de RAM&lt;/strong&gt; para dejar margen de expansión. Mide tras cada función; un build verde no es un build vivo hasta que se flashea y se lee su log de arranque.</p>
+<p>El manifiesto prohíbe superar <strong>60% de flash / 65% de RAM</strong> para dejar margen de expansión. Mide tras cada función; un build verde no es un build vivo hasta que se flashea y se lee su log de arranque.</p>
 </div>
 </main>
 <footer>

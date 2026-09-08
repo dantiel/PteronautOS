@@ -35,13 +35,13 @@ Explore os parâmetros ao vivo com o
  antes de mexer no firmware — o mesmo modelo aciona o mixer.
 </p>
 <h2>Ferocidade (assimetria do batimento)</h2>
-<p>&lt;strong&gt;Ferocidade&lt;/strong&gt; é a assimetria de curso/retorno. Em &lt;code&gt;0&lt;/code&gt; a onda é um seno puro — tempo igual subindo e descendo. Aumentar a ferocidade de descida torna o curso descendente mais rápido e a permanência da subida mais longa (e vice-versa para a ferocidade de subida). Isso desloca &lt;em&gt;onde&lt;/em&gt; o empuxo é produzido: descida rápida + recuperação lenta imita o golpe de potência de um pássaro real e é a mudança de sensação mais eficaz.</p>
-<p>Comece com &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; para uma descida potente, depois misture a ferocidade de subida em pequenos passos. Assimetria demais faz as asas estalarem na reversão — audível como um clique e visível como calor no servo.</p>
+<p><strong>Ferocidade</strong> é a assimetria de curso/retorno. Em <code>0</code> a onda é um seno puro — tempo igual subindo e descendo. Aumentar a ferocidade de descida torna o curso descendente mais rápido e a permanência da subida mais longa (e vice-versa para a ferocidade de subida). Isso desloca <em>onde</em> o empuxo é produzido: descida rápida + recuperação lenta imita o golpe de potência de um pássaro real e é a mudança de sensação mais eficaz.</p>
+<p>Comece com <code>down&nbsp;8, up&nbsp;0</code> para uma descida potente, depois misture a ferocidade de subida em pequenos passos. Assimetria demais faz as asas estalarem na reversão — audível como um clique e visível como calor no servo.</p>
 <h2>Amplitude e frequência</h2>
-<p>A amplitude não é definida diretamente; ela emerge da &lt;strong&gt;frequência&lt;/strong&gt; e da &lt;strong&gt;velocidade do curso&lt;/strong&gt;. Aumentar a frequência do batimento encurta o curso para uma dada velocidade; diminuí-la alonga o curso. O kernel limita a amplitude para que o servo nunca saia do envelope de 988–2012&amp;nbsp;µs. Ajuste a frequência para a ressonância natural de batimento da aeronave — frequência alta demais desperdiça energia, baixa demais cai abaixo da sustentação efetiva.</p>
-<p>O controle &lt;strong&gt;shape mix&lt;/strong&gt; mistura o seno puro em direção a um trapezoide (mais permanência nos pontos de reversão). Mix mais alto = reversões mais nítidas e mais empuxo nos extremos; mix mais baixo = cruzeiro mais suave e eficiente.</p>
+<p>A amplitude não é definida diretamente; ela emerge da <strong>frequência</strong> e da <strong>velocidade do curso</strong>. Aumentar a frequência do batimento encurta o curso para uma dada velocidade; diminuí-la alonga o curso. O kernel limita a amplitude para que o servo nunca saia do envelope de 988–2012&nbsp;µs. Ajuste a frequência para a ressonância natural de batimento da aeronave — frequência alta demais desperdiça energia, baixa demais cai abaixo da sustentação efetiva.</p>
+<p>O controle <strong>shape mix</strong> mistura o seno puro em direção a um trapezoide (mais permanência nos pontos de reversão). Mix mais alto = reversões mais nítidas e mais empuxo nos extremos; mix mais baixo = cruzeiro mais suave e eficiente.</p>
 <h2>Ângulo de planeio e batimento</h2>
-<p>&lt;strong&gt;Ângulo de planeio&lt;/strong&gt; e &lt;strong&gt;ângulo de batimento&lt;/strong&gt; são ambos &lt;em&gt;deslocamentos de centro&lt;/em&gt; (int8, ±15°), não amplitude. O planeio define o ângulo comum das asas quando o acelerador comanda o planeio; o batimento desloca o centro do curso do flap. Eles permitem polarizar a asa para voo lento vs. cruzeiro rápido sem tocar na ligação mecânica.</p>
+<p><strong>Ângulo de planeio</strong> e <strong>ângulo de batimento</strong> são ambos <em>deslocamentos de centro</em> (int8, ±15°), não amplitude. O planeio define o ângulo comum das asas quando o acelerador comanda o planeio; o batimento desloca o centro do curso do flap. Eles permitem polarizar a asa para voo lento vs. cruzeiro rápido sem tocar na ligação mecânica.</p>
 <h2>Presets iniciais</h2>
 <table>
 <tr>
@@ -75,7 +75,7 @@ Explore os parâmetros ao vivo com o
 <td>Mistura suave, eficiência de cruzeiro</td>
 </tr>
 </table>
-<p>Comece com &lt;strong&gt;Quase-seno&lt;/strong&gt;, confirme voo estável e depois vá para &lt;strong&gt;Extremo&lt;/strong&gt; apenas se quiser agressividade. Cada aeronave tem um ponto ideal diferente — mude um parâmetro por vez.</p>
+<p>Comece com <strong>Quase-seno</strong>, confirme voo estável e depois vá para <strong>Extremo</strong> apenas se quiser agressividade. Cada aeronave tem um ponto ideal diferente — mude um parâmetro por vez.</p>
 </div>
 </main>
 <footer>

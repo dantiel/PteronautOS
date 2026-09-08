@@ -30,7 +30,7 @@
 <h1>Configuración del transmisor</h1>
 <p class='sub-lead'>Vincula una radio ELRS, mapea los cuatro canales y define límites que coincidan con el kernel de servos.</p>
 <h2>Binding</h2>
-<p>Pon el receptor en modo bind (alimenta con la frase de bind configurada, o usa la WebUI / botón) e inicia la acción &lt;strong&gt;Bind&lt;/strong&gt; en la radio. La frase de bind por defecto &lt;code&gt;darographix&lt;/code&gt; produce un UID fijo; un bind correcto se confirma con un LED de enlace fijo y movimiento de canal en vivo en el sondeo de estado de la WebUI.</p>
+<p>Pon el receptor en modo bind (alimenta con la frase de bind configurada, o usa la WebUI / botón) e inicia la acción <strong>Bind</strong> en la radio. La frase de bind por defecto <code>darographix</code> produce un UID fijo; un bind correcto se confirma con un LED de enlace fijo y movimiento de canal en vivo en el sondeo de estado de la WebUI.</p>
 <h2>Mapeo de canales</h2>
 <table>
 <tr>
@@ -56,9 +56,9 @@
 </table>
 <p>Mapea los cuatro controles en ese orden. PteronautOS los lee en orden CRSF, así que mantén CH1–CH4 en la disposición AETR por defecto (o haz coincidir lo que el mezclador espera si los reordenaste en la configuración).</p>
 <h2>Límites y dirección</h2>
-<p>Ajusta la salida de la radio a &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs alrededor de un centro de 992&amp;nbsp;µs). &lt;em&gt;No&lt;/em&gt; uses límites extendidos — el núcleo de servo ya mapea la envolvente completa de pulso de 988–2012&amp;nbsp;µs y recortar la radio solo desperdicia resolución. El sub-trim debe permanecer en cero; el neutro es 1500&amp;nbsp;µs por diseño.</p>
+<p>Ajusta la salida de la radio a <strong>±100%</strong> (CRSF 172–1811&nbsp;µs alrededor de un centro de 992&nbsp;µs). <em>No</em> uses límites extendidos — el núcleo de servo ya mapea la envolvente completa de pulso de 988–2012&nbsp;µs y recortar la radio solo desperdicia resolución. El sub-trim debe permanecer en cero; el neutro es 1500&nbsp;µs por diseño.</p>
 <h2>Tasas y expo</h2>
-<p>Empieza con &lt;strong&gt;100% de rates y 0% de expo&lt;/strong&gt;. La autoridad del aleteo la domina la amplitud de la forma de onda, no el recorrido del stick, así que unos rates agresivos en la radio solo vuelven la aeronave nerviosa. Cuando planee y aletee bien, añade un expo suave (15–25%) para un centro más blando, y reduce rates solo si la respuesta de alabeo sobre-comanda las alas.</p>
+<p>Empieza con <strong>100% de rates y 0% de expo</strong>. La autoridad del aleteo la domina la amplitud de la forma de onda, no el recorrido del stick, así que unos rates agresivos en la radio solo vuelven la aeronave nerviosa. Cuando planee y aletee bien, añade un expo suave (15–25%) para un centro más blando, y reduce rates solo si la respuesta de alabeo sobre-comanda las alas.</p>
 <h2>Verificación</h2>
 <ul>
 <li>Stick a tope a la derecha — ala derecha sube, izquierda baja.</li>

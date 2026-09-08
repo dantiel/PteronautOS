@@ -35,13 +35,13 @@ Explore the parameters live with the
  before touching the firmware — the same model drives the mixer.
 </p>
 <h2>Ferocity (stroke asymmetry)</h2>
-<p>&lt;strong&gt;Ferocity&lt;/strong&gt; is the stroke/return asymmetry. At &lt;code&gt;0&lt;/code&gt; the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts &lt;em&gt;where&lt;/em&gt; thrust is produced: a fast downstroke + slow recovery mimics a real bird&#39;s power stroke and is the single most effective feel change.</p>
-<p>Start at &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.</p>
-<h2>Amplitude &amp; frequency</h2>
-<p>Amplitude is not set directly; it emerges from &lt;strong&gt;frequency&lt;/strong&gt; and &lt;strong&gt;stroke speed&lt;/strong&gt;. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&amp;nbsp;µs envelope. Tune frequency for the airframe&#39;s natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.</p>
-<p>The &lt;strong&gt;shape mix&lt;/strong&gt; slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.</p>
-<h2>Glide &amp; flapping angle</h2>
-<p>&lt;strong&gt;Glide angle&lt;/strong&gt; and &lt;strong&gt;flapping angle&lt;/strong&gt; are both &lt;em&gt;centre offsets&lt;/em&gt; (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke&#39;s centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.</p>
+<p><strong>Ferocity</strong> is the stroke/return asymmetry. At <code>0</code> the wave is a pure sine — equal time up and down. Raising down-ferocity makes the downstroke faster and the upstroke dwell longer (and vice-versa for up-ferocity). This shifts <em>where</em> thrust is produced: a fast downstroke + slow recovery mimics a real bird's power stroke and is the single most effective feel change.</p>
+<p>Start at <code>down&nbsp;8, up&nbsp;0</code> for a powerful downstroke, then blend up-ferocity in small steps. Too much asymmetry makes the wings snap at reversal — audible as a click and visible as servo heat.</p>
+<h2>Amplitude & frequency</h2>
+<p>Amplitude is not set directly; it emerges from <strong>frequency</strong> and <strong>stroke speed</strong>. Raising the flap frequency shortens the stroke for a given speed, lowering it lengthens the stroke. The kernel caps amplitude so the servo never leaves the 988–2012&nbsp;µs envelope. Tune frequency for the airframe's natural flap resonance — a too-high frequency wastes energy, a too-low one drops below effective lift.</p>
+<p>The <strong>shape mix</strong> slider blends the pure sine toward a trapezoid (more dwell at the reversal points). Higher mix = crisper reversals and more thrust at the extremes; lower mix = smoother, more efficient cruise.</p>
+<h2>Glide & flapping angle</h2>
+<p><strong>Glide angle</strong> and <strong>flapping angle</strong> are both <em>centre offsets</em> (int8, ±15°), not amplitude. Glide sets the common wing angle when the throttle commands glide; flapping shifts the flap stroke's centre. They let you bias the wing for slow flight vs. fast cruise without touching the mechanical linkage.</p>
 <h2>Starting presets</h2>
 <table>
 <tr>
@@ -75,7 +75,7 @@ Explore the parameters live with the
 <td>Soft blend, cruise efficiency</td>
 </tr>
 </table>
-<p>Begin with &lt;strong&gt;Near-sine&lt;/strong&gt;, confirm stable flight, then move toward &lt;strong&gt;Extreme&lt;/strong&gt; only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.</p>
+<p>Begin with <strong>Near-sine</strong>, confirm stable flight, then move toward <strong>Extreme</strong> only if you want punch. Every airframe has a different sweet spot — change one parameter at a time.</p>
 </div>
 </main>
 <footer>

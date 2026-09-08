@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>First Flight &amp; Servo Setup — PteronautOS</title>
+<title>First Flight & Servo Setup — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,12 +27,12 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <p class='tutorial-number'>02</p>
-<h1>First Flight &amp; Servo Setup</h1>
+<h1>First Flight & Servo Setup</h1>
 <p class='sub-lead'>Center the wings, set the correct directions, tune endpoints and survive the maiden flight.</p>
 <h2>1 · Centering the servos</h2>
-<p>Power the receiver with the radio &lt;em&gt;bound&lt;/em&gt; but sticks neutral. Every servo must sit at &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&amp;nbsp;µs centre.</p>
-<p>The wing pair is the critical one: both wings must be at the &lt;em&gt;same&lt;/em&gt; geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.</p>
-<h2>2 · Direction &amp; reversing</h2>
+<p>Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.</p>
+<p>The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.</p>
+<h2>2 · Direction & reversing</h2>
 <table>
 <tr>
 <th>Stick</th>
@@ -51,9 +51,9 @@
 <td>Crest rudder deflects right</td>
 </tr>
 </table>
-<p>If a surface moves the wrong way, reverse it &lt;em&gt;in the flight controller config&lt;/em&gt; (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&amp;nbsp;µs map. Keep the radio output symmetric around 1500&amp;nbsp;µs.</p>
-<h2>3 · Endpoints &amp; limits</h2>
-<p>The servo kernel defaults to &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 and &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel &lt;em&gt;without binding&lt;/em&gt; at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.</p>
+<p>If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.</p>
+<h2>3 · Endpoints & limits</h2>
+<p>The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.</p>
 <h2>4 · Pre-flight checks</h2>
 <ul>
 <li>Wings centred at neutral, both directions correct.</li>
@@ -63,7 +63,7 @@
 <li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
 </ul>
 <h2>5 · The maiden flight</h2>
-<p>Hand-launch into a gentle glide first, &lt;em&gt;motor/flap off&lt;/em&gt;, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.</p>
+<p>Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.</p>
 </div>
 </main>
 <footer>

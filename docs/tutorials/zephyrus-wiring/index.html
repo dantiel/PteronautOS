@@ -30,7 +30,7 @@
 <h1>Ligação do Giroscópio Zéfiros</h1>
 <p class='sub-lead'>Ligue um MPU6050 ao barramento I2C, resolva conflitos de pinos e verifique o AHRS pelo log série.</p>
 <h2>Seleção dos pinos I2C</h2>
-<p>Os pinos I2C padrão do Zephyrus são &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; e &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. No PWMP7 v1.0 eles funcionam; na &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 não são expostos, então o Zephyrus usa &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; e &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Sempre confira a serigrafia contra o mapa de pinos — GPIO4 é reservado de forma rígida para a interrupção do rádio SX1280 e nunca deve ser reaproveitado.</p>
+<p>Os pinos I2C padrão do Zephyrus são <strong>GPIO4 (SDA)</strong> e <strong>GPIO5 (SCL)</strong>. No PWMP7 v1.0 eles funcionam; na <strong>v1.1</strong> GPIO2/GPIO5 não são expostos, então o Zephyrus usa <strong>GPIO1 (SDA, CH2)</strong> e <strong>GPIO3 (SCL, CH3)</strong>. Sempre confira a serigrafia contra o mapa de pinos — GPIO4 é reservado de forma rígida para a interrupção do rádio SX1280 e nunca deve ser reaproveitado.</p>
 <h2>Ligar o GY-521</h2>
 <table>
 <tr>
@@ -58,9 +58,9 @@
 <td>deixar aberto</td>
 </tr>
 </table>
-<p>O GY-521 traz seus próprios pull-ups de 4,7&amp;nbsp;kΩ e um regulador AMS1117-3.3V: alimente-o com 5V, ele gera seus próprios 3,3V e os níveis lógicos se ajustam sozinhos. &lt;strong&gt;Quatro fios no total&lt;/strong&gt;, sem cortar trilhas, sem regulador extra.</p>
+<p>O GY-521 traz seus próprios pull-ups de 4,7&nbsp;kΩ e um regulador AMS1117-3.3V: alimente-o com 5V, ele gera seus próprios 3,3V e os níveis lógicos se ajustam sozinhos. <strong>Quatro fios no total</strong>, sem cortar trilhas, sem regulador extra.</p>
 <h2>Calibração e verificação</h2>
-<p>O AHRS Mahony autocalibra o bias do giroscópio no boot — mantenha a aeronave &lt;em&gt;parada&lt;/em&gt; no primeiro segundo após ligar. Verifique se o sensor está vivo pelo log serial: pitch/roll devem acompanhar a aeronave ao incliná-la, e o leme de crista deve opor um rolamento manual (rolar à direita → leme corrige à esquerda). Se o barramento travar no boot, você caiu num pino reservado — reconfira o mapa e mude para o par CH2/CH3 correto.</p>
+<p>O AHRS Mahony autocalibra o bias do giroscópio no boot — mantenha a aeronave <em>parada</em> no primeiro segundo após ligar. Verifique se o sensor está vivo pelo log serial: pitch/roll devem acompanhar a aeronave ao incliná-la, e o leme de crista deve opor um rolamento manual (rolar à direita → leme corrige à esquerda). Se o barramento travar no boot, você caiu num pino reservado — reconfira o mapa e mude para o par CH2/CH3 correto.</p>
 </div>
 </main>
 <footer>

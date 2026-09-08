@@ -236,7 +236,7 @@
           lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
           the roll weight if the head rudder feels too aggressive in roll.
 
-        %h2= mix_h2_gearbox
+        %h2!=mix_h2_gearbox
         %p
           The gearbox kernel runs statelessly every tick. Its three sub-mixers:
         %ul
@@ -261,7 +261,7 @@
           ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
           waggle, but never stall, a tail servo.
 
-        %h2= mix_h2_gyro
+        %h2!=mix_h2_gyro
         %p
           Three different injection points exist depending on kernel and axis:
         %table

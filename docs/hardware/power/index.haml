@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= pwr_title
+    %title!=pwr_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -24,17 +24,17 @@
       %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= pwr_h1
+        %h1!=pwr_h1
         %p.sub-lead= pwr_lead
 
         %h2= pwr_h2_servo
-        %p= pwr_p1
+        %p!=pwr_p1
 
         %h2= pwr_h2_bec
-        %p= pwr_p2
+        %p!=pwr_p2
 
         %h2= pwr_h2_rx
-        %p= pwr_p3
+        %p!=pwr_p3
 
         %h2= pwr_h2_wiring
         %pre

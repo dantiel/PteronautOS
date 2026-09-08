@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= budget_title
+    %title!=budget_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -24,22 +24,22 @@
       %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= budget_h1
+        %h1!=budget_h1
         %p.sub-lead= budget_lead
 
         %h2= budget_h2_flash
-        %p= budget_p1
+        %p!=budget_p1
 
         %h2= budget_h2_ram
-        %p= budget_p2
+        %p!=budget_p2
 
         %h2= budget_h2_tips
         %ul
           %li= budget_li1
-          %li= budget_li2
-          %li= budget_li3
+          %li!=budget_li2
+          %li!=budget_li3
           %li= budget_li4
-          %li= budget_li5
+          %li!=budget_li5
 
         %h2= budget_h2_targets
         %table
@@ -51,7 +51,7 @@
             %td PteronautOS_ESP8285_2400_RX
             %td ≤ 60%
             %td ≤ 65%
-        %p= budget_p3
+        %p!=budget_p3
 
     %footer
       .lang-switch

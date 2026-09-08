@@ -30,7 +30,7 @@
 <h1>Configuration de l&#39;émetteur</h1>
 <p class='sub-lead'>Relie une radio ELRS, mappe les quatre voies et règle des débattements alignés sur le noyau servo.</p>
 <h2>Binding</h2>
-<p>Mettez le récepteur en mode liaison (alimentez avec la phrase de liaison configurée, ou utilisez la WebUI / le bouton) et lancez l’action &lt;strong&gt;Bind&lt;/strong&gt; sur la radio. La phrase de liaison par défaut &lt;code&gt;darographix&lt;/code&gt; donne un UID fixe ; une liaison réussie est confirmée par une LED de liaison fixe et un mouvement de canal en direct dans le sondage d’état WebUI.</p>
+<p>Mettez le récepteur en mode liaison (alimentez avec la phrase de liaison configurée, ou utilisez la WebUI / le bouton) et lancez l’action <strong>Bind</strong> sur la radio. La phrase de liaison par défaut <code>darographix</code> donne un UID fixe ; une liaison réussie est confirmée par une LED de liaison fixe et un mouvement de canal en direct dans le sondage d’état WebUI.</p>
 <h2>Mappage des voies</h2>
 <table>
 <tr>
@@ -56,9 +56,9 @@
 </table>
 <p>Mappez les quatre commandes dans cet ordre. PteronautOS les lit dans l’ordre CRSF, donc gardez CH1–CH4 dans la disposition AETR par défaut (ou faites correspondre ce que le mixeur attend si vous les avez réordonnés dans la config).</p>
 <h2>Débattements et sens</h2>
-<p>Réglez la sortie radio à &lt;strong&gt;±100%&lt;/strong&gt; (CRSF 172–1811&amp;nbsp;µs autour d’un centre de 992&amp;nbsp;µs). N’utilisez &lt;em&gt;pas&lt;/em&gt; de limites étendues — le noyau servo mappe déjà l’enveloppe d’impulsion complète de 988–2012&amp;nbsp;µs et écrêter la radio ne fait que gaspiller la résolution. Le sub-trim doit rester à zéro ; le neutre est 1500&amp;nbsp;µs par conception.</p>
+<p>Réglez la sortie radio à <strong>±100%</strong> (CRSF 172–1811&nbsp;µs autour d’un centre de 992&nbsp;µs). N’utilisez <em>pas</em> de limites étendues — le noyau servo mappe déjà l’enveloppe d’impulsion complète de 988–2012&nbsp;µs et écrêter la radio ne fait que gaspiller la résolution. Le sub-trim doit rester à zéro ; le neutre est 1500&nbsp;µs par conception.</p>
 <h2>Taux et expo</h2>
-<p>Commencez avec &lt;strong&gt;100% de rates et 0% d’expo&lt;/strong&gt;. L’autorité du battement est dominée par l’amplitude de la forme d’onde, pas par le débattement du manche, donc des rates radio agressifs ne font que rendre l’aéronef nerveux. Une fois qu’il plane et bat bien, ajoutez un expo léger (15–25%) pour un centre plus doux, et ne réduisez les rates que si la réponse en roulis sur-commande les ailes.</p>
+<p>Commencez avec <strong>100% de rates et 0% d’expo</strong>. L’autorité du battement est dominée par l’amplitude de la forme d’onde, pas par le débattement du manche, donc des rates radio agressifs ne font que rendre l’aéronef nerveux. Une fois qu’il plane et bat bien, ajoutez un expo léger (15–25%) pour un centre plus doux, et ne réduisez les rates que si la réponse en roulis sur-commande les ailes.</p>
 <h2>Vérification</h2>
 <ul>
 <li>Manche à fond à droite — aile droite monte, gauche descend.</li>

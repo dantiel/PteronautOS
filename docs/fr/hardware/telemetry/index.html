@@ -31,7 +31,7 @@
 <h2>VBAT</h2>
 <p>Le récepteur échantillonne la tension batterie sur sa broche ADC (GPIO17 sur le PWMP7) et la renvoie par télémétrie CRSF. Câblez un diviseur de tension de la batterie principale vers la pastille ADC ; calibrez le rapport du diviseur dans la config pour que la radio lise la vraie tension du pack.</p>
 <h2>RSSI et qualité de liaison</h2>
-<p>Le RSSI et la qualité de liaison viennent directement du SX1280 et sont exposés dans les slots de télémétrie ELRS standards. Utilisez LQ (qualité de liaison) plutôt que le RSSI brut pour les décisions de portée — c’est la métrique la plus pertinente sur 2,4&amp;nbsp;GHz.</p>
+<p>Le RSSI et la qualité de liaison viennent directement du SX1280 et sont exposés dans les slots de télémétrie ELRS standards. Utilisez LQ (qualité de liaison) plutôt que le RSSI brut pour les décisions de portée — c’est la métrique la plus pertinente sur 2,4&nbsp;GHz.</p>
 <h2>Télémétrie gyro</h2>
 <p>L’AHRS Zephyrus peut diffuser roulis, tangage et vitesse de lacet en télémétrie personnalisée afin de régler le gyro en vol ou de rejouer un vol plus tard. C’est de la télémétrie de diagnostic — gardez-la hors du chemin rapide en build de production pour éviter d’inonder la liaison.</p>
 <h2>Capteurs prévus</h2>

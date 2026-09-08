@@ -30,7 +30,7 @@
 <h1>泽菲罗斯陀螺仪接线</h1>
 <p class='sub-lead'>将MPU6050接到I2C总线、解决引脚冲突并用串口日志验证AHRS。</p>
 <h2>I2C引脚选择</h2>
-<p>Zephyrus 默认的 I2C 引脚是 &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; 与 &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;。在 PWMP7 v1.0 上没问题；在 &lt;strong&gt;v1.1&lt;/strong&gt; 上 GPIO2/GPIO5 未引出，因此 Zephyrus 使用 &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; 与 &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;。请始终将丝印与引脚图对照——GPIO4 被硬性保留给 SX1280 无线电中断，绝不可改作他用。</p>
+<p>Zephyrus 默认的 I2C 引脚是 <strong>GPIO4 (SDA)</strong> 与 <strong>GPIO5 (SCL)</strong>。在 PWMP7 v1.0 上没问题；在 <strong>v1.1</strong> 上 GPIO2/GPIO5 未引出，因此 Zephyrus 使用 <strong>GPIO1 (SDA, CH2)</strong> 与 <strong>GPIO3 (SCL, CH3)</strong>。请始终将丝印与引脚图对照——GPIO4 被硬性保留给 SX1280 无线电中断，绝不可改作他用。</p>
 <h2>GY-521接线</h2>
 <table>
 <tr>
@@ -58,9 +58,9 @@
 <td>悬空</td>
 </tr>
 </table>
-<p>GY-521 自带 4.7&amp;nbsp;kΩ 上拉电阻和一个 AMS1117-3.3V 稳压器：给它 5V，它自行产生 3.3V，逻辑电平自动匹配。&lt;strong&gt;总共四根线&lt;/strong&gt;，无需割线，无需额外稳压器。</p>
+<p>GY-521 自带 4.7&nbsp;kΩ 上拉电阻和一个 AMS1117-3.3V 稳压器：给它 5V，它自行产生 3.3V，逻辑电平自动匹配。<strong>总共四根线</strong>，无需割线，无需额外稳压器。</p>
 <h2>校准与验证</h2>
-<p>Mahony AHRS 在启动时自动校准陀螺仪偏置——通电后的第一秒请让机体保持&lt;em&gt;静止&lt;/em&gt;。通过串口日志确认传感器存活：倾斜时机体时俯仰/横滚应跟随机体，冠舵应反向手动横滚(向右横滚 → 方向舵向左修正)。若总线在启动时挂起，说明你落在了保留引脚上——重新核对映射并移到正确的 CH2/CH3 对。</p>
+<p>Mahony AHRS 在启动时自动校准陀螺仪偏置——通电后的第一秒请让机体保持<em>静止</em>。通过串口日志确认传感器存活：倾斜时机体时俯仰/横滚应跟随机体，冠舵应反向手动横滚(向右横滚 → 方向舵向左修正)。若总线在启动时挂起，说明你落在了保留引脚上——重新核对映射并移到正确的 CH2/CH3 对。</p>
 </div>
 </main>
 <footer>

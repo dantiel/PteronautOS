@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Zephyrus: Stabilisierung &amp; Ondas — PteronautOS</title>
+<title>Zephyrus: Stabilisierung & Ondas — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,7 +27,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Zephyrus: Stabilisierung &amp; Ondas</h1>
+<h1>Zephyrus: Stabilisierung & Ondas</h1>
 <p class='sub-lead'>Das Idealbild der Brücke vom Gyro zum Flügelschlag: Ondas-Atemmodulation, schlag-synchrones Feed-Forward, phasenverriegelte Resonanz und aeroelastische PID-Verstärkung — und eine ehrliche Karte dessen, was die aktuelle Firmware wirklich verdrahtet.</p>
 <h2>Herkunft: OrniFlight und ein vereinfachtes Ondas</h2>
 <p>
@@ -145,7 +145,7 @@ and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</cod
 window:
 </p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
-<h2>Wellenformung &amp; PD-Mischung</h2>
+<h2>Wellenformung & PD-Mischung</h2>
 <p>
 The waveform itself follows the OrniFlight stroke family: each half uses its own
 ferocity, a shared reversal threshold keeps left/right wings in phase, and a
@@ -348,7 +348,7 @@ inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consum
 the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
 mechanical servos.
 </p>
-<h2>WebUI-Panel &amp; Konfigurations-Endpunkte</h2>
+<h2>WebUI-Panel & Konfigurations-Endpunkte</h2>
 <p>
 The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
 Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
@@ -405,7 +405,7 @@ flap. Keep the gyro an authoritative copilot, not a nervous pilot.
 <strong>Vor dem Flug auf dem Prüfstand testen.</strong>
 Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garantierte Servobewegung. Vermeiden Sie extreme asymmetrische Einstellungen, bis Amplitude, Frequenz, Gestängegeometrie und Servo-Geschwindigkeitsgrenzen ohne aerodynamische Last verifiziert wurden.
 </aside>
-<h2>Implementierungsstand &amp; offene Inkonsistenzen</h2>
+<h2>Implementierungsstand & offene Inkonsistenzen</h2>
 <p>
 <strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
 laws above are the <em>design</em>; the code contains the full parameter surface, the

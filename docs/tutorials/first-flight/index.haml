@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= first_title
+    %title!=first_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -25,14 +25,14 @@
     %main.sub-main
       .sub-content
         %p.tutorial-number= tut_card_first_number
-        %h1= first_h1
+        %h1!=first_h1
         %p.sub-lead= first_lead
 
         %h2= first_h2_center
-        %p= first_p1
-        %p= first_p2
+        %p!=first_p1
+        %p!=first_p2
 
-        %h2= first_h2_direction
+        %h2!=first_h2_direction
         %table
           %tr
             %th= first_th_stick
@@ -46,10 +46,10 @@
           %tr
             %td= first_td_yaw
             %td= first_td_yaw_v
-        %p= first_p3
+        %p!=first_p3
 
-        %h2= first_h2_endpoints
-        %p= first_p4
+        %h2!=first_h2_endpoints
+        %p!=first_p4
 
         %h2= first_h2_preflight
         %ul
@@ -60,7 +60,7 @@
           %li= first_li5
 
         %h2= first_h2_maiden
-        %p= first_p5
+        %p!=first_p5
 
     %footer
       .lang-switch

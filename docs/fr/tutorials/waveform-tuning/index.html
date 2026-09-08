@@ -35,13 +35,13 @@ Explorez les paramètres en direct avec l’
  avant de toucher au firmware — le même modèle pilote le mixeur.
 </p>
 <h2>Férocité (asymétrie du battement)</h2>
-<p>La &lt;strong&gt;férocité&lt;/strong&gt; est l’asymétrie course/retour. À &lt;code&gt;0&lt;/code&gt; l’onde est un sinus pur — temps égal en montée et descente. Augmenter la férocité de descente rend la course descendante plus rapide et le maintien montant plus long (et inversement pour la férocité montante). Cela déplace &lt;em&gt;où&lt;/em&gt; la poussée est produite : descente rapide + récupération lente imite le coup de puissance d’un vrai oiseau et c’est le changement de sensation le plus efficace.</p>
-<p>Commencez à &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; pour une descente puissante, puis mélangez la férocité montante par petits pas. Trop d’asymétrie fait claquer les ailes à l’inversion — audible comme un clic et visible comme de la chaleur servo.</p>
+<p>La <strong>férocité</strong> est l’asymétrie course/retour. À <code>0</code> l’onde est un sinus pur — temps égal en montée et descente. Augmenter la férocité de descente rend la course descendante plus rapide et le maintien montant plus long (et inversement pour la férocité montante). Cela déplace <em>où</em> la poussée est produite : descente rapide + récupération lente imite le coup de puissance d’un vrai oiseau et c’est le changement de sensation le plus efficace.</p>
+<p>Commencez à <code>down&nbsp;8, up&nbsp;0</code> pour une descente puissante, puis mélangez la férocité montante par petits pas. Trop d’asymétrie fait claquer les ailes à l’inversion — audible comme un clic et visible comme de la chaleur servo.</p>
 <h2>Amplitude et fréquence</h2>
-<p>L’amplitude n’est pas réglée directement ; elle émerge de la &lt;strong&gt;fréquence&lt;/strong&gt; et de la &lt;strong&gt;vitesse de course&lt;/strong&gt;. Augmenter la fréquence de battement raccourcit la course à vitesse donnée, la baisser l’allonge. Le noyau plafonne l’amplitude pour que le servo ne quitte jamais l’enveloppe 988–2012&amp;nbsp;µs. Réglez la fréquence sur la résonance naturelle de battement de la cellule — une fréquence trop haute gaspille l’énergie, une trop basse tombe sous la portance efficace.</p>
-<p>Le curseur &lt;strong&gt;shape mix&lt;/strong&gt; mélange le sinus pur vers un trapèze (plus de maintien aux points d’inversion). Mix plus élevé = inversions plus nettes et plus de poussée aux extrêmes ; mix plus bas = croisière plus douce et efficace.</p>
+<p>L’amplitude n’est pas réglée directement ; elle émerge de la <strong>fréquence</strong> et de la <strong>vitesse de course</strong>. Augmenter la fréquence de battement raccourcit la course à vitesse donnée, la baisser l’allonge. Le noyau plafonne l’amplitude pour que le servo ne quitte jamais l’enveloppe 988–2012&nbsp;µs. Réglez la fréquence sur la résonance naturelle de battement de la cellule — une fréquence trop haute gaspille l’énergie, une trop basse tombe sous la portance efficace.</p>
+<p>Le curseur <strong>shape mix</strong> mélange le sinus pur vers un trapèze (plus de maintien aux points d’inversion). Mix plus élevé = inversions plus nettes et plus de poussée aux extrêmes ; mix plus bas = croisière plus douce et efficace.</p>
 <h2>Angles de plané et de battement</h2>
-<p>L’&lt;strong&gt;angle de vol plané&lt;/strong&gt; et l’&lt;strong&gt;angle de battement&lt;/strong&gt; sont tous deux des &lt;em&gt;décalages de centre&lt;/em&gt; (int8, ±15°), pas une amplitude. Le vol plané fixe l’angle d’aile commun quand les gaz commandent le vol plané ; le battement décale le centre de la course de battement. Ils permettent de biaiser l’aile pour le vol lent ou la croisière rapide sans toucher à la tringlerie.</p>
+<p>L’<strong>angle de vol plané</strong> et l’<strong>angle de battement</strong> sont tous deux des <em>décalages de centre</em> (int8, ±15°), pas une amplitude. Le vol plané fixe l’angle d’aile commun quand les gaz commandent le vol plané ; le battement décale le centre de la course de battement. Ils permettent de biaiser l’aile pour le vol lent ou la croisière rapide sans toucher à la tringlerie.</p>
 <h2>Préréglages de départ</h2>
 <table>
 <tr>
@@ -75,7 +75,7 @@ Explorez les paramètres en direct avec l’
 <td>Mélange doux, efficacité de croisière</td>
 </tr>
 </table>
-<p>Commencez par &lt;strong&gt;Quasi-sinus&lt;/strong&gt;, confirmez un vol stable, puis allez vers &lt;strong&gt;Extrême&lt;/strong&gt; seulement si vous voulez du punch. Chaque cellule a un point idéal différent — changez un paramètre à la fois.</p>
+<p>Commencez par <strong>Quasi-sinus</strong>, confirmez un vol stable, puis allez vers <strong>Extrême</strong> seulement si vous voulez du punch. Chaque cellule a un point idéal différent — changez un paramètre à la fois.</p>
 </div>
 </main>
 <footer>

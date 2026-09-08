@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Power &amp; BEC — PteronautOS</title>
+<title>Power & BEC — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,14 +26,14 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Power &amp; BEC</h1>
+<h1>Power & BEC</h1>
 <p class='sub-lead'>How to feed the receiver, the MPU6050 and the wing servos from a single battery — BEC selection and wiring.</p>
 <h2>Servo power budget</h2>
-<p>Um único servo de asa pode puxar &lt;strong&gt;1–2&amp;nbsp;A&lt;/strong&gt; transitoriamente na reversão; três servos mais o receptor e o giroscópio exigem um barramento que nunca afunde. Dimensiona o BEC para a corrente de &lt;em&gt;stall&lt;/em&gt; dos três servos somados, não para a corrente em repouso. Um BEC chaveado de 5&amp;nbsp;V / 3&amp;nbsp;A é uma base segura para a maioria dos micro servos de 2–4&amp;nbsp;g; asas maiores precisam de 5&amp;nbsp;A ou mais.</p>
+<p>Um único servo de asa pode puxar <strong>1–2&nbsp;A</strong> transitoriamente na reversão; três servos mais o receptor e o giroscópio exigem um barramento que nunca afunde. Dimensiona o BEC para a corrente de <em>stall</em> dos três servos somados, não para a corrente em repouso. Um BEC chaveado de 5&nbsp;V / 3&nbsp;A é uma base segura para a maioria dos micro servos de 2–4&nbsp;g; asas maiores precisam de 5&nbsp;A ou mais.</p>
 <h2>Choosing a BEC</h2>
-<p>Prefira um &lt;strong&gt;BEC chaveado (buck)&lt;/strong&gt; a um linear: os lineares dissipam a queda de tensão como calor e colapsam sob carga de pico. Combine a tensão do BEC com a especificação do servo (5&amp;nbsp;V para a maioria dos micro servos, até 9&amp;nbsp;V para servos HV) — mas mantenha o receptor em sua própria alimentação de 5&amp;nbsp;V se ele não tiver um regulador de entrada ampla.</p>
+<p>Prefira um <strong>BEC chaveado (buck)</strong> a um linear: os lineares dissipam a queda de tensão como calor e colapsam sob carga de pico. Combine a tensão do BEC com a especificação do servo (5&nbsp;V para a maioria dos micro servos, até 9&nbsp;V para servos HV) — mas mantenha o receptor em sua própria alimentação de 5&nbsp;V se ele não tiver um regulador de entrada ampla.</p>
 <h2>Receiver rail</h2>
-<p>A maioria dos receptores ELRS aceita &lt;strong&gt;4,5–8,4&amp;nbsp;V&lt;/strong&gt; (1S–2S) diretamente e regula internamente. Alimente-os com a bateria bruta quando possível; reduza a tensão apenas para os servos. A placa MPU6050 (GY-521) aceita 5&amp;nbsp;V e gera seus próprios 3,3&amp;nbsp;V.</p>
+<p>A maioria dos receptores ELRS aceita <strong>4,5–8,4&nbsp;V</strong> (1S–2S) diretamente e regula internamente. Alimente-os com a bateria bruta quando possível; reduza a tensão apenas para os servos. A placa MPU6050 (GY-521) aceita 5&nbsp;V e gera seus próprios 3,3&nbsp;V.</p>
 <h2>Wiring diagram</h2>
 <pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Ligue todos os terras a um único ponto estrela. Um terra flutuante entre o RX e os servos é a causa clássica de jitter e quedas de tensão — um GND compartilhado é inegociável.</p>

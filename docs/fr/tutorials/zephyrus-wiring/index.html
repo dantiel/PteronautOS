@@ -30,7 +30,7 @@
 <h1>Câblage du gyroscope Zéphyros</h1>
 <p class='sub-lead'>Câble un MPU6050 sur le bus I2C, résous les conflits de broches et vérifie l&#39;AHRS via le journal série.</p>
 <h2>Choix des broches I2C</h2>
-<p>Les broches I2C par défaut de Zephyrus sont &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; et &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. Sur le PWMP7 v1.0 c’est bon ; sur la &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 ne sont pas sortis, donc Zephyrus utilise &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; et &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Vérifiez toujours la sérigraphie contre la carte des broches — GPIO4 est réservé en dur à l’interruption radio du SX1280 et ne doit jamais être réaffecté.</p>
+<p>Les broches I2C par défaut de Zephyrus sont <strong>GPIO4 (SDA)</strong> et <strong>GPIO5 (SCL)</strong>. Sur le PWMP7 v1.0 c’est bon ; sur la <strong>v1.1</strong> GPIO2/GPIO5 ne sont pas sortis, donc Zephyrus utilise <strong>GPIO1 (SDA, CH2)</strong> et <strong>GPIO3 (SCL, CH3)</strong>. Vérifiez toujours la sérigraphie contre la carte des broches — GPIO4 est réservé en dur à l’interruption radio du SX1280 et ne doit jamais être réaffecté.</p>
 <h2>Câblage du GY-521</h2>
 <table>
 <tr>
@@ -58,9 +58,9 @@
 <td>laisser ouvert</td>
 </tr>
 </table>
-<p>Le GY-521 porte ses propres pull-ups de 4,7&amp;nbsp;kΩ et un régulateur AMS1117-3.3V : alimentez-le en 5V, il produit son propre 3,3V et les niveaux logiques s’adaptent seuls. &lt;strong&gt;Quatre fils au total&lt;/strong&gt;, sans couper de piste, sans régulateur supplémentaire.</p>
+<p>Le GY-521 porte ses propres pull-ups de 4,7&nbsp;kΩ et un régulateur AMS1117-3.3V : alimentez-le en 5V, il produit son propre 3,3V et les niveaux logiques s’adaptent seuls. <strong>Quatre fils au total</strong>, sans couper de piste, sans régulateur supplémentaire.</p>
 <h2>Calibration et vérification</h2>
-<p>L’AHRS Mahony auto-calibre le biais du gyro au démarrage — gardez la cellule &lt;em&gt;immobile&lt;/em&gt; la première seconde après la mise sous tension. Vérifiez que le capteur est vivant via le journal série : tangage/roulis doivent suivre la cellule quand vous l’inclinez, et la gouverne de crête doit s’opposer à un roulis manuel (roulis à droite → gouverne corrige à gauche). Si le bus se bloque au démarrage, vous êtes tombé sur une broche réservée — revérifiez la carte et passez à la bonne paire CH2/CH3.</p>
+<p>L’AHRS Mahony auto-calibre le biais du gyro au démarrage — gardez la cellule <em>immobile</em> la première seconde après la mise sous tension. Vérifiez que le capteur est vivant via le journal série : tangage/roulis doivent suivre la cellule quand vous l’inclinez, et la gouverne de crête doit s’opposer à un roulis manuel (roulis à droite → gouverne corrige à gauche). Si le bus se bloque au démarrage, vous êtes tombé sur une broche réservée — revérifiez la carte et passez à la bonne paire CH2/CH3.</p>
 </div>
 </main>
 <footer>

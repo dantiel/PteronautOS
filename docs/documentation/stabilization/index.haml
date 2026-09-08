@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= st_title
+    %title!=st_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -25,7 +25,7 @@
       %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= st_h1
+        %h1!=st_h1
         %p.sub-lead= st_lead
 
         %h2= st_h2_lineage
@@ -163,7 +163,7 @@
               strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias
               returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias
 
-        %h2= st_h2_shape
+        %h2!=st_h2_shape
         %p
           The waveform itself follows the OrniFlight stroke family: each half uses its own
           ferocity, a shared reversal threshold keeps left/right wings in phase, and a
@@ -353,7 +353,7 @@
           the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for
           mechanical servos.
 
-        %h2= st_h2_webui
+        %h2!=st_h2_webui
         %p
           The ornithopter panel shows two stabilization groups when the build includes Zephyrus.
           Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell,
@@ -410,7 +410,7 @@
           %strong= doc_caution_title
           = doc_caution_body
 
-        %h2= st_h2_status
+        %h2!=st_h2_status
         %p
           <strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
           laws above are the <em>design</em>; the code contains the full parameter surface, the

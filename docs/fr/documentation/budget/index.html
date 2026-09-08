@@ -29,16 +29,16 @@
 <h1>Budget Flash et RAM</h1>
 <p class='sub-lead'>Où vont la flash de 1 Mo et les ~23 Ko de tas, et comment rester sous 60 % flash / 65 % RAM.</p>
 <h2>Budget Flash</h2>
-<p>Le flash 1&amp;nbsp;Mo de l’ESP8285 est dominé par la &lt;strong&gt;WebUI&lt;/strong&gt; : le build client empaqueté fait ~160&amp;nbsp;Ko compressés (~16% du flash) après tree-shaking. Le runtime float (&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …) fait ~9,7&amp;nbsp;Ko — réel mais pas le plus gros levier. La base actuelle est à ~68,6% de flash ; l’objectif de 60% exige une coupe de ~83&amp;nbsp;Ko, et la WebUI est le seul levier assez grand pour l’atteindre.</p>
+<p>Le flash 1&nbsp;Mo de l’ESP8285 est dominé par la <strong>WebUI</strong> : le build client empaqueté fait ~160&nbsp;Ko compressés (~16% du flash) après tree-shaking. Le runtime float (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) fait ~9,7&nbsp;Ko — réel mais pas le plus gros levier. La base actuelle est à ~68,6% de flash ; l’objectif de 60% exige une coupe de ~83&nbsp;Ko, et la WebUI est le seul levier assez grand pour l’atteindre.</p>
 <h2>Budget RAM</h2>
-<p>L’ESP8285 expose environ &lt;strong&gt;23&amp;nbsp;Ko de tas&lt;/strong&gt;. Les sauvegardes de config ne doivent jamais allouer un gros document JSON sur le tas — le sauveur de config de l’ornithoptère écrit directement dans LittleFS pour éviter d’épuiser le tas et de redémarrer en plein sondage. Gardez &lt;code&gt;DynamicJsonDocument&lt;/code&gt; hors du chemin chaud ; préférez les tampons de pile et les écritures directes.</p>
+<p>L’ESP8285 expose environ <strong>23&nbsp;Ko de tas</strong>. Les sauvegardes de config ne doivent jamais allouer un gros document JSON sur le tas — le sauveur de config de l’ornithoptère écrit directement dans LittleFS pour éviter d’épuiser le tas et de redémarrer en plein sondage. Gardez <code>DynamicJsonDocument</code> hors du chemin chaud ; préférez les tampons de pile et les écritures directes.</p>
 <h2>Conseils d&#39;optimisation</h2>
 <ul>
 <li>Élaguez (tree-shake) les pages ELRS-RX inutilisées du bundle WebUI.</li>
-<li>Évitez la concaténation de &lt;code&gt;String&lt;/code&gt; dans les boucles — elle fragmente le tas.</li>
-<li>Diffusez le JSON vers LittleFS avec &lt;code&gt;File::print&lt;/code&gt; au lieu de construire des documents.</li>
+<li>Évitez la concaténation de <code>String</code> dans les boucles — elle fragmente le tas.</li>
+<li>Diffusez le JSON vers LittleFS avec <code>File::print</code> au lieu de construire des documents.</li>
 <li>Gardez le formatage float hors du chemin chaud de la télémétrie (entiers pré-mis à l’échelle).</li>
-<li>Préférez les modules sous &lt;code&gt;#ifdef&lt;/code&gt; (Zephyrus compile en no-ops quand absent).</li>
+<li>Préférez les modules sous <code>#ifdef</code> (Zephyrus compile en no-ops quand absent).</li>
 </ul>
 <h2>Cibles de build</h2>
 <table>
@@ -53,7 +53,7 @@
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>Le manifeste interdit de dépasser &lt;strong&gt;60% de flash / 65% de RAM&lt;/strong&gt; pour laisser une marge d’expansion. Mesurez après chaque fonctionnalité ; un build vert n’est pas un build vivant tant qu’il n’est pas flashé et que son journal de démarrage n’a pas été lu.</p>
+<p>Le manifeste interdit de dépasser <strong>60% de flash / 65% de RAM</strong> pour laisser une marge d’expansion. Mesurez après chaque fonctionnalité ; un build vert n’est pas un build vivant tant qu’il n’est pas flashé et que son journal de démarrage n’a pas été lu.</p>
 </div>
 </main>
 <footer>

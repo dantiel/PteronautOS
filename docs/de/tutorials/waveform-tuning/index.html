@@ -35,13 +35,13 @@ Erkunde die Parameter live mit dem
  bevor du die Firmware anfasst — dasselbe Modell treibt den Mixer an.
 </p>
 <h2>Heftigkeit (Schlag-Asymmetrie)</h2>
-<p>&lt;strong&gt;Ferocity&lt;/strong&gt; ist die Asymmetrie von Schlag/Rückkehr. Bei &lt;code&gt;0&lt;/code&gt; ist die Welle ein reiner Sinus — gleiche Zeit auf und ab. Höhere Down-Ferocity macht den Abschlag schneller und den Aufschlag-Dwell länger (und umgekehrt für Up-Ferocity). Das verschiebt, &lt;em&gt;wo&lt;/em&gt; Schub entsteht: schneller Abschlag + langsame Erholung imitiert den Kraftschlag eines echten Vogels und ist die wirksamste Gefühlsänderung überhaupt.</p>
-<p>Beginne bei &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; für einen kraftvollen Abschlag, dann mische Up-Ferocity in kleinen Schritten hinzu. Zu viel Asymmetrie lässt die Flügel bei der Umkehr schnappen — hörbar als Klicken und sichtbar als Servo-Wärme.</p>
+<p><strong>Ferocity</strong> ist die Asymmetrie von Schlag/Rückkehr. Bei <code>0</code> ist die Welle ein reiner Sinus — gleiche Zeit auf und ab. Höhere Down-Ferocity macht den Abschlag schneller und den Aufschlag-Dwell länger (und umgekehrt für Up-Ferocity). Das verschiebt, <em>wo</em> Schub entsteht: schneller Abschlag + langsame Erholung imitiert den Kraftschlag eines echten Vogels und ist die wirksamste Gefühlsänderung überhaupt.</p>
+<p>Beginne bei <code>down&nbsp;8, up&nbsp;0</code> für einen kraftvollen Abschlag, dann mische Up-Ferocity in kleinen Schritten hinzu. Zu viel Asymmetrie lässt die Flügel bei der Umkehr schnappen — hörbar als Klicken und sichtbar als Servo-Wärme.</p>
 <h2>Amplitude und Frequenz</h2>
-<p>Die Amplitude wird nicht direkt gesetzt; sie ergibt sich aus &lt;strong&gt;Frequenz&lt;/strong&gt; und &lt;strong&gt;Schlaggeschwindigkeit&lt;/strong&gt;. Höhere Schlagfrequenz verkürzt bei gegebener Geschwindigkeit den Hub, niedrigere verlängert ihn. Der Kernel deckelt die Amplitude, sodass der Servo die 988–2012&amp;nbsp;µs-Hülle nie verlässt. Stimme die Frequenz auf die natürliche Schlag-Resonanz des Flugwerks ab — zu hohe Frequenz verschwendet Energie, zu niedrige fällt unter den wirksamen Auftrieb.</p>
-<p>Der &lt;strong&gt;Shape-Mix&lt;/strong&gt;-Schieber blendet den reinen Sinus Richtung Trapez (mehr Dwell an den Umkehrpunkten). Höherer Mix = knackigere Umkehrungen und mehr Schub an den Extremen; niedrigerer Mix = weicherer, effizienterer Reiseflug.</p>
+<p>Die Amplitude wird nicht direkt gesetzt; sie ergibt sich aus <strong>Frequenz</strong> und <strong>Schlaggeschwindigkeit</strong>. Höhere Schlagfrequenz verkürzt bei gegebener Geschwindigkeit den Hub, niedrigere verlängert ihn. Der Kernel deckelt die Amplitude, sodass der Servo die 988–2012&nbsp;µs-Hülle nie verlässt. Stimme die Frequenz auf die natürliche Schlag-Resonanz des Flugwerks ab — zu hohe Frequenz verschwendet Energie, zu niedrige fällt unter den wirksamen Auftrieb.</p>
+<p>Der <strong>Shape-Mix</strong>-Schieber blendet den reinen Sinus Richtung Trapez (mehr Dwell an den Umkehrpunkten). Höherer Mix = knackigere Umkehrungen und mehr Schub an den Extremen; niedrigerer Mix = weicherer, effizienterer Reiseflug.</p>
 <h2>Gleit- und Schlagwinkel</h2>
-<p>&lt;strong&gt;Gleitwinkel&lt;/strong&gt; und &lt;strong&gt;Schlagwinkel&lt;/strong&gt; sind beide &lt;em&gt;Zentrums-Offsets&lt;/em&gt; (int8, ±15°), keine Amplitude. Glide setzt den gemeinsamen Flügelwinkel, wenn das Gas Gleitflug befiehlt; Flapping verschiebt das Zentrum des Schlags. Damit kannst du den Flügel für langsamen Flug vs. schnellen Reiseflug ausrichten, ohne das mechanische Gestänge anzufassen.</p>
+<p><strong>Gleitwinkel</strong> und <strong>Schlagwinkel</strong> sind beide <em>Zentrums-Offsets</em> (int8, ±15°), keine Amplitude. Glide setzt den gemeinsamen Flügelwinkel, wenn das Gas Gleitflug befiehlt; Flapping verschiebt das Zentrum des Schlags. Damit kannst du den Flügel für langsamen Flug vs. schnellen Reiseflug ausrichten, ohne das mechanische Gestänge anzufassen.</p>
 <h2>Start-Presets</h2>
 <table>
 <tr>
@@ -75,7 +75,7 @@ Erkunde die Parameter live mit dem
 <td>Weicher Mix, Reiseflug-Effizienz</td>
 </tr>
 </table>
-<p>Beginne mit &lt;strong&gt;Fast-Sinus&lt;/strong&gt;, bestätige stabilen Flug, und gehe nur dann Richtung &lt;strong&gt;Extrem&lt;/strong&gt;, wenn du Punch willst. Jedes Flugwerk hat einen anderen Sweet Spot — ändere immer nur einen Parameter.</p>
+<p>Beginne mit <strong>Fast-Sinus</strong>, bestätige stabilen Flug, und gehe nur dann Richtung <strong>Extrem</strong>, wenn du Punch willst. Jedes Flugwerk hat einen anderen Sweet Spot — ändere immer nur einen Parameter.</p>
 </div>
 </main>
 <footer>

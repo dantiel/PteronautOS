@@ -30,7 +30,7 @@
 <h1>Cableado del giroscopio Céfiros</h1>
 <p class='sub-lead'>Conecta un MPU6050 al bus I2C, resuelve conflictos de pines y verifica el AHRS con el registro serie.</p>
 <h2>Selección de pines I2C</h2>
-<p>Los pines I2C por defecto de Zephyrus son &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; y &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. En el PWMP7 v1.0 están bien; en la &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 no están expuestos, así que Zephyrus usa &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; y &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Verifica siempre la serigrafía contra el mapa de pines — GPIO4 está reservado de forma rígida para la interrupción de radio del SX1280 y nunca debe reutilizarse.</p>
+<p>Los pines I2C por defecto de Zephyrus son <strong>GPIO4 (SDA)</strong> y <strong>GPIO5 (SCL)</strong>. En el PWMP7 v1.0 están bien; en la <strong>v1.1</strong> GPIO2/GPIO5 no están expuestos, así que Zephyrus usa <strong>GPIO1 (SDA, CH2)</strong> y <strong>GPIO3 (SCL, CH3)</strong>. Verifica siempre la serigrafía contra el mapa de pines — GPIO4 está reservado de forma rígida para la interrupción de radio del SX1280 y nunca debe reutilizarse.</p>
 <h2>Cableado del GY-521</h2>
 <table>
 <tr>
@@ -58,9 +58,9 @@
 <td>dejar abierto</td>
 </tr>
 </table>
-<p>El GY-521 trae sus propios pull-ups de 4,7&amp;nbsp;kΩ y un regulador AMS1117-3.3V: aliméntalo con 5V, genera sus propios 3,3V y los niveles lógicos se ajustan solos. &lt;strong&gt;Cuatro cables en total&lt;/strong&gt;, sin cortar pistas, sin regulador extra.</p>
+<p>El GY-521 trae sus propios pull-ups de 4,7&nbsp;kΩ y un regulador AMS1117-3.3V: aliméntalo con 5V, genera sus propios 3,3V y los niveles lógicos se ajustan solos. <strong>Cuatro cables en total</strong>, sin cortar pistas, sin regulador extra.</p>
 <h2>Calibración y verificación</h2>
-<p>El AHRS Mahony autocalibra el sesgo del giroscopio en el arranque — mantén el fuselaje &lt;em&gt;quieto&lt;/em&gt; durante el primer segundo tras encender. Verifica que el sensor esté vivo por el log serial: pitch/roll deben seguir al fuselaje al inclinarlo, y el timón de cresta debe oponerse a un alabeo manual (alabeo a la derecha → el timón corrige a la izquierda). Si el bus se cuelga en el arranque, has caído en un pin reservado — revisa el mapa y muévete al par CH2/CH3 correcto.</p>
+<p>El AHRS Mahony autocalibra el sesgo del giroscopio en el arranque — mantén el fuselaje <em>quieto</em> durante el primer segundo tras encender. Verifica que el sensor esté vivo por el log serial: pitch/roll deben seguir al fuselaje al inclinarlo, y el timón de cresta debe oponerse a un alabeo manual (alabeo a la derecha → el timón corrige a la izquierda). Si el bus se cuelga en el arranque, has caído en un pin reservado — revisa el mapa y muévete al par CH2/CH3 correcto.</p>
 </div>
 </main>
 <footer>

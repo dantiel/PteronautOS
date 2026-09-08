@@ -30,8 +30,8 @@
 <h1>Erstflug und Servo-Setup</h1>
 <p class='sub-lead'>Zentriere die Flügel, stelle die Richtungen ein, tune Endpunkte und überstehe den Jungfernflug.</p>
 <h2>1 · Servos zentrieren</h2>
-<p>Speise den Empfänger bei &lt;em&gt;gebundenem&lt;/em&gt; Radio, aber neutralen Sticks. Jeder Servo muss auf &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; sitzen. Steht ein Horn nicht rechtwinklig zum Gestänge, schraube es ab und setze es auf die nächstliegende Verzahnung — erzwinge die Neutralstellung niemals per Sub-Trim im Radio; der Flugcontroller geht bereits von einem echten 1500&amp;nbsp;µs-Zentrum aus.</p>
-<p>Das Flügelpaar ist das kritische: Beide Flügel müssen im Neutralpunkt den &lt;em&gt;gleichen&lt;/em&gt; geometrischen Winkel haben. Ein Halbzahn-Unterschied zwischen links und rechts zeigt sich im Flug als Roll-Drift und lässt sich vom Gyro nicht wegtrimmen, ohne dessen Autorität aufzufressen.</p>
+<p>Speise den Empfänger bei <em>gebundenem</em> Radio, aber neutralen Sticks. Jeder Servo muss auf <strong>1500&nbsp;µs</strong> sitzen. Steht ein Horn nicht rechtwinklig zum Gestänge, schraube es ab und setze es auf die nächstliegende Verzahnung — erzwinge die Neutralstellung niemals per Sub-Trim im Radio; der Flugcontroller geht bereits von einem echten 1500&nbsp;µs-Zentrum aus.</p>
+<p>Das Flügelpaar ist das kritische: Beide Flügel müssen im Neutralpunkt den <em>gleichen</em> geometrischen Winkel haben. Ein Halbzahn-Unterschied zwischen links und rechts zeigt sich im Flug als Roll-Drift und lässt sich vom Gyro nicht wegtrimmen, ohne dessen Autorität aufzufressen.</p>
 <h2>2 · Richtung und Umkehr</h2>
 <table>
 <tr>
@@ -51,9 +51,9 @@
 <td>Das Kamm-Ruder schlägt nach rechts aus</td>
 </tr>
 </table>
-<p>Bewegt sich eine Fläche falsch herum, invertiere sie &lt;em&gt;in der Flugcontroller-Config&lt;/em&gt; (die Richtungs-Flags des Servo-Kernels) — nicht durch Umdrehen des Servos oder einen Radio-Kanal-Reverse, der die 988–2012&amp;nbsp;µs-Karte verschiebt. Halte den Radio-Ausgang symmetrisch um 1500&amp;nbsp;µs.</p>
+<p>Bewegt sich eine Fläche falsch herum, invertiere sie <em>in der Flugcontroller-Config</em> (die Richtungs-Flags des Servo-Kernels) — nicht durch Umdrehen des Servos oder einen Radio-Kanal-Reverse, der die 988–2012&nbsp;µs-Karte verschiebt. Halte den Radio-Ausgang symmetrisch um 1500&nbsp;µs.</p>
 <h2>3 · Endpunkte und Grenzen</h2>
-<p>Der Servo-Kernel nutzt standardmäßig &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 und &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Setze die mechanischen Endpunkte so, dass der Flügel seinen vollen Weg &lt;em&gt;ohne Klemmen&lt;/em&gt; an den Extremen durchläuft. Höre auf das Brummen eines blockierten Servos — nimm den Endpunkt zurück, bis es aufhört. Endpunkte leben im Servo-Kernel, nicht im Radio: lass das Radio auf ±100%.</p>
+<p>Der Servo-Kernel nutzt standardmäßig <code>servoMinUs</code>&nbsp;988 und <code>servoMaxUs</code>&nbsp;2012. Setze die mechanischen Endpunkte so, dass der Flügel seinen vollen Weg <em>ohne Klemmen</em> an den Extremen durchläuft. Höre auf das Brummen eines blockierten Servos — nimm den Endpunkt zurück, bis es aufhört. Endpunkte leben im Servo-Kernel, nicht im Radio: lass das Radio auf ±100%.</p>
 <h2>4 · Vorflug-Checks</h2>
 <ul>
 <li>Flügel im Neutralpunkt zentriert, beide Richtungen korrekt.</li>
@@ -63,7 +63,7 @@
 <li>Akkuspannung passt zur BEC-Spezifikation; Servos brechen bei vollem Ausschlag nicht ein.</li>
 </ul>
 <h2>5 · Der Jungfernflug</h2>
-<p>Wirf zuerst in einen sanften Gleitflug, &lt;em&gt;Motor/Flügelschlag aus&lt;/em&gt;, um Trimmung und Balance zu bestätigen. Erst wenn er geradeaus gleitet, schalte eine niedrige Schlagfrequenz und niedrige Heftigkeit zu. Erhöhe die Frequenz langsam; Resonanz und aeroelastische Effekte ändern sich mit der Geschwindigkeit, also trimm nach jeder Änderung neu. Lande früh auf dem ersten Akku — das Ziel sind Daten, nicht Dauer.</p>
+<p>Wirf zuerst in einen sanften Gleitflug, <em>Motor/Flügelschlag aus</em>, um Trimmung und Balance zu bestätigen. Erst wenn er geradeaus gleitet, schalte eine niedrige Schlagfrequenz und niedrige Heftigkeit zu. Erhöhe die Frequenz langsam; Resonanz und aeroelastische Effekte ändern sich mit der Geschwindigkeit, also trimm nach jeder Änderung neu. Lande früh auf dem ersten Akku — das Ziel sind Daten, nicht Dauer.</p>
 </div>
 </main>
 <footer>

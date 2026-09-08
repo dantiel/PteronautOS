@@ -35,13 +35,13 @@ Explora los parámetros en vivo con el
  antes de tocar el firmware — el mismo modelo acciona el mezclador.
 </p>
 <h2>Ferocidad (asimetría del batido)</h2>
-<p>La &lt;strong&gt;ferocidad&lt;/strong&gt; es la asimetría de carrera/retorno. En &lt;code&gt;0&lt;/code&gt; la onda es un seno puro — igual tiempo arriba y abajo. Subir la ferocidad de bajada hace la carrera descendente más rápida y la permanencia ascendente más larga (y viceversa para la ferocidad de subida). Esto desplaza &lt;em&gt;dónde&lt;/em&gt; se produce el empuje: una bajada rápida + recuperación lenta imita el golpe de potencia de un ave real y es el cambio de sensación más eficaz.</p>
-<p>Empieza en &lt;code&gt;down&amp;nbsp;8, up&amp;nbsp;0&lt;/code&gt; para una bajada potente, luego mezcla ferocidad de subida en pasos pequeños. Demasiada asimetría hace que las alas chasqueen en la inversión — audible como un clic y visible como calor en el servo.</p>
+<p>La <strong>ferocidad</strong> es la asimetría de carrera/retorno. En <code>0</code> la onda es un seno puro — igual tiempo arriba y abajo. Subir la ferocidad de bajada hace la carrera descendente más rápida y la permanencia ascendente más larga (y viceversa para la ferocidad de subida). Esto desplaza <em>dónde</em> se produce el empuje: una bajada rápida + recuperación lenta imita el golpe de potencia de un ave real y es el cambio de sensación más eficaz.</p>
+<p>Empieza en <code>down&nbsp;8, up&nbsp;0</code> para una bajada potente, luego mezcla ferocidad de subida en pasos pequeños. Demasiada asimetría hace que las alas chasqueen en la inversión — audible como un clic y visible como calor en el servo.</p>
 <h2>Amplitud y frecuencia</h2>
-<p>La amplitud no se ajusta directamente; emerge de la &lt;strong&gt;frecuencia&lt;/strong&gt; y la &lt;strong&gt;velocidad de carrera&lt;/strong&gt;. Subir la frecuencia de aleteo acorta la carrera a una velocidad dada; bajarla la alarga. El núcleo limita la amplitud para que el servo nunca salga de la envolvente de 988–2012&amp;nbsp;µs. Ajusta la frecuencia a la resonancia natural de aleteo del fuselaje — una frecuencia demasiado alta desperdicia energía, una demasiado baja cae por debajo de la sustentación efectiva.</p>
-<p>El control &lt;strong&gt;shape mix&lt;/strong&gt; mezcla el seno puro hacia un trapezoide (más permanencia en los puntos de inversión). Más mix = inversiones más nítidas y más empuje en los extremos; menos mix = crucero más suave y eficiente.</p>
+<p>La amplitud no se ajusta directamente; emerge de la <strong>frecuencia</strong> y la <strong>velocidad de carrera</strong>. Subir la frecuencia de aleteo acorta la carrera a una velocidad dada; bajarla la alarga. El núcleo limita la amplitud para que el servo nunca salga de la envolvente de 988–2012&nbsp;µs. Ajusta la frecuencia a la resonancia natural de aleteo del fuselaje — una frecuencia demasiado alta desperdicia energía, una demasiado baja cae por debajo de la sustentación efectiva.</p>
+<p>El control <strong>shape mix</strong> mezcla el seno puro hacia un trapezoide (más permanencia en los puntos de inversión). Más mix = inversiones más nítidas y más empuje en los extremos; menos mix = crucero más suave y eficiente.</p>
 <h2>Ángulos de planeo y aleteo</h2>
-<p>El &lt;strong&gt;ángulo de planeo&lt;/strong&gt; y el &lt;strong&gt;ángulo de aleteo&lt;/strong&gt; son ambos &lt;em&gt;desplazamientos de centro&lt;/em&gt; (int8, ±15°), no amplitud. El planeo fija el ángulo común del ala cuando el acelerador ordena planeo; el aleteo desplaza el centro de la carrera de aleteo. Te permiten sesgar el ala para vuelo lento vs. crucero rápido sin tocar el varillaje mecánico.</p>
+<p>El <strong>ángulo de planeo</strong> y el <strong>ángulo de aleteo</strong> son ambos <em>desplazamientos de centro</em> (int8, ±15°), no amplitud. El planeo fija el ángulo común del ala cuando el acelerador ordena planeo; el aleteo desplaza el centro de la carrera de aleteo. Te permiten sesgar el ala para vuelo lento vs. crucero rápido sin tocar el varillaje mecánico.</p>
 <h2>Presets iniciales</h2>
 <table>
 <tr>
@@ -75,7 +75,7 @@ Explora los parámetros en vivo con el
 <td>Mezcla suave, eficiencia de crucero</td>
 </tr>
 </table>
-<p>Empieza con &lt;strong&gt;Casi-seno&lt;/strong&gt;, confirma vuelo estable y luego avanza hacia &lt;strong&gt;Extremo&lt;/strong&gt; solo si quieres pegada. Cada fuselaje tiene un punto dulce distinto — cambia un parámetro a la vez.</p>
+<p>Empieza con <strong>Casi-seno</strong>, confirma vuelo estable y luego avanza hacia <strong>Extremo</strong> solo si quieres pegada. Cada fuselaje tiene un punto dulce distinto — cambia un parámetro a la vez.</p>
 </div>
 </main>
 <footer>

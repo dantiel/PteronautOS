@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= tel_title
+    %title!=tel_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -24,14 +24,14 @@
       %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= tel_h1
+        %h1!=tel_h1
         %p.sub-lead= tel_lead
 
         %h2= tel_h2_vbat
         %p= tel_p1
 
-        %h2= tel_h2_rssi
-        %p= tel_p2
+        %h2!=tel_h2_rssi
+        %p!=tel_p2
 
         %h2= tel_h2_gyro
         %p= tel_p3

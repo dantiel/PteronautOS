@@ -29,11 +29,11 @@
 <h1>Servo Kernel</h1>
 <p class='sub-lead'>Pulse-width envelope, per-function trim and speed limiting — the low-level servo contract.</p>
 <h2>Pulse-width envelope</h2>
-<p>The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by &lt;code&gt;servoMinUs&lt;/code&gt; (default &lt;strong&gt;988&lt;/strong&gt;) and &lt;code&gt;servoMaxUs&lt;/code&gt; (default &lt;strong&gt;2012&lt;/strong&gt;). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to &lt;code&gt;[500…1490]&lt;/code&gt; and &lt;code&gt;[1510…2500]&lt;/code&gt; with &lt;code&gt;min &amp;lt; max&lt;/code&gt; enforced.</p>
+<p>The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.</p>
 <h2>Per-function trim</h2>
-<p>&lt;code&gt;servoTrimUs[]&lt;/code&gt; is a per-&lt;em&gt;ServoFunc&lt;/em&gt; correction (±300&amp;nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.</p>
+<p><code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.</p>
 <h2>Speed limiting</h2>
-<p>&lt;strong&gt;Servo speed&lt;/strong&gt; limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the &lt;em&gt;click&lt;/em&gt; at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.</p>
+<p><strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.</p>
 <p class='hw-note'>For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.</p>
 </div>
 </main>

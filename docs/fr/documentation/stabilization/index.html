@@ -145,7 +145,7 @@ and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</cod
 window:
 </p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
-<h2>Mise en forme de l&#39;onde et mélange PD</h2>
+<h2>Mise en forme de l'onde et mélange PD</h2>
 <p>
 The waveform itself follows the OrniFlight stroke family: each half uses its own
 ferocity, a shared reversal threshold keeps left/right wings in phase, and a
@@ -405,7 +405,7 @@ flap. Keep the gyro an authoritative copilot, not a nervous pilot.
 <strong>Testez sur banc avant le vol.</strong>
 L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
 </aside>
-<h2>État de l&#39;implémentation et incohérences ouvertes</h2>
+<h2>État de l'implémentation et incohérences ouvertes</h2>
 <p>
 <strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal
 laws above are the <em>design</em>; the code contains the full parameter surface, the

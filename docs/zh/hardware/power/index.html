@@ -29,11 +29,11 @@
 <h1>电源与BEC</h1>
 <p class='sub-lead'>如何用单块电池为接收机、MPU6050和机翼舵机供电——BEC选择与接线。</p>
 <h2>舵机功率预算</h2>
-<p>单个机翼舵机在反转时可瞬时汲取 &lt;strong&gt;1–2&amp;nbsp;A&lt;/strong&gt;；三个舵机加上接收机与陀螺仪，需要一条绝不塌陷的电源轨。请按三个舵机 &lt;em&gt;堵转&lt;/em&gt; 电流之和(而非空闲电流)来选配 BEC。5&amp;nbsp;V / 3&amp;nbsp;A 的开关 BEC 对大多数 2–4&amp;nbsp;g 微型舵机是安全基准；更大的机翼需要 5&amp;nbsp;A 或更高。</p>
+<p>单个机翼舵机在反转时可瞬时汲取 <strong>1–2&nbsp;A</strong>；三个舵机加上接收机与陀螺仪，需要一条绝不塌陷的电源轨。请按三个舵机 <em>堵转</em> 电流之和(而非空闲电流)来选配 BEC。5&nbsp;V / 3&nbsp;A 的开关 BEC 对大多数 2–4&nbsp;g 微型舵机是安全基准；更大的机翼需要 5&nbsp;A 或更高。</p>
 <h2>选择BEC</h2>
-<p>优先使用 &lt;strong&gt;开关(降压)BEC&lt;/strong&gt; 而非线性 BEC：线性 BEC 将压降转化为热量，并在突发负载下崩溃。让 BEC 电压匹配舵机额定值(大多数微型舵机为 5&amp;nbsp;V，高压舵机最高 9&amp;nbsp;V)——但若接收机没有宽输入稳压器，则让其保持独立的 5&amp;nbsp;V 供电。</p>
+<p>优先使用 <strong>开关(降压)BEC</strong> 而非线性 BEC：线性 BEC 将压降转化为热量，并在突发负载下崩溃。让 BEC 电压匹配舵机额定值(大多数微型舵机为 5&nbsp;V，高压舵机最高 9&nbsp;V)——但若接收机没有宽输入稳压器，则让其保持独立的 5&nbsp;V 供电。</p>
 <h2>接收机供电轨</h2>
-<p>大多数 ELRS 接收机直接接受 &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt;(1S–2S)并在内部稳压。尽可能直接供给电池电压；仅为舵机降压。MPU6050 分线板(GY-521)接受 5&amp;nbsp;V 并自行产生 3.3&amp;nbsp;V。</p>
+<p>大多数 ELRS 接收机直接接受 <strong>4.5–8.4&nbsp;V</strong>(1S–2S)并在内部稳压。尽可能直接供给电池电压；仅为舵机降压。MPU6050 分线板(GY-521)接受 5&nbsp;V 并自行产生 3.3&nbsp;V。</p>
 <h2>接线图</h2>
 <pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>将所有地线连接到单一星形点。RX 与舵机之间的浮动地是抖动与欠压的典型成因——共享 GND 不容妥协。</p>

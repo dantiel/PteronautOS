@@ -190,10 +190,10 @@
         %p= hw_wiring_p
         .tutorial-menu
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/power/"}
-            %strong= pwr_h1
+            %strong!=pwr_h1
             %p= pwr_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/telemetry/"}
-            %strong= tel_h1
+            %strong!=tel_h1
             %p= tel_lead
         %p
           %a{href: "#{asset_prefix}en/hardware-pwmp7/"}= hw_link_pwmp7

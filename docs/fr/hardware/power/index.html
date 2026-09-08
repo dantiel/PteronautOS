@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Alimentation &amp; BEC — PteronautOS</title>
+<title>Alimentation & BEC — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,14 +26,14 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Alimentation &amp; BEC</h1>
+<h1>Alimentation & BEC</h1>
 <p class='sub-lead'>Comment alimenter le récepteur, le MPU6050 et les servos d&#39;aile depuis une seule batterie — choix du BEC et câblage.</p>
 <h2>Budget de puissance des servos</h2>
-<p>Un seul servo d’aile peut tirer &lt;strong&gt;1–2&amp;nbsp;A&lt;/strong&gt; transitoirement à l’inversion ; trois servos plus le récepteur et le gyro exigent un rail qui ne s’effondre jamais. Dimensionnez le BEC pour le courant de &lt;em&gt;décrochage&lt;/em&gt; des trois servos additionnés, pas leur courant de repos. Un BEC à découpage 5&amp;nbsp;V / 3&amp;nbsp;A est une base sûre pour la plupart des micro servos de 2–4&amp;nbsp;g ; les grandes ailes demandent 5&amp;nbsp;A ou plus.</p>
+<p>Un seul servo d’aile peut tirer <strong>1–2&nbsp;A</strong> transitoirement à l’inversion ; trois servos plus le récepteur et le gyro exigent un rail qui ne s’effondre jamais. Dimensionnez le BEC pour le courant de <em>décrochage</em> des trois servos additionnés, pas leur courant de repos. Un BEC à découpage 5&nbsp;V / 3&nbsp;A est une base sûre pour la plupart des micro servos de 2–4&nbsp;g ; les grandes ailes demandent 5&nbsp;A ou plus.</p>
 <h2>Choisir un BEC</h2>
-<p>Préférez un &lt;strong&gt;BEC à découpage (buck)&lt;/strong&gt; à un BEC linéaire : les linéaires brûlent la chute de tension en chaleur et s’effondrent sous charge de crête. Adaptez la tension du BEC au calibre du servo (5&amp;nbsp;V pour la plupart des micro servos, jusqu’à 9&amp;nbsp;V pour les servos HV) — mais gardez le récepteur sur sa propre alimentation 5&amp;nbsp;V s’il n’a pas de régulateur à large plage.</p>
+<p>Préférez un <strong>BEC à découpage (buck)</strong> à un BEC linéaire : les linéaires brûlent la chute de tension en chaleur et s’effondrent sous charge de crête. Adaptez la tension du BEC au calibre du servo (5&nbsp;V pour la plupart des micro servos, jusqu’à 9&nbsp;V pour les servos HV) — mais gardez le récepteur sur sa propre alimentation 5&nbsp;V s’il n’a pas de régulateur à large plage.</p>
 <h2>Rail du récepteur</h2>
-<p>La plupart des récepteurs ELRS acceptent &lt;strong&gt;4,5–8,4&amp;nbsp;V&lt;/strong&gt; (1S–2S) directement et régulent en interne. Alimentez-les en tension batterie brute quand c’est possible ; n’abaissez que pour les servos. La carte MPU6050 (GY-521) accepte 5&amp;nbsp;V et produit son propre 3,3&amp;nbsp;V.</p>
+<p>La plupart des récepteurs ELRS acceptent <strong>4,5–8,4&nbsp;V</strong> (1S–2S) directement et régulent en interne. Alimentez-les en tension batterie brute quand c’est possible ; n’abaissez que pour les servos. La carte MPU6050 (GY-521) accepte 5&nbsp;V et produit son propre 3,3&nbsp;V.</p>
 <h2>Schéma de câblage</h2>
 <pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Reliez toutes les masses à un unique point en étoile. Une masse flottante entre le RX et les servos est la cause classique de jitter et de chutes — un GND partagé est non négociable.</p>

@@ -29,16 +29,16 @@
 <h1>Flash・RAM予算</h1>
 <p class='sub-lead'>1MBフラッシュと~23KBヒープの行き先、そして60%フラッシュ/65%RAM未満を維持する方法。</p>
 <h2>Flash予算</h2>
-<p>1&amp;nbsp;MB の ESP8285 フラッシュは &lt;strong&gt;WebUI&lt;/strong&gt; が支配的です。バンドルされたクライアントビルドはツリーシェイキング後 ~160&amp;nbsp;KB 圧縮(フラッシュの ~16%)です。浮動小数点ランタイム(&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …)は ~9.7&amp;nbsp;KB で、実在しますが最大のレバーではありません。現在のベースラインはフラッシュ ~68.6% で、60% 目標には ~83&amp;nbsp;KB の削減が必要であり、WebUI だけがそれを実現できる大きさのレバーです。</p>
+<p>1&nbsp;MB の ESP8285 フラッシュは <strong>WebUI</strong> が支配的です。バンドルされたクライアントビルドはツリーシェイキング後 ~160&nbsp;KB 圧縮(フラッシュの ~16%)です。浮動小数点ランタイム(<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …)は ~9.7&nbsp;KB で、実在しますが最大のレバーではありません。現在のベースラインはフラッシュ ~68.6% で、60% 目標には ~83&nbsp;KB の削減が必要であり、WebUI だけがそれを実現できる大きさのレバーです。</p>
 <h2>RAM予算</h2>
-<p>ESP8285 はおよそ &lt;strong&gt;23&amp;nbsp;KB のヒープ&lt;/strong&gt;を公開します。設定保存はヒープ上に大きな JSON ドキュメントを割り当ててはいけません。オーニソプターの設定セーバーはヒープ枯渇とポーリング中の再起動を避けるため LittleFS へ直接ストリーミングします。&lt;code&gt;DynamicJsonDocument&lt;/code&gt; をホットパスから外し、スタックバッファと直接書き込みを優先してください。</p>
+<p>ESP8285 はおよそ <strong>23&nbsp;KB のヒープ</strong>を公開します。設定保存はヒープ上に大きな JSON ドキュメントを割り当ててはいけません。オーニソプターの設定セーバーはヒープ枯渇とポーリング中の再起動を避けるため LittleFS へ直接ストリーミングします。<code>DynamicJsonDocument</code> をホットパスから外し、スタックバッファと直接書き込みを優先してください。</p>
 <h2>最適化のヒント</h2>
 <ul>
 <li>WebUI バンドルから未使用の ELRS-RX ページをツリーシェイクしてください。</li>
-<li>ループ内での &lt;code&gt;String&lt;/code&gt; 連結は避けてください。ヒープを断片化します。</li>
-<li>ドキュメントを構築する代わりに &lt;code&gt;File::print&lt;/code&gt; で JSON を LittleFS へストリーミングしてください。</li>
+<li>ループ内での <code>String</code> 連結は避けてください。ヒープを断片化します。</li>
+<li>ドキュメントを構築する代わりに <code>File::print</code> で JSON を LittleFS へストリーミングしてください。</li>
 <li>テレメトリのホットパスから浮動小数点フォーマットを外してください(事前スケール整数)。</li>
-<li>&lt;code&gt;#ifdef&lt;/code&gt; でゲートされたモジュールを優先してください(不在時 Zephyrus は no-op にコンパイル)。</li>
+<li><code>#ifdef</code> でゲートされたモジュールを優先してください(不在時 Zephyrus は no-op にコンパイル)。</li>
 </ul>
 <h2>ビルドターゲット</h2>
 <table>
@@ -53,7 +53,7 @@
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>マニフェストは拡張の余裕を残すため &lt;strong&gt;フラッシュ 60% / RAM 65%&lt;/strong&gt; の超過を禁じます。各機能の後に測定してください。グリーンビルドは、フラッシュされブートログが読まれるまで生きているビルドではありません。</p>
+<p>マニフェストは拡張の余裕を残すため <strong>フラッシュ 60% / RAM 65%</strong> の超過を禁じます。各機能の後に測定してください。グリーンビルドは、フラッシュされブートログが読まれるまで生きているビルドではありません。</p>
 </div>
 </main>
 <footer>

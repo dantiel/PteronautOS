@@ -42,13 +42,13 @@
         %h2= doc_h2_articles
         .tutorial-menu
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}
-            %strong= archart_h1
+            %strong!=archart_h1
             %p= archart_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}
             %strong= mix_h1
             %p= mix_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/stabilization/"}
-            %strong= st_h1
+            %strong!=st_h1
             %p= st_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}
             %strong= sk_h1
@@ -57,7 +57,7 @@
             %strong= fs_h1
             %p= fs_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/budget/"}
-            %strong= budget_h1
+            %strong!=budget_h1
             %p= budget_lead
 
         %section#ferocity-waveform.waveform-docs

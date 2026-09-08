@@ -29,11 +29,11 @@
 <h1>Comportamiento de failsafe</h1>
 <p class='sub-lead'>Qué ocurre cuando se pierde el enlace — alas centradas, timón centrado, degradación elegante.</p>
 <h2>Condiciones de disparo</h2>
-<p>El failsafe se activa cuando el enlace CRSF reporta conexión perdida o los datos de canal quedan obsoletos más allá del timeout configurado. El failsafe propio de la radio &lt;em&gt;no&lt;/em&gt; es la fuente de verdad — PteronautOS reimpone su propio failsafe centrado para que el comportamiento sea idéntico sin importar la marca de la radio o el modo de bind.</p>
+<p>El failsafe se activa cuando el enlace CRSF reporta conexión perdida o los datos de canal quedan obsoletos más allá del timeout configurado. El failsafe propio de la radio <em>no</em> es la fuente de verdad — PteronautOS reimpone su propio failsafe centrado para que el comportamiento sea idéntico sin importar la marca de la radio o el modo de bind.</p>
 <h2>Salida centrada</h2>
-<p>Al dispararse, cada servo vuelve a &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; y la salida de forma de onda se suprime. Las alas se centran, el timón de cresta se centra. Las lecturas de canal &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; se reinician para que el sondeo de estado de la WebUI muestre la verdad neutral.</p>
+<p>Al dispararse, cada servo vuelve a <strong>1500&nbsp;µs</strong> y la salida de forma de onda se suprime. Las alas se centran, el timón de cresta se centra. Las lecturas de canal <code>voiceAileron/Elevator/Throttle/Rudder</code> se reinician para que el sondeo de estado de la WebUI muestre la verdad neutral.</p>
 <h2>Degradación elegante</h2>
-<p>La regla de diseño es &lt;em&gt;gracia en la degradación&lt;/em&gt;: un MPU6050 defectuoso no debe derribar la aeronave. Zephyrus se desactiva ante el fallo del giroscopio y el mezclador Ornithopter sigue volando con entrada pura de los sticks — la vía del failsafe y la vía del giroscopio son independientes, así que una falla nunca se propaga a la otra.</p>
+<p>La regla de diseño es <em>gracia en la degradación</em>: un MPU6050 defectuoso no debe derribar la aeronave. Zephyrus se desactiva ante el fallo del giroscopio y el mezclador Ornithopter sigue volando con entrada pura de los sticks — la vía del failsafe y la vía del giroscopio son independientes, así que una falla nunca se propaga a la otra.</p>
 <h2>Recuperación</h2>
 <p>La recuperación es automática: cuando se reanudan los frames CRSF válidos, el mezclador se reengancha en el siguiente tick y los servos vuelven a seguir los canales en vivo. No hay reinicio manual ni enclavamiento — la transición es una única rampa suave de vuelta a las posiciones comandadas.</p>
 <aside class='waveform-caution'>

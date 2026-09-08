@@ -30,8 +30,8 @@
 <h1>Primer vuelo y ajuste de servos</h1>
 <p class='sub-lead'>Centra las alas, ajusta las direcciones, configura los límites y sobrevive al vuelo inaugural.</p>
 <h2>1 · Centrado de los servos</h2>
-<p>Alimenta el receptor con la radio &lt;em&gt;enlazada&lt;/em&gt; pero con los sticks en neutro. Cada servo debe quedar en &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;. Si un brazo no queda perpendicular al varillaje, desatorníllalo y reaséntalo en el spline más cercano — nunca fuerces el neutro con sub-trim en la radio; el controlador de vuelo ya asume un centro real de 1500&amp;nbsp;µs.</p>
-<p>El par de alas es el crítico: ambas alas deben estar en el &lt;em&gt;mismo&lt;/em&gt; ángulo geométrico en neutro. Una diferencia de medio diente entre izquierda y derecha se ve como sesgo de alabeo en vuelo y no puede compensarla el giroscopio sin mermar su autoridad.</p>
+<p>Alimenta el receptor con la radio <em>enlazada</em> pero con los sticks en neutro. Cada servo debe quedar en <strong>1500&nbsp;µs</strong>. Si un brazo no queda perpendicular al varillaje, desatorníllalo y reaséntalo en el spline más cercano — nunca fuerces el neutro con sub-trim en la radio; el controlador de vuelo ya asume un centro real de 1500&nbsp;µs.</p>
+<p>El par de alas es el crítico: ambas alas deben estar en el <em>mismo</em> ángulo geométrico en neutro. Una diferencia de medio diente entre izquierda y derecha se ve como sesgo de alabeo en vuelo y no puede compensarla el giroscopio sin mermar su autoridad.</p>
 <h2>2 · Dirección e inversión</h2>
 <table>
 <tr>
@@ -51,9 +51,9 @@
 <td>El timón de cresta deflecta a la derecha</td>
 </tr>
 </table>
-<p>Si una superficie se mueve al revés, inviértela &lt;em&gt;en la configuración del controlador de vuelo&lt;/em&gt; (las flags de dirección del núcleo de servo), no girando el servo ni usando un reverse de canal de radio que desplaza el mapa de 988–2012&amp;nbsp;µs. Mantén la salida de la radio simétrica alrededor de 1500&amp;nbsp;µs.</p>
+<p>Si una superficie se mueve al revés, inviértela <em>en la configuración del controlador de vuelo</em> (las flags de dirección del núcleo de servo), no girando el servo ni usando un reverse de canal de radio que desplaza el mapa de 988–2012&nbsp;µs. Mantén la salida de la radio simétrica alrededor de 1500&nbsp;µs.</p>
 <h2>3 · Límites y topes</h2>
-<p>El núcleo de servo usa por defecto &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 y &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Ajusta los límites mecánicos para que el ala recorra todo su desplazamiento &lt;em&gt;sin trabarse&lt;/em&gt; en los extremos. Escucha el zumbido de un servo bloqueado — retrocede el límite hasta que pare. Los límites viven en el núcleo de servo, no en la radio: deja la radio al ±100%.</p>
+<p>El núcleo de servo usa por defecto <code>servoMinUs</code>&nbsp;988 y <code>servoMaxUs</code>&nbsp;2012. Ajusta los límites mecánicos para que el ala recorra todo su desplazamiento <em>sin trabarse</em> en los extremos. Escucha el zumbido de un servo bloqueado — retrocede el límite hasta que pare. Los límites viven en el núcleo de servo, no en la radio: deja la radio al ±100%.</p>
 <h2>4 · Comprobaciones previas</h2>
 <ul>
 <li>Alas centradas en neutro, ambas direcciones correctas.</li>
@@ -63,7 +63,7 @@
 <li>La tensión de la batería coincide con la especificación del BEC; los servos no sufren caídas en un barrido completo.</li>
 </ul>
 <h2>5 · El vuelo inaugural</h2>
-<p>Lanza a mano en un planeo suave primero, &lt;em&gt;motor/aleteo apagado&lt;/em&gt;, para confirmar trim y equilibrio. Solo cuando planee recto debes activar una frecuencia de aleteo baja y baja ferocidad. Aumenta la frecuencia lentamente; la resonancia y los efectos aeroelásticos cambian con la velocidad, así que re-trima tras cada cambio. Aterriza temprano en la primera batería — el objetivo son datos, no duración.</p>
+<p>Lanza a mano en un planeo suave primero, <em>motor/aleteo apagado</em>, para confirmar trim y equilibrio. Solo cuando planee recto debes activar una frecuencia de aleteo baja y baja ferocidad. Aumenta la frecuencia lentamente; la resonancia y los efectos aeroelásticos cambian con la velocidad, así que re-trima tras cada cambio. Aterriza temprano en la primera batería — el objetivo son datos, no duración.</p>
 </div>
 </main>
 <footer>

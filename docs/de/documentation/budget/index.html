@@ -29,16 +29,16 @@
 <h1>Flash- und RAM-Budget</h1>
 <p class='sub-lead'>Wohin 1MB Flash und ~23KB Heap gehen und wie man unter 60% Flash / 65% RAM bleibt.</p>
 <h2>Flash-Budget</h2>
-<p>Der 1&amp;nbsp;MB große ESP8285-Flash wird von der &lt;strong&gt;WebUI&lt;/strong&gt; dominiert: der gebündelte Client-Build ist ~160&amp;nbsp;KB komprimiert (~16% des Flash) nach Tree-Shaking. Die Float-Runtime (&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …) ist ~9,7&amp;nbsp;KB — real, aber nicht der größte Hebel. Die aktuelle Basis liegt bei ~68,6% Flash; das 60%-Ziel braucht eine Kürzung um ~83&amp;nbsp;KB, und die WebUI ist der einzige Hebel, der groß genug dafür ist.</p>
+<p>Der 1&nbsp;MB große ESP8285-Flash wird von der <strong>WebUI</strong> dominiert: der gebündelte Client-Build ist ~160&nbsp;KB komprimiert (~16% des Flash) nach Tree-Shaking. Die Float-Runtime (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) ist ~9,7&nbsp;KB — real, aber nicht der größte Hebel. Die aktuelle Basis liegt bei ~68,6% Flash; das 60%-Ziel braucht eine Kürzung um ~83&nbsp;KB, und die WebUI ist der einzige Hebel, der groß genug dafür ist.</p>
 <h2>RAM-Budget</h2>
-<p>Der ESP8285 stellt grob &lt;strong&gt;23&amp;nbsp;KB Heap&lt;/strong&gt; bereit. Config-Saves dürfen niemals ein großes JSON-Dokument auf dem Heap anlegen — der Ornithopter-Config-Saver streamt direkt nach LittleFS, um den Heap nicht zu erschöpfen und mitten im Poll neu zu booten. Halte &lt;code&gt;DynamicJsonDocument&lt;/code&gt; aus dem heißen Pfad; bevorzuge Stack-Buffer und direkte Schreibvorgänge.</p>
+<p>Der ESP8285 stellt grob <strong>23&nbsp;KB Heap</strong> bereit. Config-Saves dürfen niemals ein großes JSON-Dokument auf dem Heap anlegen — der Ornithopter-Config-Saver streamt direkt nach LittleFS, um den Heap nicht zu erschöpfen und mitten im Poll neu zu booten. Halte <code>DynamicJsonDocument</code> aus dem heißen Pfad; bevorzuge Stack-Buffer und direkte Schreibvorgänge.</p>
 <h2>Optimierungs-Tipps</h2>
 <ul>
 <li>Shake ungenutzte ELRS-RX-Seiten aus dem WebUI-Bundle.</li>
-<li>Vermeide &lt;code&gt;String&lt;/code&gt;-Verkettung in Schleifen — sie fragmentiert den Heap.</li>
-<li>Streame JSON mit &lt;code&gt;File::print&lt;/code&gt; nach LittleFS, statt Dokumente zu bauen.</li>
+<li>Vermeide <code>String</code>-Verkettung in Schleifen — sie fragmentiert den Heap.</li>
+<li>Streame JSON mit <code>File::print</code> nach LittleFS, statt Dokumente zu bauen.</li>
 <li>Halte Float-Formatierung aus dem Telemetrie-Hot-Path (vorskaliere Ganzzahlen).</li>
-<li>Bevorzuge &lt;code&gt;#ifdef&lt;/code&gt;-gegated Module (Zephyrus kompiliert bei Abwesenheit zu No-ops).</li>
+<li>Bevorzuge <code>#ifdef</code>-gegated Module (Zephyrus kompiliert bei Abwesenheit zu No-ops).</li>
 </ul>
 <h2>Build-Ziele</h2>
 <table>
@@ -53,7 +53,7 @@
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>Das Manifest verbietet, &lt;strong&gt;60% Flash / 65% RAM&lt;/strong&gt; zu überschreiten, um Expansionsspielraum zu lassen. Miss nach jedem Feature; ein grüner Build ist erst dann ein lebender Build, wenn er geflasht und sein Boot-Log gelesen ist.</p>
+<p>Das Manifest verbietet, <strong>60% Flash / 65% RAM</strong> zu überschreiten, um Expansionsspielraum zu lassen. Miss nach jedem Feature; ein grüner Build ist erst dann ein lebender Build, wenn er geflasht und sein Boot-Log gelesen ist.</p>
 </div>
 </main>
 <footer>
