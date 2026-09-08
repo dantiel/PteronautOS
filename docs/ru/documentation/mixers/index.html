@@ -29,24 +29,19 @@
 <h1>Справочник микшеров</h1>
 <p class='sub-lead'>От стиков и гироскопа до µs на проводе: полная геометрия каждого микшера — оси крыла, смеси руля, элевоны, триммы и ограничения.</p>
 <p>
-This page documents the mixer layer of
-<code>src/lib/Ornithopter/Ornithopter.cpp</code> and the profile system of
-<code>OrnithopterConfig.h</code>. For the surrounding architecture, start with the
-<a href="../../../ru/documentation/architecture/">Architecture article</a>;
-for pulse timing and trim ranges, see the
-<a href="../../../ru/documentation/servo-kernel/">Servo Kernel</a> article.
+На этой странице описан слой микшера <code>src/lib/Ornithopter/Ornithopter.cpp</code> и система профилей <code>OrnithopterConfig.h</code>. Для общей архитектуры начните со 
+<a href='../../../ru/documentation/architecture/'>статью Архитектура</a>
+; о тайминге импульсов и диапазонах трима см. 
+<a href='../../../ru/documentation/servo-kernel/'>Серво-ядро</a>
+ статью.
 </p>
 <h2>Теги функций серво</h2>
-<p>
-Every output of every mixer is a µs value written into <code>_f[]</code>, indexed by a
-<em>ServoFunc tag</em>. Tags are transport — they say <em>what</em> a signal means, never
-<em>where</em> it is wired:
-</p>
+<p>Каждый выход каждого микшера — значение µs, записанное в <code>_f[]</code> и индексированное <em>тегом ServoFunc</em>. Теги — это транспорт: они говорят <em>что</em> означает сигнал, но не <em>куда</em> он подключён:</p>
 <table>
 <tr>
-<th>Tag</th>
-<th>Name</th>
-<th>Meaning</th>
+<th>Тег</th>
+<th>Имя</th>
+<th>Значение</th>
 </tr>
 <tr>
 <td>
@@ -55,7 +50,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_NONE</code>
 </td>
-<td>Reserved — no function (first PWM slots stay free for BOOT and I2C)</td>
+<td>Зарезервирован — без функции (первые PWM-слоты свободны для BOOT и I2C)</td>
 </tr>
 <tr>
 <td>
@@ -64,7 +59,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Front flapping wings (waveform kernel)</td>
+<td>Передние машущие крылья (волновое ядро)</td>
 </tr>
 <tr>
 <td>
@@ -73,7 +68,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Head/crest rudder (waveform) or fin rudder (gearbox) — yaw + roll blend</td>
+<td>Головной/гребневой руль (волна) или килевой руль (редуктор) — смесь рыскания + крена</td>
 </tr>
 <tr>
 <td>
@@ -82,7 +77,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Brushless ESC throttle (gearbox kernel only)</td>
+<td>Газ бесколлекторного ESC (только редукторное ядро)</td>
 </tr>
 <tr>
 <td>
@@ -91,7 +86,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_VTAIL_LEFT / SF_VTAIL_RIGHT</code>
 </td>
-<td>V-tail surfaces, elevon-mixed (gearbox kernel)</td>
+<td>Поверхности V-хвоста, элевонное смешение (редукторное ядро)</td>
 </tr>
 <tr>
 <td>
@@ -100,7 +95,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_ELEVATOR</code>
 </td>
-<td>Traditional separate elevator (gearbox profiles 6/7)</td>
+<td>Традиционный отдельный руль высоты (редукторные профили 6/7)</td>
 </tr>
 <tr>
 <td>
@@ -109,27 +104,18 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Rear wing pair of a 4-wing airframe (mirror of the front pair, own trim)</td>
+<td>Задняя пара крыльев 4-крылого планера (зеркало передней пары, собственный трим)</td>
 </tr>
 </table>
-<p>
-A runtime <em>profile</em> provides the <code>funcMap</code>: an array that maps PWM
-output index → ServoFunc. The first three slots (PWM 1…3) are always
-<code>SF_NONE</code> — they belong to the BOOT strap and the I2C bus — so real servo
-functions begin at PWM index 3 (the firmware comment spells this out: index 3 = CH4,
-4 = CH5, 5 = CH6).
-</p>
+<p>Профиль рантайма даёт <code>funcMap</code>: массив, отображающий индекс PWM-выхода → ServoFunc. Первые три слота (PWM 1…3) всегда <code>SF_NONE</code> — они принадлежат ремню BOOT и шине I2C — поэтому реальные серво-функции начинаются с индекса PWM 3 (комментарий в прошивке поясняет: индекс 3 = CH4, 4 = CH5, 5 = CH6).</p>
 <h2>Восемь профилей микшера</h2>
-<p>
-Eight mixer profiles exist. Profiles 0–2 drive the <em>waveform</em> kernel (flapping
-wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
-</p>
+<p>Существуют восемь профилей микшера. Профили 0–2 ведут <em>волновое</em> ядро (машущие крылья), профили 3–7 — <em>редукторное</em> ядро (мотор + хвосты):</p>
 <table>
 <tr>
 <th>#</th>
-<th>Profile</th>
-<th>Kernel</th>
-<th>Servos</th>
+<th>Профиль</th>
+<th>Ядро</th>
+<th>Сервы</th>
 <th>funcMap (PWM 3 · 4 · 5)</th>
 </tr>
 <tr>
@@ -139,9 +125,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>waveform</td>
+<td>волновое</td>
 <td>2</td>
-<td>Left wing · Right wing · —</td>
+<td>Левое крыло · Правое крыло · —</td>
 </tr>
 <tr>
 <td>
@@ -150,9 +136,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>waveform</td>
+<td>волновое</td>
 <td>3</td>
-<td>Left wing · Right wing · Rudder</td>
+<td>Левое крыло · Правое крыло · Руль</td>
 </tr>
 <tr>
 <td>
@@ -161,9 +147,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>waveform</td>
-<td>4 (back-right shares the back-left mirror)</td>
-<td>Left wing · Right wing · Back-left wing</td>
+<td>волновое</td>
+<td>4 (задняя правая разделяет зеркало задней левой)</td>
+<td>Левое крыло · Правое крыло · Заднее левое крыло</td>
 </tr>
 <tr>
 <td>
@@ -172,9 +158,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>редукторное</td>
 <td>3</td>
-<td>Rudder · V-tail left · V-tail right</td>
+<td>Руль · V-хвост левый · V-хвост правый</td>
 </tr>
 <tr>
 <td>
@@ -183,9 +169,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL</code>
 </td>
-<td>gearbox</td>
+<td>редукторное</td>
 <td>3</td>
-<td>Motor · V-tail left · V-tail right</td>
+<td>Мотор · V-хвост левый · V-хвост правый</td>
 </tr>
 <tr>
 <td>
@@ -194,9 +180,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
-<td>4 (V-tail right shares the left mirror)</td>
-<td>Rudder · Motor · V-tail left</td>
+<td>редукторное</td>
+<td>4 (правый V-хвост разделяет левое зеркало)</td>
+<td>Руль · Мотор · V-хвост левый</td>
 </tr>
 <tr>
 <td>
@@ -205,9 +191,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>редукторное</td>
 <td>2</td>
-<td>Rudder · Elevator · —</td>
+<td>Руль · Руль высоты · —</td>
 </tr>
 <tr>
 <td>
@@ -216,135 +202,66 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>редукторное</td>
 <td>3</td>
-<td>Rudder · Motor · Elevator</td>
+<td>Руль · Мотор · Руль высоты</td>
 </tr>
 </table>
-<p>
-Selection: build-time flag <code>MIXER_PROFILE</code> (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> → profile 5), then runtime-overridable through the
-WebUI (<code>setOrnithopterProfile</code>). The kernel test is simply
-<code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.
-</p>
+<p>Выбор: флаг сборки <code>MIXER_PROFILE</code> (устаревший <code>ORNITHOPTER_GEARBOX=1</code> → профиль 5), затем переопределяется в рантайме через WebUI (<code>setOrnithopterProfile</code>). Проверка ядра — просто <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Микширование осей крыла (волновое ядро)</h2>
-<p>
-All channel values enter the mixers normalized: <code>_crsfToNorm</code> maps the raw
-172…1811 window linearly onto −1…+1. Steering commands are then scaled by the
-per-profile authority sliders (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)
-times ±60° (<code>ORNI_STEER_MAX_DEG</code>).
-</p>
-<p>
-<strong>Mirror geometry.</strong> Wing servos are mirror-mounted, which swaps the meaning
-of common-mode and differential terms. The code therefore treats aileron (roll) as
-<em>common</em> — it adds to both wings, which becomes a differential <em>physical</em>
-deflection — and elevator (pitch) as <em>differential</em> in code, which becomes a
-common physical deflection. The angle equations, with <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>
-and the 2× multiplier applied to deviation terms only:
-</p>
+<p>Все значения каналов входят в микшеры нормализованными: <code>_crsfToNorm</code> линейно отображает сырое окно 172…1811 на −1…+1. Команды руления затем масштабируются слайдерами авторитета профиля (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%) на ±60° (<code>ORNI_STEER_MAX_DEG</code>).</p>
+<p><strong>Зеркальная геометрия.</strong> Сервы крыла установлены зеркально, что меняет смысл синфазных и дифференциальных членов. Поэтому код трактует элерон (крен) как <em>синфазный</em> — он добавляется к обоим крыльям, становясь дифференциальным <em>физическим</em> отклонением — а руль высоты (тангаж) как <em>дифференциальный</em> в коде, становясь синфазным физическим отклонением. Уравнения углов, при <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code> и множителе 2× только для членов отклонения:</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
-<p>
-<code>degL</code>/<code>degR</code> are the instantaneous stroke deflections of the left
-and right wing, each the product of its own amplitude and a ferocity-shaped wave.
-Elevator-up strengthens the <em>downstroke</em>; elevator-down the <em>upstroke</em>
-(asymmetric ferocity). Yaw splits the wings in two complementary ways:
-</p>
+<p><code>degL</code>/<code>degR</code> — мгновенные отклонения взмаха левого и правого крыла, каждое — произведение собственной амплитуды и волны, сформированной свирепостью. Руль высоты вверх усиливает <em>нисходящий</em> взмах; вниз — <em>восходящий</em> (асимметричная свирепость). Рыскание делит крылья двумя дополняющими способами:</p>
 <ul>
-<li>
-<strong>Ferocity differential</strong> (<code>rudderFerocityRange</code>): left gets
-<code>+ferocity</code>, right <code>−ferocity</code> — the two wings dwell differently
-but keep a <em>shared reversal phase</em> (<code>limiarShared</code>), so turns are
-pure roll torque, never desynchronisation.
-</li>
-<li>
-<strong>Amplitude differential</strong> (<code>rudderAmplitudeDifferential</code>):
-left amplitude ×(1+Δ), right ×(1−Δ) — symmetric divergence around the throttle-set
-stroke.
-</li>
+<li><strong>Дифференциал свирепости</strong> (<code>rudderFerocityRange</code>): левое получает <code>+свирепость</code>, правое <code>−свирепость</code> — два крыла удерживаются по-разному, но сохраняют <em>общую фазу реверса</em> (<code>limiarShared</code>), поэтому повороты — чистый крутящий момент крена, а не рассинхронизация.</li>
+<li><strong>Дифференциал амплитуды</strong> (<code>rudderAmplitudeDifferential</code>): левая амплитуда ×(1+Δ), правая ×(1−Δ) — симметричное расхождение вокруг заданного газом взмаха.</li>
 </ul>
-<p>
-Angles are clamped 0…180° and converted to pulses with the configurable envelope
-<code>servoMinUs…servoMaxUs</code> (defaults 988…2012): µs = min + angle·(max−min)/180,
-plus the per-function trim. The glide/flap centre offsets (<code>glideAngleDeg</code>,
-<code>flappingAngleDeg</code>, ±15°) enter as static terms on their respective branch —
-so glide and flap centres can be tuned independently per flight profile.
-</p>
+<p>Углы ограничены 0…180° и преобразуются в импульсы настраиваемым конвертом <code>servoMinUs…servoMaxUs</code> (по умолчанию 988…2012): µs = min + угол·(max−min)/180, плюс трим на функцию. Смещения центра планирования/взмаха (<code>glideAngleDeg</code>, <code>flappingAngleDeg</code>, ±15°) входят как статические члены в свою ветвь — поэтому центры планирования и взмаха можно настраивать независимо для каждого профиля.</p>
 <h2>Микширование руля (оба ядра)</h2>
-<p>
-The rudder mixer is <em>shared verbatim by both kernels</em> — one equation, two
-airframes:
-</p>
+<p>Микшер руля <em>дословно общий для обоих ядер</em> — одно уравнение, два планера:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
-<p>
-Defaults: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>
-(runtime-tunable in the WebUI, stored per backup). Roll coupling on the rudder is what
-lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
-the roll weight if the head rudder feels too aggressive in roll.
-</p>
+<p>По умолчанию: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (настраиваются в рантайме в WebUI, хранятся на бэкап). Связь крена на руле — то, что позволяет тяжелокрылому птерозавру держать координированные повороты без гимнастики с нитью рыскания; уменьшите вес крена, если головной руль слишком агрессивен в крене.</p>
 <h2>Микширование хвоста и элевонов (редуктор)</h2>
-<p>
-The gearbox kernel runs statelessly every tick. Its three sub-mixers:
-</p>
+<p>Редукторное ядро работает без состояния каждый тик. Его три субмикшера:</p>
 <ul>
-<li>
-<strong>Motor</strong> — <code>SF_MOTOR</code>: when armed, throttle 0…1 maps to
-1000…2000&nbsp;µs; disarmed or link-down forces the minimum (motor stopped).
-</li>
-<li>
-<strong>Rudder</strong> — identical equation to the section above.
-</li>
-<li>
-<strong>Tails</strong> — two families. Classic profiles (6/7) drive a separate
-elevator: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-tail profiles
-(3/4/5) elevon-mix both channels onto the two tail servos:
-</li>
+<li><strong>Мотор</strong> — <code>SF_MOTOR</code>: при вооружении газ 0…1 отображается на 1000…2000&nbsp;мкс; снятие с вооружения или потеря связи форсирует минимум (мотор остановлен).</li>
+<li><strong>Руль</strong> — уравнение идентично разделу выше.</li>
+<li><strong>Хвосты</strong> — две семьи. Классические профили (6/7) ведут отдельный руль высоты: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-профили (3/4/5) элевонно смешивают оба канала на два хвостовых серво:</li>
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
-<p>
-On the gearbox kernel, Zephyrus injects <em>both</em> roll and pitch PID corrections into
-the tail servos (roll anti-phase, pitch common-mode), each hard-clamped to
-±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
-waggle, but never stall, a tail servo.
-</p>
+<p>На редукторном ядре Zephyrus вводит <em>обе</em> ПИД-коррекции крена и тангажа в хвостовые сервы (крен противофазно, тангаж синфазно), каждая жёстко ограничена ±250&nbsp;мкс (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Сбой гироскопа может поэтому покачать, но никогда не застопорит хвостовой серво.</p>
 <h2>Впрыск Зефира, триммы и failsafe</h2>
-<p>
-Three different injection points exist depending on kernel and axis:
-</p>
+<p>Существуют три разные точки ввода в зависимости от ядра и оси:</p>
 <table>
 <tr>
-<th>Axis</th>
-<th>Waveform kernel</th>
-<th>Gearbox kernel</th>
+<th>Ось</th>
+<th>Волновое ядро</th>
+<th>Редукторное ядро</th>
 </tr>
 <tr>
-<td>Rudder / yaw</td>
-<td><code>gyroRudderCorrection</code> added to the crest rudder µs</td>
-<td><code>gyroRudderCorrection</code> added to the fin rudder µs</td>
+<td>Руль / рыскание</td>
+<td><code>gyroRudderCorrection</code> добавляется к µs гребневого руля</td>
+<td><code>gyroRudderCorrection</code> добавляется к µs килевого руля</td>
 </tr>
 <tr>
-<td>Roll (aileron)</td>
-<td>— (waveform wings carry no roll PID)</td>
-<td><code>gyroAileronCorrection</code>, anti-phase across V-tail, clamped ±250&nbsp;µs</td>
+<td>Крен (элерон)</td>
+<td>— (волновые крылья не несут ПИД крена)</td>
+<td><code>gyroAileronCorrection</code>, противофаза по V-хвосту, ограничено ±250&nbsp;мкс</td>
 </tr>
 <tr>
-<td>Pitch (elevator)</td>
-<td>— (injected as wave modulation in the Zephyrus layer)</td>
-<td><code>gyroElevatorCorrection</code>, common-mode, clamped ±250&nbsp;µs</td>
+<td>Тангаж (руль высоты)</td>
+<td>— (вводится как модуляция волны в слое Zephyrus)</td>
+<td><code>gyroElevatorCorrection</code>, синфазно, ограничено ±250&nbsp;мкс</td>
 </tr>
 </table>
+<p><strong>Тримы и пределы.</strong> У каждой функции есть знаковый трим на серво (<code>servoTrimUs[tag]</code>, по умолчанию 0, ±300&nbsp;мкс), добавляемый последним, и каждое значение проходит <code>_clampServo</code> — абсолютный защитный предел 500…2500&nbsp;мкс, который выше всего. При фейлсейфе или потере связи все функции возвращаются к 1500&nbsp;мкс, а редукторный мотор — к минимуму, поэтому модель всегда планирует к нейтрали.</p>
 <p>
-<strong>Trims &amp; limits.</strong> Every function has a signed per-servo trim
-(<code>servoTrimUs[tag]</code>, default 0, ±300&nbsp;µs) added last, and every value
-passes <code>_clampServo</code> — an absolute 500…2500&nbsp;µs safety clamp that
-outranks everything. On failsafe or link-down, all functions return to 1500&nbsp;µs and a
-gearbox motor to minimum, so the model always glides to neutral.
-</p>
-<p>
-Ready for the practical layer? The
-<a href="../../../ru/tutorials/waveform-tuning/">Waveform Tuning</a>
-tutorial shows how these numbers feel from the sticks, and the
-<a href="../../../ru/documentation/architecture/">Architecture</a> article
-shows where each mixer sits in the pipeline.
+Готовы к практическому слою? 
+<a href='../../../ru/tutorials/waveform-tuning/'>Настройка волны</a>
+ учебник показывает, как эти числа ощущаются со стиков, а 
+<a href='../../../ru/documentation/architecture/'>Архитектура</a>
+ статья показывает, где каждый микшер сидит в конвейере.
 </p>
 </div>
 </main>

@@ -29,24 +29,19 @@
 <h1>混控器参考</h1>
 <p class='sub-lead'>从摇杆与陀螺仪到导线上的微秒：每种可选混控器的完整几何——机翼轴、方向舵混合、升降副翼、微调与限幅。</p>
 <p>
-This page documents the mixer layer of
-<code>src/lib/Ornithopter/Ornithopter.cpp</code> and the profile system of
-<code>OrnithopterConfig.h</code>. For the surrounding architecture, start with the
-<a href="../../../zh/documentation/architecture/">Architecture article</a>;
-for pulse timing and trim ranges, see the
-<a href="../../../zh/documentation/servo-kernel/">Servo Kernel</a> article.
+本页记录 <code>src/lib/Ornithopter/Ornithopter.cpp</code> 的混控器层与 <code>OrnithopterConfig.h</code> 的配置文件系统。关于周边架构，请从 
+<a href='../../../zh/documentation/architecture/'>架构文章</a>
+；关于脉冲时序与微调范围，参见 
+<a href='../../../zh/documentation/servo-kernel/'>伺服内核</a>
+ 一文。
 </p>
 <h2>舵机功能标签</h2>
-<p>
-Every output of every mixer is a µs value written into <code>_f[]</code>, indexed by a
-<em>ServoFunc tag</em>. Tags are transport — they say <em>what</em> a signal means, never
-<em>where</em> it is wired:
-</p>
+<p>每个混控器的每个输出都是写入 <code>_f[]</code> 的 µs 值，由 <em>ServoFunc 标签</em>索引。标签是传输载体——它们说明信号<em>意味着什么</em>，而从不说明它<em>接在哪里</em>：</p>
 <table>
 <tr>
-<th>Tag</th>
-<th>Name</th>
-<th>Meaning</th>
+<th>标签</th>
+<th>名称</th>
+<th>含义</th>
 </tr>
 <tr>
 <td>
@@ -55,7 +50,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_NONE</code>
 </td>
-<td>Reserved — no function (first PWM slots stay free for BOOT and I2C)</td>
+<td>保留——无功能（前几个 PWM 槽位为 BOOT 和 I2C 保留空闲）</td>
 </tr>
 <tr>
 <td>
@@ -64,7 +59,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Front flapping wings (waveform kernel)</td>
+<td>前扑翼（波形内核）</td>
 </tr>
 <tr>
 <td>
@@ -73,7 +68,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Head/crest rudder (waveform) or fin rudder (gearbox) — yaw + roll blend</td>
+<td>头/冠舵（波形）或鳍舵（变速箱）——偏航 + 横滚混合</td>
 </tr>
 <tr>
 <td>
@@ -82,7 +77,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Brushless ESC throttle (gearbox kernel only)</td>
+<td>无刷电调油门（仅变速箱内核）</td>
 </tr>
 <tr>
 <td>
@@ -91,7 +86,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_VTAIL_LEFT / SF_VTAIL_RIGHT</code>
 </td>
-<td>V-tail surfaces, elevon-mixed (gearbox kernel)</td>
+<td>V 尾翼面，升降副翼混合（变速箱内核）</td>
 </tr>
 <tr>
 <td>
@@ -100,7 +95,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_ELEVATOR</code>
 </td>
-<td>Traditional separate elevator (gearbox profiles 6/7)</td>
+<td>传统独立升降舵（变速箱配置文件 6/7）</td>
 </tr>
 <tr>
 <td>
@@ -109,27 +104,18 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Rear wing pair of a 4-wing airframe (mirror of the front pair, own trim)</td>
+<td>四翼机架的后翼对（前翼对的镜像，独立微调）</td>
 </tr>
 </table>
-<p>
-A runtime <em>profile</em> provides the <code>funcMap</code>: an array that maps PWM
-output index → ServoFunc. The first three slots (PWM 1…3) are always
-<code>SF_NONE</code> — they belong to the BOOT strap and the I2C bus — so real servo
-functions begin at PWM index 3 (the firmware comment spells this out: index 3 = CH4,
-4 = CH5, 5 = CH6).
-</p>
+<p>运行时<em>配置文件</em>提供 <code>funcMap</code>：一个将 PWM 输出索引 → ServoFunc 映射的数组。前三个槽位（PWM 1…3）始终为 <code>SF_NONE</code>——它们属于 BOOT 引脚和 I2C 总线——因此真正的伺服函数从 PWM 索引 3 开始（固件注释说明：索引 3 = CH4、4 = CH5、5 = CH6）。</p>
 <h2>八种混控配置文件</h2>
-<p>
-Eight mixer profiles exist. Profiles 0–2 drive the <em>waveform</em> kernel (flapping
-wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
-</p>
+<p>存在八个混控配置文件。配置文件 0–2 驱动<em>波形</em>内核（扑翼），配置文件 3–7 驱动<em>变速箱</em>内核（电机 + 尾翼）：</p>
 <table>
 <tr>
 <th>#</th>
-<th>Profile</th>
-<th>Kernel</th>
-<th>Servos</th>
+<th>配置文件</th>
+<th>内核</th>
+<th>伺服器</th>
 <th>funcMap (PWM 3 · 4 · 5)</th>
 </tr>
 <tr>
@@ -139,9 +125,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>waveform</td>
+<td>波形</td>
 <td>2</td>
-<td>Left wing · Right wing · —</td>
+<td>左翼 · 右翼 · —</td>
 </tr>
 <tr>
 <td>
@@ -150,9 +136,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>waveform</td>
+<td>波形</td>
 <td>3</td>
-<td>Left wing · Right wing · Rudder</td>
+<td>左翼 · 右翼 · 方向舵</td>
 </tr>
 <tr>
 <td>
@@ -161,9 +147,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>waveform</td>
-<td>4 (back-right shares the back-left mirror)</td>
-<td>Left wing · Right wing · Back-left wing</td>
+<td>波形</td>
+<td>4（后右与后左镜像共享）</td>
+<td>左翼 · 右翼 · 后左翼</td>
 </tr>
 <tr>
 <td>
@@ -172,9 +158,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>变速箱</td>
 <td>3</td>
-<td>Rudder · V-tail left · V-tail right</td>
+<td>方向舵 · V 尾左 · V 尾右</td>
 </tr>
 <tr>
 <td>
@@ -183,9 +169,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL</code>
 </td>
-<td>gearbox</td>
+<td>变速箱</td>
 <td>3</td>
-<td>Motor · V-tail left · V-tail right</td>
+<td>电机 · V 尾左 · V 尾右</td>
 </tr>
 <tr>
 <td>
@@ -194,9 +180,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
-<td>4 (V-tail right shares the left mirror)</td>
-<td>Rudder · Motor · V-tail left</td>
+<td>变速箱</td>
+<td>4（V 尾右与左镜像共享）</td>
+<td>方向舵 · 电机 · V 尾左</td>
 </tr>
 <tr>
 <td>
@@ -205,9 +191,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>变速箱</td>
 <td>2</td>
-<td>Rudder · Elevator · —</td>
+<td>方向舵 · 升降舵 · —</td>
 </tr>
 <tr>
 <td>
@@ -216,135 +202,66 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>变速箱</td>
 <td>3</td>
-<td>Rudder · Motor · Elevator</td>
+<td>方向舵 · 电机 · 升降舵</td>
 </tr>
 </table>
-<p>
-Selection: build-time flag <code>MIXER_PROFILE</code> (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> → profile 5), then runtime-overridable through the
-WebUI (<code>setOrnithopterProfile</code>). The kernel test is simply
-<code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.
-</p>
+<p>选择：构建标志 <code>MIXER_PROFILE</code>（旧式 <code>ORNITHOPTER_GEARBOX=1</code> → 配置文件 5），随后可通过 WebUI 运行时覆盖（<code>setOrnithopterProfile</code>）。内核测试仅为 <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>。</p>
 <h2>机翼轴混控（波形内核）</h2>
-<p>
-All channel values enter the mixers normalized: <code>_crsfToNorm</code> maps the raw
-172…1811 window linearly onto −1…+1. Steering commands are then scaled by the
-per-profile authority sliders (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)
-times ±60° (<code>ORNI_STEER_MAX_DEG</code>).
-</p>
-<p>
-<strong>Mirror geometry.</strong> Wing servos are mirror-mounted, which swaps the meaning
-of common-mode and differential terms. The code therefore treats aileron (roll) as
-<em>common</em> — it adds to both wings, which becomes a differential <em>physical</em>
-deflection — and elevator (pitch) as <em>differential</em> in code, which becomes a
-common physical deflection. The angle equations, with <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>
-and the 2× multiplier applied to deviation terms only:
-</p>
+<p>所有通道值都以归一化形式进入混控器：<code>_crsfToNorm</code> 将原始 172…1811 窗口线性映射到 −1…+1。操纵命令随后按各配置文件权限滑块（<code>aileronScale</code>、<code>elevatorScale</code>、0–100%）乘以 ±60°（<code>ORNI_STEER_MAX_DEG</code>）缩放。</p>
+<p><strong>镜像几何。</strong>机翼伺服器镜像安装，这交换了共模项与差动项的含义。因此代码将副翼（横滚）视为<em>共模</em>——它加到两翼上，成为差动的<em>物理</em>偏转——而升降舵（俯仰）在代码中为<em>差动</em>，成为共模的物理偏转。角度方程，其中 <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code> 且 2× 乘数仅施加于偏差项：</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
-<p>
-<code>degL</code>/<code>degR</code> are the instantaneous stroke deflections of the left
-and right wing, each the product of its own amplitude and a ferocity-shaped wave.
-Elevator-up strengthens the <em>downstroke</em>; elevator-down the <em>upstroke</em>
-(asymmetric ferocity). Yaw splits the wings in two complementary ways:
-</p>
+<p><code>degL</code>/<code>degR</code> 是左右机翼的瞬时冲程偏转，各为其自身振幅与凶猛度塑造波形的乘积。升降舵上推强化<em>下冲程</em>；下推强化<em>上冲程</em>（非对称凶猛度）。偏航以两种互补方式分割机翼：</p>
 <ul>
-<li>
-<strong>Ferocity differential</strong> (<code>rudderFerocityRange</code>): left gets
-<code>+ferocity</code>, right <code>−ferocity</code> — the two wings dwell differently
-but keep a <em>shared reversal phase</em> (<code>limiarShared</code>), so turns are
-pure roll torque, never desynchronisation.
-</li>
-<li>
-<strong>Amplitude differential</strong> (<code>rudderAmplitudeDifferential</code>):
-left amplitude ×(1+Δ), right ×(1−Δ) — symmetric divergence around the throttle-set
-stroke.
-</li>
+<li><strong>凶猛度差动</strong>（<code>rudderFerocityRange</code>）：左侧得到 <code>+凶猛度</code>，右侧 <code>−凶猛度</code>——两翼停留方式不同，但保持<em>共享反转相位</em>（<code>limiarShared</code>），因此转向是纯粹的横滚扭矩，绝非失步。</li>
+<li><strong>振幅差动</strong>（<code>rudderAmplitudeDifferential</code>）：左振幅 ×(1+Δ)、右 ×(1−Δ)——围绕油门设定冲程的对称发散。</li>
 </ul>
-<p>
-Angles are clamped 0…180° and converted to pulses with the configurable envelope
-<code>servoMinUs…servoMaxUs</code> (defaults 988…2012): µs = min + angle·(max−min)/180,
-plus the per-function trim. The glide/flap centre offsets (<code>glideAngleDeg</code>,
-<code>flappingAngleDeg</code>, ±15°) enter as static terms on their respective branch —
-so glide and flap centres can be tuned independently per flight profile.
-</p>
+<p>角度被钳制于 0…180° 并用可配置包络 <code>servoMinUs…servoMaxUs</code>（默认 988…2012）转换为脉冲：µs = min + 角度·(max−min)/180，再加按函数微调。滑翔/扑翼中心偏移（<code>glideAngleDeg</code>、<code>flappingAngleDeg</code>、±15°）作为静态项进入各自分支——因此滑翔与扑翼中心可按飞行配置文件独立调校。</p>
 <h2>方向舵混控（两种内核）</h2>
-<p>
-The rudder mixer is <em>shared verbatim by both kernels</em> — one equation, two
-airframes:
-</p>
+<p>方向舵混控器被<em>两个内核逐字共享</em>——一个方程，两种机架：</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
-<p>
-Defaults: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>
-(runtime-tunable in the WebUI, stored per backup). Roll coupling on the rudder is what
-lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
-the roll weight if the head rudder feels too aggressive in roll.
-</p>
+<p>默认值：<code>rudderYawWeight = 65%</code>、<code>rudderRollWeight = 35%</code>（可在 WebUI 运行时调校，按备份存储）。方向舵上的横滚耦合让翼载较重的翼龙无需偏航绳技巧即可保持协调转弯；若头舵在横滚上过于激进，请降低横滚权重。</p>
 <h2>齿轮箱尾翼与升降副翼混控</h2>
-<p>
-The gearbox kernel runs statelessly every tick. Its three sub-mixers:
-</p>
+<p>变速箱内核每个节拍无状态运行。其三个子混控器：</p>
 <ul>
-<li>
-<strong>Motor</strong> — <code>SF_MOTOR</code>: when armed, throttle 0…1 maps to
-1000…2000&nbsp;µs; disarmed or link-down forces the minimum (motor stopped).
-</li>
-<li>
-<strong>Rudder</strong> — identical equation to the section above.
-</li>
-<li>
-<strong>Tails</strong> — two families. Classic profiles (6/7) drive a separate
-elevator: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-tail profiles
-(3/4/5) elevon-mix both channels onto the two tail servos:
-</li>
+<li><strong>电机</strong>——<code>SF_MOTOR</code>：武装时油门 0…1 映射到 1000…2000&nbsp;µs；解除武装或链路丢失时强制最小（电机停转）。</li>
+<li><strong>方向舵</strong>——与上一节方程相同。</li>
+<li><strong>尾翼</strong>——两个族。常规配置文件（6/7）驱动独立升降舵：<code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>。V 尾配置文件（3/4/5）将两个通道升降副翼混合到两个尾翼伺服器：</li>
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
-<p>
-On the gearbox kernel, Zephyrus injects <em>both</em> roll and pitch PID corrections into
-the tail servos (roll anti-phase, pitch common-mode), each hard-clamped to
-±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
-waggle, but never stall, a tail servo.
-</p>
+<p>在变速箱内核上，Zephyrus 将<em>横滚与俯仰两者</em>的 PID 修正注入尾翼伺服器（横滚反相、俯仰共模），各硬性钳制于 ±250&nbsp;µs（<code>ZEPHYR_GEARBOX_CLAMP_US</code>）。因此陀螺仪毛刺可以晃动、但绝不停转一个尾翼伺服器。</p>
 <h2>泽菲罗斯注入、微调与失控保护</h2>
-<p>
-Three different injection points exist depending on kernel and axis:
-</p>
+<p>根据内核与轴的不同，存在三个不同的注入点：</p>
 <table>
 <tr>
-<th>Axis</th>
-<th>Waveform kernel</th>
-<th>Gearbox kernel</th>
+<th>轴</th>
+<th>波形内核</th>
+<th>变速箱内核</th>
 </tr>
 <tr>
-<td>Rudder / yaw</td>
-<td><code>gyroRudderCorrection</code> added to the crest rudder µs</td>
-<td><code>gyroRudderCorrection</code> added to the fin rudder µs</td>
+<td>方向舵 / 偏航</td>
+<td><code>gyroRudderCorrection</code> 加到冠舵 µs 上</td>
+<td><code>gyroRudderCorrection</code> 加到鳍舵 µs 上</td>
 </tr>
 <tr>
-<td>Roll (aileron)</td>
-<td>— (waveform wings carry no roll PID)</td>
-<td><code>gyroAileronCorrection</code>, anti-phase across V-tail, clamped ±250&nbsp;µs</td>
+<td>横滚（副翼）</td>
+<td>——（波形机翼不携带横滚 PID）</td>
+<td><code>gyroAileronCorrection</code>，跨 V 尾反相，钳制 ±250&nbsp;µs</td>
 </tr>
 <tr>
-<td>Pitch (elevator)</td>
-<td>— (injected as wave modulation in the Zephyrus layer)</td>
-<td><code>gyroElevatorCorrection</code>, common-mode, clamped ±250&nbsp;µs</td>
+<td>俯仰（升降舵）</td>
+<td>——（在 Zephyrus 层中作为波形调制注入）</td>
+<td><code>gyroElevatorCorrection</code>，共模，钳制 ±250&nbsp;µs</td>
 </tr>
 </table>
+<p><strong>微调与限制。</strong>每个函数都有带符号的逐伺服微调（<code>servoTrimUs[tag]</code>，默认 0，±300&nbsp;µs）最后加入，每个值都经过 <code>_clampServo</code>——一个凌驾一切的绝对 500…2500&nbsp;µs 安全钳制。失控保护或链路丢失时，所有函数回到 1500&nbsp;µs、变速箱电机回到最小，因此模型始终滑向中立。</p>
 <p>
-<strong>Trims &amp; limits.</strong> Every function has a signed per-servo trim
-(<code>servoTrimUs[tag]</code>, default 0, ±300&nbsp;µs) added last, and every value
-passes <code>_clampServo</code> — an absolute 500…2500&nbsp;µs safety clamp that
-outranks everything. On failsafe or link-down, all functions return to 1500&nbsp;µs and a
-gearbox motor to minimum, so the model always glides to neutral.
-</p>
-<p>
-Ready for the practical layer? The
-<a href="../../../zh/tutorials/waveform-tuning/">Waveform Tuning</a>
-tutorial shows how these numbers feel from the sticks, and the
-<a href="../../../zh/documentation/architecture/">Architecture</a> article
-shows where each mixer sits in the pipeline.
+准备好进入实战层了吗？
+<a href='../../../zh/tutorials/waveform-tuning/'>波形调校</a>
+ 教程展示了这些数值在摇杆上的手感，而
+<a href='../../../zh/documentation/architecture/'>架构</a>
+ 一文展示了每个混控器在管线中的位置。
 </p>
 </div>
 </main>

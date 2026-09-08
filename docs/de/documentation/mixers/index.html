@@ -29,24 +29,19 @@
 <h1>Mixer-Referenz</h1>
 <p class='sub-lead'>Von Sticks und Gyro bis zu µs auf der Leitung: die vollständige Geometrie jedes wählbaren Mixers — Flügelachsen, Ruder-Mischungen, Elevons, Trims und Begrenzungen.</p>
 <p>
-This page documents the mixer layer of
-<code>src/lib/Ornithopter/Ornithopter.cpp</code> and the profile system of
-<code>OrnithopterConfig.h</code>. For the surrounding architecture, start with the
-<a href="../../../de/documentation/architecture/">Architecture article</a>;
-for pulse timing and trim ranges, see the
-<a href="../../../de/documentation/servo-kernel/">Servo Kernel</a> article.
+Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornithopter.cpp</code> und das Profilsystem von <code>OrnithopterConfig.h</code>. Für die umgebende Architektur beginnen Sie mit dem 
+<a href='../../../de/documentation/architecture/'>Architektur-Artikel</a>
+; für Puls-Timing und Trim-Bereiche siehe den 
+<a href='../../../de/documentation/servo-kernel/'>Servo-Kernel</a>
+ Artikel.
 </p>
 <h2>Servo-Funktions-Tags</h2>
-<p>
-Every output of every mixer is a µs value written into <code>_f[]</code>, indexed by a
-<em>ServoFunc tag</em>. Tags are transport — they say <em>what</em> a signal means, never
-<em>where</em> it is wired:
-</p>
+<p>Jeder Ausgang jedes Mixers ist ein µs-Wert, geschrieben in <code>_f[]</code>, indiziert durch einen <em>ServoFunc-Tag</em>. Tags sind Transport — sie sagen <em>was</em> ein Signal bedeutet, nie <em>wo</em> es verdrahtet ist:</p>
 <table>
 <tr>
 <th>Tag</th>
 <th>Name</th>
-<th>Meaning</th>
+<th>Bedeutung</th>
 </tr>
 <tr>
 <td>
@@ -55,7 +50,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_NONE</code>
 </td>
-<td>Reserved — no function (first PWM slots stay free for BOOT and I2C)</td>
+<td>Reserviert — keine Funktion (die ersten PWM-Slots bleiben für BOOT und I2C frei)</td>
 </tr>
 <tr>
 <td>
@@ -64,7 +59,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Front flapping wings (waveform kernel)</td>
+<td>Vordere Schlagflügel (Wellenform-Kernel)</td>
 </tr>
 <tr>
 <td>
@@ -73,7 +68,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Head/crest rudder (waveform) or fin rudder (gearbox) — yaw + roll blend</td>
+<td>Kopf-/Kamm-Ruder (Wellenform) oder Flossenruder (Getriebe) — Gier- + Roll-Mischung</td>
 </tr>
 <tr>
 <td>
@@ -82,7 +77,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Brushless ESC throttle (gearbox kernel only)</td>
+<td>Brushless-ESC-Schub (nur Getriebe-Kernel)</td>
 </tr>
 <tr>
 <td>
@@ -91,7 +86,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_VTAIL_LEFT / SF_VTAIL_RIGHT</code>
 </td>
-<td>V-tail surfaces, elevon-mixed (gearbox kernel)</td>
+<td>V-Leitwerk-Flächen, elevon-gemischt (Getriebe-Kernel)</td>
 </tr>
 <tr>
 <td>
@@ -100,7 +95,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_ELEVATOR</code>
 </td>
-<td>Traditional separate elevator (gearbox profiles 6/7)</td>
+<td>Traditionelles separates Höhenruder (Getriebe-Profile 6/7)</td>
 </tr>
 <tr>
 <td>
@@ -109,25 +104,16 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Rear wing pair of a 4-wing airframe (mirror of the front pair, own trim)</td>
+<td>Hinteres Flügelpaar einer 4-Flügel-Zelle (Spiegel des vorderen Paars, eigener Trim)</td>
 </tr>
 </table>
-<p>
-A runtime <em>profile</em> provides the <code>funcMap</code>: an array that maps PWM
-output index → ServoFunc. The first three slots (PWM 1…3) are always
-<code>SF_NONE</code> — they belong to the BOOT strap and the I2C bus — so real servo
-functions begin at PWM index 3 (the firmware comment spells this out: index 3 = CH4,
-4 = CH5, 5 = CH6).
-</p>
+<p>Ein Laufzeit-<em>Profil</em> liefert die <code>funcMap</code>: ein Array, das PWM-Ausgangsindex → ServoFunc abbildet. Die ersten drei Slots (PWM 1…3) sind immer <code>SF_NONE</code> — sie gehören dem BOOT-Gurt und dem I2C-Bus — echte Servo-Funktionen beginnen also bei PWM-Index 3 (der Firmware-Kommentar erklärt: Index 3 = CH4, 4 = CH5, 5 = CH6).</p>
 <h2>Die acht Mixer-Profile</h2>
-<p>
-Eight mixer profiles exist. Profiles 0–2 drive the <em>waveform</em> kernel (flapping
-wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
-</p>
+<p>Acht Mixer-Profile existieren. Profile 0–2 treiben das <em>Wellenform</em>-Kernel (Schlagflügel), Profile 3–7 das <em>Getriebe</em>-Kernel (Motor + Leitwerke):</p>
 <table>
 <tr>
 <th>#</th>
-<th>Profile</th>
+<th>Profil</th>
 <th>Kernel</th>
 <th>Servos</th>
 <th>funcMap (PWM 3 · 4 · 5)</th>
@@ -139,9 +125,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>waveform</td>
+<td>Wellenform</td>
 <td>2</td>
-<td>Left wing · Right wing · —</td>
+<td>Linker Flügel · Rechter Flügel · —</td>
 </tr>
 <tr>
 <td>
@@ -150,9 +136,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>waveform</td>
+<td>Wellenform</td>
 <td>3</td>
-<td>Left wing · Right wing · Rudder</td>
+<td>Linker Flügel · Rechter Flügel · Ruder</td>
 </tr>
 <tr>
 <td>
@@ -161,9 +147,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>waveform</td>
-<td>4 (back-right shares the back-left mirror)</td>
-<td>Left wing · Right wing · Back-left wing</td>
+<td>Wellenform</td>
+<td>4 (hinten-rechts teilt den Spiegel hinten-links)</td>
+<td>Linker Flügel · Rechter Flügel · Hinterer linker Flügel</td>
 </tr>
 <tr>
 <td>
@@ -172,9 +158,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>Getriebe</td>
 <td>3</td>
-<td>Rudder · V-tail left · V-tail right</td>
+<td>Ruder · V-Leitwerk links · V-Leitwerk rechts</td>
 </tr>
 <tr>
 <td>
@@ -183,9 +169,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL</code>
 </td>
-<td>gearbox</td>
+<td>Getriebe</td>
 <td>3</td>
-<td>Motor · V-tail left · V-tail right</td>
+<td>Motor · V-Leitwerk links · V-Leitwerk rechts</td>
 </tr>
 <tr>
 <td>
@@ -194,9 +180,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
-<td>4 (V-tail right shares the left mirror)</td>
-<td>Rudder · Motor · V-tail left</td>
+<td>Getriebe</td>
+<td>4 (V-Leitwerk rechts teilt den linken Spiegel)</td>
+<td>Ruder · Motor · V-Leitwerk links</td>
 </tr>
 <tr>
 <td>
@@ -205,9 +191,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>Getriebe</td>
 <td>2</td>
-<td>Rudder · Elevator · —</td>
+<td>Ruder · Höhenruder · —</td>
 </tr>
 <tr>
 <td>
@@ -216,135 +202,66 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>Getriebe</td>
 <td>3</td>
-<td>Rudder · Motor · Elevator</td>
+<td>Ruder · Motor · Höhenruder</td>
 </tr>
 </table>
-<p>
-Selection: build-time flag <code>MIXER_PROFILE</code> (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> → profile 5), then runtime-overridable through the
-WebUI (<code>setOrnithopterProfile</code>). The kernel test is simply
-<code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.
-</p>
+<p>Auswahl: Build-Flag <code>MIXER_PROFILE</code> (alt <code>ORNITHOPTER_GEARBOX=1</code> → Profil 5), dann zur Laufzeit über die WebUI überschreibbar (<code>setOrnithopterProfile</code>). Der Kernel-Test ist schlicht <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Flügelachsen-Mixing (Waveform-Kernel)</h2>
-<p>
-All channel values enter the mixers normalized: <code>_crsfToNorm</code> maps the raw
-172…1811 window linearly onto −1…+1. Steering commands are then scaled by the
-per-profile authority sliders (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)
-times ±60° (<code>ORNI_STEER_MAX_DEG</code>).
-</p>
-<p>
-<strong>Mirror geometry.</strong> Wing servos are mirror-mounted, which swaps the meaning
-of common-mode and differential terms. The code therefore treats aileron (roll) as
-<em>common</em> — it adds to both wings, which becomes a differential <em>physical</em>
-deflection — and elevator (pitch) as <em>differential</em> in code, which becomes a
-common physical deflection. The angle equations, with <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>
-and the 2× multiplier applied to deviation terms only:
-</p>
+<p>Alle Kanalwerte treten normalisiert in die Mixer ein: <code>_crsfToNorm</code> bildet das rohe 172…1811-Fenster linear auf −1…+1 ab. Steuerbefehle werden dann mit den Autoritäts-Slidern pro Profil (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100 %) mal ±60° (<code>ORNI_STEER_MAX_DEG</code>) skaliert.</p>
+<p><strong>Spiegelgeometrie.</strong> Flügel-Servos sind spiegelverkehrt montiert, was die Bedeutung von Gleichtakt- und Differenz-Termen vertauscht. Der Code behandelt daher Querruder (Roll) als <em>gleichtaktig</em> — es addiert sich auf beide Flügel, was zu einer differenziellen <em>physischen</em> Auslenkung wird — und Höhenruder (Nick) als <em>differentiell</em> im Code, was zu einer gleichtaktigen physischen Auslenkung wird. Die Winkelgleichungen, mit <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code> und dem 2×-Multiplikator nur auf Abweichungsterme:</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
-<p>
-<code>degL</code>/<code>degR</code> are the instantaneous stroke deflections of the left
-and right wing, each the product of its own amplitude and a ferocity-shaped wave.
-Elevator-up strengthens the <em>downstroke</em>; elevator-down the <em>upstroke</em>
-(asymmetric ferocity). Yaw splits the wings in two complementary ways:
-</p>
+<p><code>degL</code>/<code>degR</code> sind die momentanen Schlag-Auslenkungen des linken und rechten Flügels, jeweils das Produkt aus eigener Amplitude und einer heftigkeitsgeformten Welle. Höhenruder hoch stärkt den <em>Abschlag</em>; tief den <em>Aufschlag</em> (asymmetrische Heftigkeit). Gieren teilt die Flügel auf zwei komplementäre Weisen:</p>
 <ul>
-<li>
-<strong>Ferocity differential</strong> (<code>rudderFerocityRange</code>): left gets
-<code>+ferocity</code>, right <code>−ferocity</code> — the two wings dwell differently
-but keep a <em>shared reversal phase</em> (<code>limiarShared</code>), so turns are
-pure roll torque, never desynchronisation.
-</li>
-<li>
-<strong>Amplitude differential</strong> (<code>rudderAmplitudeDifferential</code>):
-left amplitude ×(1+Δ), right ×(1−Δ) — symmetric divergence around the throttle-set
-stroke.
-</li>
+<li><strong>Heftigkeits-Differential</strong> (<code>rudderFerocityRange</code>): links bekommt <code>+Heftigkeit</code>, rechts <code>−Heftigkeit</code> — die zwei Flügel verweilen unterschiedlich, behalten aber eine <em>geteilte Umkehrphase</em> (<code>limiarShared</code>), daher sind Kurven reines Roll-Drehmoment, nie Desynchronisation.</li>
+<li><strong>Amplituden-Differential</strong> (<code>rudderAmplitudeDifferential</code>): linke Amplitude ×(1+Δ), rechte ×(1−Δ) — symmetrische Divergenz um den schubgesetzten Schlag.</li>
 </ul>
-<p>
-Angles are clamped 0…180° and converted to pulses with the configurable envelope
-<code>servoMinUs…servoMaxUs</code> (defaults 988…2012): µs = min + angle·(max−min)/180,
-plus the per-function trim. The glide/flap centre offsets (<code>glideAngleDeg</code>,
-<code>flappingAngleDeg</code>, ±15°) enter as static terms on their respective branch —
-so glide and flap centres can be tuned independently per flight profile.
-</p>
+<p>Winkel werden auf 0…180° begrenzt und mit der konfigurierbaren Hülle <code>servoMinUs…servoMaxUs</code> (Standard 988…2012) in Pulse gewandelt: µs = min + Winkel·(max−min)/180, plus Funktions-Trim. Die Gleit-/Flatterzentrum-Offsets (<code>glideAngleDeg</code>, <code>flappingAngleDeg</code>, ±15°) gehen als statische Terme in ihren jeweiligen Zweig ein — so lassen sich Gleit- und Flatterzentren pro Flugprofil unabhängig tunen.</p>
 <h2>Ruder-Mixing (beide Kernel)</h2>
-<p>
-The rudder mixer is <em>shared verbatim by both kernels</em> — one equation, two
-airframes:
-</p>
+<p>Der Ruder-Mixer wird <em>von beiden Kerneln wörtlich geteilt</em> — eine Gleichung, zwei Zellen:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
-<p>
-Defaults: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>
-(runtime-tunable in the WebUI, stored per backup). Roll coupling on the rudder is what
-lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
-the roll weight if the head rudder feels too aggressive in roll.
-</p>
+<p>Standard: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (zur Laufzeit in der WebUI tunbar, pro Backup gespeichert). Die Roll-Kopplung auf dem Ruder lässt einen flügelschweren Pterosaurier koordinierte Kurven ohne Gierfaden-Akrobatik halten; reduzieren Sie das Roll-Gewicht, wenn das Kopf-Ruder im Roll zu aggressiv wirkt.</p>
 <h2>Leitwerks- & Elevon-Mixing (Getriebe)</h2>
-<p>
-The gearbox kernel runs statelessly every tick. Its three sub-mixers:
-</p>
+<p>Das Getriebe-Kernel läuft zustandslos jeden Tick. Seine drei Sub-Mixer:</p>
 <ul>
-<li>
-<strong>Motor</strong> — <code>SF_MOTOR</code>: when armed, throttle 0…1 maps to
-1000…2000&nbsp;µs; disarmed or link-down forces the minimum (motor stopped).
-</li>
-<li>
-<strong>Rudder</strong> — identical equation to the section above.
-</li>
-<li>
-<strong>Tails</strong> — two families. Classic profiles (6/7) drive a separate
-elevator: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-tail profiles
-(3/4/5) elevon-mix both channels onto the two tail servos:
-</li>
+<li><strong>Motor</strong> — <code>SF_MOTOR</code>: bei scharf mappt Schub 0…1 auf 1000…2000&nbsp;µs; entschärft oder Link-Verlust erzwingt das Minimum (Motor gestoppt).</li>
+<li><strong>Ruder</strong> — identische Gleichung wie im Abschnitt oben.</li>
+<li><strong>Leitwerke</strong> — zwei Familien. Klassische Profile (6/7) treiben ein separates Höhenruder: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-Profile (3/4/5) mischen beide Kanäle elevon auf die zwei Leitwerk-Servos:</li>
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
-<p>
-On the gearbox kernel, Zephyrus injects <em>both</em> roll and pitch PID corrections into
-the tail servos (roll anti-phase, pitch common-mode), each hard-clamped to
-±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
-waggle, but never stall, a tail servo.
-</p>
+<p>Auf dem Getriebe-Kernel speist Zephyrus <em>beide</em> Roll- und Nick-PID-Korrekturen in die Leitwerk-Servos ein (Roll gegenphasig, Nick gleichtaktig), jeweils hart auf ±250&nbsp;µs begrenzt (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Ein Gyro-Glitch kann daher wackeln, aber nie einen Leitwerk-Servo blockieren.</p>
 <h2>Zephyrus-Einspeisung, Trims & Failsafe</h2>
-<p>
-Three different injection points exist depending on kernel and axis:
-</p>
+<p>Je nach Kernel und Achse existieren drei verschiedene Einspeisepunkte:</p>
 <table>
 <tr>
-<th>Axis</th>
-<th>Waveform kernel</th>
-<th>Gearbox kernel</th>
+<th>Achse</th>
+<th>Wellenform-Kernel</th>
+<th>Getriebe-Kernel</th>
 </tr>
 <tr>
-<td>Rudder / yaw</td>
-<td><code>gyroRudderCorrection</code> added to the crest rudder µs</td>
-<td><code>gyroRudderCorrection</code> added to the fin rudder µs</td>
+<td>Ruder / Gieren</td>
+<td><code>gyroRudderCorrection</code> zu den Kamm-Ruder-µs addiert</td>
+<td><code>gyroRudderCorrection</code> zu den Flossenruder-µs addiert</td>
 </tr>
 <tr>
-<td>Roll (aileron)</td>
-<td>— (waveform wings carry no roll PID)</td>
-<td><code>gyroAileronCorrection</code>, anti-phase across V-tail, clamped ±250&nbsp;µs</td>
+<td>Roll (Querruder)</td>
+<td>— (Wellenform-Flügel tragen kein Roll-PID)</td>
+<td><code>gyroAileronCorrection</code>, gegenphasig über das V-Leitwerk, ±250&nbsp;µs begrenzt</td>
 </tr>
 <tr>
-<td>Pitch (elevator)</td>
-<td>— (injected as wave modulation in the Zephyrus layer)</td>
-<td><code>gyroElevatorCorrection</code>, common-mode, clamped ±250&nbsp;µs</td>
+<td>Nick (Höhenruder)</td>
+<td>— (als Wellenmodulation in der Zephyrus-Schicht eingespeist)</td>
+<td><code>gyroElevatorCorrection</code>, gleichtaktig, ±250&nbsp;µs begrenzt</td>
 </tr>
 </table>
+<p><strong>Trims &amp; Grenzen.</strong> Jede Funktion hat einen vorzeichenbehafteten Trim pro Servo (<code>servoTrimUs[tag]</code>, Standard 0, ±300&nbsp;µs), zuletzt addiert, und jeder Wert passiert <code>_clampServo</code> — eine absolute 500…2500&nbsp;µs-Sicherheitsklemme, die alles überstimmt. Bei Failsafe oder Link-Verlust kehren alle Funktionen auf 1500&nbsp;µs und ein Getriebemotor auf Minimum zurück, sodass das Modell stets zu Neutral gleitet.</p>
 <p>
-<strong>Trims &amp; limits.</strong> Every function has a signed per-servo trim
-(<code>servoTrimUs[tag]</code>, default 0, ±300&nbsp;µs) added last, and every value
-passes <code>_clampServo</code> — an absolute 500…2500&nbsp;µs safety clamp that
-outranks everything. On failsafe or link-down, all functions return to 1500&nbsp;µs and a
-gearbox motor to minimum, so the model always glides to neutral.
-</p>
-<p>
-Ready for the practical layer? The
-<a href="../../../de/tutorials/waveform-tuning/">Waveform Tuning</a>
-tutorial shows how these numbers feel from the sticks, and the
-<a href="../../../de/documentation/architecture/">Architecture</a> article
-shows where each mixer sits in the pipeline.
+Bereit für die Praxis-Schicht? Das 
+<a href='../../../de/tutorials/waveform-tuning/'>Wellenform-Tuning</a>
+-Tutorial zeigt, wie sich diese Zahlen an den Sticks anfühlen, und der 
+<a href='../../../de/documentation/architecture/'>Architektur</a>
+ Artikel zeigt, wo jeder Mixer in der Pipeline sitzt.
 </p>
 </div>
 </main>

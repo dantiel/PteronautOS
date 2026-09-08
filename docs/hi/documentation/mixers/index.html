@@ -29,24 +29,19 @@
 <h1>मिक्सर संदर्भ</h1>
 <p class='sub-lead'>स्टिक और जायरो से तार पर µs तक: हर चयन योग्य मिक्सर की पूर्ण ज्यामिति — पंख अक्ष, रडर मिश्रण, एलेवॉन, ट्रिम और क्लैम्प।</p>
 <p>
-This page documents the mixer layer of
-<code>src/lib/Ornithopter/Ornithopter.cpp</code> and the profile system of
-<code>OrnithopterConfig.h</code>. For the surrounding architecture, start with the
-<a href="../../../hi/documentation/architecture/">Architecture article</a>;
-for pulse timing and trim ranges, see the
-<a href="../../../hi/documentation/servo-kernel/">Servo Kernel</a> article.
+यह पृष्ठ <code>src/lib/Ornithopter/Ornithopter.cpp</code> की मिक्सर परत और <code>OrnithopterConfig.h</code> की प्रोफ़ाइल प्रणाली का दस्तावेज़ है। आसपास की वास्तुकला के लिए, 
+<a href='../../../hi/documentation/architecture/'>आर्किटेक्चर लेख</a>
+; पल्स टाइमिंग और ट्रिम रेंज के लिए देखें 
+<a href='../../../hi/documentation/servo-kernel/'>सर्वो कर्नेल</a>
+ लेख देखें।
 </p>
 <h2>सर्वो फ़ंक्शन टैग</h2>
-<p>
-Every output of every mixer is a µs value written into <code>_f[]</code>, indexed by a
-<em>ServoFunc tag</em>. Tags are transport — they say <em>what</em> a signal means, never
-<em>where</em> it is wired:
-</p>
+<p>हर मिक्सर का हर आउटपुट <code>_f[]</code> में लिखा गया µs मान है, जो <em>ServoFunc टैग</em> से अनुक्रमित है। टैग परिवहन हैं — वे बताते हैं कि सिग्नल <em>क्या</em> मतलब रखता है, कभी <em>कहाँ</em> जुड़ा है नहीं:</p>
 <table>
 <tr>
-<th>Tag</th>
-<th>Name</th>
-<th>Meaning</th>
+<th>टैग</th>
+<th>नाम</th>
+<th>अर्थ</th>
 </tr>
 <tr>
 <td>
@@ -55,7 +50,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_NONE</code>
 </td>
-<td>Reserved — no function (first PWM slots stay free for BOOT and I2C)</td>
+<td>आरक्षित — कोई फ़ंक्शन नहीं(पहले PWM स्लॉट BOOT और I2C के लिए खाली रहते हैं)</td>
 </tr>
 <tr>
 <td>
@@ -64,7 +59,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Front flapping wings (waveform kernel)</td>
+<td>अग्र फ़्लैपिंग पंख(वेवफ़ॉर्म कर्नेल)</td>
 </tr>
 <tr>
 <td>
@@ -73,7 +68,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Head/crest rudder (waveform) or fin rudder (gearbox) — yaw + roll blend</td>
+<td>हेड/क्रेस्ट रडर(वेवफ़ॉर्म) या फ़िन रडर(गियरबॉक्स) — यॉ + रोल ब्लेंड</td>
 </tr>
 <tr>
 <td>
@@ -82,7 +77,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Brushless ESC throttle (gearbox kernel only)</td>
+<td>ब्रशलेस ESC थ्रॉटल(केवल गियरबॉक्स कर्नेल)</td>
 </tr>
 <tr>
 <td>
@@ -91,7 +86,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_VTAIL_LEFT / SF_VTAIL_RIGHT</code>
 </td>
-<td>V-tail surfaces, elevon-mixed (gearbox kernel)</td>
+<td>V-टेल सतहें, एलेवॉन-मिश्रित(गियरबॉक्स कर्नेल)</td>
 </tr>
 <tr>
 <td>
@@ -100,7 +95,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_ELEVATOR</code>
 </td>
-<td>Traditional separate elevator (gearbox profiles 6/7)</td>
+<td>पारंपरिक अलग एलेवेटर(गियरबॉक्स प्रोफ़ाइल 6/7)</td>
 </tr>
 <tr>
 <td>
@@ -109,27 +104,18 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Rear wing pair of a 4-wing airframe (mirror of the front pair, own trim)</td>
+<td>4-विंग एयरफ़्रेम का पिछला पंख जोड़ा(सामने के जोड़े का दर्पण, अपना ट्रिम)</td>
 </tr>
 </table>
-<p>
-A runtime <em>profile</em> provides the <code>funcMap</code>: an array that maps PWM
-output index → ServoFunc. The first three slots (PWM 1…3) are always
-<code>SF_NONE</code> — they belong to the BOOT strap and the I2C bus — so real servo
-functions begin at PWM index 3 (the firmware comment spells this out: index 3 = CH4,
-4 = CH5, 5 = CH6).
-</p>
+<p>एक रनटाइम <em>प्रोफ़ाइल</em> <code>funcMap</code> देती है: एक सरणी जो PWM आउटपुट इंडेक्स → ServoFunc मैप करती है। पहले तीन स्लॉट(PWM 1…3) हमेशा <code>SF_NONE</code> — वे BOOT स्ट्रैप और I2C बस के हैं — इसलिए वास्तविक सर्वो फ़ंक्शन PWM इंडेक्स 3 से शुरू होते हैं(फ़र्मवेयर टिप्पणी स्पष्ट करती है: इंडेक्स 3 = CH4, 4 = CH5, 5 = CH6)।</p>
 <h2>आठ मिक्सर प्रोफ़ाइल</h2>
-<p>
-Eight mixer profiles exist. Profiles 0–2 drive the <em>waveform</em> kernel (flapping
-wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
-</p>
+<p>आठ मिक्सर प्रोफ़ाइल हैं। प्रोफ़ाइल 0–2 <em>वेवफ़ॉर्म</em> कर्नेल(फ़्लैपिंग पंख) चलाती हैं, प्रोफ़ाइल 3–7 <em>गियरबॉक्स</em> कर्नेल(मोटर + टेल):</p>
 <table>
 <tr>
 <th>#</th>
-<th>Profile</th>
-<th>Kernel</th>
-<th>Servos</th>
+<th>प्रोफ़ाइल</th>
+<th>कर्नेल</th>
+<th>सर्वो</th>
 <th>funcMap (PWM 3 · 4 · 5)</th>
 </tr>
 <tr>
@@ -139,9 +125,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>waveform</td>
+<td>वेवफ़ॉर्म</td>
 <td>2</td>
-<td>Left wing · Right wing · —</td>
+<td>बायाँ पंख · दायाँ पंख · —</td>
 </tr>
 <tr>
 <td>
@@ -150,9 +136,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>waveform</td>
+<td>वेवफ़ॉर्म</td>
 <td>3</td>
-<td>Left wing · Right wing · Rudder</td>
+<td>बायाँ पंख · दायाँ पंख · रडर</td>
 </tr>
 <tr>
 <td>
@@ -161,9 +147,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>waveform</td>
-<td>4 (back-right shares the back-left mirror)</td>
-<td>Left wing · Right wing · Back-left wing</td>
+<td>वेवफ़ॉर्म</td>
+<td>4(पिछला दायाँ पिछले बाएँ का दर्पण साझा करता है)</td>
+<td>बायाँ पंख · दायाँ पंख · पिछला बायाँ पंख</td>
 </tr>
 <tr>
 <td>
@@ -172,9 +158,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>गियरबॉक्स</td>
 <td>3</td>
-<td>Rudder · V-tail left · V-tail right</td>
+<td>रडर · V-टेल बाएँ · V-टेल दाएँ</td>
 </tr>
 <tr>
 <td>
@@ -183,9 +169,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL</code>
 </td>
-<td>gearbox</td>
+<td>गियरबॉक्स</td>
 <td>3</td>
-<td>Motor · V-tail left · V-tail right</td>
+<td>मोटर · V-टेल बाएँ · V-टेल दाएँ</td>
 </tr>
 <tr>
 <td>
@@ -194,9 +180,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
-<td>4 (V-tail right shares the left mirror)</td>
-<td>Rudder · Motor · V-tail left</td>
+<td>गियरबॉक्स</td>
+<td>4(V-टेल दायाँ बाएँ दर्पण साझा करता है)</td>
+<td>रडर · मोटर · V-टेल बाएँ</td>
 </tr>
 <tr>
 <td>
@@ -205,9 +191,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>गियरबॉक्स</td>
 <td>2</td>
-<td>Rudder · Elevator · —</td>
+<td>रडर · एलेवेटर · —</td>
 </tr>
 <tr>
 <td>
@@ -216,135 +202,66 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>गियरबॉक्स</td>
 <td>3</td>
-<td>Rudder · Motor · Elevator</td>
+<td>रडर · मोटर · एलेवेटर</td>
 </tr>
 </table>
-<p>
-Selection: build-time flag <code>MIXER_PROFILE</code> (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> → profile 5), then runtime-overridable through the
-WebUI (<code>setOrnithopterProfile</code>). The kernel test is simply
-<code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.
-</p>
+<p>चयन: बिल्ड फ़्लैग <code>MIXER_PROFILE</code>(पुराना <code>ORNITHOPTER_GEARBOX=1</code> → प्रोफ़ाइल 5), फिर WebUI से रनटाइम ओवरराइड(<code>setOrnithopterProfile</code>)। कर्नेल परीक्षण केवल <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>।</p>
 <h2>पंख-अक्ष मिक्सिंग (वेवफ़ॉर्म कर्नेल)</h2>
-<p>
-All channel values enter the mixers normalized: <code>_crsfToNorm</code> maps the raw
-172…1811 window linearly onto −1…+1. Steering commands are then scaled by the
-per-profile authority sliders (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)
-times ±60° (<code>ORNI_STEER_MAX_DEG</code>).
-</p>
-<p>
-<strong>Mirror geometry.</strong> Wing servos are mirror-mounted, which swaps the meaning
-of common-mode and differential terms. The code therefore treats aileron (roll) as
-<em>common</em> — it adds to both wings, which becomes a differential <em>physical</em>
-deflection — and elevator (pitch) as <em>differential</em> in code, which becomes a
-common physical deflection. The angle equations, with <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>
-and the 2× multiplier applied to deviation terms only:
-</p>
+<p>सभी चैनल मान सामान्यीकृत होकर मिक्सर में प्रवेश करते हैं: <code>_crsfToNorm</code> कच्चे 172…1811 विंडो को −1…+1 पर रैखिक मैप करता है। स्टीयरिंग कमांड फिर प्रति-प्रोफ़ाइल अधिकार स्लाइडर(<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)× ±60°(<code>ORNI_STEER_MAX_DEG</code>) से स्केल होते हैं।</p>
+<p><strong>दर्पण ज्यामिति।</strong> विंग सर्वो दर्पण-माउंटेड होते हैं, जो कॉमन-मोड और डिफ़रेंशियल पदों का अर्थ बदल देता है। इसलिए कोड एलेरॉन(रोल) को <em>कॉमन</em> मानता है — यह दोनों पंखों में जुड़ता है, जो <em>भौतिक</em> डिफ़रेंशियल विक्षेप बन जाता है — और एलेवेटर(पिच) को कोड में <em>डिफ़रेंशियल</em> मानता है, जो भौतिक कॉमन विक्षेप बन जाता है। कोण समीकरण, <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code> और केवल विचलन पदों पर लगे 2× गुणक के साथ:</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
-<p>
-<code>degL</code>/<code>degR</code> are the instantaneous stroke deflections of the left
-and right wing, each the product of its own amplitude and a ferocity-shaped wave.
-Elevator-up strengthens the <em>downstroke</em>; elevator-down the <em>upstroke</em>
-(asymmetric ferocity). Yaw splits the wings in two complementary ways:
-</p>
+<p><code>degL</code>/<code>degR</code> बाएँ और दाएँ पंख के तात्कालिक स्ट्रोक विक्षेप हैं, प्रत्येक अपने आयाम और उग्रता-आकारित तरंग का गुणनफल। एलेवेटर ऊपर <em>डाउनस्ट्रोक</em> को, नीचे <em>अपस्ट्रोक</em> को मज़बूत करता है(असममित उग्रता)। यॉ पंखों को दो पूरक तरीकों से बाँटता है:</p>
 <ul>
-<li>
-<strong>Ferocity differential</strong> (<code>rudderFerocityRange</code>): left gets
-<code>+ferocity</code>, right <code>−ferocity</code> — the two wings dwell differently
-but keep a <em>shared reversal phase</em> (<code>limiarShared</code>), so turns are
-pure roll torque, never desynchronisation.
-</li>
-<li>
-<strong>Amplitude differential</strong> (<code>rudderAmplitudeDifferential</code>):
-left amplitude ×(1+Δ), right ×(1−Δ) — symmetric divergence around the throttle-set
-stroke.
-</li>
+<li><strong>उग्रता अंतर</strong>(<code>rudderFerocityRange</code>): बाएँ को <code>+उग्रता</code>, दाएँ को <code>−उग्रता</code> — दोनों पंख अलग-अलग ड्वेल करते हैं पर <em>साझा रिवर्सल फ़ेज़</em>(<code>limiarShared</code>) रखते हैं, इसलिए मोड़ शुद्ध रोल टॉर्क होते हैं, कभी अतुल्यकालिक नहीं।</li>
+<li><strong>आयाम अंतर</strong>(<code>rudderAmplitudeDifferential</code>): बायाँ आयाम ×(1+Δ), दायाँ ×(1−Δ) — थ्रॉटल-सेट स्ट्रोक के चारों ओर सममित विचलन।</li>
 </ul>
-<p>
-Angles are clamped 0…180° and converted to pulses with the configurable envelope
-<code>servoMinUs…servoMaxUs</code> (defaults 988…2012): µs = min + angle·(max−min)/180,
-plus the per-function trim. The glide/flap centre offsets (<code>glideAngleDeg</code>,
-<code>flappingAngleDeg</code>, ±15°) enter as static terms on their respective branch —
-so glide and flap centres can be tuned independently per flight profile.
-</p>
+<p>कोण 0…180° पर क्लैम्प होते हैं और कॉन्फ़िगर करने योग्य लिफ़ाफ़े <code>servoMinUs…servoMaxUs</code>(डिफ़ॉल्ट 988…2012) से पल्स में बदलते हैं: µs = min + कोण·(max−min)/180, फ़ंक्शन-वार ट्रिम के साथ। ग्लाइड/फ़्लैप केंद्र ऑफ़सेट(<code>glideAngleDeg</code>, <code>flappingAngleDeg</code>, ±15°) अपनी-अपनी शाखा में स्थिर पद के रूप में आते हैं — इसलिए ग्लाइड और फ़्लैप केंद्र को प्रति फ़्लाइट प्रोफ़ाइल स्वतंत्र रूप से ट्यून किया जा सकता है।</p>
 <h2>रडर मिक्सिंग (दोनों कर्नेल)</h2>
-<p>
-The rudder mixer is <em>shared verbatim by both kernels</em> — one equation, two
-airframes:
-</p>
+<p>रडर मिक्सर <em>दोनों कर्नेल द्वारा शब्दशः साझा</em> है — एक समीकरण, दो एयरफ़्रेम:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
-<p>
-Defaults: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>
-(runtime-tunable in the WebUI, stored per backup). Roll coupling on the rudder is what
-lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
-the roll weight if the head rudder feels too aggressive in roll.
-</p>
+<p>डिफ़ॉल्ट: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>(WebUI में रनटाइम-ट्यूनेबल, प्रति बैकअप संग्रहित)। रडर पर रोल युग्मन ही भारी-पंख वाले टेरोसॉर को बिना यॉ-स्ट्रिंग कसरत के समन्वित मोड़ बनाए रखने देता है; यदि हेड रडर रोल में बहुत आक्रामक लगे तो रोल भार घटाएँ।</p>
 <h2>गियरबॉक्स पूँछ और एलेवॉन मिक्सिंग</h2>
-<p>
-The gearbox kernel runs statelessly every tick. Its three sub-mixers:
-</p>
+<p>गियरबॉक्स कर्नेल हर टिक स्टेटलेस चलता है। इसके तीन उप-मिक्सर:</p>
 <ul>
-<li>
-<strong>Motor</strong> — <code>SF_MOTOR</code>: when armed, throttle 0…1 maps to
-1000…2000&nbsp;µs; disarmed or link-down forces the minimum (motor stopped).
-</li>
-<li>
-<strong>Rudder</strong> — identical equation to the section above.
-</li>
-<li>
-<strong>Tails</strong> — two families. Classic profiles (6/7) drive a separate
-elevator: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-tail profiles
-(3/4/5) elevon-mix both channels onto the two tail servos:
-</li>
+<li><strong>मोटर</strong> — <code>SF_MOTOR</code>: आर्म होने पर थ्रॉटल 0…1 से 1000…2000&nbsp;µs में मैप; डिसआर्म या लिंक-डाउन पर न्यूनतम बल(मोटर रुकी)।</li>
+<li><strong>रडर</strong> — ऊपर के खंड के समान समीकरण।</li>
+<li><strong>टेल</strong> — दो परिवार। क्लासिक प्रोफ़ाइल(6/7) अलग एलेवेटर चलाती हैं: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>। V-टेल प्रोफ़ाइल(3/4/5) दोनों चैनलों को दो टेल सर्वो पर एलेवॉन-मिक्स करती हैं:</li>
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
-<p>
-On the gearbox kernel, Zephyrus injects <em>both</em> roll and pitch PID corrections into
-the tail servos (roll anti-phase, pitch common-mode), each hard-clamped to
-±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
-waggle, but never stall, a tail servo.
-</p>
+<p>गियरबॉक्स कर्नेल पर, Zephyrus <em>रोल और पिच दोनों</em> PID सुधार टेल सर्वो में इंजेक्ट करता है(रोल प्रति-फ़ेज़, पिच कॉमन-मोड), प्रत्येक ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>) पर हार्ड-क्लैम्प। इसलिए जायरो गड़बड़ी टेल सर्वो को हिला सकती है पर कभी रोक नहीं सकती।</p>
 <h2>ज़ेफ़िरोस इंजेक्शन, ट्रिम और फ़ेलसेफ़</h2>
-<p>
-Three different injection points exist depending on kernel and axis:
-</p>
+<p>कर्नेल और अक्ष के आधार पर तीन अलग इंजेक्शन बिंदु हैं:</p>
 <table>
 <tr>
-<th>Axis</th>
-<th>Waveform kernel</th>
-<th>Gearbox kernel</th>
+<th>अक्ष</th>
+<th>वेवफ़ॉर्म कर्नेल</th>
+<th>गियरबॉक्स कर्नेल</th>
 </tr>
 <tr>
-<td>Rudder / yaw</td>
-<td><code>gyroRudderCorrection</code> added to the crest rudder µs</td>
-<td><code>gyroRudderCorrection</code> added to the fin rudder µs</td>
+<td>रडर / यॉ</td>
+<td>क्रेस्ट रडर µs में <code>gyroRudderCorrection</code> जोड़ा गया</td>
+<td>फ़िन रडर µs में <code>gyroRudderCorrection</code> जोड़ा गया</td>
 </tr>
 <tr>
-<td>Roll (aileron)</td>
-<td>— (waveform wings carry no roll PID)</td>
-<td><code>gyroAileronCorrection</code>, anti-phase across V-tail, clamped ±250&nbsp;µs</td>
+<td>रोल(एलेरॉन)</td>
+<td>—(वेवफ़ॉर्म पंख कोई रोल PID नहीं रखते)</td>
+<td><code>gyroAileronCorrection</code>, V-टेल पर प्रति-फ़ेज़, ±250&nbsp;µs क्लैम्प</td>
 </tr>
 <tr>
-<td>Pitch (elevator)</td>
-<td>— (injected as wave modulation in the Zephyrus layer)</td>
-<td><code>gyroElevatorCorrection</code>, common-mode, clamped ±250&nbsp;µs</td>
+<td>पिच(एलेवेटर)</td>
+<td>—(Zephyrus परत में वेव मॉड्यूलेशन के रूप में इंजेक्ट)</td>
+<td><code>gyroElevatorCorrection</code>, कॉमन-मोड, ±250&nbsp;µs क्लैम्प</td>
 </tr>
 </table>
+<p><strong>ट्रिम और सीमाएँ।</strong> हर फ़ंक्शन में एक चिह्नित प्रति-सर्वो ट्रिम(<code>servoTrimUs[tag]</code>, डिफ़ॉल्ट 0, ±300&nbsp;µs) अंत में जुड़ता है, और हर मान <code>_clampServo</code> — सब पर भारी एक निरपेक्ष 500…2500&nbsp;µs सुरक्षा क्लैम्प — से गुज़रता है। फेलसेफ़ या लिंक-डाउन पर सभी फ़ंक्शन 1500&nbsp;µs पर और गियरबॉक्स मोटर न्यूनतम पर लौट आते हैं, इसलिए मॉडल हमेशा न्यूट्रल पर ग्लाइड करता है।</p>
 <p>
-<strong>Trims &amp; limits.</strong> Every function has a signed per-servo trim
-(<code>servoTrimUs[tag]</code>, default 0, ±300&nbsp;µs) added last, and every value
-passes <code>_clampServo</code> — an absolute 500…2500&nbsp;µs safety clamp that
-outranks everything. On failsafe or link-down, all functions return to 1500&nbsp;µs and a
-gearbox motor to minimum, so the model always glides to neutral.
-</p>
-<p>
-Ready for the practical layer? The
-<a href="../../../hi/tutorials/waveform-tuning/">Waveform Tuning</a>
-tutorial shows how these numbers feel from the sticks, and the
-<a href="../../../hi/documentation/architecture/">Architecture</a> article
-shows where each mixer sits in the pipeline.
+व्यावहारिक परत के लिए तैयार? 
+<a href='../../../hi/tutorials/waveform-tuning/'>वेवफ़ॉर्म ट्यूनिंग</a>
+ ट्यूटोरियल दिखाता है कि ये संख्याएँ स्टिक से कैसी लगती हैं, और 
+<a href='../../../hi/documentation/architecture/'>आर्किटेक्चर</a>
+ लेख दिखाता है कि हर मिक्सर पाइपलाइन में कहाँ बैठता है।
 </p>
 </div>
 </main>

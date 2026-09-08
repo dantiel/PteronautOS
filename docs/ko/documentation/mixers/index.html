@@ -29,24 +29,19 @@
 <h1>믹서 레퍼런스</h1>
 <p class='sub-lead'>스틱과 자이로에서 선 위의 µs까지: 선택 가능한 모든 믹서의 완전한 기하 — 날개 축, 러더 블렌드, 엘레본, 트림과 클램프.</p>
 <p>
-This page documents the mixer layer of
-<code>src/lib/Ornithopter/Ornithopter.cpp</code> and the profile system of
-<code>OrnithopterConfig.h</code>. For the surrounding architecture, start with the
-<a href="../../../ko/documentation/architecture/">Architecture article</a>;
-for pulse timing and trim ranges, see the
-<a href="../../../ko/documentation/servo-kernel/">Servo Kernel</a> article.
+이 페이지는 <code>src/lib/Ornithopter/Ornithopter.cpp</code>의 믹서 계층과 <code>OrnithopterConfig.h</code>의 프로파일 시스템을 문서화합니다. 주변 아키텍처는 
+<a href='../../../ko/documentation/architecture/'>아키텍처 문서</a>
+; 펄스 타이밍과 트림 범위는 
+<a href='../../../ko/documentation/servo-kernel/'>서보 커널</a>
+ 문서를 참조하세요.
 </p>
 <h2>서보 기능 태그</h2>
-<p>
-Every output of every mixer is a µs value written into <code>_f[]</code>, indexed by a
-<em>ServoFunc tag</em>. Tags are transport — they say <em>what</em> a signal means, never
-<em>where</em> it is wired:
-</p>
+<p>모든 믹서의 모든 출력은 <em>ServoFunc 태그</em>로 인덱싱된 <code>_f[]</code>에 기록되는 µs 값입니다. 태그는 운송 수단 — 신호가 <em>무엇을</em> 의미하는지 말하지 <em>어디에</em> 배선되는지는 말하지 않습니다:</p>
 <table>
 <tr>
-<th>Tag</th>
-<th>Name</th>
-<th>Meaning</th>
+<th>태그</th>
+<th>이름</th>
+<th>의미</th>
 </tr>
 <tr>
 <td>
@@ -55,7 +50,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_NONE</code>
 </td>
-<td>Reserved — no function (first PWM slots stay free for BOOT and I2C)</td>
+<td>예약됨 — 기능 없음(첫 PWM 슬롯은 BOOT와 I2C용으로 비어 있음)</td>
 </tr>
 <tr>
 <td>
@@ -64,7 +59,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Front flapping wings (waveform kernel)</td>
+<td>전방 플래핑 날개(파형 커널)</td>
 </tr>
 <tr>
 <td>
@@ -73,7 +68,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Head/crest rudder (waveform) or fin rudder (gearbox) — yaw + roll blend</td>
+<td>헤드/크레스트 러더(파형) 또는 핀 러더(기어박스) — 요 + 롤 블렌드</td>
 </tr>
 <tr>
 <td>
@@ -82,7 +77,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Brushless ESC throttle (gearbox kernel only)</td>
+<td>브러시리스 ESC 스로틀(기어박스 커널 전용)</td>
 </tr>
 <tr>
 <td>
@@ -91,7 +86,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_VTAIL_LEFT / SF_VTAIL_RIGHT</code>
 </td>
-<td>V-tail surfaces, elevon-mixed (gearbox kernel)</td>
+<td>V-테일 면, 엘레본 혼합(기어박스 커널)</td>
 </tr>
 <tr>
 <td>
@@ -100,7 +95,7 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_ELEVATOR</code>
 </td>
-<td>Traditional separate elevator (gearbox profiles 6/7)</td>
+<td>전통적인 별도 엘리베이터(기어박스 프로파일 6/7)</td>
 </tr>
 <tr>
 <td>
@@ -109,27 +104,18 @@ Every output of every mixer is a µs value written into <code>_f[]</code>, index
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Rear wing pair of a 4-wing airframe (mirror of the front pair, own trim)</td>
+<td>4-날개 기체의 후방 날개 쌍(전방 쌍의 미러, 자체 트림)</td>
 </tr>
 </table>
-<p>
-A runtime <em>profile</em> provides the <code>funcMap</code>: an array that maps PWM
-output index → ServoFunc. The first three slots (PWM 1…3) are always
-<code>SF_NONE</code> — they belong to the BOOT strap and the I2C bus — so real servo
-functions begin at PWM index 3 (the firmware comment spells this out: index 3 = CH4,
-4 = CH5, 5 = CH6).
-</p>
+<p>런타임 <em>프로파일</em>이 <code>funcMap</code>을 제공합니다: PWM 출력 인덱스 → ServoFunc을 매핑하는 배열. 처음 세 슬롯(PWM 1…3)은 항상 <code>SF_NONE</code> — BOOT 스트랩과 I2C 버스에 속하므로 — 실제 서보 함수는 PWM 인덱스 3에서 시작합니다(펌웨어 주석이 명시: 인덱스 3 = CH4, 4 = CH5, 5 = CH6).</p>
 <h2>여덟 가지 믹서 프로필</h2>
-<p>
-Eight mixer profiles exist. Profiles 0–2 drive the <em>waveform</em> kernel (flapping
-wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
-</p>
+<p>8개의 믹서 프로파일이 있습니다. 프로파일 0–2는 <em>파형</em> 커널(플래핑 날개)을, 프로파일 3–7은 <em>기어박스</em> 커널(모터 + 테일)을 구동합니다:</p>
 <table>
 <tr>
 <th>#</th>
-<th>Profile</th>
-<th>Kernel</th>
-<th>Servos</th>
+<th>프로파일</th>
+<th>커널</th>
+<th>서보</th>
 <th>funcMap (PWM 3 · 4 · 5)</th>
 </tr>
 <tr>
@@ -139,9 +125,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>waveform</td>
+<td>파형</td>
 <td>2</td>
-<td>Left wing · Right wing · —</td>
+<td>왼쪽 날개 · 오른쪽 날개 · —</td>
 </tr>
 <tr>
 <td>
@@ -150,9 +136,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>waveform</td>
+<td>파형</td>
 <td>3</td>
-<td>Left wing · Right wing · Rudder</td>
+<td>왼쪽 날개 · 오른쪽 날개 · 러더</td>
 </tr>
 <tr>
 <td>
@@ -161,9 +147,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>waveform</td>
-<td>4 (back-right shares the back-left mirror)</td>
-<td>Left wing · Right wing · Back-left wing</td>
+<td>파형</td>
+<td>4(후방 오른쪽이 후방 왼쪽 미러를 공유)</td>
+<td>왼쪽 날개 · 오른쪽 날개 · 후방 왼쪽 날개</td>
 </tr>
 <tr>
 <td>
@@ -172,9 +158,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>기어박스</td>
 <td>3</td>
-<td>Rudder · V-tail left · V-tail right</td>
+<td>러더 · V-테일 좌 · V-테일 우</td>
 </tr>
 <tr>
 <td>
@@ -183,9 +169,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL</code>
 </td>
-<td>gearbox</td>
+<td>기어박스</td>
 <td>3</td>
-<td>Motor · V-tail left · V-tail right</td>
+<td>모터 · V-테일 좌 · V-테일 우</td>
 </tr>
 <tr>
 <td>
@@ -194,9 +180,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_2VTAIL_1RUD</code>
 </td>
-<td>gearbox</td>
-<td>4 (V-tail right shares the left mirror)</td>
-<td>Rudder · Motor · V-tail left</td>
+<td>기어박스</td>
+<td>4(V-테일 오른쪽이 왼쪽 미러를 공유)</td>
+<td>러더 · 모터 · V-테일 좌</td>
 </tr>
 <tr>
 <td>
@@ -205,9 +191,9 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>기어박스</td>
 <td>2</td>
-<td>Rudder · Elevator · —</td>
+<td>러더 · 엘리베이터 · —</td>
 </tr>
 <tr>
 <td>
@@ -216,135 +202,66 @@ wings), profiles 3–7 the <em>gearbox</em> kernel (motor + tails):
 <td>
 <code>GEARBOX_1MOT_1ELE_1RUD</code>
 </td>
-<td>gearbox</td>
+<td>기어박스</td>
 <td>3</td>
-<td>Rudder · Motor · Elevator</td>
+<td>러더 · 모터 · 엘리베이터</td>
 </tr>
 </table>
-<p>
-Selection: build-time flag <code>MIXER_PROFILE</code> (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> → profile 5), then runtime-overridable through the
-WebUI (<code>setOrnithopterProfile</code>). The kernel test is simply
-<code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.
-</p>
+<p>선택: 빌드 플래그 <code>MIXER_PROFILE</code>(레거시 <code>ORNITHOPTER_GEARBOX=1</code> → 프로파일 5), 이후 WebUI로 런타임 재정의(<code>setOrnithopterProfile</code>). 커널 검사는 단순히 <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>날개 축 믹싱 (파형 커널)</h2>
-<p>
-All channel values enter the mixers normalized: <code>_crsfToNorm</code> maps the raw
-172…1811 window linearly onto −1…+1. Steering commands are then scaled by the
-per-profile authority sliders (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)
-times ±60° (<code>ORNI_STEER_MAX_DEG</code>).
-</p>
-<p>
-<strong>Mirror geometry.</strong> Wing servos are mirror-mounted, which swaps the meaning
-of common-mode and differential terms. The code therefore treats aileron (roll) as
-<em>common</em> — it adds to both wings, which becomes a differential <em>physical</em>
-deflection — and elevator (pitch) as <em>differential</em> in code, which becomes a
-common physical deflection. The angle equations, with <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>
-and the 2× multiplier applied to deviation terms only:
-</p>
+<p>모든 채널 값은 정규화되어 믹서에 들어갑니다: <code>_crsfToNorm</code>이 원시 172…1811 창을 −1…+1로 선형 매핑합니다. 조향 명령은 이후 프로파일별 권위 슬라이더(<code>aileronScale</code>, <code>elevatorScale</code>, 0–100%)× ±60°(<code>ORNI_STEER_MAX_DEG</code>)로 스케일됩니다.</p>
+<p><strong>미러 기하.</strong> 날개 서보는 미러 장착되어 공통 모드와 차동 항의 의미가 뒤바뀝니다. 따라서 코드는 에일러론(롤)을 <em>공통</em>으로 취급 — 양 날개에 더해져 <em>물리적</em> 차동 편향이 됨 — 하고 엘리베이터(피치)는 코드에서 <em>차동</em>으로 취급하여 물리적 공통 편향이 됩니다. 각도 방정식은 <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code>와 편차 항에만 적용되는 2× 승수로:</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
-<p>
-<code>degL</code>/<code>degR</code> are the instantaneous stroke deflections of the left
-and right wing, each the product of its own amplitude and a ferocity-shaped wave.
-Elevator-up strengthens the <em>downstroke</em>; elevator-down the <em>upstroke</em>
-(asymmetric ferocity). Yaw splits the wings in two complementary ways:
-</p>
+<p><code>degL</code>/<code>degR</code>은 왼쪽·오른쪽 날개의 순간 스트로크 편향으로, 각각 자신의 진폭과 격렬도-형성 파의 곱입니다. 엘리베이터 업은 <em>다운스트로크</em>를, 다운은 <em>업스트로크</em>를 강화합니다(비대칭 격렬도). 요는 날개를 두 보완 방식으로 나눕니다:</p>
 <ul>
-<li>
-<strong>Ferocity differential</strong> (<code>rudderFerocityRange</code>): left gets
-<code>+ferocity</code>, right <code>−ferocity</code> — the two wings dwell differently
-but keep a <em>shared reversal phase</em> (<code>limiarShared</code>), so turns are
-pure roll torque, never desynchronisation.
-</li>
-<li>
-<strong>Amplitude differential</strong> (<code>rudderAmplitudeDifferential</code>):
-left amplitude ×(1+Δ), right ×(1−Δ) — symmetric divergence around the throttle-set
-stroke.
-</li>
+<li><strong>격렬도 차동</strong>(<code>rudderFerocityRange</code>): 왼쪽은 <code>+격렬도</code>, 오른쪽은 <code>−격렬도</code> — 두 날개가 다르게 드웰하지만 <em>공유 반전 위상</em>(<code>limiarShared</code>)을 유지하므로 선회는 순수 롤 토크이지 결코 비동기가 아닙니다.</li>
+<li><strong>진폭 차동</strong>(<code>rudderAmplitudeDifferential</code>): 왼쪽 진폭 ×(1+Δ), 오른쪽 ×(1−Δ) — 스로틀 설정 스트로크 중심의 대칭 발산.</li>
 </ul>
-<p>
-Angles are clamped 0…180° and converted to pulses with the configurable envelope
-<code>servoMinUs…servoMaxUs</code> (defaults 988…2012): µs = min + angle·(max−min)/180,
-plus the per-function trim. The glide/flap centre offsets (<code>glideAngleDeg</code>,
-<code>flappingAngleDeg</code>, ±15°) enter as static terms on their respective branch —
-so glide and flap centres can be tuned independently per flight profile.
-</p>
+<p>각도는 0…180°로 클램프되고 구성 가능한 엔벨로프 <code>servoMinUs…servoMaxUs</code>(기본 988…2012)로 펄스 변환됩니다: µs = min + 각도·(max−min)/180, 함수별 트림 추가. 글라이드/플랩 중심 오프셋(<code>glideAngleDeg</code>, <code>flappingAngleDeg</code>, ±15°)은 각 분기에 정적 항으로 들어갑니다 — 따라서 글라이드와 플랩 중심을 프로파일별로 독립 조정할 수 있습니다.</p>
 <h2>러더 믹싱 (두 커널 모두)</h2>
-<p>
-The rudder mixer is <em>shared verbatim by both kernels</em> — one equation, two
-airframes:
-</p>
+<p>러더 믹서는 <em>두 커널이 그대로 공유</em>합니다 — 하나의 방정식, 두 기체:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
-<p>
-Defaults: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>
-(runtime-tunable in the WebUI, stored per backup). Roll coupling on the rudder is what
-lets a wing-heavy pterosaur hold coordinated turns without yaw-string gymnastics; reduce
-the roll weight if the head rudder feels too aggressive in roll.
-</p>
+<p>기본값: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>(WebUI에서 런타임 조정, 백업별 저장). 러더의 롤 커플링 덕분에 날개가 무거운 프테로사우루스가 요스트링 곡예 없이 협조 선회를 유지합니다. 헤드 러더가 롤에서 너무 공격적이면 롤 가중치를 줄이세요.</p>
 <h2>기어박스 꼬리·엘레본 믹싱</h2>
-<p>
-The gearbox kernel runs statelessly every tick. Its three sub-mixers:
-</p>
+<p>기어박스 커널은 매 틱 무상태로 실행됩니다. 세 하위 믹서:</p>
 <ul>
-<li>
-<strong>Motor</strong> — <code>SF_MOTOR</code>: when armed, throttle 0…1 maps to
-1000…2000&nbsp;µs; disarmed or link-down forces the minimum (motor stopped).
-</li>
-<li>
-<strong>Rudder</strong> — identical equation to the section above.
-</li>
-<li>
-<strong>Tails</strong> — two families. Classic profiles (6/7) drive a separate
-elevator: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-tail profiles
-(3/4/5) elevon-mix both channels onto the two tail servos:
-</li>
+<li><strong>모터</strong> — <code>SF_MOTOR</code>: 아밍 시 스로틀 0…1이 1000…2000&nbsp;µs로 매핑; 디스암 또는 링크 다운 시 최소 강제(모터 정지).</li>
+<li><strong>러더</strong> — 위 섹션과 동일한 방정식.</li>
+<li><strong>테일</strong> — 두 패밀리. 고전 프로파일(6/7)은 별도 엘리베이터 구동: <code>µs = 1500 + elevatorNorm·500 + pitchPID + trim</code>. V-테일 프로파일(3/4/5)은 두 채널을 두 테일 서보에 엘레본 혼합:</li>
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
-<p>
-On the gearbox kernel, Zephyrus injects <em>both</em> roll and pitch PID corrections into
-the tail servos (roll anti-phase, pitch common-mode), each hard-clamped to
-±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). A gyro glitch can therefore
-waggle, but never stall, a tail servo.
-</p>
+<p>기어박스 커널에서 Zephyrus는 <em>롤과 피치 둘 다</em> PID 보정을 테일 서보에 주입합니다(롤 역위상, 피치 공통 모드), 각각 ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)로 하드 클램프. 따라서 자이로 글리치는 테일 서보를 흔들 수는 있어도 절대 멈추게 하지 못합니다.</p>
 <h2>제피로스 주입, 트림·페일세이프</h2>
-<p>
-Three different injection points exist depending on kernel and axis:
-</p>
+<p>커널과 축에 따라 세 가지 주입 지점이 있습니다:</p>
 <table>
 <tr>
-<th>Axis</th>
-<th>Waveform kernel</th>
-<th>Gearbox kernel</th>
+<th>축</th>
+<th>파형 커널</th>
+<th>기어박스 커널</th>
 </tr>
 <tr>
-<td>Rudder / yaw</td>
-<td><code>gyroRudderCorrection</code> added to the crest rudder µs</td>
-<td><code>gyroRudderCorrection</code> added to the fin rudder µs</td>
+<td>러더 / 요</td>
+<td>크레스트 러더 µs에 <code>gyroRudderCorrection</code> 추가</td>
+<td>핀 러더 µs에 <code>gyroRudderCorrection</code> 추가</td>
 </tr>
 <tr>
-<td>Roll (aileron)</td>
-<td>— (waveform wings carry no roll PID)</td>
-<td><code>gyroAileronCorrection</code>, anti-phase across V-tail, clamped ±250&nbsp;µs</td>
+<td>롤(에일러론)</td>
+<td>—(파형 날개는 롤 PID 없음)</td>
+<td><code>gyroAileronCorrection</code>, V-테일에서 역위상, ±250&nbsp;µs 클램프</td>
 </tr>
 <tr>
-<td>Pitch (elevator)</td>
-<td>— (injected as wave modulation in the Zephyrus layer)</td>
-<td><code>gyroElevatorCorrection</code>, common-mode, clamped ±250&nbsp;µs</td>
+<td>피치(엘리베이터)</td>
+<td>—(Zephyrus 계층에서 파 변조로 주입)</td>
+<td><code>gyroElevatorCorrection</code>, 공통 모드, ±250&nbsp;µs 클램프</td>
 </tr>
 </table>
+<p><strong>트림과 한계.</strong> 모든 함수에는 부호 있는 서보별 트림(<code>servoTrimUs[tag]</code>, 기본 0, ±300&nbsp;µs)이 마지막에 더해지고, 모든 값은 <code>_clampServo</code> — 모든 것을 능가하는 절대 500…2500&nbsp;µs 안전 클램프 — 를 통과합니다. 페일세이프나 링크 다운 시 모든 함수는 1500&nbsp;µs로, 기어박스 모터는 최소로 돌아가므로 모델은 항상 중립으로 글라이드합니다.</p>
 <p>
-<strong>Trims &amp; limits.</strong> Every function has a signed per-servo trim
-(<code>servoTrimUs[tag]</code>, default 0, ±300&nbsp;µs) added last, and every value
-passes <code>_clampServo</code> — an absolute 500…2500&nbsp;µs safety clamp that
-outranks everything. On failsafe or link-down, all functions return to 1500&nbsp;µs and a
-gearbox motor to minimum, so the model always glides to neutral.
-</p>
-<p>
-Ready for the practical layer? The
-<a href="../../../ko/tutorials/waveform-tuning/">Waveform Tuning</a>
-tutorial shows how these numbers feel from the sticks, and the
-<a href="../../../ko/documentation/architecture/">Architecture</a> article
-shows where each mixer sits in the pipeline.
+실전 계층으로 갈 준비가 되셨나요? 
+<a href='../../../ko/tutorials/waveform-tuning/'>파형 튜닝</a>
+ 튜토리얼은 이 수치들이 스틱에서 어떻게 느껴지는지 보여주고, 
+<a href='../../../ko/documentation/architecture/'>아키텍처</a>
+ 문서는 각 믹서가 파이프라인 어디에 있는지 보여줍니다.
 </p>
 </div>
 </main>
