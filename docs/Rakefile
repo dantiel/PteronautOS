@@ -2,6 +2,20 @@
 require "rake/clean"
 require "json"
 require "haml"
+require_relative "markdown_mini"
+
+# Hermetic suffix convention (identical across all 11 languages):
+#   *_markdown ??? markdown source, rendered to HTML at build time (use != in HAML)
+#   *_html     ??? raw HTML (tags/entities), rendered unescaped (use != in HAML)
+#   anything else ??? plain text, rendered escaped (= in HAML)
+def enrich_translations(vars)
+  vars.each do |k, v|
+    if k.end_with?("_markdown") && v.is_a?(String)
+      vars[k] = MarkdownMini.render(v)
+    end
+  end
+  vars
+end
 
 LANGS = %w[pt en ru es de ko ja zh ar hi fr]
 SUBFOLDERS = %w[en ru es de ko ja zh ar hi fr]
@@ -36,7 +50,7 @@ CLOBBER.include(
 )
 
 def build_html(lang)
-  vars = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
+  vars = enrich_translations(JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8")))
   template = File.read("index.haml", encoding: "UTF-8")
   engine = Haml::Template.new { template }
 
@@ -55,7 +69,7 @@ task :haml do
 end
 
 def build_page(name, lang)
-  vars = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
+  vars = enrich_translations(JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8")))
   template = File.read("#{name}/index.haml", encoding: "UTF-8")
   engine = Haml::Template.new { template }
 
