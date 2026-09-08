@@ -31,53 +31,44 @@
 <p class='sub-lead'>Turn a ~6 USD ESP32-S3 into two tools: a rock-steady CRSF→PWM servo converter and a pocket flasher that installs PteronautOS on EP2-class receivers without a soldered FTDI.</p>
 <h2>One board, two tools</h2>
 <p>
-Both personalities run on the <strong>same hardware</strong> — a Waveshare-style
-ESP32-S3 micro board (~6&nbsp;USD, 23&nbsp;×&nbsp;18&nbsp;mm, native USB, every
-GPIO PWM-capable). The two faces now live in <strong>one combined sketch — HERMES</strong>,
-with the two standalone sketches still available if you want only one tool:
+YOSHIMITSU is the <strong>Hermetic Shinobi</strong> with two faces — a rock-steady
+CRSF→PWM <em>converter</em> and a pocket <em>flasher</em> — fused into one
+combined firmware. Both faces live on the same board, so one permanent harness
+serves flying <em>and</em> flashing. Two builds are provided, one per board:
 </p>
 <table>
 <tr>
-<th>Tool</th>
+<th>Build</th>
 <th>Sketch</th>
-<th>Turns the S3 into…</th>
+<th>Face switch</th>
 <th>Used for</th>
 </tr>
 <tr>
-<td>HERMES (combined)</td>
+<td>YOSHIMITSU · ESP32-S3</td>
 <td>
-<code>esp32s3_hermes</code>
+<code>esp32s3_yoshimitsu</code>
 </td>
-<td>Both faces in one — converter <em>and</em> flasher, GPIO0 double-tap to switch</td>
-<td>One permanent harness for flying <em>and</em> flashing</td>
+<td>GPIO0 double-tap (BOOT button)</td>
+<td>Native USB, every GPIO PWM-capable, up to 8 servo channels</td>
 </tr>
 <tr>
-<td>A — Converter</td>
+<td>YOSHIMITSU · RP2040-Tiny</td>
 <td>
-<code>esp32s3_crsf_pwm</code>
+<code>rp2040_tiny_yoshimitsu</code>
 </td>
-<td>A rock-steady CRSF→PWM servo driver (up to 8 channels)</td>
-<td>Driving wing + rudder servos from any CRSF-only receiver</td>
-</tr>
-<tr>
-<td>B — Pocket flasher</td>
-<td>
-<code>esp32s3_flash_bridge</code>
-</td>
-<td>A USB↔UART bridge with a boot + power-cycle jig</td>
-<td>Flashing PteronautOS onto EP2-class receivers — no soldered FTDI</td>
+<td>Buttonless — FLASHER command + RESET tap</td>
+<td>UART0/UART1 on fixed pins, onboard WS2812B status LED</td>
 </tr>
 </table>
 <p>
-All three sketches live in the repository under
-<code>sketches/esp32s3_hermes/</code>,
-<code>sketches/esp32s3_crsf_pwm/</code> and
-<code>sketches/esp32s3_flash_bridge/</code> and compile with the
-standard arduino-esp32 core.
+Both builds live in the repository under
+<code>sketches/esp32s3_yoshimitsu/</code> and
+<code>sketches/rp2040_tiny_yoshimitsu/</code> and compile with the
+standard arduino-esp32 / arduino-pico cores.
 </p>
-<h2>HERMES — the combined firmware</h2>
+<h2>YOSHIMITSU — the combined firmware</h2>
 <p>
-<strong>HERMES</strong> — the Hermetic Shinobi — is the recommended firmware: one board,
+<strong>YOSHIMITSU</strong> — the Hermetic Shinobi — is the recommended firmware: one board,
 two faces. It boots in <strong>FACE&nbsp;I</strong> (converter) and switches to
 <strong>FACE&nbsp;II</strong> (flasher) with a GPIO0 double-tap. The BOOT button is the
 single control surface:
@@ -114,11 +105,11 @@ The wiring is <strong>one permanent harness</strong> — the same six wires serv
 faces, so you never re-wire between flying and flashing. In FACE&nbsp;II the USB↔UART
 path is a <em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP
 traffic passes through untouched. Full source:
-<code>sketches/esp32s3_hermes/esp32s3_hermes.ino</code>.
+<code>sketches/esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino</code>.
 </p>
-<h2>A — CRSF→PWM converter (recap)</h2>
+<h2>FACE I — CRSF→PWM converter (recap)</h2>
 <p>
-Flashing the converter sketch follows the exact procedure described in
+<strong>FACE&nbsp;I</strong> — the converter — follows the exact procedure described in
 <a href="../../../en/tutorials/crsf-converter/">Tutorial 06 — CRSF→PWM Converter</a>:
 CRSF at 420&nbsp;000&nbsp;baud on the UART, servos on three free GPIOs,
 a 988–2012&nbsp;µs window mapped from the 172–1811 channel range, and a
@@ -126,14 +117,14 @@ failsafe that centres the servos when no valid frame arrives for 500&nbsp;ms.
 </p>
 <ul>
 <li>Wiring recap: RX&nbsp;TX → S3&nbsp;GPIO44, RX&nbsp;RX → S3&nbsp;GPIO43, common GND, shared 5&nbsp;V rail.</li>
-<li>Servos: GPIO1 (left wing), GPIO2 (right wing), GPIO3 (crest rudder) — all overrideable in the sketch.</li>
-<li>Full, CRC-checked source: <code>sketches/esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino</code></li>
+<li>Servos: GPIO1 (left wing), GPIO2 (right wing), GPIO3 (crest rudder) — all overrideable in the pin-map block at the top of the sketch.</li>
+<li>Full, CRC-checked source: <code>sketches/esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino</code></li>
 </ul>
 <p>
 If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need
-personality A at all — the pocket flasher below is then your only reason to own the S3.
+FACE&nbsp;I at all — FACE&nbsp;II below is then your only reason to own the S3.
 </p>
-<h2>B — Pocket flasher for EP2-class receivers</h2>
+<h2>FACE II — Pocket flasher for EP2-class receivers</h2>
 <p>
 <strong>The problem:</strong> EP2-class receivers (HappyModel EP2, EP1, EPW6, …) expose
 CRSF on castellated pads and carry a tiny BOOT pad. Using an FTDI adapter means holding
@@ -232,11 +223,11 @@ to 3V3 (gate high = MOSFET off). GPIO9 drives the BOOT pad.
 jig. Verify the MOSFET with a voltmeter before connecting a receiver: with GPIO10 HIGH the
 drain must read 0&nbsp;V; with GPIO10 LOW it must read 3.3&nbsp;V.
 </aside>
-<h2>Flash mode in the bridge sketch</h2>
+<h2>Flash mode (FACE II)</h2>
 <p>
-The bridge sketch boots into <em>transparent passthrough</em> (USB ↔ UART at
+FACE&nbsp;II boots into <em>transparent passthrough</em> (USB ↔ UART at
 115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, press the S3's BOOT button
-twice within one second — or send the line <code>FLASH</code> over the USB serial. The
+twice within one second — or send the command <code>FLASHER</code> over the USB serial. The
 sketch then:
 </p>
 <ol>
@@ -275,6 +266,88 @@ field console for live telemetry.
 </ul>
 <p>
 Once flashed, the same receiver flies — no FTDI left behind.
+</p>
+<h2>The RP2040-Tiny pocket build</h2>
+<p>
+Prefer the <strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) — or its twin, the
+RP2040-Zero, which shares the exact same pinout? The same two faces run on the RP2040 with
+<strong>no readable button at all</strong>: the adapter's BOOT/RESET taps only drive
+BOOTSEL/RUN, so YOSHIMITSU-RP2040 is driven entirely over the USB serial port.
+</p>
+<ul>
+<li><code>FLASHER</code> — enter FACE&nbsp;II and drop the receiver into its ROM bootloader (MOSFET power-cycle dance), then bridge USB ↔ UART for esptool.</li>
+<li><code>STATUS</code> — print the active pin map and the self-test report.</li>
+<li><code>HELP</code> — list every command.</li>
+</ul>
+<p>
+To flash the RP2040-Tiny itself, hold <code>BOOT</code> while power-cycling (it mounts as a
+mass-storage drive), drop the <code>.uf2</code> on it, then press <code>RESET</code> once —
+the board reboots into FACE&nbsp;I running the new firmware. Configure once, flash once,
+never touch again.
+</p>
+<h2>RP2040-Tiny pin map</h2>
+<table>
+<tr>
+<th>Function</th>
+<th>RP2040-Tiny pin</th>
+<th>Note</th>
+</tr>
+<tr>
+<td>CRSF RX ↔ receiver TX</td>
+<td>GPIO1 (UART0 RX)</td>
+<td>420&nbsp;000&nbsp;baud</td>
+</tr>
+<tr>
+<td>CRSF TX (unused, wired for completeness)</td>
+<td>GPIO0 (UART0 TX)</td>
+<td>Cross: TX → RX</td>
+</tr>
+<tr>
+<td>Bridge RX ↔ receiver TX</td>
+<td>GPIO9 (UART1 RX)</td>
+<td>115&nbsp;200&nbsp;baud</td>
+</tr>
+<tr>
+<td>Bridge TX → receiver RX</td>
+<td>GPIO8 (UART1 TX)</td>
+<td>Cross: TX → RX</td>
+</tr>
+<tr>
+<td>Servo left wing</td>
+<td>GPIO2</td>
+<td>PWM</td>
+</tr>
+<tr>
+<td>Servo right wing</td>
+<td>GPIO3</td>
+<td>PWM</td>
+</tr>
+<tr>
+<td>Servo crest rudder</td>
+<td>GPIO4</td>
+<td>PWM</td>
+</tr>
+<tr>
+<td>RX BOOT (receiver GPIO0, active low)</td>
+<td>GPIO5</td>
+<td>Low = enter bootloader</td>
+</tr>
+<tr>
+<td>RX PWR (P-MOSFET gate, low = powered)</td>
+<td>GPIO6</td>
+<td>Switched 3.3&nbsp;V rail</td>
+</tr>
+<tr>
+<td>Status LED</td>
+<td>GPIO16</td>
+<td>WS2812B</td>
+</tr>
+</table>
+<p>
+The complete pin map is an editable block at the top of
+<code>sketches/rp2040_tiny_yoshimitsu/rp2040_tiny_yoshimitsu.ino</code> — every pin is
+validated at compile time, so a collision or an invalid UART number refuses to build
+rather than misbehaving in the air.
 </p>
 </div>
 </main>

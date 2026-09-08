@@ -311,10 +311,10 @@
   "s3t_h1": "ESP32-S3 Toolbox",
   "s3t_lead": "Turn a ~6 USD ESP32-S3 into two tools: a rock-steady CRSF→PWM servo converter and a pocket flasher that installs PteronautOS on EP2-class receivers without a soldered FTDI.",
   "s3t_h2_dual": "One board, two tools",
-  "s3t_h2_conv": "A — CRSF→PWM converter (recap)",
-  "s3t_h2_flasher": "B — Pocket flasher for EP2-class receivers",
+  "s3t_h2_conv": "FACE I — CRSF→PWM converter (recap)",
+  "s3t_h2_flasher": "FACE II — Pocket flasher for EP2-class receivers",
   "s3t_h2_wiring": "Flash-jig wiring",
-  "s3t_h2_mode": "Flash mode in the bridge sketch",
+  "s3t_h2_mode": "Flash mode (FACE II)",
   "s3t_h2_esptool": "Flashing PteronautOS through the S3",
   "s3t_h2_verify": "Verify & maiden flight",
   "archart_title": "PteronautOS Architecture — Kernels & Data Flow — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "WebUI panel & configuration endpoints",
   "st_h2_tuning": "Tuning guide",
   "st_h2_status": "Implementation status & open inconsistencies",
-  "s3t_h2_hermes": "HERMES — the combined firmware"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — the combined firmware",
+  "s3t_h2_rp2040": "The RP2040-Tiny pocket build",
+  "s3t_h2_rp2040_pins": "RP2040-Tiny pin map"
 }

@@ -4,25 +4,34 @@ Reference Arduino sketches that turn a tiny micro board into a workbench compani
 for PteronautOS — one that reads CRSF on the bench **and** flashes PteronautOS onto
 EP2-class ExpressLRS receivers, with no FTDI adapter.
 
+**YOSHIMITSU · the Hermetic Shinobi** is one board, two faces, in a single combined
+sketch: **FACE I** — CRSF→PWM servo converter; **FACE II** — pocket flasher
+(USB↔UART bridge + BOOT-hold/power-cycle jig). There are no standalone half-solutions
+any more — only the complete solution, in two builds:
+
 | Folder | Sketch | Personality |
 |---|---|---|
-| [`rp2040_tiny_hermes/`](rp2040_tiny_hermes/rp2040_tiny_hermes.ino) | **HERMES · RP2040-Tiny** | One board, two faces for the **Waveshare RP2040-Tiny** (lightest, no onboard button): **FACE I** CRSF→PWM converter + **FACE II** pocket flasher, switched by a USB command + the adapter's RESET. |
-| [`esp32s3_hermes/`](esp32s3_hermes/esp32s3_hermes.ino) | **HERMES · ESP32-S3** | The same two faces for any native-USB ESP32-S3 board, switched by a GPIO0 double-tap. |
-| [`esp32s3_crsf_pwm/`](esp32s3_crsf_pwm/esp32s3_crsf_pwm.ino) | CRSF→PWM servo converter | Standalone converter only (superseded by HERMES FACE I). Reads CRSF (420 000 baud) from any ELRS receiver and drives up to 8 servos with 988–2012 µs pulses, CRC-checked, 500 ms failsafe. |
-| [`esp32s3_flash_bridge/`](esp32s3_flash_bridge/esp32s3_flash_bridge.ino) | Pocket flasher | Standalone flasher only (superseded by HERMES FACE II). USB↔UART bridge plus a BOOT-hold + power-cycle jig (P-MOSFET) that drops EP2-class ESP8285 receivers into their bootloader — no FTDI adapter needed. |
+| [`rp2040_tiny_yoshimitsu/`](rp2040_tiny_yoshimitsu/rp2040_tiny_yoshimitsu.ino) | **YOSHIMITSU · RP2040-Tiny** | One board, two faces for the **Waveshare RP2040-Tiny** (lightest, no onboard button): **FACE I** CRSF→PWM converter + **FACE II** pocket flasher, switched by a USB command + the adapter's RESET. |
+| [`esp32s3_yoshimitsu/`](esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino) | **YOSHIMITSU · ESP32-S3** | The same two faces for any native-USB ESP32-S3 board, switched by a GPIO0 double-tap. |
+
+Both sketches carry a prominent **PIN MAP — EDIT HERE** block right after the header:
+board-profile macros, a full UART mux table for the RP2040, compile-time `#error`
+guards against pin collisions and invalid UART assignments, and a boot POST that
+prints the active wiring (also available via the `STATUS` command). Configure once,
+flash once, never touch again.
 
 ---
 
-## HERMES · RP2040-Tiny — quick start
+## YOSHIMITSU · RP2040-Tiny — quick start
 
 For the **Waveshare RP2040-Tiny** (or RP2040-Zero — identical pinout). The Tiny has
 **no onboard button** — its USB adapter only carries BOOT (BOOTSEL) and RESET (RUN),
-which are not readable GPIOs. So HERMES-RP2040 is buttonless:
+which are not readable GPIOs. So YOSHIMITSU-RP2040 is buttonless:
 
 | Face | Input | Action |
 |---|---|---|
 | FACE I (boot default) | USB console `FLASHER` | enter FACE II |
-| FACE I | USB console `STATUS` | show mode + receiver power |
+| FACE I | USB console `STATUS` | show mode + receiver power + pin map |
 | FACE II (on entry) | — | auto: hold BOOT + power-cycle → receiver in bootloader |
 | FACE II | adapter RESET | reboot → FACE I **and** receiver runs its new firmware |
 
@@ -44,7 +53,7 @@ which are not readable GPIOs. So HERMES-RP2040 is buttonless:
 > `--baud` **must** match `BRIDGE_BAUD` (115200). The bridge is pure transparent
 > (no line parsing), so esptool's binary SLIP flows untouched.
 
-**Flashing HERMES onto the RP2040-Tiny itself:** hold **BOOT**, tap **RESET**, release
+**Flashing YOSHIMITSU onto the RP2040-Tiny itself:** hold **BOOT**, tap **RESET**, release
 **BOOT** (or hold BOOT while plugging USB) → an `RPI-RP2` drive appears → drag the
 `.uf2` onto it.
 
@@ -65,17 +74,18 @@ Onboard RGB: GP16 (WS2812B — status if Adafruit_NeoPixel is installed)
 ```
 
 Exposed GPIOs on the Tiny/Zero: `GP0–GP15` + `GP26–GP29`. `Serial1` = UART0 (GP0/GP1),
-`Serial2` = UART1 (GP8/GP9) — the sketch sets these pins explicitly, so any generic
-RP2040 board selection works.
+`Serial2` = UART1 (GP8/GP9) — the sketch sets these pins explicitly and validates
+them against the RP2040 UART mux table at compile time, so any generic RP2040 board
+selection works. All pins are editable in the PIN MAP block (`BOARD_CUSTOM`).
 
 > ⚠️ Feed the receiver **3.3 V only** on the jig. Servos run from their own rail,
 > never the RP2040's 3V3. Verify MOSFET orientation with a voltmeter first.
 
 ---
 
-## HERMES · ESP32-S3 — quick start
+## YOSHIMITSU · ESP32-S3 — quick start
 
-HERMES boots in **FACE I** (converter). The BOOT button (GPIO0) is the single
+YOSHIMITSU boots in **FACE I** (converter). The BOOT button (GPIO0) is the single
 control surface:
 
 | Context | Gesture | Action |
@@ -97,6 +107,32 @@ untouched.
 - **ESP32-S3 build**: [arduino-esp32](https://github.com/espressif/arduino-esp32) core,
   plus the [ESP32Servo](https://github.com/jkb-git/ESP32Servo) library.
 
+## Build verification — honest status
+
+These sketches were **syntax-checked against host stubs** (`tools/stub/`, a minimal
+Arduino API surface) and pass with zero diagnostics:
+
+```bash
+clang++ -fsyntax-only -std=gnu++17 -Wall \
+  -I tools/stub -x c++ \
+  sketches/rp2040_tiny_yoshimitsu/rp2040_tiny_yoshimitsu.ino tools/stub/main.cpp
+
+clang++ -fsyntax-only -std=gnu++17 -Wall \
+  -I tools/stub -x c++ \
+  sketches/esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino tools/stub/main.cpp
+```
+
+The compile-time pin guards are proven by `tools/yoshi_guard_test.py` — 6 negative
+tests (pin collisions, invalid UART numbers, UART mux violations, out-of-range
+GPIOs); every one must refuse to compile with the matching `#error`.
+
+They were **not** compiled against the real arduino-pico / arduino-esp32 cores on the
+machine that wrote them (no arduino-cli / PlatformIO RP2040 platform installed), and
+**not** bench-tested on hardware. Before first use: verify the MOSFET polarity with a
+voltmeter (gate LOW must power the receiver) and run one esptool handshake against a
+receiver on the jig. The PIN MAP blocks and the boot POST exist precisely so the first
+flash is also the last — once the harness is verified, nothing needs to be touched again.
+
 ## Documentation
 
 Full illustrated tutorials live in the docs site:
@@ -106,7 +142,7 @@ Full illustrated tutorials live in the docs site:
 
 ## Wiring quick reference
 
-### HERMES · ESP32-S3 (one permanent harness — both faces)
+### YOSHIMITSU · ESP32-S3 (one permanent harness — both faces)
 ```
 S3 3V3    ──► S ── P-MOSFET (AO3401) ── D ──► RX 3V3
 S3 GPIO10 ──► gate           (10 kΩ pull-up to 3V3; LOW = power ON)
@@ -118,7 +154,7 @@ servo left → GPIO1 · servo right → GPIO2 · crest rudder → GPIO3
 status LED → GPIO21 (optional)
 ```
 
-### Flashing an EP2-class receiver through HERMES (FACE II)
+### Flashing an EP2-class receiver through YOSHIMITSU (FACE II)
 1. Double-tap BOOT → FACE II.
 2. Double-tap BOOT again → receiver drops into its ROM bootloader.
 3. Flash with esptool — **always** `--before no_reset`:

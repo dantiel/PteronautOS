@@ -311,10 +311,10 @@
   "s3t_h1": "صندوق أدوات ESP32-S3",
   "s3t_lead": "حوِّل ESP32-S3 بتكلفة ~6 دولارات إلى أداتين: محوّل CRSF→PWM ثابت لمحركات السيرفو، وومّيض جيبي يثبّت PteronautOS على مستقبلات فئة EP2 دون FTDI ملحوم.",
   "s3t_h2_dual": "لوحة واحدة، أداتان",
-  "s3t_h2_conv": "أ — محوّل CRSF→PWM (ملخّص)",
-  "s3t_h2_flasher": "ب — وميض جيبي لمستقبلات فئة EP2",
+  "s3t_h2_conv": "FACE I — محوّل CRSF→PWM (ملخّص)",
+  "s3t_h2_flasher": "FACE II — وميض جيبي لمستقبلات فئة EP2",
   "s3t_h2_wiring": "أسلاك حاضنة الكتابة",
-  "s3t_h2_mode": "وضع الكتابة في برنامج الجسر",
+  "s3t_h2_mode": "وضع الكتابة (FACE II)",
   "s3t_h2_esptool": "كتابة PteronautOS عبر S3",
   "s3t_h2_verify": "التحقق وأول رحلة",
   "archart_title": "بنية PteronautOS — النوى وتدفق البيانات — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "لوحة WebUI ونقاط نهاية الإعداد",
   "st_h2_tuning": "دليل الضبط",
   "st_h2_status": "حالة التنفيذ والتناقضات المفتوحة",
-  "s3t_h2_hermes": "HERMES — البرامج الثابتة المدمجة"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — البرامج الثابتة المدمجة",
+  "s3t_h2_rp2040": "نسخة الجيب RP2040-Tiny",
+  "s3t_h2_rp2040_pins": "خريطة دبابيس RP2040-Tiny"
 }

@@ -311,10 +311,10 @@
   "s3t_h1": "ESP32-S3 工具箱",
   "s3t_lead": "把一块约 6 美元的 ESP32-S3 变成两件工具：稳如磐石的 CRSF→PWM 舵机转换器，以及无需焊接 FTDI 就能给 EP2 级接收机烧录 PteronautOS 的口袋烧录器。",
   "s3t_h2_dual": "一块板，两件工具",
-  "s3t_h2_conv": "A — CRSF→PWM 转换器（回顾）",
-  "s3t_h2_flasher": "B — EP2 级接收机口袋烧录器",
+  "s3t_h2_conv": "FACE I — CRSF→PWM 转换器（回顾）",
+  "s3t_h2_flasher": "FACE II — EP2 级接收机口袋烧录器",
   "s3t_h2_wiring": "烧录夹具接线",
-  "s3t_h2_mode": "桥接程序中的烧录模式",
+  "s3t_h2_mode": "烧录模式 (FACE II)",
   "s3t_h2_esptool": "通过 S3 烧录 PteronautOS",
   "s3t_h2_verify": "验证与首飞",
   "archart_title": "PteronautOS 架构 — 内核与数据流 — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "WebUI 面板与配置端点",
   "st_h2_tuning": "调参指南",
   "st_h2_status": "实现状态与未解决的不一致",
-  "s3t_h2_hermes": "HERMES — 组合固件"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — 组合固件",
+  "s3t_h2_rp2040": "RP2040-Tiny 袖珍版构建",
+  "s3t_h2_rp2040_pins": "RP2040-Tiny 引脚图"
 }

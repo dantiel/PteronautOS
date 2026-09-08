@@ -311,10 +311,10 @@
   "s3t_h1": "Boîte à outils ESP32-S3",
   "s3t_lead": "Transformez un ESP32-S3 à ~6 USD en deux outils : un convertisseur CRSF→PWM ultra-stable et un flasher de poche qui installe PteronautOS sur les récepteurs de classe EP2 sans FTDI soudé.",
   "s3t_h2_dual": "Une carte, deux outils",
-  "s3t_h2_conv": "A — Convertisseur CRSF→PWM (rappel)",
-  "s3t_h2_flasher": "B — Flasher de poche pour récepteurs de classe EP2",
+  "s3t_h2_conv": "FACE I — Convertisseur CRSF→PWM (rappel)",
+  "s3t_h2_flasher": "FACE II — Flasher de poche pour récepteurs de classe EP2",
   "s3t_h2_wiring": "Câblage du support de flash",
-  "s3t_h2_mode": "Mode flash dans le sketch-pont",
+  "s3t_h2_mode": "Mode flash (FACE II)",
   "s3t_h2_esptool": "Flasher PteronautOS via le S3",
   "s3t_h2_verify": "Vérification et premier vol",
   "archart_title": "Architecture de PteronautOS — kernels et flux de données — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "Panneau WebUI et endpoints de configuration",
   "st_h2_tuning": "Guide de réglage",
   "st_h2_status": "État de l'implémentation et incohérences ouvertes",
-  "s3t_h2_hermes": "HERMES — le firmware combiné"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — le firmware combiné",
+  "s3t_h2_rp2040": "Le build de poche RP2040-Tiny",
+  "s3t_h2_rp2040_pins": "Brochage RP2040-Tiny"
 }

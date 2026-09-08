@@ -311,10 +311,10 @@
   "s3t_h1": "ESP32-S3 도구 키트",
   "s3t_lead": "약 6 USD짜리 ESP32-S3를 두 가지 도구로: 흔들림 없는 CRSF→PWM 서보 컨버터와, 납땜 FTDI 없이 EP2급 수신기에 PteronautOS를 올리는 포켓 플래셔.",
   "s3t_h2_dual": "보드 하나, 도구 둘",
-  "s3t_h2_conv": "A — CRSF→PWM 컨버터 (요약)",
-  "s3t_h2_flasher": "B — EP2급 수신기용 포켓 플래셔",
+  "s3t_h2_conv": "FACE I — CRSF→PWM 컨버터 (요약)",
+  "s3t_h2_flasher": "FACE II — EP2급 수신기용 포켓 플래셔",
   "s3t_h2_wiring": "플래싱 지그 배선",
-  "s3t_h2_mode": "브리지 스케치의 플래시 모드",
+  "s3t_h2_mode": "플래시 모드 (FACE II)",
   "s3t_h2_esptool": "S3로 PteronautOS 플래싱",
   "s3t_h2_verify": "확인 및 첫 비행",
   "archart_title": "PteronautOS 아키텍처 — 커널과 데이터 흐름 — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "WebUI 패널 및 구성 엔드포인트",
   "st_h2_tuning": "튜닝 가이드",
   "st_h2_status": "구현 상태 및 미해결 불일치",
-  "s3t_h2_hermes": "HERMES — 통합 펼웨어"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — 통합 펼웨어",
+  "s3t_h2_rp2040": "RP2040-Tiny 포켓 빌드",
+  "s3t_h2_rp2040_pins": "RP2040-Tiny 핀 배치"
 }

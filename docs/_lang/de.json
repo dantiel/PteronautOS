@@ -311,10 +311,10 @@
   "s3t_h1": "ESP32-S3 Werkzeugkasten",
   "s3t_lead": "Mache aus einem ~6-USD-ESP32-S3 zwei Werkzeuge: einen stabilen CRSF→PWM-Servokonverter und einen Taschen-Flasher, der PteronautOS ohne gelöteten FTDI auf EP2-Klasse-Empfänger bringt.",
   "s3t_h2_dual": "Ein Board, zwei Werkzeuge",
-  "s3t_h2_conv": "A — CRSF→PWM-Konverter (Rückblick)",
-  "s3t_h2_flasher": "B — Taschen-Flasher für EP2-Klasse-Empfänger",
+  "s3t_h2_conv": "FACE I — CRSF→PWM-Konverter (Rückblick)",
+  "s3t_h2_flasher": "FACE II — Taschen-Flasher für EP2-Klasse-Empfänger",
   "s3t_h2_wiring": "Verdrahtung der Flash-Halterung",
-  "s3t_h2_mode": "Flash-Modus in der Bridge-Skizze",
+  "s3t_h2_mode": "Flash-Modus (FACE II)",
   "s3t_h2_esptool": "PteronautOS über den S3 flashen",
   "s3t_h2_verify": "Prüfen & Jungfernflug",
   "archart_title": "PteronautOS-Architektur — Kernel & Datenfluss — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "WebUI-Panel & Konfigurations-Endpunkte",
   "st_h2_tuning": "Abstimmungs-Leitfaden",
   "st_h2_status": "Implementierungsstand & offene Inkonsistenzen",
-  "s3t_h2_hermes": "HERMES — die kombinierte Firmware"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — die kombinierte Firmware",
+  "s3t_h2_rp2040": "Der RP2040-Tiny Pocket-Build",
+  "s3t_h2_rp2040_pins": "RP2040-Tiny Pinbelegung"
 }

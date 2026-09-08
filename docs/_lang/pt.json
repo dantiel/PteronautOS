@@ -311,10 +311,10 @@
   "s3t_h1": "Kit de ferramentas ESP32-S3",
   "s3t_lead": "Transforma um ESP32-S3 de ~6 USD em duas ferramentas: um conversor CRSF→PWM firme como uma rocha e um flasher de bolso que instala o PteronautOS em recetores da classe EP2 sem FTDI soldado.",
   "s3t_h2_dual": "Uma placa, duas ferramentas",
-  "s3t_h2_conv": "A — Conversor CRSF→PWM (recapitulação)",
-  "s3t_h2_flasher": "B — Flasher de bolso para recetores da classe EP2",
+  "s3t_h2_conv": "FACE I — Conversor CRSF→PWM (recapitulação)",
+  "s3t_h2_flasher": "FACE II — Flasher de bolso para recetores da classe EP2",
   "s3t_h2_wiring": "Ligação do suporte de gravação",
-  "s3t_h2_mode": "Modo de gravação no sketch-ponte",
+  "s3t_h2_mode": "Modo de gravação (FACE II)",
   "s3t_h2_esptool": "Gravar o PteronautOS através do S3",
   "s3t_h2_verify": "Verificação e primeiro voo",
   "archart_title": "Arquitetura do PteronautOS — kernels e fluxo de dados — PteronautOS",
@@ -350,5 +350,7 @@
   "st_h2_webui": "Painel WebUI e endpoints de configuração",
   "st_h2_tuning": "Guia de ajuste",
   "st_h2_status": "Estado da implementação e inconsistências em aberto",
-  "s3t_h2_hermes": "HERMES — o firmware combinado"
+  "s3t_h2_yoshimitsu": "YOSHIMITSU — o firmware combinado",
+  "s3t_h2_rp2040": "O build de bolso RP2040-Tiny",
+  "s3t_h2_rp2040_pins": "Mapa de pinos RP2040-Tiny"
 }
