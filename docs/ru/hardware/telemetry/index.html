@@ -29,23 +29,17 @@
 <h1>Телеметрия и датчики</h1>
 <p class='sub-lead'>VBAT, RSSI, качество линка и телеметрия гироскопа обратно на радио — что доступно и что планируется.</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>Приёмник измеряет напряжение батареи на выводе АЦП (GPIO17 на PWMP7) и передаёт его по телеметрии CRSF. Подключите делитель напряжения от основной батареи к площадке АЦП; откалибруйте коэффициент делителя в конфигурации, чтобы радио читало истинное напряжение сборки.</p>
 <h2>RSSI и качество линка</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>RSSI и качество связи поступают напрямую от SX1280 и выставляются в стандартные слоты телеметрии ELRS. Для оценки дальности используйте LQ (качество связи), а не сырой RSSI — это более осмысленная метрика на 2,4&amp;nbsp;ГГц.</p>
 <h2>Телеметрия гироскопа</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>AHRS Zephyrus может передавать крен, тангаж и угловую скорость рыскания как пользовательскую телеметрию, чтобы настраивать гироскоп в полёте или проигрывать полёт позже. Это диагностическая телеметрия — держите её вне быстрого пути в боевых сборках, чтобы не заливать канал.</p>
 <h2>Планируемые датчики</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>Барометр (BMP280) для удержания высоты и управления планированием.</li>
+<li>Воздушная скорость через датчик дифференциального давления для триггеров автопланирования.</li>
+<li>Датчик тока для живого потребления энергии и выносливости сборки.</li>
+<li>GPS для логирования позиции и экспериментов с возвратом домой.</li>
 </ul>
 </div>
 </main>

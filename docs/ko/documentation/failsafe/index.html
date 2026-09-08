@@ -29,21 +29,13 @@
 <h1>페일세이프 동작</h1>
 <p class='sub-lead'>링크가 끊기면 — 날개 중립, 러더 중립, 우아한 성능 저하.</p>
 <h2>트리거 조건</h2>
-<p>
-Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
-</p>
+<p>CRSF 링크가 연결 손실을 보고하거나 채널 데이터가 설정된 타임아웃을 넘어 오래되면 페일세이프가 작동합니다. 라디오 자체 페일세이프는 &lt;em&gt;진실의 원천이 아닙니다&lt;/em&gt;. PteronautOS가 자체 중앙 페일세이프를 다시 부과하므로 라디오 브랜드나 바인드 모드와 무관하게 동작이 동일합니다.</p>
 <h2>중립 출력</h2>
-<p>
-On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
-</p>
+<p>트리거되면 모든 서보가 &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;로 복귀하고 파형 출력이 억제됩니다. 날개가 중앙에 오고 크레스트 러더가 중앙에 옵니다. &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; 채널 판독값이 리셋되어 WebUI 상태 폴이 중립 진실을 표시합니다.</p>
 <h2>우아한 성능 저하</h2>
-<p>
-The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
-</p>
+<p>설계 규칙은 &lt;em&gt;저하 속의 우아함&lt;/em&gt;입니다. MPU6050 고장이 기체를 추락시켜서는 안 됩니다. Zephyrus는 자이로 고장 시 스스로 비활성화하고 Ornithopter 믹서는 순수 스틱 입력으로 계속 비행합니다. 페일세이프 경로와 자이로 경로가 독립적이므로 한쪽 고장이 다른 쪽으로 연쇄되지 않습니다.</p>
 <h2>복구</h2>
-<p>
-Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
-</p>
+<p>복구는 자동입니다. 유효한 CRSF 프레임이 재개되면 믹서가 다음 틱에 다시 관여하고 서보가 라이브 채널을 다시 따릅니다. 수동 리셋이나 래칭은 없습니다. 전환은 명령 위치로 돌아가는 단일 소프트 램프입니다.</p>
 <aside class='waveform-caution'>
 <strong>비행 전 벤치 테스트.</strong>
 익스플로러는 보장된 서보 움직임이 아니라 명령된 수학적 파형을 설명합니다. 진폭, 주파수, 링키지 기하, 서보 속도 한계가 공기역학적 부하 없이 검증될 때까지 극단적인 비대칭 설정을 피하세요.

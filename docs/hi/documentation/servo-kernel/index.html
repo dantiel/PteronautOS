@@ -29,20 +29,12 @@
 <h1>सर्वो कर्नेल</h1>
 <p class='sub-lead'>पल्स-चौड़ाई एनवेलप, प्रति-फ़ंक्शन ट्रिम और गति सीमा — निम्न-स्तरीय सर्वो अनुबंध।</p>
 <h2>पल्स-चौड़ाई एनवेलप</h2>
-<p>
-The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
-</p>
+<p>सर्वो कर्नेल एक सामान्यीकृत कोण (−1…+1) को &lt;code&gt;servoMinUs&lt;/code&gt; (डिफ़ॉल्ट &lt;strong&gt;988&lt;/strong&gt;) और &lt;code&gt;servoMaxUs&lt;/code&gt; (डिफ़ॉल्ट &lt;strong&gt;2012&lt;/strong&gt;) द्वारा परिभाषित वैश्विक आवरण के माध्यम से पल्स चौड़ाई में मैप करता है। इसने पुराने कंपाइल-टाइम स्थिरांकों को बदल दिया ताकि 0°/180° स्विंग को बिना रीबिल्ड किए किसी भी सर्वो से मिलाया जा सके। मानों को &lt;code&gt;[500…1490]&lt;/code&gt; और &lt;code&gt;[1510…2500]&lt;/code&gt; तक सीमित किया जाता है और &lt;code&gt;min &amp;lt; max&lt;/code&gt; लागू किया जाता है।</p>
 <h2>प्रति-फ़ंक्शन ट्रिम</h2>
-<p>
-<code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
-</p>
+<p>&lt;code&gt;servoTrimUs[]&lt;/code&gt; मिश्रण के बाद लागू होने वाला प्रति-&lt;em&gt;ServoFunc&lt;/em&gt; सुधार (±300&amp;nbsp;µs) है। यह पंख-युग्म (सूचकांक 1/2), रडर (3) और पिछले पंखों (8/9) को कवर करता है। एक ही सतह पर आधे-दाँत के हॉर्न ऑफ़सेट को शून्य करने के लिए इसका उपयोग करें — एयरफ्रेम असंतुलन से लड़ने के लिए नहीं, जो मिक्सर या जायरो का काम है।</p>
 <h2>गति सीमा</h2>
-<p>
-<strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
-</p>
-<p class='hw-note'>
-For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
-</p>
+<p>&lt;strong&gt;सर्वो गति&lt;/strong&gt; प्रति टिक पल्स परिवर्तन की दर को सीमित करती है, कठोर उलटाव को चिकना करती है और गियरबॉक्स को झटके के भार से बचाती है। यह आदेशित स्थिति पर एक लो-पास है, इसलिए कम मान फ्लैप उलटाव को भी नरम करता है — स्ट्रोक के ऊपर व नीचे के &lt;em&gt;क्लिक&lt;/em&gt; के विरुद्ध इसे ट्यून करें। बहुत धीमा होने पर पंख तरंगरूप से पिछड़ जाता है; बहुत तेज़ होने पर झटका फिर लौट आता है।</p>
+<p class='hw-note'>पल्स/ट्रिम/गति पैरामीटर और JSON कुंजियों की पूरी सूची के लिए, फर्मवेयर में सर्वो-कर्नेल नोट और WebUI संदर्भ देखें।</p>
 </div>
 </main>
 <footer>

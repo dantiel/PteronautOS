@@ -28,19 +28,15 @@
         %p.sub-lead= sk_lead
 
         %h2= sk_h2_pulse
-        %p
-          The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
+        %p= sk_p1
 
         %h2= sk_h2_trim
-        %p
-          <code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
+        %p= sk_p2
 
         %h2= sk_h2_speed
-        %p
-          <strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
+        %p= sk_p3
 
-        %p.hw-note
-          For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
+        %p.hw-note= sk_note
 
     %footer
       .lang-switch

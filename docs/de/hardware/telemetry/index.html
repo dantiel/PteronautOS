@@ -29,23 +29,17 @@
 <h1>Telemetrie &amp; Sensoren</h1>
 <p class='sub-lead'>VBAT, RSSI, Linkqualität und Gyro-Telemetrie zurück zum Funk — was exponiert ist und was geplant ist.</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>Der Empfänger tastet die Akkuspannung an seinem ADC-Pin ab (GPIO17 auf dem PWMP7) und meldet sie über CRSF-Telemetrie zurück. Verkable einen Spannungsteiler vom Hauptakku zum ADC-Pad; kalibriere das Teilerverhältnis in der Config, damit das Radio die echte Packspannung liest.</p>
 <h2>RSSI &amp; Linkqualität</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>RSSI und Verbindungsqualität kommen direkt vom SX1280 und stehen in den Standard-ELRS-Telemetrie-Slots. Nutze für Reichweiten-Entscheidungen LQ (Link Quality) statt rohem RSSI — das ist auf 2,4&amp;nbsp;GHz die aussagekräftigere Metrik.</p>
 <h2>Gyro-Telemetrie</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>Das Zephyrus-AHRS kann Roll, Pitch und Gierrate als eigene Telemetrie streamen, um das Gyro im Flug zu tunen oder einen Flug später zu rekonstruieren. Das ist Diagnose-Telemetrie — halte sie in Produktions-Builds aus dem schnellen Pfad, um die Verbindung nicht zu fluten.</p>
 <h2>Geplante Sensoren</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>Barometer (BMP280) für Höhenhaltung und Gleitsteuerung.</li>
+<li>Fahrtmessung über Differenzdrucksensor für Auto-Glide-Auslöser.</li>
+<li>Stromsensor für Live-Verbrauch und Pack-Ausdauer.</li>
+<li>GPS für Positions-Logging und Return-to-Home-Experimente.</li>
 </ul>
 </div>
 </main>

@@ -29,20 +29,12 @@
 <h1>Servo-Kernel</h1>
 <p class='sub-lead'>Impulsbreiten-Hüllkurve, Trim je Funktion und Geschwindigkeitsbegrenzung — der Low-Level-Servo-Vertrag.</p>
 <h2>Impulsbreiten-Hüllkurve</h2>
-<p>
-The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
-</p>
+<p>Der Servo-Kernel bildet einen normalisierten Winkel (−1…+1) über eine globale Hüllkurve auf eine Pulsbreite ab, definiert durch &lt;code&gt;servoMinUs&lt;/code&gt; (Standard &lt;strong&gt;988&lt;/strong&gt;) und &lt;code&gt;servoMaxUs&lt;/code&gt; (Standard &lt;strong&gt;2012&lt;/strong&gt;). Das ersetzte die alten Compile-Zeit-Konstanten, sodass der 0°/180°-Ausschlag ohne Neu-Build an jeden Servo angepasst werden kann. Die Werte werden auf &lt;code&gt;[500…1490]&lt;/code&gt; und &lt;code&gt;[1510…2500]&lt;/code&gt; begrenzt, mit erzwungenem &lt;code&gt;min &amp;lt; max&lt;/code&gt;.</p>
 <h2>Trim je Funktion</h2>
-<p>
-<code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
-</p>
+<p>&lt;code&gt;servoTrimUs[]&lt;/code&gt; ist eine Korrektur je &lt;em&gt;ServoFunc&lt;/em&gt; (±300&amp;nbsp;µs), die nach dem Mixen angewendet wird. Sie deckt das Flügelpaar (Indizes 1/2), das Ruder (3) und die Rückenflügel (8/9) ab. Nutze sie, um einen Halbzahn-Versatz des Servohorns auf einer einzelnen Fläche zu nullen — nicht, um eine Flugwerks-Asymmetrie zu bekämpfen; die gehört in den Mixer oder das Gyro.</p>
 <h2>Geschwindigkeitsbegrenzung</h2>
-<p>
-<strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
-</p>
-<p class='hw-note'>
-For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
-</p>
+<p>&lt;strong&gt;Servogeschwindigkeit&lt;/strong&gt; begrenzt die Pulsänderungsrate pro Tick, glättet harte Umkehrungen und schützt Getriebe vor Schlaglasten. Sie ist ein Tiefpass auf die kommandierte Position — ein niedriger Wert weicht daher auch die Flügelschlag-Umkehr auf. Stimme sie gegen das &lt;em&gt;Klicken&lt;/em&gt; am oberen und unteren Ende des Hubs ab. Zu langsam, und der Flügel hinkt der Wellenform hinterher; zu schnell, und der Schlag kehrt zurück.</p>
+<p class='hw-note'>Die vollständige Liste der Puls-/Trim-/Geschwindigkeitsparameter und JSON-Keys findest du in der Servo-Kernel-Notiz im Firmware-Code und in der WebUI-Referenz.</p>
 </div>
 </main>
 <footer>

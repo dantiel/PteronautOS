@@ -28,23 +28,20 @@
         %p.sub-lead= tel_lead
 
         %h2= tel_h2_vbat
-        %p
-          The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
+        %p= tel_p1
 
         %h2= tel_h2_rssi
-        %p
-          RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
+        %p= tel_p2
 
         %h2= tel_h2_gyro
-        %p
-          The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
+        %p= tel_p3
 
         %h2= tel_h2_future
         %ul
-          %li Barometer (BMP280) for altitude hold and glide control.
-          %li Airspeed via a differential pressure sensor for auto-glide triggers.
-          %li Current sensor for live power consumption and pack endurance.
-          %li GPS for position logging and return-to-home experiments.
+          %li= tel_li1
+          %li= tel_li2
+          %li= tel_li3
+          %li= tel_li4
 
     %footer
       .lang-switch

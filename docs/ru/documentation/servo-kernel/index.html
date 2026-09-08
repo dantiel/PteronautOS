@@ -29,20 +29,12 @@
 <h1>Сервоядро</h1>
 <p class='sub-lead'>Диапазон длительности импульса, тримминг по функциям и ограничение скорости — низкоуровневый контракт сервопривода.</p>
 <h2>Диапазон длительности импульса</h2>
-<p>
-The servo kernel maps a normalised angle (−1…+1) to a pulse width through a global envelope defined by <code>servoMinUs</code> (default <strong>988</strong>) and <code>servoMaxUs</code> (default <strong>2012</strong>). This replaced the old compile-time constants so the 0°/180° swing can be matched to any servo without a rebuild. The values are clamped to <code>[500…1490]</code> and <code>[1510…2500]</code> with <code>min &lt; max</code> enforced.
-</p>
+<p>Серво-ядро отображает нормализованный угол (−1…+1) в ширину импульса через глобальный конверт, заданный &lt;code&gt;servoMinUs&lt;/code&gt; (по умолчанию &lt;strong&gt;988&lt;/strong&gt;) и &lt;code&gt;servoMaxUs&lt;/code&gt; (по умолчанию &lt;strong&gt;2012&lt;/strong&gt;). Это заменило прежние константы компиляции, чтобы ход 0°/180° подходил любому сервоприводу без пересборки. Значения ограничены диапазонами &lt;code&gt;[500…1490]&lt;/code&gt; и &lt;code&gt;[1510…2500]&lt;/code&gt; с проверкой &lt;code&gt;min &amp;lt; max&lt;/code&gt;.</p>
 <h2>Тримминг по функциям</h2>
-<p>
-<code>servoTrimUs[]</code> is a per-<em>ServoFunc</em> correction (±300&nbsp;µs) applied after mixing. It covers the wing pair (indices 1/2), rudder (3) and the back wings (8/9). Use it to zero out a half-tooth horn offset on a single surface — not to fight an airframe imbalance, which belongs in the mixer or the gyro.
-</p>
+<p>&lt;code&gt;servoTrimUs[]&lt;/code&gt; — поправка на каждый &lt;em&gt;ServoFunc&lt;/em&gt; (±300&amp;nbsp;мкс), применяемая после микширования. Она охватывает пару крыльев (индексы 1/2), руль (3) и задние крылья (8/9). Используйте её, чтобы обнулить смещение рога на пол-зуба на одной поверхности — а не для борьбы с дисбалансом планера, который относится к микшеру или гироскопу.</p>
 <h2>Ограничение скорости</h2>
-<p>
-<strong>Servo speed</strong> limits the rate of pulse change per tick, smoothing hard reversals and protecting gearboxes from snap loads. It is a low-pass on the commanded position, so a low value also softens the flap reversal — tune it against the <em>click</em> at the top and bottom of the stroke. Too slow and the wing lags the waveform; too fast and you re-introduce the snap.
-</p>
-<p class='hw-note'>
-For the full pulse/trim/speed parameter list and JSON keys, see the servo-kernel note in the firmware and the WebUI reference.
-</p>
+<p>&lt;strong&gt;Скорость серво&lt;/strong&gt; ограничивает скорость изменения импульса за тик, сглаживая жёсткие реверсы и защищая редукторы от ударных нагрузок. Это фильтр нижних частот по командной позиции, поэтому низкое значение также смягчает реверс взмаха — настраивайте его по &lt;em&gt;щелчку&lt;/em&gt; в верхней и нижней точках хода. Слишком медленно — и крыло отстаёт от формы волны; слишком быстро — и удар возвращается.</p>
+<p class='hw-note'>Полный список параметров импульса/трима/скорости и ключей JSON — в заметке серво-ядра в прошивке и в справочнике WebUI.</p>
 </div>
 </main>
 <footer>

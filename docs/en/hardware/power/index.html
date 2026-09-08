@@ -29,22 +29,14 @@
 <h1>Power &amp; BEC</h1>
 <p class='sub-lead'>How to feed the receiver, the MPU6050 and the wing servos from a single battery — BEC selection and wiring.</p>
 <h2>Servo power budget</h2>
-<p>
-A single wing servo can pull <strong>1–2&nbsp;A</strong> transiently at reversal; three servos plus the receiver and gyro demand a rail that never sags. Size the BEC for the <em>stall</em> current of all three servos summed, not their idle current. A 5&nbsp;V / 3&nbsp;A switching BEC is a safe baseline for most 2–4&nbsp;g micro servos; larger wings need 5&nbsp;A or more.
-</p>
+<p>A single wing servo can pull &lt;strong&gt;1–2&amp;nbsp;A&lt;/strong&gt; transiently at reversal; three servos plus the receiver and gyro demand a rail that never sags. Size the BEC for the &lt;em&gt;stall&lt;/em&gt; current of all three servos summed, not their idle current. A 5&amp;nbsp;V / 3&amp;nbsp;A switching BEC is a safe baseline for most 2–4&amp;nbsp;g micro servos; larger wings need 5&amp;nbsp;A or more.</p>
 <h2>Choosing a BEC</h2>
-<p>
-Prefer a <strong>switching (buck) BEC</strong> over a linear one: linears burn the voltage drop as heat and collapse under burst load. Match the BEC voltage to the servo rating (5&nbsp;V for most micro servos, up to 9&nbsp;V for HV servos) — but keep the receiver on its own 5&nbsp;V feed if it lacks a wide-input regulator.
-</p>
+<p>Prefer a &lt;strong&gt;switching (buck) BEC&lt;/strong&gt; over a linear one: linears burn the voltage drop as heat and collapse under burst load. Match the BEC voltage to the servo rating (5&amp;nbsp;V for most micro servos, up to 9&amp;nbsp;V for HV servos) — but keep the receiver on its own 5&amp;nbsp;V feed if it lacks a wide-input regulator.</p>
 <h2>Receiver rail</h2>
-<p>
-Most ELRS receivers take <strong>4.5–8.4&nbsp;V</strong> (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&nbsp;V and makes its own 3.3&nbsp;V.
-</p>
+<p>Most ELRS receivers take &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt; (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&amp;nbsp;V and makes its own 3.3&amp;nbsp;V.</p>
 <h2>Wiring diagram</h2>
 <pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
-<p>
-Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.
-</p>
+<p>Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.</p>
 </div>
 </main>
 <footer>

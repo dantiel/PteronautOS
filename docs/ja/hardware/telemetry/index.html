@@ -29,23 +29,17 @@
 <h1>テレメトリーとセンサー</h1>
 <p class='sub-lead'>VBAT、RSSI、リンク品質、ジャイロテレメトリーの無線機への返送 — 公開済みと予定。</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>受信機は ADC ピン(PWMP7 の GPIO17)でバッテリー電圧をサンプリングし、CRSF テレメトリーで報告します。メインバッテリーから ADC パッドへ分圧回路を配線し、無線機が実際のパック電圧を読むように設定で分圧比を較正してください。</p>
 <h2>RSSIとリンク品質</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>RSSI とリンク品質は SX1280 から直接得られ、標準 ELRS テレメトリスロットで公開されます。距離判断には生 RSSI ではなく LQ(リンク品質)を使ってください。2.4&amp;nbsp;GHz ではより意味のある指標です。</p>
 <h2>ジャイロテレメトリー</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>Zephyrus AHRS はロール、ピッチ、ヨーレートをカスタムテレメトリーとしてストリーミングでき、飛行中にジャイロを調整したり後でフライトを再生したりできます。これは診断用テレメトリーです。プロダクションビルドではリンクをあふれさせないよう、高速経路から外してください。</p>
 <h2>予定センサー</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>高度維持とグライド制御のための気圧計(BMP280)。</li>
+<li>自動グライドトリガーのための差圧センサーによる対気速度。</li>
+<li>ライブ消費電力とパック持続時間のための電流センサー。</li>
+<li>位置ログとリターントゥホーム実験のための GPS。</li>
 </ul>
 </div>
 </main>

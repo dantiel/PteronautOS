@@ -29,21 +29,13 @@
 <h1>फेलसेफ व्यवहार</h1>
 <p class='sub-lead'>लिंक टूटने पर क्या होता है — पंख केंद्रित, रडर केंद्रित, सुंदर गिरावट।</p>
 <h2>ट्रिगर स्थितियाँ</h2>
-<p>
-Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
-</p>
+<p>फेलसेफ तब सक्रिय होता है जब CRSF लिंक कनेक्शन खोने की सूचना देता है या चैनल डेटा कॉन्फ़िगर किए गए टाइमआउट से अधिक पुराना हो जाता है। रेडियो का अपना फेलसेफ &lt;em&gt;सत्य का स्रोत नहीं&lt;/em&gt; है — PteronautOS अपना केंद्रित फेलसेफ फिर लागू करता है ताकि रेडियो ब्रांड या बाइंड मोड चाहे जो भी हो, व्यवहार एक जैसा रहे।</p>
 <h2>केंद्रित आउटपुट</h2>
-<p>
-On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
-</p>
+<p>ट्रिगर होने पर, हर सर्वो &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; पर लौट आता है और तरंगरूप आउटपुट दबा दिया जाता है। पंख केंद्रित होते हैं, क्रेस्ट रडर केंद्रित होता है। &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; चैनल रीडआउट रीसेट हो जाते हैं ताकि WebUI स्थिति पोल तटस्थ सत्य दिखाए।</p>
 <h2>सुंदर गिरावट</h2>
-<p>
-The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
-</p>
+<p>डिज़ाइन नियम है &lt;em&gt;क्षरण में शोभा&lt;/em&gt;: खराब MPU6050 विमान को गिरा न दे। Zephyrus जायरो विफलता पर स्वयं को अक्षम कर देता है और Ornithopter मिक्सर शुद्ध स्टिक इनपुट पर उड़ता रहता है — फेलसेफ पथ और जायरो पथ स्वतंत्र हैं, इसलिए एक दोष कभी दूसरे में नहीं फैलता।</p>
 <h2>रिकवरी</h2>
-<p>
-Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
-</p>
+<p>रिकवरी स्वचालित है: जब वैध CRSF फ्रेम फिर शुरू होते हैं, मिक्सर अगले टिक पर फिर सक्रिय हो जाता है और सर्वो लाइव चैनलों का फिर अनुसरण करते हैं। कोई मैनुअल रीसेट नहीं और कोई लैचिंग नहीं — संक्रमण आदेशित स्थितियों की ओर एक ही नरम रैंप है।</p>
 <aside class='waveform-caution'>
 <strong>उड़ान से पहले बेंच-टेस्ट करें।</strong>
 एक्सप्लोरर आदेशित गणितीय तरंगरूप का वर्णन करता है, न कि गारंटीकृत सर्वो गति का। जब तक आयाम, आवृत्ति, लिंकेज ज्यामिति और सर्वो-गति सीमाएँ वायुगतिकीय भार के बिना सत्यापित न हों, तब तक अत्यधिक असममित सेटिंग से बचें।

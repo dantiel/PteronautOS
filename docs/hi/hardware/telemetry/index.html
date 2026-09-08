@@ -29,23 +29,17 @@
 <h1>टेलीमेट्री और सेंसर</h1>
 <p class='sub-lead'>VBAT, RSSI, लिंक गुणवत्ता और जायरो टेलीमेट्री रेडियो तक — क्या उपलब्ध है और क्या योजनाबद्ध है।</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>रिसीवर अपने ADC पिन (PWMP7 पर GPIO17) पर बैटरी वोल्टेज का नमूना लेता है और CRSF टेलीमेट्री से वापस रिपोर्ट करता है। मुख्य बैटरी से ADC पैड तक वोल्टेज डिवाइडर वायर करें; कॉन्फ़िग में डिवाइडर अनुपात कैलिब्रेट करें ताकि रेडियो सही पैक वोल्टेज पढ़े।</p>
 <h2>RSSI और लिंक गुणवत्ता</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>RSSI और लिंक गुणवत्ता सीधे SX1280 से आती है और मानक ELRS टेलीमेट्री स्लॉट में उजागर होती है। रेंज निर्णयों के लिए कच्चे RSSI के बजाय LQ (लिंक गुणवत्ता) का उपयोग करें — 2.4&amp;nbsp;GHz पर यह अधिक सार्थक मीट्रिक है।</p>
 <h2>जायरो टेलीमेट्री</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>Zephyrus AHRS रोल, पिच और यॉ रेट को कस्टम टेलीमेट्री के रूप में स्ट्रीम कर सकता है ताकि आप उड़ान में जायरो ट्यून करें या बाद में उड़ान को दोबारा चलाएँ। यह नैदानिक टेलीमेट्री है — प्रोडक्शन बिल्ड में लिंक भरने से बचाने के लिए इसे तेज़ पथ से दूर रखें।</p>
 <h2>योजनाबद्ध सेंसर</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>ऊँचाई बनाए रखने और ग्लाइड नियंत्रण के लिए बैरोमीटर (BMP280)।</li>
+<li>ऑटो-ग्लाइड ट्रिगर के लिए विभेदक दाब सेंसर से एयरस्पीड।</li>
+<li>लाइव बिजली खपत और पैक सहनशक्ति के लिए करंट सेंसर।</li>
+<li>स्थिति लॉगिंग और रिटर्न-टू-होम प्रयोगों के लिए GPS।</li>
 </ul>
 </div>
 </main>

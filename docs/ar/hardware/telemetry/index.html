@@ -29,23 +29,17 @@
 <h1>القياس عن بعد والمستشعرات</h1>
 <p class='sub-lead'>VBAT وRSSI وجودة الرابط وقياس الجيروسكوب عن بعد إلى الراديو — ما هو متاح وما هو مخطط.</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>يقيس المستقبِل جهد البطارية على طرف ADC (GPIO17 على PWMP7) ويُبلغ عنه عبر تليمتري CRSF. وصِّل مقسّم جهد من البطارية الرئيسية إلى وسادة ADC؛ وعايِر نسبة المقسّم في الإعداد ليقرأ الراديو جهد الحزمة الحقيقي.</p>
 <h2>RSSI وجودة الرابط</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>يأتي RSSI وجودة الوصلة من SX1280 مباشرةً ويُعرضان في فتحات تليمتري ELRS القياسية. استخدم LQ (جودة الوصلة) بدلاً من RSSI الخام لاتخاذ قرارات المدى — فهو المقياس الأكثر دلالة على 2.4&amp;nbsp;غيغاهرتز.</p>
 <h2>قياس الجيروسكوب عن بعد</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>يمكن لـ Zephyrus AHRS بث الالتفاف والانحدار ومعدل الانعراج كتليمتري مخصص لتضبط الجيروسكوب أثناء الطيران أو تعيد تشغيل رحلة لاحقاً. هذه تليمتري تشخيصية — أبقِها خارج المسار السريع في بنيات الإنتاج لتجنب إغراق الوصلة.</p>
 <h2>مستشعرات مخططة</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>بارومتر (BMP280) لتثبيت الارتفاع والتحكم في الانزلاق.</li>
+<li>سرعة جوية عبر مستشعر ضغط تفاضلي لمشغّلات الانزلاق التلقائي.</li>
+<li>مستشعر تيار لاستهلاك الطاقة المباشر وتحمل الحزمة.</li>
+<li>GPS لتسجيل الموضع وتجارب العودة إلى نقطة الانطلاق.</li>
 </ul>
 </div>
 </main>

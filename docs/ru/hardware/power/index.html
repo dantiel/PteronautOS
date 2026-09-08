@@ -29,22 +29,14 @@
 <h1>Питание и BEC</h1>
 <p class='sub-lead'>Как запитать приёмник, MPU6050 и сервоприводы крыла от одного аккумулятора — выбор BEC и подключение.</p>
 <h2>Бюджет питания сервоприводов</h2>
-<p>
-A single wing servo can pull <strong>1–2&nbsp;A</strong> transiently at reversal; three servos plus the receiver and gyro demand a rail that never sags. Size the BEC for the <em>stall</em> current of all three servos summed, not their idle current. A 5&nbsp;V / 3&nbsp;A switching BEC is a safe baseline for most 2–4&nbsp;g micro servos; larger wings need 5&nbsp;A or more.
-</p>
+<p>Один сервопривод крыла может кратковременно потреблять &lt;strong&gt;1–2&amp;nbsp;А&lt;/strong&gt; при реверсе; три серво плюс приёмник и гироскоп требуют шины, которая не проседает. Выбирайте BEC по &lt;em&gt;пусковому&lt;/em&gt; току всех трёх сервоприводов в сумме, а не по току холостого хода. Импульсный BEC на 5&amp;nbsp;В / 3&amp;nbsp;А — безопасная база для большинства микросерво на 2–4&amp;nbsp;г; крупным крыльям нужно 5&amp;nbsp;А и более.</p>
 <h2>Выбор BEC</h2>
-<p>
-Prefer a <strong>switching (buck) BEC</strong> over a linear one: linears burn the voltage drop as heat and collapse under burst load. Match the BEC voltage to the servo rating (5&nbsp;V for most micro servos, up to 9&nbsp;V for HV servos) — but keep the receiver on its own 5&nbsp;V feed if it lacks a wide-input regulator.
-</p>
+<p>Предпочитайте &lt;strong&gt;импульсный (понижающий) BEC&lt;/strong&gt; линейному: линейные сжигают падение напряжения в тепло и проваливаются под пиковой нагрузкой. Согласуйте напряжение BEC с номиналом серво (5&amp;nbsp;В для большинства микросерво, до 9&amp;nbsp;В для HV-серво) — но питайте приёмник от собственных 5&amp;nbsp;В, если у него нет широкодиапазонного регулятора.</p>
 <h2>Шина приёмника</h2>
-<p>
-Most ELRS receivers take <strong>4.5–8.4&nbsp;V</strong> (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&nbsp;V and makes its own 3.3&nbsp;V.
-</p>
+<p>Большинство приёмников ELRS принимают &lt;strong&gt;4,5–8,4&amp;nbsp;В&lt;/strong&gt; (1S–2S) напрямую и регулируют внутри. Подавайте им сырое напряжение батареи, когда возможно; понижайте только для сервоприводов. Плата MPU6050 (GY-521) принимает 5&amp;nbsp;В и вырабатывает свои 3,3&amp;nbsp;В.</p>
 <h2>Схема подключения</h2>
 <pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
-<p>
-Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.
-</p>
+<p>Сводите все земли в одну точку-звезду. Плавающая земля между RX и сервоприводами — классическая причина джиттера и просадок — общий GND не обсуждается.</p>
 </div>
 </main>
 <footer>

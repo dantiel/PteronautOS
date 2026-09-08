@@ -29,21 +29,13 @@
 <h1>Comportamiento de failsafe</h1>
 <p class='sub-lead'>Qué ocurre cuando se pierde el enlace — alas centradas, timón centrado, degradación elegante.</p>
 <h2>Condiciones de disparo</h2>
-<p>
-Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
-</p>
+<p>El failsafe se activa cuando el enlace CRSF reporta conexión perdida o los datos de canal quedan obsoletos más allá del timeout configurado. El failsafe propio de la radio &lt;em&gt;no&lt;/em&gt; es la fuente de verdad — PteronautOS reimpone su propio failsafe centrado para que el comportamiento sea idéntico sin importar la marca de la radio o el modo de bind.</p>
 <h2>Salida centrada</h2>
-<p>
-On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
-</p>
+<p>Al dispararse, cada servo vuelve a &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; y la salida de forma de onda se suprime. Las alas se centran, el timón de cresta se centra. Las lecturas de canal &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; se reinician para que el sondeo de estado de la WebUI muestre la verdad neutral.</p>
 <h2>Degradación elegante</h2>
-<p>
-The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
-</p>
+<p>La regla de diseño es &lt;em&gt;gracia en la degradación&lt;/em&gt;: un MPU6050 defectuoso no debe derribar la aeronave. Zephyrus se desactiva ante el fallo del giroscopio y el mezclador Ornithopter sigue volando con entrada pura de los sticks — la vía del failsafe y la vía del giroscopio son independientes, así que una falla nunca se propaga a la otra.</p>
 <h2>Recuperación</h2>
-<p>
-Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
-</p>
+<p>La recuperación es automática: cuando se reanudan los frames CRSF válidos, el mezclador se reengancha en el siguiente tick y los servos vuelven a seguir los canales en vivo. No hay reinicio manual ni enclavamiento — la transición es una única rampa suave de vuelta a las posiciones comandadas.</p>
 <aside class='waveform-caution'>
 <strong>Prueba en banco antes de volar.</strong>
 El explorador describe la forma de onda matemática comandada, no el movimiento garantizado del servo. Evita ajustes asimétricos extremos hasta que amplitud, frecuencia, geometría de varillaje y límites de velocidad del servo se hayan verificado sin carga aerodinámica.

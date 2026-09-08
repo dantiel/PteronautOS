@@ -29,21 +29,13 @@
 <h1>Failsafe-Verhalten</h1>
 <p class='sub-lead'>Was bei Linkverlust passiert — zentrierte Flügel, zentriertes Ruder, sanfte Degradation.</p>
 <h2>Auslösebedingungen</h2>
-<p>
-Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
-</p>
+<p>Der Failsafe greift, wenn die CRSF-Verbindung einen Verlust meldet oder die Kanaldaten über das konfigurierte Timeout hinaus veraltet sind. Der radioeigene Failsafe ist &lt;em&gt;nicht&lt;/em&gt; die Quelle der Wahrheit — PteronautOS setzt seinen eigenen zentrierten Failsafe durch, sodass das Verhalten unabhängig von Radiomarke oder Bind-Modus identisch ist.</p>
 <h2>Zentrierter Ausgang</h2>
-<p>
-On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
-</p>
+<p>Beim Auslösen kehrt jeder Servo auf &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; zurück und die Wellenform-Ausgabe wird unterdrückt. Flügel zentrieren, das Kamm-Ruder zentriert. Die Kanal-Ausgaben &lt;code&gt;voiceAileron/Elevator/Throttle/Rudder&lt;/code&gt; werden zurückgesetzt, damit der WebUI-Status-Poll die neutrale Wahrheit zeigt.</p>
 <h2>Sanfte Degradation</h2>
-<p>
-The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
-</p>
+<p>Die Design-Regel heißt &lt;em&gt;Anmut in der Degradation&lt;/em&gt;: ein versagender MPU6050 darf das Fluggerät nicht abstürzen lassen. Zephyrus deaktiviert sich bei Gyro-Fehler, und der Ornithopter-Mixer fliegt auf reinem Stick-Input weiter — der Failsafe-Pfad und der Gyro-Pfad sind unabhängig, sodass ein Fehler nie in den anderen kaskadiert.</p>
 <h2>Wiederherstellung</h2>
-<p>
-Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
-</p>
+<p>Die Erholung ist automatisch: Sobald gültige CRSF-Frames zurückkehren, greift der Mixer im nächsten Tick wieder ein und die Servos folgen erneut den Live-Kanälen. Es gibt weder manuellen Reset noch Verriegelung — der Übergang ist eine einzige sanfte Rampe zurück zu den kommandierten Positionen.</p>
 <aside class='waveform-caution'>
 <strong>Vor dem Flug auf dem Prüfstand testen.</strong>
 Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garantierte Servobewegung. Vermeiden Sie extreme asymmetrische Einstellungen, bis Amplitude, Frequenz, Gestängegeometrie und Servo-Geschwindigkeitsgrenzen ohne aerodynamische Last verifiziert wurden.

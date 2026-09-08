@@ -29,23 +29,17 @@
 <h1>Telemetría y sensores</h1>
 <p class='sub-lead'>VBAT, RSSI, calidad de enlace y telemetría del giro de vuelta a la radio — qué se expone y qué se planea.</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>El receptor muestrea la tensión de la batería en su pin ADC (GPIO17 en el PWMP7) y la reporta por telemetría CRSF. Cablea un divisor de tensión desde la batería principal a la almohadilla ADC; calibra la relación del divisor en la configuración para que la radio lea la tensión real del pack.</p>
 <h2>RSSI y calidad de enlace</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>El RSSI y la calidad de enlace provienen directamente del SX1280 y se exponen en los slots de telemetría ELRS estándar. Usa LQ (calidad de enlace) en lugar del RSSI crudo para decisiones de alcance — es la métrica más significativa en 2,4&amp;nbsp;GHz.</p>
 <h2>Telemetría del giro</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>El AHRS Zephyrus puede transmitir roll, pitch y velocidad de guiñada como telemetría personalizada para ajustar el giroscopio en vuelo o reproducir un vuelo más tarde. Es telemetría de diagnóstico — mantenla fuera de la vía rápida en builds de producción para no inundar el enlace.</p>
 <h2>Sensores planeados</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>Barómetro (BMP280) para mantenimiento de altitud y control de planeo.</li>
+<li>Velocidad del aire mediante sensor de presión diferencial para disparos de auto-planeo.</li>
+<li>Sensor de corriente para consumo de energía en vivo y autonomía del pack.</li>
+<li>GPS para registro de posición y experimentos de retorno a casa.</li>
 </ul>
 </div>
 </main>

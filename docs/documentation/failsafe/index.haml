@@ -28,20 +28,16 @@
         %p.sub-lead= fs_lead
 
         %h2= fs_h2_trigger
-        %p
-          Failsafe engages when the CRSF link reports a lost connection or the channel data is stale beyond the configured timeout. The radio's own failsafe is <em>not</em> the source of truth — PteronautOS re-imposes its own centred failsafe so the behaviour is identical regardless of radio brand or bind mode.
+        %p= fs_p1
 
         %h2= fs_h2_center
-        %p
-          On trigger, every servo returns to <strong>1500&nbsp;µs</strong> and the waveform output is suppressed. Wings centre, the crest rudder centres. The <code>voiceAileron/Elevator/Throttle/Rudder</code> channel readouts are reset so the WebUI state poll shows the neutral truth.
+        %p= fs_p2
 
         %h2= fs_h2_grace
-        %p
-          The design rule is <em>grace in degradation</em>: a failing MPU6050 must not take the aircraft down. Zephyrus disables itself on gyro failure and the Ornithopter mixer keeps flying on pure stick input — the failsafe path and the gyro path are independent, so one fault never cascades into the other.
+        %p= fs_p3
 
         %h2= fs_h2_recover
-        %p
-          Recovery is automatic: when valid CRSF frames resume, the mixer re-engages on the next tick and the servos follow the live channels again. There is no manual reset and no latching — the transition is a single soft ramp back to commanded positions.
+        %p= fs_p4
 
         %aside.waveform-caution
           %strong= doc_caution_title

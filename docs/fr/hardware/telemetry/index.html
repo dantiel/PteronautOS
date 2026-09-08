@@ -29,23 +29,17 @@
 <h1>Télémétrie et capteurs</h1>
 <p class='sub-lead'>VBAT, RSSI, qualité de liaison et télémétrie gyro vers la radio — ce qui est exposé et ce qui est prévu.</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>Le récepteur échantillonne la tension batterie sur sa broche ADC (GPIO17 sur le PWMP7) et la renvoie par télémétrie CRSF. Câblez un diviseur de tension de la batterie principale vers la pastille ADC ; calibrez le rapport du diviseur dans la config pour que la radio lise la vraie tension du pack.</p>
 <h2>RSSI et qualité de liaison</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>Le RSSI et la qualité de liaison viennent directement du SX1280 et sont exposés dans les slots de télémétrie ELRS standards. Utilisez LQ (qualité de liaison) plutôt que le RSSI brut pour les décisions de portée — c’est la métrique la plus pertinente sur 2,4&amp;nbsp;GHz.</p>
 <h2>Télémétrie gyro</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>L’AHRS Zephyrus peut diffuser roulis, tangage et vitesse de lacet en télémétrie personnalisée afin de régler le gyro en vol ou de rejouer un vol plus tard. C’est de la télémétrie de diagnostic — gardez-la hors du chemin rapide en build de production pour éviter d’inonder la liaison.</p>
 <h2>Capteurs prévus</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>Baromètre (BMP280) pour le maintien d’altitude et le contrôle du vol plané.</li>
+<li>Vitesse air via un capteur de pression différentielle pour les déclencheurs de vol plané auto.</li>
+<li>Capteur de courant pour la consommation en direct et l’endurance du pack.</li>
+<li>GPS pour l’enregistrement de position et les essais de retour maison.</li>
 </ul>
 </div>
 </main>

@@ -29,23 +29,17 @@
 <h1>遥测与传感器</h1>
 <p class='sub-lead'>VBAT、RSSI、链路质量与陀螺仪遥测回传遥控——已暴露与计划内容。</p>
 <h2>VBAT</h2>
-<p>
-The receiver samples battery voltage on its ADC pin (GPIO17 on the PWMP7) and reports it back over CRSF telemetry. Wire a voltage divider from the main battery to the ADC pad; calibrate the divider ratio in the config so the radio reads the true pack voltage.
-</p>
+<p>接收机在其 ADC 引脚(PWMP7 上的 GPIO17)采样电池电压，并通过 CRSF 遥测回报。请从主电池到 ADC 焊盘连接一个分压器；在配置中校准分压比，使遥控器读到真实的电池组电压。</p>
 <h2>RSSI与链路质量</h2>
-<p>
-RSSI and link quality come from the SX1280 directly and are exposed in the standard ELRS telemetry slots. Use LQ (link quality) rather than raw RSSI for range decisions — it is the more meaningful metric on 2.4&nbsp;GHz.
-</p>
+<p>RSSI 与链路质量直接来自 SX1280，并暴露在标准 ELRS 遥测槽位中。进行距离判断时请使用 LQ(链路质量)而非原始 RSSI——在 2.4&amp;nbsp;GHz 上它更有意义。</p>
 <h2>陀螺仪遥测</h2>
-<p>
-The Zephyrus AHRS can stream roll, pitch and yaw rate as custom telemetry so you can tune the gyro in flight or replay a flight later. This is diagnostic telemetry — keep it off the fast path in production builds to avoid flooding the link.
-</p>
+<p>Zephyrus AHRS 可将横滚、俯仰与偏航速率作为自定义遥测流式传输，以便在飞行中调校陀螺仪或稍后回放飞行。这是诊断遥测——在生产构建中请让其远离快速路径，以免淹没链路。</p>
 <h2>规划中的传感器</h2>
 <ul>
-<li>Barometer (BMP280) for altitude hold and glide control.</li>
-<li>Airspeed via a differential pressure sensor for auto-glide triggers.</li>
-<li>Current sensor for live power consumption and pack endurance.</li>
-<li>GPS for position logging and return-to-home experiments.</li>
+<li>用于定高与滑翔控制的气压计(BMP280)。</li>
+<li>通过差压传感器获取空速，用于自动滑翔触发。</li>
+<li>用于实时功耗与电池组续航的电流传感器。</li>
+<li>用于位置记录与返航实验的 GPS。</li>
 </ul>
 </div>
 </main>
