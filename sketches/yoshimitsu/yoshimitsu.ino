@@ -63,7 +63,7 @@
 //  restart and every LED breath run on millis() state machines, so the bridge
 //  stays byte-exact at all times.
 //
-//  JIGUANG (極光 · the aurora) — the YOSHI_RGB cheatcode. The single onboard
+//  YOSHI (the aurora) — the RGB cheatcode. The single onboard
 //  WS2812B never sits idle: every stance breathes its own psychedelic aurora,
 //  a colour AND a rhythm that tell the pose's story. Read the ronin across
 //  the room without one serial byte:
@@ -415,7 +415,7 @@ static bool gyroConnected = false;
 #endif
 
 // =============================================================================
-//  JIGUANG (極光) — the YOSHI_RGB aurora cheatcode · always-on stance story
+//  YOSHI (the aurora) — the RGB cheatcode · always-on stance story
 // -----------------------------------------------------------------------------
 //  The single onboard WS2812B never sits idle: every stance breathes its own
 //  psychedelic aurora — a colour AND a rhythm that tell the pose's story, so
@@ -1168,7 +1168,7 @@ void setup() {
 #endif
 #if YOSHI_RGB
   rgb.begin();
-  rgb.setBrightness(64);                     // JIGUANG — vivid enough to read, not blinding
+  rgb.setBrightness(64);                     // YOSHI — vivid enough to read, not blinding
 #endif
 #if defined(LED_PIN)
   if (LED_PIN >= 0) pinMode(LED_PIN, OUTPUT);
@@ -1222,7 +1222,7 @@ void loop() {
   handleBootButton();
   handleUsb();
   pumpDance();
-  pumpRgb();                          // JIGUANG — the always-on stance aurora
+  pumpRgb();                          // YOSHI — the always-on stance aurora
   if (stance == STANCE_BACK_TURNED) {
     pumpMirror();
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
