@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>٠٦</p>
 <h1>محول CRSF→PWM</h1>
-<p class='sub-lead'>حوّل لوحة ESP32-S3 بقيمة 6 دولارات إلى محول CRSF-سيرفو مستقل — أرخص طريقة للطيران بـ PteronautOS على مستقبل بدون PWM أصلي.</p>
+<p class='sub-lead'>مستبدل — أصبح هذا المحول الآن وضعية KINCHO لدى YOSHIMITSU. انظر الدرس 07.</p>
 <h2>لماذا المحول؟</h2>
 <p>
 Most ExpressLRS receivers — <strong>HappyModel EP2</strong>, <strong>EP1</strong>, <strong>EPW6</strong> in CRSF mode — expose only a serial <code>CRSF</code> stream and no usable PWM headers. PteronautOS expects three servo channels (left wing, right wing, crest rudder). The cleanest, cheapest bridge is a tiny <strong>ESP32-S3</strong> board programmed as a pure <em>CRSF→PWM converter</em>: it reads the CRSF frames over UART and fans out rock-steady servo pulses.

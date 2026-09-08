@@ -30,82 +30,99 @@
 
         %h2= s3t_h2_dual
         %p
-          YOSHIMITSU is the <strong>Hermetic Shinobi</strong> with two faces — a rock-steady
-          CRSF→PWM <em>converter</em> and a pocket <em>flasher</em> — fused into one
-          combined firmware. Both faces live on the same board, so one permanent harness
-          serves flying <em>and</em> flashing. Two builds are provided, one per board:
+          YOSHIMITSU is the <strong>Hermetic Shinobi</strong> with <strong>six stances</strong> —
+          one soul, not two tools. A single sketch builds for both boards; the stances switch by
+          USB command, a GPIO0 button (ESP32-S3), or RESET-taps (RP2040-Tiny):
         %table
           %tr
-            %th Build
-            %th Sketch
-            %th Face switch
-            %th Used for
+            %th Stance
+            %th Meaning
           %tr
-            %td YOSHIMITSU · ESP32-S3
             %td
-              %code esp32s3_yoshimitsu
-            %td GPIO0 double-tap (BOOT button)
-            %td Native USB, every GPIO PWM-capable, up to 8 servo channels
+              %code KINCHO
+            %td CRSF→PWM converter — the parry (CRC discards the false). No channel names, no gyro.
           %tr
-            %td YOSHIMITSU · RP2040-Tiny
             %td
-              %code rp2040_tiny_yoshimitsu
-            %td Buttonless — FLASHER command + RESET tap
-            %td UART0/UART1 on fixed pins, onboard WS2812B status LED
+              %code MANJI_DRAGONFLY
+            %td Converter + Zephyrus gyro link (optional MPU6050) — the levitation.
+          %tr
+            %td
+              %code FLEA
+            %td Power-cycle jig — the lift that drops the RX into its bootloader.
+          %tr
+            %td
+              %code MEDITATION
+            %td Pocket flasher — the sponge-head, saving energy, ready to be flashed.
+          %tr
+            %td
+              %code NSS
+            %td No-Sword bench — direct servo over USB, no RF.
+          %tr
+            %td
+              %code BACK_TURNED
+            %td The deceptive idle — a living UART mirror. Never looks back.
         %p
-          Both builds live in the repository under
-          <code>sketches/esp32s3_yoshimitsu/</code> and
-          <code>sketches/rp2040_tiny_yoshimitsu/</code> and compile with the
-          standard arduino-esp32 / arduino-pico cores.
+          One sketch, two targets: <code>sketches/yoshimitsu/yoshimitsu.ino</code> compiles for the
+          <strong>Waveshare RP2040-Tiny</strong> (lightest, no onboard button) <em>and</em> any
+          native-USB <strong>ESP32-S3</strong>, with the standard arduino-pico / arduino-esp32 cores.
 
         %h2= s3t_h2_yoshimitsu
         %p
-          <strong>YOSHIMITSU</strong> — the Hermetic Shinobi — is the recommended firmware: one board,
-          two faces. It boots in <strong>FACE&nbsp;I</strong> (converter) and switches to
-          <strong>FACE&nbsp;II</strong> (flasher) with a GPIO0 double-tap. The BOOT button is the
-          single control surface:
+          <strong>YOSHIMITSU</strong> is the recommended firmware. It boots in <strong>KINCHO</strong>
+          (the converter) and moves between stances. The USB console is the canonical switch on both
+          boards — <code>KINCHO</code> · <code>MANJI</code> · <code>FLEA</code> ·
+          <code>MEDITATION</code> · <code>NSS</code> · <code>BACK</code> · <code>POSE &lt;n&gt;</code>.
+          On the ESP32-S3 the BOOT button (GPIO0) is a second surface:
         %table
           %tr
-            %th Face
+            %th Context
             %th Gesture
             %th Action
           %tr
-            %td FACE I (converter)
+            %td any stance
             %td double-tap
-            %td enter FACE II (flasher)
+            %td cycle KINCHO → MANJI → NSS → BACK → KINCHO …
           %tr
-            %td FACE II (flasher)
+            %td any stance
+            %td long-press 2 s
+            %td enter MEDITATION
+          %tr
+            %td MEDITATION / FLEA
             %td single tap
             %td restart the receiver (run the new firmware)
           %tr
-            %td FACE II (flasher)
+            %td MEDITATION / FLEA
             %td double-tap
-            %td drop the receiver into its bootloader (flash mode)
-          %tr
-            %td FACE II (flasher)
-            %td long-press 2 s
-            %td return to FACE I (converter)
+            %td FLEA — drop the receiver into its bootloader
         %p
-          The wiring is <strong>one permanent harness</strong> — the same six wires serve both
-          faces, so you never re-wire between flying and flashing. In FACE&nbsp;II the USB↔UART
-          path is a <em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP
-          traffic passes through untouched. Full source:
-          <code>sketches/esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino</code>.
+          The wiring is <strong>one permanent harness</strong> — the same wires serve every stance,
+          so you never re-wire between flying and flashing. In MEDITATION the USB↔UART path is a
+          <em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP traffic passes
+          through untouched. Full source: <code>sketches/yoshimitsu/yoshimitsu.ino</code>.
 
         %h2= s3t_h2_conv
         %p
-          <strong>FACE&nbsp;I</strong> — the converter — follows the exact procedure described in
-          <a href="#{asset_prefix}#{lang_dir}tutorials/crsf-converter/">Tutorial 06 — CRSF→PWM Converter</a>:
-          CRSF at 420&nbsp;000&nbsp;baud on the UART, servos on three free GPIOs,
-          a 988–2012&nbsp;µs window mapped from the 172–1811 channel range, and a
-          failsafe that centres the servos when no valid frame arrives for 500&nbsp;ms.
+          <strong>KINCHO</strong> — the converter stance — reads CRSF at 420&nbsp;000&nbsp;baud on the
+          UART, drives servos with a 988–2012&nbsp;µs window mapped from the 172–1811 channel range,
+          and centres them on a 500&nbsp;ms failsafe. The parry is the CRC check: a corrupt frame is
+          discarded before it ever reaches a servo. The converter is <strong>channel-agnostic</strong> —
+          servos are <code>SERVO_PIN_1..8</code> and the <code>CHANNEL_TO_SERVO</code> table decides
+          which CRSF channel feeds each; channel <em>meaning</em> belongs to the mixer/kernel, never
+          to the board.
         %ul
-          %li Wiring recap: RX&nbsp;TX → S3&nbsp;GPIO44, RX&nbsp;RX → S3&nbsp;GPIO43, common GND, shared 5&nbsp;V rail.
-          %li Servos: GPIO1 (left wing), GPIO2 (right wing), GPIO3 (crest rudder) — all overrideable in the pin-map block at the top of the sketch.
-          %li Full, CRC-checked source: <code>sketches/esp32s3_yoshimitsu/esp32s3_yoshimitsu.ino</code>
+          %li ESP32-S3: RX&nbsp;TX → GPIO44, RX&nbsp;RX → GPIO43, common GND, shared 5&nbsp;V rail.
+          %li RP2040-Tiny: RX&nbsp;TX → GPIO1 (UART0), common GND.
+          %li Servos: <code>SERVO_PIN_1..3</code> (three more on the S3) — overrideable in the PIN MAP block.
         %p
-          If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need
-          FACE&nbsp;I at all — FACE&nbsp;II below is then your only reason to own the S3.
+          For a <strong>gyro-stabilised ornithopter</strong>, use <strong>MANJI_DRAGONFLY</strong> —
+          the same converter plus the <strong>Zephyrus</strong> link: an optional MPU6050 on
+          <code>GYRO_SDA</code>/<code>GYRO_SCL</code> feeds a yaw-rate correction into the crest servo.
+          Without a gyro wired, MANJI_DRAGONFLY degrades gracefully into KINCHO. A commercial
+          CRSF→PWM converter board has no gyro path at all — EP2-class receivers carry no IMU, so
+          Zephyrus lives in YOSHIMITSU, not in the receiver.
+        %p
+          If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need the
+          converter stances at all — MEDITATION below is then your only reason to own the S3.
 
         %h2= s3t_h2_flasher
         %p
@@ -199,21 +216,21 @@
 
         %h2= s3t_h2_mode
         %p
-          FACE&nbsp;II boots into <em>transparent passthrough</em> (USB ↔ UART at
-          115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, press the S3's BOOT button
-          twice within one second — or send the command <code>FLASHER</code> over the USB serial. The
+          MEDITATION boots into <em>transparent passthrough</em> (USB ↔ UART at
+          115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, double-tap the S3's BOOT button
+          (or type <code>FLEA</code> over the USB serial). The
           sketch then:
         %ol
           %li pulls GPIO9 low (BOOT pad asserted),
           %li switches the MOSFET off for 120&nbsp;ms (receiver power off),
-          %li switches it back on and waits 800&nbsp;ms (receiver powers up inside its bootloader),
+          %li switches it back on and waits 900&nbsp;ms (receiver powers up inside its bootloader),
           %li releases GPIO9 — the RX now sits in the ROM bootloader, waiting for esptool,
           %li resumes USB↔UART passthrough so esptool can talk to it.
         %p
           Because the bridge cannot drive the classic DTR/RTS auto-reset lines, always flash with
           <code>--before no_reset</code> — the power-cycle dance above <em>is</em> the reset.
-          After flashing, a <strong>single</strong> BOOT press power-cycles the receiver again so
-          it boots the new firmware; two presses within the window would merely re-enter flash mode.
+          After flashing, a <strong>single</strong> BOOT tap power-cycles the receiver again so
+          it boots the new firmware; a double-tap would merely re-enter flash mode.
 
         %h2= s3t_h2_esptool
         %p
@@ -225,14 +242,14 @@
               # 1. Build PteronautOS (from the repository root)
               pio run -e PteronautOS_ESP8285_2400_RX
 
-              # 2. Drop the RX into flash mode via the S3 (BOOT twice), then:
+              # 2. Drop the RX into flash mode (type FLEA, or double-tap BOOT), then:
               python3 -m esptool --chip esp8285 \
                 --port /dev/cu.usbmodemXXXX --baud 115200 \
                 --before no_reset write_flash \
                 --flash_mode dout --flash_size 1MB --flash_freq 40m \
                 0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
 
-              # 3. Restart the RX once more (single BOOT press) to run the new firmware.
+              # 3. Restart the RX once more (single BOOT tap) to run the new firmware.
         %p
           The flash settings (dout, 1&nbsp;MB, 40&nbsp;MHz) match the stock ESP8285 ELRS target —
           never use qio or a larger size. After flashing, the very same USB port shows the
@@ -242,7 +259,7 @@
 
         %h2= s3t_h2_verify
         %ul
-          %li Flash mode: BOOT twice must power-cycle the RX and leave it waiting — the 3.3&nbsp;V dips for ~120&nbsp;ms.
+          %li FLEA must power-cycle the RX and leave it waiting — the 3.3&nbsp;V dips for ~120&nbsp;ms.
           %li esptool reports <code>Chip is ESP8285</code> and finishes with <code>Hash of data verified</code>.
           %li The boot log shows the PteronautOS banner and, with the radio on, a link-up message.
           %li Wiggle the sticks: servos track smoothly; switch the radio off: wings centre to 1500&nbsp;µs within a second.
@@ -253,17 +270,21 @@
         %h2= s3t_h2_rp2040
         %p
           Prefer the <strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) — or its twin, the
-          RP2040-Zero, which shares the exact same pinout? The same two faces run on the RP2040 with
+          RP2040-Zero, which shares the exact same pinout. All six stances run on the RP2040 with
           <strong>no readable button at all</strong>: the adapter's BOOT/RESET taps only drive
-          BOOTSEL/RUN, so YOSHIMITSU-RP2040 is driven entirely over the USB serial port.
+          BOOTSEL/RUN, so YOSHIMITSU-RP2040 is driven over the USB serial port, plus a buttonless
+          RESET-tap counter.
         %ul
-          %li <code>FLASHER</code> — enter FACE&nbsp;II and drop the receiver into its ROM bootloader (MOSFET power-cycle dance), then bridge USB ↔ UART for esptool.
+          %li <code>FLEA</code> — drop the receiver into its ROM bootloader (MOSFET power-cycle dance), then bridge USB ↔ UART for esptool.
+          %li <code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — switch stance.
+          %li <code>POSE &lt;n&gt;</code> — jump to a stance by number.
           %li <code>STATUS</code> — print the active pin map and the self-test report.
           %li <code>HELP</code> — list every command.
+          %li Quick RESET taps (within ~2&nbsp;s, counted in flash-backed EEPROM against the AON RTC) advance the stance: 1 = MANJI · 2 = NSS · 3 = BACK · 4 = MEDITATION · 5 = KINCHO.
         %p
           To flash the RP2040-Tiny itself, hold <code>BOOT</code> while power-cycling (it mounts as a
           mass-storage drive), drop the <code>.uf2</code> on it, then press <code>RESET</code> once —
-          the board reboots into FACE&nbsp;I running the new firmware. Configure once, flash once,
+          the board reboots into KINCHO running the new firmware. Configure once, flash once,
           never touch again.
 
         %h2= s3t_h2_rp2040_pins
@@ -289,17 +310,25 @@
             %td GPIO8 (UART1 TX)
             %td Cross: TX → RX
           %tr
-            %td Servo left wing
+            %td Servo 1 (<code>SERVO_PIN_1</code>)
             %td GPIO2
-            %td PWM
+            %td PWM — channel via <code>CHANNEL_TO_SERVO</code>
           %tr
-            %td Servo right wing
+            %td Servo 2 (<code>SERVO_PIN_2</code>)
             %td GPIO3
             %td PWM
           %tr
-            %td Servo crest rudder
+            %td Servo 3 (<code>SERVO_PIN_3</code>)
             %td GPIO4
             %td PWM
+          %tr
+            %td Gyro SDA (MPU6050, optional)
+            %td GPIO10
+            %td MANJI_DRAGONFLY
+          %tr
+            %td Gyro SCL (MPU6050, optional)
+            %td GPIO11
+            %td MANJI_DRAGONFLY
           %tr
             %td RX BOOT (receiver GPIO0, active low)
             %td GPIO5
@@ -314,9 +343,8 @@
             %td WS2812B
         %p
           The complete pin map is an editable block at the top of
-          <code>sketches/rp2040_tiny_yoshimitsu/rp2040_tiny_yoshimitsu.ino</code> — every pin is
-          validated at compile time, so a collision or an invalid UART number refuses to build
-          rather than misbehaving in the air.
+          <code>sketches/yoshimitsu/yoshimitsu.ino</code> — pin ranges and collisions are validated
+          by a boot POST, and invalid UART numbers refuse to build rather than misbehaving in the air.
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
