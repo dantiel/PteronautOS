@@ -76,15 +76,20 @@
 //  Always on, always millis()-driven, throttled so it never disturbs the
 //  byte-exact flasher bridge.
 //
-//  JIGUANG (極光 · the aurora) — the invincible codex: every cheatcode in
-//  one scroll. Type `JIGUANG` on the USB console and the ronin unrolls the
-//  complete solution — all six stances, YOSHI, the BOOT gestures and the
-//  RESET-tap table — without moving a finger. It is a facet of the story,
-//  a way of viewing the whole legend, never a demon that seizes the input:
-//  the stance keeps flying, CRSF and servos untouched. With YOSHI_RGB the
-//  light becomes the lens — one slow wheel that weaves every stance colour
-//  into a single unbroken breath. It is the part of Yoshimitsu that cannot
-//  lose: the whole story seen at once.
+//  JIGUANG (極光 · the aurora) — the overqualified storyteller, debug
+//  commentator AND administrator of the Manji legend. Yoshimitsu's voice is
+//  functional and terse; JIGUANG's is the myth. When awakened (`JIGUANG` on
+//  the USB console) it narrates the boot stance, every stance change, and —
+//  on demand — the CRSF channel scroll, an arcade-style HIGHSCORE ledger,
+//  and the receiver's ELRS debug bytes passed through verbatim. When muted
+//  (`MUTE` / `JIGUANG 0`) it is silent as a lamb — exactly like Yoshimitsu,
+//  but in its own persona. The 極光 sigil is written everywhere: hermetically
+//  encrypted behind the compile gate YOSHI_JIGUANG (1 = omnipresent, 0 = not
+//  a single 極光 byte compiled in). In MEDITATION the sponge-head becomes
+//  JIGUANG the administrator — the transparent flasher bridge stays, but when
+//  the wire is idle it takes commands from the USB-serial heaven (STATUS,
+//  CRSF, SCORE, POSE, …). JIGUANG never seizes the stance: the pose keeps
+//  flying, CRSF and servos untouched. JIGUANG / jiguang / 極光 never dies.
 //
 //  // homage to the Manji-clan shinobi of the soul — never print in docs.
 //
@@ -137,6 +142,14 @@
 #endif
 #if YOSHI_GYRO
   #include <Wire.h>
+#endif
+
+// ── JIGUANG (極光 · the aurora) — the storyteller/administrator ───────────────
+// Hermetic compile gate. 1 = omnipresent: the 極光 sigil is written everywhere
+// and the storyteller may speak. 0 = hermetically deactivated: the lamb — not
+// one 極光 byte is compiled in, MEDITATION stays a pure flasher bridge.
+#if !defined(YOSHI_JIGUANG)
+  #define YOSHI_JIGUANG 1
 #endif
 
 // =============================================================================
@@ -416,18 +429,116 @@ static uint32_t bridgeRxToUsb  = 0;
 static uint32_t bridgeOverflows = 0;
 static uint32_t lastBridgeMs   = 0;
 
+// CRSF/stats ledger for JIGUANG's HIGHSCORE (arcade-style, told by 極光)
+static uint32_t goodFrames     = 0;        // CRSF RC frames accepted (CRC clean)
+static uint32_t failsafeHits   = 0;        // link-loss events (failsafe entries)
+static bool     failsafeActive = false;
+
 #if YOSHI_RGB
 static Adafruit_NeoPixel rgb(1, RGB_LED_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
-// JIGUANG (極光 · the aurora) — the invincible codex's lens flag. JIGUANG /
-// jiguang / 極光 never dies: this bool is its only state. It changes the
-// VIEW (the LED lens), never the stance — CRSF, servos and the bridge keep
-// obeying the pose while the whole story is seen at once.
-static bool jiguangLens = false;           // true = lens on (the union aurora)
+// JIGUANG (極光 · the aurora) — the storyteller's voice level. 0 = the lamb
+// (silent, but explicit commands still answer), 1 = tale (boot + stance
+// narration), 2 = scroll (+ CRSF readout), 3 = omni (+ ELRS passthrough).
+// JIGUANG / jiguang / 極光 never dies. It never seizes the stance — CRSF,
+// servos and the bridge keep obeying the pose while the legend is told.
+static uint8_t jigLevel = 0;               // boots as the lamb — JIGUANG wakes it
 
 #if YOSHI_GYRO
 static bool gyroConnected = false;
+#endif
+
+// =============================================================================
+//  JIGUANG (極光 · the aurora) — the storyteller / commentator / administrator
+// -----------------------------------------------------------------------------
+//  Yoshimitsu's voice is functional; JIGUANG's is the legend. The same ronin,
+//  two tongues. JIGUANG narrates the boot, every stance change, and — when
+//  awakened — the CRSF scroll, an arcade HIGHSCORE ledger and the receiver's
+//  ELRS debug bytes passed through verbatim. Mute it and it is silent as a
+//  lamb; wake it and the 極光 sigil is everywhere. It never seizes the stance.
+// =============================================================================
+
+#if YOSHI_JIGUANG
+#define JIG_SIGIL "極光 "       // the storyteller's sigil — JIGUANG / jiguang / 極光
+#define JIG_CRSF_MS 250        // level-2 CRSF scroll cadence (~4 Hz)
+
+static bool jigBegin(uint8_t minLevel) {   // open a JIGUANG line if allowed
+  if (jigLevel < minLevel) return false;
+  Serial.print(JIG_SIGIL);
+  return true;
+}
+static void jigSay(uint8_t minLevel, const char* s) {
+  if (jigBegin(minLevel)) Serial.println(s);
+}
+static void jigCmd() { Serial.print(JIG_SIGIL); }   // explicit admin — always answers
+
+static uint32_t lastJigCrsfMs = 0;
+
+// MEDITATION's console sub-state: true = JIGUANG's admin throne, false = the
+// transparent flasher bridge. esptool's SLIP (0xC0) auto-yields to the bridge.
+static bool medAdmin = true;
+
+static uint16_t mapRaw(uint16_t raw);      // forward — defined in CRSF→PWM below
+
+// One legend line per stance (level 1 — the tale)
+static const char* STANCE_TALE[STANCE_COUNT] = {
+  "KINCHO — 忍 the parry. The sword holds; the false falls at the hilt.",
+  "MANJI_DRAGONFLY — the levitation. The gyro blades turn the wind.",
+  "FLEA — 跳 the lift. The ronin vaults over low steel into the bootloader.",
+  "MEDITATION — 禅 the sponge-head. 極光 sits cross-legged, ready to be flashed.",
+  "NSS — 鞘 the no-sword bench. The blade sheathed; the bench bows.",
+  "BACK_TURNED — 背 the mirror. It looks dead, but it never looks back."
+};
+static void jigNarrateStance(Stance s) { jigSay(1, STANCE_TALE[s]); }
+
+static void printCrsfLine() {              // level-2 auto scroll (one compact line)
+  if (!jigBegin(2)) return;
+  Serial.print("CRSF[");
+  for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
+    Serial.print(channel[i]);
+    if (i + 1 < CHANNEL_COUNT) Serial.print(',');
+  }
+  Serial.println("]");
+}
+
+static void printCrsfChannels() {          // explicit `CRSF` — the full 16-ch scroll
+  jigCmd(); Serial.println("the 16 channels (raw → µs):");
+  for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
+    jigCmd();
+    Serial.print("CH"); Serial.print((int)(i + 1));
+    Serial.print(" raw="); Serial.print(channel[i]);
+    Serial.print(" µs="); Serial.println(mapRaw(channel[i]));
+  }
+}
+
+static void printHighscore() {             // explicit `SCORE` — the ronin's ledger
+  jigCmd(); Serial.println("════ HIGHSCORE — the ronin's ledger ════");
+  jigCmd(); Serial.print("good CRSF frames ... "); Serial.print(goodFrames); Serial.println();
+  jigCmd(); Serial.print("failsafe events .... "); Serial.print(failsafeHits); Serial.println();
+  jigCmd(); Serial.print("bridge USB→RX ...... "); Serial.print(bridgeUsbToRx); Serial.println(" bytes");
+  jigCmd(); Serial.print("bridge RX→USB ...... "); Serial.print(bridgeRxToUsb); Serial.println(" bytes");
+  jigCmd(); Serial.print("bridge overflows ... "); Serial.print(bridgeOverflows); Serial.println();
+  jigCmd(); Serial.print("uptime ............. "); Serial.print(millis() / 1000UL); Serial.println(" s");
+  jigCmd(); Serial.println("════════════════════════════════");
+}
+
+// Level-3 omni: relay the receiver's ELRS debug bytes verbatim to the console.
+static void pumpElrsDebug() {
+  while (BRIDGE_SERIAL.available() && Serial.availableForWrite()) {
+    Serial.write(BRIDGE_SERIAL.read());
+  }
+}
+#else
+#define JIG_SIGIL ""
+static bool jigBegin(uint8_t) { return false; }
+static void jigSay(uint8_t, const char*) {}
+static void jigCmd() {}
+static void jigNarrateStance(Stance) {}
+static void printCrsfLine() {}
+static void printCrsfChannels() {}
+static void printHighscore() {}
+static void pumpElrsDebug() {}
 #endif
 
 // =============================================================================
@@ -495,9 +606,12 @@ static void pumpRgb() {
   uint32_t ms = millis();
   uint32_t c  = 0;
 
-  if (jiguangLens) {
-    c = jiguang(ms);                        // JIGUANG — the lens: every colour in one wheel
-  } else {
+#if YOSHI_JIGUANG
+  if (jigLevel >= 3) {
+    c = jiguang(ms);                        // JIGUANG omni — the storyteller wears the aurora
+  } else
+#endif
+  {
     switch (stance) {
     case STANCE_KINCHO: {                    // sword stance — the parry
       uint8_t k = (uint8_t)(24 + triWave(ms, 2200) / 3);   // slow green breath
@@ -623,9 +737,16 @@ static int32_t gyroZRate() {                       // raw yaw rate, ±250 dps
 #endif
 
 static void applyChannels() {
-  if (channel[ARM_CHANNEL] <= 992) {               // disarmed: everything centred
+  if (millis() - lastGoodMs > FAILSAFE_MS) {
     for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(1500);
-    return;
+    if (!failsafeActive) {
+      failsafeActive = true;
+      failsafeHits++;
+      jigSay(2, "FAILSAFE — the link fell; the wings centre. The parry holds.");
+    }
+    lastGoodMs = millis();
+  } else {
+    failsafeActive = false;
   }
 
 #if YOSHI_GYRO
@@ -695,6 +816,7 @@ static void pumpCrsf() {
             channel[i] = (uint16_t)((payload[byteIdx] | (payload[byteIdx + 1] << 8)) >> shift) & 0x07FF;
           }
           lastGoodMs = millis();
+          goodFrames++;
           applyChannels();
         }
         crsfState = S_HEADER;
@@ -721,6 +843,8 @@ static void rxPower(bool on) {
 static void bootAssert(bool hold) {
   digitalWrite(RX_BOOT_PIN, hold ? LOW : HIGH);
 }
+
+static void enterStance(Stance next);      // forward — defined in STANCE TRANSITIONS below
 
 // ── Power-cycle dance — async millis() machine, NEVER blocking ──────────────
 enum : uint8_t { DANCE_IDLE, DANCE_BOOT_HOLD, DANCE_POWER_OFF, DANCE_POWER_ON, DANCE_SETTLE };
@@ -764,8 +888,7 @@ static void pumpDance() {
         dancePhase = DANCE_IDLE;
         if (danceHoldBoot) {
           Serial.println("YOSHIMITSU: receiver dropped into ROM bootloader — run esptool with --before no_reset now.");
-          stance = STANCE_MEDITATION;           // the lift settles into the sponge-head
-          setStanceLed();
+          enterStance(STANCE_MEDITATION);       // the lift settles into the sponge-head
         } else {
           Serial.println("YOSHIMITSU: receiver restarted — the new soul should be running.");
         }
@@ -919,7 +1042,11 @@ static void printStatus() {
   }
 #endif
   Serial.print(" · receiver power = ");
-  Serial.println(rxPowered ? "ON" : "OFF");
+  Serial.print(rxPowered ? "ON" : "OFF");
+#if YOSHI_JIGUANG
+  Serial.print(" · JIGUANG voice = "); Serial.print((int)jigLevel);
+#endif
+  Serial.println();
   Serial.print("  bridge: USB→RX "); Serial.print(bridgeUsbToRx);
   Serial.print(" bytes · RX→USB "); Serial.print(bridgeRxToUsb);
   Serial.print(" bytes · overflows "); Serial.print(bridgeOverflows);
@@ -937,10 +1064,19 @@ static void printHelp() {
   Serial.println("  NSS/BENCH    No-Sword bench — direct servo, no radio");
   Serial.println("  BACK/TURN    deceptive idle — the UART mirror, never looks back");
   Serial.println("  POSE <n>     jump to stance 0..5");
-  Serial.println("  JIGUANG      the invincible codex — every cheatcode in one scroll (a lens, never a takeover)");
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
+#if YOSHI_JIGUANG
+  Serial.println("JIGUANG (極光) — the storyteller / commentator / administrator:");
+  Serial.println("  JIGUANG      toggle the voice (lamb ↔ tale)");
+  Serial.println("  JIGUANG 0..3 set level: 0 lamb · 1 tale · 2 scroll · 3 omni");
+  Serial.println("  MUTE         silence the storyteller (the lamb)");
+  Serial.println("  CRSF         print the 16-channel scroll (raw → µs)");
+  Serial.println("  SCORE        arcade HIGHSCORE ledger (frames, failsafes, bridge)");
+  Serial.println("  ELRS         toggle the receiver's debug passthrough (omni)");
+  Serial.println("  BRIDGE/ADMIN (MEDITATION) yield to / retake the flasher console");
+#endif
 }
 
 static void printBootBanner() {
@@ -960,7 +1096,6 @@ static void enterStance(Stance next) {
   if (next == stance && next != STANCE_FLEA) return;
 
   stance = next;
-  jiguangLens = false;                      // any stance command lowers the lens
 
   switch (stance) {
     case STANCE_KINCHO:
@@ -988,6 +1123,11 @@ static void enterStance(Stance next) {
       rxPower(true);                       // receiver powered so esptool sees it
       Serial.println("YOSHIMITSU: MEDITATION — the sponge-head, ready to be flashed.");
       Serial.println("YOSHIMITSU:   the bridge is live. Exit: long-press BOOT (ESP32) or RESET (RP2040).");
+#if YOSHI_JIGUANG
+      medAdmin = true;                     // the sponge-head wakes as the administrator
+      jigCmd();
+      Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type STATUS / CRSF / SCORE / POSE.");
+#endif
       break;
 
     case STANCE_NSS:
@@ -1004,6 +1144,7 @@ static void enterStance(Stance next) {
       Serial.println("YOSHIMITSU:   send bytes on one UART and they emerge on the other. It never looks back.");
       break;
   }
+  jigNarrateStance(stance);            // 極光 tells the stance change (level 1)
   setStanceLed();
 }
 
@@ -1029,32 +1170,46 @@ static void runCommand(const char* line) {
   if      (strncmp(line, "KINCHO", 6) == 0) enterStance(STANCE_KINCHO);
   else if (strncmp(line, "MANJI",  5) == 0 || strncmp(line, "GYRO", 4) == 0) enterStance(STANCE_MANJI_DRAGONFLY);
   else if (strncmp(line, "JIGUANG", 7) == 0) {
-    // The invincible codex — all cheatcodes in one scroll. A facet of the
-    // story: it never seizes the stance, never sharpens the CRSF edge. The
-    // pose keeps flying; only the view changes (the LED lens, where a
-    // WS2812B lives). JIGUANG / jiguang / 極光 never dies.
-    Serial.println("YOSHIMITSU: JIGUANG (極光) — the invincible codex. All cheatcodes in one scroll:");
-    Serial.println("YOSHIMITSU:   KINCHO        CRSF→PWM converter (the parry)");
-    Serial.println("YOSHIMITSU:   MANJI         converter + Zephyrus gyro (the levitation)");
-    Serial.println("YOSHIMITSU:   FLEA          the lift — power-cycle jig → MEDITATION");
-    Serial.println("YOSHIMITSU:   MEDITATION    pocket flasher (the sponge-head, ready to be flashed)");
-    Serial.println("YOSHIMITSU:   NSS           no-sword bench — direct servo, no RF");
-    Serial.println("YOSHIMITSU:   BACK          deceptive idle — the UART mirror, never looks back");
-    Serial.println("YOSHIMITSU:   YOSHI         the always-on stance aurora (WS2812B)");
-    Serial.println("YOSHIMITSU:   JIGUANG       this scroll — the whole story seen at once");
-    Serial.println("YOSHIMITSU:   RESET-taps    1=MANJI 2=NSS 3=BACK 4=MEDITATION 5=KINCHO (RP2040)");
-    Serial.println("YOSHIMITSU:   BOOT          double-tap cycles · long-press MEDITATION (ESP32-S3)");
-#if YOSHI_RGB
-    jiguangLens = !jiguangLens;
-    Serial.print("YOSHIMITSU: the light lens is now ");
-    Serial.println(jiguangLens
-      ? "ON — one slow wheel weaving every stance colour into a single breath."
-      : "OFF — YOSHI paints the stance's own story again.");
+#if YOSHI_JIGUANG
+    // JIGUANG (極光) — the storyteller/administrator. `JIGUANG` toggles the
+    // voice (lamb ↔ tale); `JIGUANG n` sets the level 0..3. It never seizes
+    // the stance: CRSF, servos and the bridge keep obeying the pose.
+    const char* a = line + 7;
+    while (*a == ' ') a++;
+    if (*a >= '0' && *a <= '3') jigLevel = (uint8_t)(*a - '0');
+    else jigLevel = (jigLevel == 0) ? 1 : 0;
+    jigCmd();
+    Serial.print("voice = "); Serial.print((int)jigLevel);
+    Serial.println(jigLevel == 0 ? " — 0 the lamb (silent)."
+                 : jigLevel == 1 ? " — 1 tale (boot + stance narration)."
+                 : jigLevel == 2 ? " — 2 scroll (+ CRSF readout)."
+                                 : " — 3 omni (+ ELRS passthrough).");
 #else
-    Serial.println("YOSHIMITSU: no onboard WS2812B — the codex is ink only.");
+    Serial.println("YOSHIMITSU: JIGUANG (極光) is hermetically deactivated — recompile with YOSHI_JIGUANG=1.");
 #endif
-    Serial.println("YOSHIMITSU: the stance is untouched: CRSF, servos and the bridge keep obeying the pose.");
   }
+#if YOSHI_JIGUANG
+  else if (strncmp(line, "MUTE", 4) == 0) {
+    jigLevel = 0;
+    jigCmd(); Serial.println("the lamb sleeps. 極光 is silent.");
+  }
+  else if (strncmp(line, "CRSF", 4) == 0) printCrsfChannels();
+  else if (strncmp(line, "SCORE", 5) == 0 || strncmp(line, "HIGHSCORE", 9) == 0) printHighscore();
+  else if (strncmp(line, "ELRS", 4) == 0) {
+    jigLevel = (jigLevel >= 3) ? 1 : 3;
+    jigCmd();
+    Serial.println(jigLevel >= 3 ? "ELRS passthrough ON — 極光 relays the receiver's debug bytes."
+                                 : "ELRS passthrough OFF — the storyteller holds its breath.");
+  }
+  else if (strncmp(line, "BRIDGE", 6) == 0) {
+    if (stance == STANCE_MEDITATION) { medAdmin = false; jigCmd(); Serial.println("yielding to the transparent flasher bridge."); }
+    else { jigCmd(); Serial.println("BRIDGE only applies in MEDITATION."); }
+  }
+  else if (strncmp(line, "ADMIN", 5) == 0) {
+    if (stance == STANCE_MEDITATION) { medAdmin = true; jigCmd(); Serial.println("JIGUANG the administrator returns to the throne."); }
+    else { jigCmd(); Serial.println("ADMIN only applies in MEDITATION."); }
+  }
+#endif
   else if (strncmp(line, "FLEA",   4) == 0 || strncmp(line, "JIG", 3) == 0)  enterStance(STANCE_FLEA);
   else if (strncmp(line, "MEDITATION", 10) == 0 || strncmp(line, "MED", 3) == 0 ||
            strncmp(line, "FLASH",   5) == 0 || strncmp(line, "FLASHER", 7) == 0) enterStance(STANCE_MEDITATION);
@@ -1071,25 +1226,68 @@ static void runCommand(const char* line) {
   else Serial.println("YOSHIMITSU: unknown — type HELP.");
 }
 
-static void handleUsb() {
-  if (stance == STANCE_MEDITATION || stance == STANCE_FLEA) {
-    pumpBridge();                            // transparent, no line parsing
+static char consoleLine[24];
+static uint8_t consoleN = 0;
+
+static void parseConsoleLine() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (consoleN < sizeof(consoleLine) - 1) consoleLine[consoleN++] = c;
+    if (c == '\n' || c == '\r') {
+      consoleLine[consoleN] = '\0';
+      runCommand(consoleLine);
+      consoleN = 0;
+    }
+    if (consoleN >= sizeof(consoleLine) - 1) consoleN = 0;
+  }
+}
+
+#if YOSHI_JIGUANG
+// MEDITATION — the sponge-head is JIGUANG's throne. By default it is the admin
+// console (line parsing); the instant esptool's SLIP (0xC0) speaks, it yields
+// to the byte-exact flasher bridge and stays there until MEDITATION re-enters.
+static void handleMeditationUsb() {
+  if (!medAdmin) {
+    pumpBridge();
     if (BRIDGE_SERIAL.overflow()) bridgeSerialRecover();
     return;
   }
-
-  static char line[24];
-  static uint8_t n = 0;
   while (Serial.available()) {
-    char c = (char)Serial.read();
-    if (n < sizeof(line) - 1) line[n++] = c;
-    if (c == '\n' || c == '\r') {
-      line[n] = '\0';
-      runCommand(line);
-      n = 0;
+    int c = Serial.read();
+    if (c == 0xC0) {                          // SLIP END — esptool is calling
+      medAdmin = false;
+      BRIDGE_SERIAL.write((uint8_t)c);        // hand the frame start onward
+      lastBridgeMs = millis();
+      return;
     }
-    if (n >= sizeof(line) - 1) n = 0;
+    if (c == '\n' || c == '\r') {
+      consoleLine[consoleN] = '\0'; consoleN = 0;
+      runCommand(consoleLine);
+    } else if (consoleN < sizeof(consoleLine) - 1) {
+      consoleLine[consoleN++] = (char)c;
+    } else {
+      consoleN = 0;
+    }
   }
+}
+#endif
+
+static void handleUsb() {
+  if (stance == STANCE_MEDITATION) {
+#if YOSHI_JIGUANG
+    handleMeditationUsb();
+#else
+    pumpBridge();
+    if (BRIDGE_SERIAL.overflow()) bridgeSerialRecover();
+#endif
+    return;
+  }
+  if (stance == STANCE_FLEA) {
+    pumpBridge();
+    if (BRIDGE_SERIAL.overflow()) bridgeSerialRecover();
+    return;
+  }
+  parseConsoleLine();
 }
 
 // =============================================================================
@@ -1272,6 +1470,7 @@ void setup() {
   } else {                         // BACK_TURNED (and any future silent pose)
     rxPower(false);
   }
+  jigNarrateStance(stance);        // 極光 tells the boot stance (no-op when the lamb)
   setStanceLed();
 }
 
@@ -1289,4 +1488,13 @@ void loop() {
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
     if (stance != STANCE_NSS) pumpCrsf();     // NSS drives servos manually, no CRSF
   }
+#if YOSHI_JIGUANG
+  if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) {
+    if (jigLevel >= 2 && millis() - lastJigCrsfMs >= JIG_CRSF_MS) {
+      lastJigCrsfMs = millis();
+      printCrsfLine();                        // level 2 — the CRSF scroll
+    }
+    if (jigLevel >= 3) pumpElrsDebug();       // level 3 — the ELRS debug passthrough
+  }
+#endif
 }
