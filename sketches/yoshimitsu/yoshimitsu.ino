@@ -45,7 +45,7 @@
 //  SWITCHING:
 //
 //    USB console (all boards — the canonical, reliable path):
-//        KINCHO | MANJI | FLEA | MEDITATION | NSS | BACK | POSE <n>
+//        KINCHO | MANJI | FLEA | MEDITATION | NSS | BACK | POSE <n> | JIGUANG
 //        STATUS | HELP | SERVO <i> <us>   (SERVO only works in NSS)
 //
 //    ESP32-S3 GPIO0 (BOOT) button:
@@ -75,6 +75,13 @@
 //    BACK_TURNED     near-black + an unpredictable crimson glint (the mirror)
 //  Always on, always millis()-driven, throttled so it never disturbs the
 //  byte-exact flasher bridge.
+//
+//  JIGUANG (極光 · the aurora) — the standalone RGB cheatcode. JIGUANG /
+//  jiguang / 極光 never dies: where YOSHI paints the stance's story, JIGUANG
+//  is the raw, unbound aurora borealis itself — a full-spectrum psychedelic
+//  drift that obeys no pose. Type `JIGUANG` on the USB console and the ronin
+//  lets go of his stance for 30 s, breathing pure northern light before
+//  YOSHI returns. It is the sky behind every pose.
 //
 //  // homage to the Manji-clan shinobi of the soul — never print in docs.
 //
@@ -410,6 +417,11 @@ static uint32_t lastBridgeMs   = 0;
 static Adafruit_NeoPixel rgb(1, RGB_LED_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
+// JIGUANG (極光 · the aurora) — the standalone RGB cheatcode's trance timer.
+// JIGUANG / jiguang / 極光 never dies: this deadline is its only state.
+#define JIGUANG_TRANCE_MS 30000            // 30 s of pure aurora, then YOSHI returns
+static uint32_t jiguangUntil = 0;          // 0 = no trance; else millis() deadline
+
 #if YOSHI_GYRO
 static bool gyroConnected = false;
 #endif
@@ -459,6 +471,18 @@ static uint32_t dimColor(uint32_t c, uint8_t k) {
   return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
 }
 
+// JIGUANG (極光 · the aurora) — the pure, unbound northern light. Unlike YOSHI
+// (which paints the stance's story), JIGUANG is a free-running, full-spectrum
+// psychedelic drift that obeys no pose. JIGUANG / jiguang / 極光 never dies.
+static uint32_t jiguang(uint32_t ms) {
+  uint8_t wave    = triWave(ms + ((ms >> 4) & 0xFF), 900);  // slow curtain
+  uint8_t shimmer = (uint8_t)((ms >> 2) & 0x3F);            // fast ripple
+  uint8_t k       = (uint8_t)((wave + shimmer) >> 1);
+  if (k < 28) k = 28;                                       // the aurora never sleeps
+  return (wave > 200) ? dimColor(0x7000FF, k)               // violet fringe at the peak
+                      : dimColor(0x00FF70, k);              // green-teal core
+}
+
 static uint32_t rgbLast   = 0xFFFFFFFF;   // sentinel → force first paint
 static uint32_t rgbLastMs = 0;
 
@@ -467,7 +491,11 @@ static void pumpRgb() {
   uint32_t ms = millis();
   uint32_t c  = 0;
 
-  switch (stance) {
+  if (jiguangUntil && (ms < jiguangUntil)) {
+    c = jiguang(ms);                        // JIGUANG — the unbound aurora, temporarily
+  } else {
+    if (jiguangUntil) jiguangUntil = 0;     // trance over — YOSHI returns to the stance
+    switch (stance) {
     case STANCE_KINCHO: {                    // sword stance — the parry
       uint8_t k = (uint8_t)(24 + triWave(ms, 2200) / 3);   // slow green breath
       c = dimColor(0x00FF00, k);
@@ -504,6 +532,7 @@ static void pumpRgb() {
       c = 0x000000;
       if ((ms / 1000) % 7 == 3) c = dimColor(0x200008, triWave(ms, 120));
       break;
+    }
     }
   }
 
@@ -905,6 +934,7 @@ static void printHelp() {
   Serial.println("  NSS/BENCH    No-Sword bench — direct servo, no radio");
   Serial.println("  BACK/TURN    deceptive idle — the UART mirror, never looks back");
   Serial.println("  POSE <n>     jump to stance 0..5");
+  Serial.println("  JIGUANG      the standalone aurora — pure northern light (a trance, not a stance)");
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
@@ -994,6 +1024,14 @@ static void handleServoCmd(const char* arg) {
 static void runCommand(const char* line) {
   if      (strncmp(line, "KINCHO", 6) == 0) enterStance(STANCE_KINCHO);
   else if (strncmp(line, "MANJI",  5) == 0 || strncmp(line, "GYRO", 4) == 0) enterStance(STANCE_MANJI_DRAGONFLY);
+  else if (strncmp(line, "JIGUANG", 7) == 0) {
+#if YOSHI_RGB
+    jiguangUntil = millis() + JIGUANG_TRANCE_MS;
+    Serial.println("YOSHIMITSU: JIGUANG (極光) — the unbound aurora breathes for 30 s, then YOSHI returns.");
+#else
+    Serial.println("YOSHIMITSU: JIGUANG (極光) — no onboard WS2812B, the aurora sleeps.");
+#endif
+  }
   else if (strncmp(line, "FLEA",   4) == 0 || strncmp(line, "JIG", 3) == 0)  enterStance(STANCE_FLEA);
   else if (strncmp(line, "MEDITATION", 10) == 0 || strncmp(line, "MED", 3) == 0 ||
            strncmp(line, "FLASH",   5) == 0 || strncmp(line, "FLASHER", 7) == 0) enterStance(STANCE_MEDITATION);

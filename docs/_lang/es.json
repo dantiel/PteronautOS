@@ -353,5 +353,6 @@
   "s3t_h2_yoshimitsu": "YOSHIMITSU — el firmware combinado",
   "s3t_h2_rp2040": "El build de bolsillo RP2040-Tiny",
   "s3t_h2_rp2040_pins": "Mapa de pines RP2040-Tiny",
-  "s3t_h2_yoshi": "YOSHI — la aurora de posturas siempre activa"
+  "s3t_h2_yoshi": "YOSHI — la aurora de posturas siempre activa",
+  "s3t_h2_jiguang": "JIGUANG — el cheatcode aurora independiente"
 }

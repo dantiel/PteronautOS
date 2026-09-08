@@ -353,5 +353,6 @@
   "s3t_h2_yoshimitsu": "YOSHIMITSU — the combined firmware",
   "s3t_h2_rp2040": "The RP2040-Tiny pocket build",
   "s3t_h2_rp2040_pins": "RP2040-Tiny pin map",
-  "s3t_h2_yoshi": "YOSHI — the always-on stance aurora"
+  "s3t_h2_yoshi": "YOSHI — the always-on stance aurora",
+  "s3t_h2_jiguang": "JIGUANG — the standalone aurora cheatcode"
 }
