@@ -29,27 +29,23 @@
 <h1>Flash &amp; RAM Budget</h1>
 <p class='sub-lead'>Where the 1MB flash and ~23KB heap go, and how to keep the build under the 60% flash / 65% RAM limits.</p>
 <h2>Flash budget</h2>
-<p>
-The 1&nbsp;MB ESP8285 flash is dominated by the <strong>WebUI</strong>: the bundled client build is ~160&nbsp;KB compressed (~16% of flash) after tree-shaking. The float runtime (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) is ~9.7&nbsp;KB — real but not the biggest lever. Current baseline sits at ~68.6% flash; the 60% target needs a ~83&nbsp;KB cut, and the WebUI is the only lever large enough to reach it.
-</p>
+<p>O flash de 1&amp;nbsp;MB do ESP8285 é dominado pela &lt;strong&gt;WebUI&lt;/strong&gt;: o build de cliente empacotado tem ~160&amp;nbsp;KB comprimidos (~16% do flash) após tree-shaking. O runtime de float (&lt;code&gt;_scanf_float&lt;/code&gt;, &lt;code&gt;_printf_float&lt;/code&gt;, &lt;code&gt;_dtoa_r&lt;/code&gt;, &lt;code&gt;_strtod_l&lt;/code&gt; …) tem ~9,7&amp;nbsp;KB — real, mas não é a maior alavanca. A linha de base atual está em ~68,6% de flash; a meta de 60% exige um corte de ~83&amp;nbsp;KB, e a WebUI é a única alavanca grande o bastante para alcançá-la.</p>
 <h2>RAM budget</h2>
-<p>
-The ESP8285 exposes roughly <strong>23&nbsp;KB of heap</strong>. Config saves must never allocate a big JSON document on the heap — the ornithopter config saver streams directly to LittleFS to avoid exhausting the heap and rebooting mid-poll. Keep <code>DynamicJsonDocument</code> out of the hot path; prefer stack buffers and direct writes.
-</p>
+<p>O ESP8285 expõe cerca de &lt;strong&gt;23&amp;nbsp;KB de heap&lt;/strong&gt;. O salvamento de configuração nunca deve alocar um grande documento JSON no heap — o gravador de config do ornitóptero grava direto no LittleFS para evitar esgotar o heap e reiniciar no meio do poll. Mantenha &lt;code&gt;DynamicJsonDocument&lt;/code&gt; fora do caminho quente; prefira buffers de pilha e gravações diretas.</p>
 <h2>Optimization tips</h2>
 <ul>
-<li>Tree-shake unused ELRS-RX pages from the WebUI bundle.</li>
-<li>Avoid <code>String</code> concatenation in loops — it fragments the heap.</li>
-<li>Stream JSON to LittleFS with <code>File::print</code> instead of building documents.</li>
-<li>Keep float formatting out of the telemetry hot path (pre-scaled integers).</li>
-<li>Prefer <code>#ifdef</code>-gated modules (Zephyrus compiles to no-ops when absent).</li>
+<li>Remova (tree-shake) páginas ELRS-RX não usadas do bundle da WebUI.</li>
+<li>Evite concatenação de &lt;code&gt;String&lt;/code&gt; em loops — ela fragmenta o heap.</li>
+<li>Transmita JSON para o LittleFS com &lt;code&gt;File::print&lt;/code&gt; em vez de construir documentos.</li>
+<li>Mantenha a formatação de float fora do caminho quente da telemetria (inteiros pré-escalados).</li>
+<li>Prefira módulos protegidos por &lt;code&gt;#ifdef&lt;/code&gt; (Zephyrus compila para no-ops quando ausente).</li>
 </ul>
 <h2>Build targets</h2>
 <table>
 <tr>
-<th>Target</th>
-<th>Flash budget</th>
-<th>RAM budget</th>
+<th>Alvo</th>
+<th>Orçamento de flash</th>
+<th>Orçamento de RAM</th>
 </tr>
 <tr>
 <td>PteronautOS_ESP8285_2400_RX</td>
@@ -57,9 +53,7 @@ The ESP8285 exposes roughly <strong>23&nbsp;KB of heap</strong>. Config saves mu
 <td>≤ 65%</td>
 </tr>
 </table>
-<p>
-The manifest forbids exceeding <strong>60% flash / 65% RAM</strong> to leave margin for expansion. Measure after every feature; a green build is not a live build until it is flashed and its boot log read.
-</p>
+<p>O manifesto proíbe exceder &lt;strong&gt;60% de flash / 65% de RAM&lt;/strong&gt; para deixar margem de expansão. Meça após cada recurso; um build verde não é um build vivo até ser gravado e seu log de boot ser lido.</p>
 </div>
 </main>
 <footer>

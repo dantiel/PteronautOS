@@ -30,9 +30,7 @@
 <h1>Zephyrus Gyro Wiring</h1>
 <p class='sub-lead'>Wire an MPU6050 to the I2C bus, resolve pin conflicts and verify the AHRS with the serial log.</p>
 <h2>I2C pin selection</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>The default Zephyrus I2C pins are &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; and &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. On the PWMP7 v1.0 those are fine; on &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 are not broken out, so Zephyrus uses &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; and &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.</p>
 <h2>Wiring the GY-521</h2>
 <table>
 <tr>
@@ -60,13 +58,9 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 <td>leave open</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>The GY-521 carries its own 4.7&amp;nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. &lt;strong&gt;Four wires total&lt;/strong&gt;, no trace cutting, no extra regulator.</p>
 <h2>Calibration &amp; verification</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe &lt;em&gt;still&lt;/em&gt; for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you&#39;ve landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.</p>
 </div>
 </main>
 <footer>

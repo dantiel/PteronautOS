@@ -30,18 +30,16 @@
 <h1>Подключение гироскопа Зефир</h1>
 <p class='sub-lead'>Подключите MPU6050 к шине I2C, разрешите конфликты пинов и проверьте AHRS по последовательному логу.</p>
 <h2>Выбор пинов I2C</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>Пины I2C Zephyrus по умолчанию — &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; и &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. На PWMP7 v1.0 они подходят; на &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 не выведены, поэтому Zephyrus использует &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; и &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Всегда сверяйте шелкографию с картой пинов — GPIO4 жёстко зарезервирован под прерывание радио SX1280 и никогда не должен переиспользоваться.</p>
 <h2>Подключение GY-521</h2>
 <table>
 <tr>
 <th>GY-521</th>
-<th>Receiver</th>
+<th>Приёмник</th>
 </tr>
 <tr>
 <td>VCC</td>
-<td>5V rail (onboard regulator makes 3.3V)</td>
+<td>Шина 5В (встроенный регулятор даёт 3,3В)</td>
 </tr>
 <tr>
 <td>GND</td>
@@ -49,24 +47,20 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 </tr>
 <tr>
 <td>SDA</td>
-<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+<td>GPIO1 (CH2) — или GPIO5 на v1.0</td>
 </tr>
 <tr>
 <td>SCL</td>
-<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+<td>GPIO3 (CH3) — или GPIO2 на v1.0</td>
 </tr>
 <tr>
 <td>AD0 / INT / XDA / XCL</td>
-<td>leave open</td>
+<td>оставить неподключённым</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>GY-521 несёт собственные подтяжки 4,7&amp;nbsp;кОм и регулятор AMS1117-3.3V: подайте 5В — он сделает свои 3,3В, и логические уровни совпадут автоматически. &lt;strong&gt;Всего четыре провода&lt;/strong&gt;, без резки дорожек и без лишнего регулятора.</p>
 <h2>Калибровка и проверка</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>Mahony AHRS самокалибрует смещение гироскопа при загрузке — держите планер &lt;em&gt;неподвижно&lt;/em&gt; первую секунду после включения. Проверьте живость датчика по серийному логу: тангаж/крен должны отслеживать планер при наклоне, а гребневой руль должен противодействовать ручному крену (крен вправо → руль корректирует влево). Если шина зависает при загрузке, вы попали на зарезервированный пин — перепроверьте карту и перейдите на правильную пару CH2/CH3.</p>
 </div>
 </main>
 <footer>

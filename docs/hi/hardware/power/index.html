@@ -35,7 +35,7 @@
 <h2>रिसीवर रेल</h2>
 <p>अधिकांश ELRS रिसीवर &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt; (1S–2S) सीधे लेते हैं और आंतरिक रूप से नियंत्रित करते हैं। संभव हो तो उन्हें कच्चा बैटरी वोल्टेज दें; केवल सर्वो के लिए स्टेप-डाउन करें। MPU6050 ब्रेकआउट (GY-521) 5&amp;nbsp;V लेता है और अपना 3.3&amp;nbsp;V बनाता है।</p>
 <h2>वायरिंग आरेख</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>सभी ग्राउंड को एक ही स्टार पॉइंट से जोड़ें। RX और सर्वो के बीच फ्लोटिंग ग्राउंड जिटर और ब्राउन-आउट का क्लासिक कारण है — साझा GND अटल है।</p>
 </div>
 </main>

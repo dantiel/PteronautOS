@@ -30,50 +30,40 @@
 <h1>初飛行とサーボ設定</h1>
 <p class='sub-lead'>翼をセンターに合わせ、方向を設定し、エンドポイントを調整して初飛行を成功させましょう。</p>
 <h2>1 · サーボのセンター調整</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>無線機を&lt;em&gt;バインド&lt;/em&gt;した状態で、スティックは中立にして受信機に給電してください。全サーボは &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt; に位置する必要があります。ホーンがリンケージに垂直でない場合は、ねじを外して最も近いスプラインに付け直してください。無線機のサブトリムで中立を強制しないでください。フライトコントローラはすでに真の 1500&amp;nbsp;µs 中心を想定しています。</p>
+<p>翼ペアが重要です。両翼は中立で&lt;em&gt;同じ&lt;/em&gt;幾何学的角度になければなりません。左右の半歯の差は飛行中のロール偏りとして現れ、ジャイロの権威を削らずにトリム除去することはできません。</p>
 <h2>2 · 方向と逆転</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>スティック</th>
+<th>期待される舵面</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>右ロール</td>
+<td>右翼端が上、左翼端が下</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>ピッチアップ(引く)</td>
+<td>機首を上げるよう両翼が傾く(またはエレボン相当)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>右ヨー</td>
+<td>クレストラダーが右に振れる</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>舵面が逆向きに動く場合は、サーボを反転させたり 988–2012&amp;nbsp;µs マップをずらす無線チャンネルリバースを使うのではなく、&lt;em&gt;フライトコントローラ設定&lt;/em&gt;(サーボカーネルの方向フラグ)で反転してください。無線出力は 1500&amp;nbsp;µs を中心に対称に保ちます。</p>
 <h2>3 · エンドポイントとリミット</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>サーボカーネルのデフォルトは &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 と &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012 です。翼が極端位置で&lt;em&gt;突っ張らずに&lt;/em&gt;全行程を掃引するよう機械的エンドポイントを設定してください。ストールしたサーボのブザー音を聞き、止まるまでエンドポイントを戻します。エンドポイントは無線機ではなくサーボカーネルにあります。無線機は ±100% のままにします。</p>
 <h2>4 · 飛行前チェック</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>中立で翼中央、両方向とも正しい。</li>
+<li>ストールのブザー音なくエンドポイント設定。</li>
+<li>フェイルセーフ確認 — 送信機オフ — 翼とラダー中央。</li>
+<li>ジャイロが正しい向きで反応(機体をロールさせるとラダーが逆らう)。</li>
+<li>バッテリー電圧が BEC 定格と一致。フルスイープでサーボがブラウンアウトしない。</li>
 </ul>
 <h2>5 · 初飛行</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>まず &lt;em&gt;モーター/フラップオフ&lt;/em&gt;で緩やかなグライドに手投げし、トリムとバランスを確認してください。まっすぐ滑空するようになってから、低いフラップ周波数と低いフェロシティを投入します。周波数はゆっくり上げてください。共振と空力弾性効果は対気速度で変わるため、変更ごとに再トリムします。最初のバッテリーでは早めに着陸してください。目的はデータであって滞空時間ではありません。</p>
 </div>
 </main>
 <footer>

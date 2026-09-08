@@ -30,50 +30,40 @@
 <h1>Primer vuelo y ajuste de servos</h1>
 <p class='sub-lead'>Centra las alas, ajusta las direcciones, configura los límites y sobrevive al vuelo inaugural.</p>
 <h2>1 · Centrado de los servos</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>Alimenta el receptor con la radio &lt;em&gt;enlazada&lt;/em&gt; pero con los sticks en neutro. Cada servo debe quedar en &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;. Si un brazo no queda perpendicular al varillaje, desatorníllalo y reaséntalo en el spline más cercano — nunca fuerces el neutro con sub-trim en la radio; el controlador de vuelo ya asume un centro real de 1500&amp;nbsp;µs.</p>
+<p>El par de alas es el crítico: ambas alas deben estar en el &lt;em&gt;mismo&lt;/em&gt; ángulo geométrico en neutro. Una diferencia de medio diente entre izquierda y derecha se ve como sesgo de alabeo en vuelo y no puede compensarla el giroscopio sin mermar su autoridad.</p>
 <h2>2 · Dirección e inversión</h2>
 <table>
 <tr>
 <th>Stick</th>
-<th>Expected surface</th>
+<th>Superficie esperada</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>Alabeo a la derecha</td>
+<td>Punta del ala derecha arriba, izquierda abajo</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>Cabeceo arriba (tirar)</td>
+<td>Ambas alas se inclinan para levantar el morro (o equivalente elevon)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>Guiñada a la derecha</td>
+<td>El timón de cresta deflecta a la derecha</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>Si una superficie se mueve al revés, inviértela &lt;em&gt;en la configuración del controlador de vuelo&lt;/em&gt; (las flags de dirección del núcleo de servo), no girando el servo ni usando un reverse de canal de radio que desplaza el mapa de 988–2012&amp;nbsp;µs. Mantén la salida de la radio simétrica alrededor de 1500&amp;nbsp;µs.</p>
 <h2>3 · Límites y topes</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>El núcleo de servo usa por defecto &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 y &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Ajusta los límites mecánicos para que el ala recorra todo su desplazamiento &lt;em&gt;sin trabarse&lt;/em&gt; en los extremos. Escucha el zumbido de un servo bloqueado — retrocede el límite hasta que pare. Los límites viven en el núcleo de servo, no en la radio: deja la radio al ±100%.</p>
 <h2>4 · Comprobaciones previas</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>Alas centradas en neutro, ambas direcciones correctas.</li>
+<li>Límites ajustados sin zumbido de bloqueo.</li>
+<li>Failsafe verificado — transmisor apagado — alas y timón centran.</li>
+<li>El giroscopio responde en el sentido correcto (alabea el fuselaje, el timón debe oponerse).</li>
+<li>La tensión de la batería coincide con la especificación del BEC; los servos no sufren caídas en un barrido completo.</li>
 </ul>
 <h2>5 · El vuelo inaugural</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>Lanza a mano en un planeo suave primero, &lt;em&gt;motor/aleteo apagado&lt;/em&gt;, para confirmar trim y equilibrio. Solo cuando planee recto debes activar una frecuencia de aleteo baja y baja ferocidad. Aumenta la frecuencia lentamente; la resonancia y los efectos aeroelásticos cambian con la velocidad, así que re-trima tras cada cambio. Aterriza temprano en la primera batería — el objetivo son datos, no duración.</p>
 </div>
 </main>
 <footer>

@@ -30,18 +30,16 @@
 <h1>توصيل جيروسكوب زيفيروس</h1>
 <p class='sub-lead'>وصّل MPU6050 بناقل I2C وحل تعارضات الأطراف وتحقق من AHRS عبر سجل المنفذ التسلسلي.</p>
 <h2>اختيار أطراف I2C</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>دبابيس I2C الافتراضية لـ Zephyrus هي &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; و&lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. على PWMP7 v1.0 تكون مناسبة؛ أما على &lt;strong&gt;v1.1&lt;/strong&gt; فلا يتم إخراج GPIO2/GPIO5، لذا يستخدم Zephyrus &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; و&lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. قارن دائماً الطباعة الحريرية بخريطة الدبابيس — GPIO4 محجوز بشكل صارم لمقاطعة راديو SX1280 ويجب ألا يُعاد توظيفه أبداً.</p>
 <h2>توصيل GY-521</h2>
 <table>
 <tr>
 <th>GY-521</th>
-<th>Receiver</th>
+<th>المستقبِل</th>
 </tr>
 <tr>
 <td>VCC</td>
-<td>5V rail (onboard regulator makes 3.3V)</td>
+<td>خط 5V (المنظم المدمج يولّد 3.3V)</td>
 </tr>
 <tr>
 <td>GND</td>
@@ -49,24 +47,20 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 </tr>
 <tr>
 <td>SDA</td>
-<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+<td>GPIO1 (CH2) — أو GPIO5 على v1.0</td>
 </tr>
 <tr>
 <td>SCL</td>
-<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+<td>GPIO3 (CH3) — أو GPIO2 على v1.0</td>
 </tr>
 <tr>
 <td>AD0 / INT / XDA / XCL</td>
-<td>leave open</td>
+<td>اتركه مفتوحاً</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>يحمل GY-521 مقاومات رفع خاصة به 4.7&amp;nbsp;كيلو أوم ومنظماً AMS1117-3.3V: زوّده بـ 5V، فيولّد 3.3V خاصته وتتطابق مستويات المنطق تلقائياً. &lt;strong&gt;أربعة أسلاك إجمالاً&lt;/strong&gt;، دون قطع مسارات ودون منظم إضافي.</p>
 <h2>المعايرة والتحقق</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>يعاير Mahony AHRS انحياز الجيروسكوب ذاتياً عند الإقلاع — أبقِ الهيكل &lt;em&gt;ساكناً&lt;/em&gt; في الثانية الأولى بعد التشغيل. تحقق من أن المستشعر حي عبر السجل التسلسلي: يجب أن يتتبع الانحدار/الالتفاف الهيكل عند إمالته، وأن تعاكس دفة العرف التفافاً يدوياً (التفاف يمين → الدفة تصحح يساراً). إذا علق الناقل عند الإقلاع، فقد وقعت على دبوس محجوز — أعد فحص الخريطة وانتقل إلى زوج CH2/CH3 الصحيح.</p>
 </div>
 </main>
 <footer>

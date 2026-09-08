@@ -35,7 +35,7 @@
 <h2>接收机供电轨</h2>
 <p>大多数 ELRS 接收机直接接受 &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt;(1S–2S)并在内部稳压。尽可能直接供给电池电压；仅为舵机降压。MPU6050 分线板(GY-521)接受 5&amp;nbsp;V 并自行产生 3.3&amp;nbsp;V。</p>
 <h2>接线图</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>将所有地线连接到单一星形点。RX 与舵机之间的浮动地是抖动与欠压的典型成因——共享 GND 不容妥协。</p>
 </div>
 </main>

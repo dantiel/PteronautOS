@@ -35,7 +35,7 @@
 <h2>受信機レール</h2>
 <p>ほとんどの ELRS 受信機は &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt;(1S–2S)を直接受け、内部でレギュレートします。可能ならバッテリー生電圧を供給し、サーボにだけ降圧してください。MPU6050 ブレイクアウト(GY-521)は 5&amp;nbsp;V を受け、独自の 3.3&amp;nbsp;V を生成します。</p>
 <h2>配線図</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>すべてのグラウンドを単一のスター点に接続してください。RX とサーボ間の浮遊グラウンドは、ジッターとブラウンアウトの典型的な原因です。共有 GND は必須です。</p>
 </div>
 </main>

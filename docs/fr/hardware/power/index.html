@@ -35,7 +35,7 @@
 <h2>Rail du récepteur</h2>
 <p>La plupart des récepteurs ELRS acceptent &lt;strong&gt;4,5–8,4&amp;nbsp;V&lt;/strong&gt; (1S–2S) directement et régulent en interne. Alimentez-les en tension batterie brute quand c’est possible ; n’abaissez que pour les servos. La carte MPU6050 (GY-521) accepte 5&amp;nbsp;V et produit son propre 3,3&amp;nbsp;V.</p>
 <h2>Schéma de câblage</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Reliez toutes les masses à un unique point en étoile. Une masse flottante entre le RX et les servos est la cause classique de jitter et de chutes — un GND partagé est non négociable.</p>
 </div>
 </main>

@@ -30,18 +30,16 @@
 <h1>ज़ेफ़िरोस जायरो वायरिंग</h1>
 <p class='sub-lead'>MPU6050 को I2C बस से जोड़ें, पिन विरोध हल करें और सीरियल लॉग से AHRS सत्यापित करें।</p>
 <h2>I2C पिन चयन</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>Zephyrus के डिफ़ॉल्ट I2C पिन &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; और &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt; हैं। PWMP7 v1.0 पर ये ठीक हैं; &lt;strong&gt;v1.1&lt;/strong&gt; पर GPIO2/GPIO5 बाहर नहीं निकाले गए, इसलिए Zephyrus &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; और &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt; का उपयोग करता है। हमेशा सिल्कस्क्रीन को पिन मैप से मिलाएँ — GPIO4 SX1280 रेडियो इंटरप्ट के लिए हार्ड-रिज़र्व है और इसे कभी पुनर्प्रयोजित न करें।</p>
 <h2>GY-521 वायरिंग</h2>
 <table>
 <tr>
 <th>GY-521</th>
-<th>Receiver</th>
+<th>रिसीवर</th>
 </tr>
 <tr>
 <td>VCC</td>
-<td>5V rail (onboard regulator makes 3.3V)</td>
+<td>5V रेल(ऑनबोर्ड रेगुलेटर 3.3V बनाता है)</td>
 </tr>
 <tr>
 <td>GND</td>
@@ -49,24 +47,20 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 </tr>
 <tr>
 <td>SDA</td>
-<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+<td>GPIO1 (CH2) — या v1.0 पर GPIO5</td>
 </tr>
 <tr>
 <td>SCL</td>
-<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+<td>GPIO3 (CH3) — या v1.0 पर GPIO2</td>
 </tr>
 <tr>
 <td>AD0 / INT / XDA / XCL</td>
-<td>leave open</td>
+<td>खुला छोड़ें</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>GY-521 में अपने 4.7&amp;nbsp;kΩ पुल-अप और AMS1117-3.3V रेगुलेटर होते हैं: इसे 5V दें, यह अपना 3.3V बनाता है और लॉजिक लेवल स्वतः मेल खाते हैं। &lt;strong&gt;कुल चार तार&lt;/strong&gt;, कोई ट्रेस कटिंग नहीं, कोई अतिरिक्त रेगुलेटर नहीं।</p>
 <h2>कैलिब्रेशन और सत्यापन</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>Mahony AHRS बूट पर जायरो बायस को स्वतः कैलिब्रेट करता है — पावर-अप के बाद पहले सेकंड तक एयरफ्रेम को &lt;em&gt;स्थिर&lt;/em&gt; रखें। सीरियल लॉग से सेंसर के जीवित होने की पुष्टि करें: झुकाने पर पिच/रोल एयरफ्रेम का अनुसरण करें, और क्रेस्ट रडर मैनुअल रोल का विरोध करे(दायाँ रोल → रडर बाईं ओर सुधारे)। यदि बूट पर बस हैंग हो जाए, तो आप आरक्षित पिन पर उतर गए हैं — मैप फिर जाँचें और सही CH2/CH3 जोड़ी पर जाएँ।</p>
 </div>
 </main>
 <footer>

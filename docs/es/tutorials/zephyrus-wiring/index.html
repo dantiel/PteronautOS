@@ -30,18 +30,16 @@
 <h1>Cableado del giroscopio Céfiros</h1>
 <p class='sub-lead'>Conecta un MPU6050 al bus I2C, resuelve conflictos de pines y verifica el AHRS con el registro serie.</p>
 <h2>Selección de pines I2C</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>Los pines I2C por defecto de Zephyrus son &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt; y &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;. En el PWMP7 v1.0 están bien; en la &lt;strong&gt;v1.1&lt;/strong&gt; GPIO2/GPIO5 no están expuestos, así que Zephyrus usa &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt; y &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;. Verifica siempre la serigrafía contra el mapa de pines — GPIO4 está reservado de forma rígida para la interrupción de radio del SX1280 y nunca debe reutilizarse.</p>
 <h2>Cableado del GY-521</h2>
 <table>
 <tr>
 <th>GY-521</th>
-<th>Receiver</th>
+<th>Receptor</th>
 </tr>
 <tr>
 <td>VCC</td>
-<td>5V rail (onboard regulator makes 3.3V)</td>
+<td>Riel de 5V (regulador integrado produce 3,3V)</td>
 </tr>
 <tr>
 <td>GND</td>
@@ -49,24 +47,20 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 </tr>
 <tr>
 <td>SDA</td>
-<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+<td>GPIO1 (CH2) — o GPIO5 en v1.0</td>
 </tr>
 <tr>
 <td>SCL</td>
-<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+<td>GPIO3 (CH3) — o GPIO2 en v1.0</td>
 </tr>
 <tr>
 <td>AD0 / INT / XDA / XCL</td>
-<td>leave open</td>
+<td>dejar abierto</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>El GY-521 trae sus propios pull-ups de 4,7&amp;nbsp;kΩ y un regulador AMS1117-3.3V: aliméntalo con 5V, genera sus propios 3,3V y los niveles lógicos se ajustan solos. &lt;strong&gt;Cuatro cables en total&lt;/strong&gt;, sin cortar pistas, sin regulador extra.</p>
 <h2>Calibración y verificación</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>El AHRS Mahony autocalibra el sesgo del giroscopio en el arranque — mantén el fuselaje &lt;em&gt;quieto&lt;/em&gt; durante el primer segundo tras encender. Verifica que el sensor esté vivo por el log serial: pitch/roll deben seguir al fuselaje al inclinarlo, y el timón de cresta debe oponerse a un alabeo manual (alabeo a la derecha → el timón corrige a la izquierda). Si el bus se cuelga en el arranque, has caído en un pin reservado — revisa el mapa y muévete al par CH2/CH3 correcto.</p>
 </div>
 </main>
 <footer>

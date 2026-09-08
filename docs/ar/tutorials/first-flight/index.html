@@ -30,50 +30,40 @@
 <h1>الرحلة الأولى وإعداد السيرفو</h1>
 <p class='sub-lead'>وسّط الأجنحة واضبط الاتجاهات ونقاط النهاية واجتز الرحلة الأولى.</p>
 <h2>1 · توسيط السيرفو</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>زوّد المستقبِل بالطاقة والراديو &lt;em&gt;مربوط&lt;/em&gt; لكن العصي في الوضع المحايد. يجب أن يستقر كل مؤازرة عند &lt;strong&gt;1500&amp;nbsp;ميكروثانية&lt;/strong&gt;. إذا لم يكن الذراع عمودياً على الوصلة، ففكّه وأعد تركيبه على أقرب سنّ — لا تفرض الحياد أبداً بالتقليم الفرعي في الراديو؛ فمتحكم الطيران يفترض مسبقاً مركزاً حقيقياً عند 1500&amp;nbsp;ميكروثانية.</p>
+<p>زوج الأجنحة هو الحاسم: يجب أن يكون كلا الجناحين عند &lt;em&gt;نفس&lt;/em&gt; الزاوية الهندسية في الحياد. يظهر فرق نصف سنّ بين اليسار واليمين كانحياز التفاف في الطيران، ولا يمكن للجيروسكوب إزالته بالتقليم دون النيل من سلطته.</p>
 <h2>2 · الاتجاه والعكس</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>العصا</th>
+<th>السطح المتوقع</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>التفاف يميناً</td>
+<td>طرف الجناح الأيمن لأعلى والأيسر لأسفل</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>رفع المقدمة (سحب)</td>
+<td>يميل كلا الجناحين لرفع المقدمة (أو ما يعادل الإيليفون)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>انعراج يميناً</td>
+<td>تنحرف دفة العرف يميناً</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>إذا تحرّك سطح في الاتجاه الخاطئ، فاعكسه &lt;em&gt;في إعداد متحكم الطيران&lt;/em&gt; (أعلام اتجاه نواة المؤازرة)، لا بقلب المؤازرة أو استخدام عكس قناة راديو يزيح خريطة 988–2012&amp;nbsp;ميكروثانية. أبقِ خرج الراديو متماثلاً حول 1500&amp;nbsp;ميكروثانية.</p>
 <h2>3 · نقاط النهاية والحدود</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>يستخدم نواة المؤازرة افتراضياً &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 و&lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. اضبط النهايات الميكانيكية بحيث يمسح الجناح كامل مساره &lt;em&gt;دون تعشيق&lt;/em&gt; عند الطرفين. استمع إلى طنين مؤازرة متوقفة — وتراجع بالنهاية حتى يتوقف. تعيش النهايات في نواة المؤازرة لا في الراديو: اترك الراديو عند ±100%.</p>
 <h2>4 · فحوصات ما قبل الرحلة</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>الأجنحة متمركزة في الحياد، والاتجاهان صحيحان.</li>
+<li>النهايات مضبوطة دون طنين توقف.</li>
+<li>تم التحقق من الأمان عند الإخفاق — المرسل مطفأ — الأجنحة والدفة تتموضع في المنتصف.</li>
+<li>يستجيب الجيروسكوب في الاتجاه الصحيح (أمِل الهيكل، فيجب أن تعاكس الدفة).</li>
+<li>جهد البطارية يطابق تصنيف BEC؛ ولا تتعرض المؤازرات لانقطاع في مسح كامل.</li>
 </ul>
 <h2>5 · الرحلة الأولى</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>أطلق باليد في انزلاق لطيف أولاً مع &lt;em&gt;إيقاف المحرك/الرفرفة&lt;/em&gt; لتأكيد التقليم والتوازن. فقط عندما ينزلق باستقامة، شغّل تردد رفرفة منخفضاً وشراسة منخفضة. زد التردد ببطء؛ فالرنين والتأثيرات الهوائية المرنة تتغير مع سرعة الهواء، لذا أعد التقليم بعد كل تغيير. اهبط مبكراً على البطارية الأولى — فالهدف هو البيانات لا المدة.</p>
 </div>
 </main>
 <footer>

@@ -35,7 +35,7 @@
 <h2>Empfänger-Rail</h2>
 <p>Die meisten ELRS-Empfänger nehmen &lt;strong&gt;4,5–8,4&amp;nbsp;V&lt;/strong&gt; (1S–2S) direkt und regeln intern. Speise sie möglichst mit der rohen Akkuspannung; nur für die Servos herunterregeln. Das MPU6050-Breakout (GY-521) akzeptiert 5&amp;nbsp;V und erzeugt seine eigenen 3,3&amp;nbsp;V.</p>
 <h2>Schaltplan</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Führe alle Massen zu einem einzigen Sternpunkt. Eine schwebende Masse zwischen RX und Servos ist die klassische Ursache für Jitter und Brown-outs — eine gemeinsame GND ist nicht verhandelbar.</p>
 </div>
 </main>

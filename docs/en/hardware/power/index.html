@@ -35,7 +35,7 @@
 <h2>Receiver rail</h2>
 <p>Most ELRS receivers take &lt;strong&gt;4.5–8.4&amp;nbsp;V&lt;/strong&gt; (1S–2S) directly and regulate internally. Feed them the raw battery when possible; only step down for the servos. The MPU6050 breakout (GY-521) accepts 5&amp;nbsp;V and makes its own 3.3&amp;nbsp;V.</p>
 <h2>Wiring diagram</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Tie every ground to a single star point. A floating ground between the RX and the servos is the classic cause of jitter and brown-outs — one shared GND is non-negotiable.</p>
 </div>
 </main>

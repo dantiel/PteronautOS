@@ -30,50 +30,40 @@
 <h1>Premier vol et réglage des servos</h1>
 <p class='sub-lead'>Centre les ailes, règle les sens, ajuste les débattements et réussis le vol inaugural.</p>
 <h2>1 · Centrage des servos</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>Alimentez le récepteur avec la radio &lt;em&gt;liée&lt;/em&gt; mais manches au neutre. Chaque servo doit se tenir à &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;. Si un palonnier n’est pas perpendiculaire à la tringlerie, dévissez-le et repositionnez-le sur la cannelure la plus proche — ne forcez jamais le neutre avec un sub-trim radio ; le contrôleur de vol suppose déjà un vrai centre de 1500&amp;nbsp;µs.</p>
+<p>La paire d’ailes est la critique : les deux ailes doivent être au &lt;em&gt;même&lt;/em&gt; angle géométrique au neutre. Une différence d’une demi-dent entre gauche et droite se voit comme un biais de roulis en vol et ne peut être compensée par le gyro sans entamer son autorité.</p>
 <h2>2 · Sens et inversion</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>Manche</th>
+<th>Surface attendue</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>Roulis à droite</td>
+<td>Bout d’aile droite en haut, gauche en bas</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>Cabré (tirer)</td>
+<td>Les deux ailes s’inclinent pour lever le nez (ou équivalent elevon)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>Lacet à droite</td>
+<td>La gouverne de crête dévie à droite</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>Si une surface bouge dans le mauvais sens, inversez-la &lt;em&gt;dans la config du contrôleur de vol&lt;/em&gt; (les drapeaux de direction du noyau servo), pas en retournant le servo ni en utilisant un reverse de canal radio qui décale la carte 988–2012&amp;nbsp;µs. Gardez la sortie radio symétrique autour de 1500&amp;nbsp;µs.</p>
 <h2>3 · Débattements et limites</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>Le noyau servo utilise par défaut &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 et &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Réglez les fins de course mécaniques pour que l’aile balaye toute sa course &lt;em&gt;sans bloquer&lt;/em&gt; aux extrêmes. Écoutez le bourdonnement d’un servo calé — reculez la fin de course jusqu’à ce qu’il cesse. Les fins de course vivent dans le noyau servo, pas dans la radio : laissez la radio à ±100%.</p>
 <h2>4 · Vérifications avant vol</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>Ailes centrées au neutre, les deux sens corrects.</li>
+<li>Fins de course réglées sans bourdonnement de calage.</li>
+<li>Failsafe vérifié — émetteur coupé — ailes et gouverne se centrent.</li>
+<li>Le gyro répond dans le bon sens (inclinez la cellule, la gouverne doit s’opposer).</li>
+<li>La tension batterie correspond au calibre du BEC ; les servos ne font pas de chute sur un balayage complet.</li>
 </ul>
 <h2>5 · Le vol inaugural</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>Lancez d’abord à la main en vol plané doux, &lt;em&gt;moteur/battement coupé&lt;/em&gt;, pour confirmer trim et équilibre. N’engagez une basse fréquence de battement et une faible férocité que lorsqu’il plane droit. Augmentez la fréquence lentement ; la résonance et les effets aéroélastiques changent avec la vitesse, alors re-trimez après chaque changement. Posez tôt sur la première batterie — le but est la donnée, pas la durée.</p>
 </div>
 </main>
 <footer>

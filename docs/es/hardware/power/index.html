@@ -35,7 +35,7 @@
 <h2>Riel del receptor</h2>
 <p>La mayoría de receptores ELRS aceptan &lt;strong&gt;4,5–8,4&amp;nbsp;V&lt;/strong&gt; (1S–2S) directamente y regulan internamente. Aliméntalos con la batería cruda cuando sea posible; reduce solo para los servos. La placa MPU6050 (GY-521) acepta 5&amp;nbsp;V y genera sus propios 3,3&amp;nbsp;V.</p>
 <h2>Diagrama de cableado</h2>
-<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;&#x000A;All GNDs tied together (single star point).&#x000A;</code></pre>
+<pre><code>Battery ──┬── BEC (5V) ──┬── wing L servo (5V)&#x000A;          │              ├── wing R servo (5V)&#x000A;          │              └── rudder servo (5V)&#x000A;          │&#x000A;          ├── RX (4.5–8.4V rail)&#x000A;          └── GY-521 (5V, onboard 3.3V reg)&#x000A;</code></pre>
 <p>Une todas las masas a un único punto en estrella. Una masa flotante entre el RX y los servos es la causa clásica de jitter y caídas — un GND compartido es innegociable.</p>
 </div>
 </main>

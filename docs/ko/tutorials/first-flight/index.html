@@ -30,50 +30,40 @@
 <h1>첫 비행 및 서보 설정</h1>
 <p class='sub-lead'>날개를 중립하고 방향을 맞추고 엔드포인트를 조정하고 처녀비행을 해보세요.</p>
 <h2>1 · 서보 중립</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>라디오를 &lt;em&gt;바인드&lt;/em&gt;한 상태로, 스틱은 중립으로 두고 수신기에 전원을 공급하세요. 모든 서보는 &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;에 있어야 합니다. 혼이 링키지에 수직이 아니면 나사를 풀고 가장 가까운 스플라인에 다시 장착하세요. 라디오의 서브트림으로 중립을 강제하지 마세요. 비행 컨트롤러는 이미 진짜 1500&amp;nbsp;µs 중심을 가정합니다.</p>
+<p>날개 쌍이 중요합니다. 두 날개는 중립에서 &lt;em&gt;동일한&lt;/em&gt; 기하 각도에 있어야 합니다. 좌우 반 톱니 차이는 비행 중 롤 편향으로 나타나며, 자이로의 권위를 갉아먹지 않고는 트림으로 제거할 수 없습니다.</p>
 <h2>2 · 방향 및 리버스</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>스틱</th>
+<th>예상 표면</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>오른쪽 롤</td>
+<td>오른쪽 날개 끝 위로, 왼쪽 아래로</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>피치 업(당김)</td>
+<td>기수를 올리도록 양 날개가 기울어짐(또는 엘레본 등가)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>오른쪽 요</td>
+<td>크레스트 러더가 오른쪽으로 편향</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>표면이 반대로 움직이면 서보를 뒤집거나 988–2012&amp;nbsp;µs 맵을 이동시키는 라디오 채널 리버스를 쓰지 말고, &lt;em&gt;비행 컨트롤러 설정&lt;/em&gt;(서보 커널 방향 플래그)에서 반전하세요. 라디오 출력은 1500&amp;nbsp;µs 주위로 대칭을 유지하세요.</p>
 <h2>3 · 엔드포인트와 한계</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>서보 커널 기본값은 &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988과 &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012입니다. 날개가 극단에서 &lt;em&gt;묶이지 않고&lt;/em&gt; 전체 행정을 훑도록 기계적 엔드포인트를 설정하세요. 스톨된 서보의 윙윙거림을 듣고 멈출 때까지 엔드포인트를 되돌리세요. 엔드포인트는 라디오가 아니라 서보 커널에 있습니다. 라디오는 ±100%로 두세요.</p>
 <h2>4 · 비행 전 점검</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>중립에서 날개 중앙, 양방향 모두 올바름.</li>
+<li>스톨 버즈 없이 엔드포인트 설정.</li>
+<li>페일세이프 확인 — 송신기 끔 — 날개와 러더 중앙.</li>
+<li>자이로가 올바른 방향으로 반응(기체를 롤하면 러더가 반대 작용).</li>
+<li>배터리 전압이 BEC 정격과 일치; 전체 스윕에서 서보가 브라운아웃하지 않음.</li>
 </ul>
 <h2>5 · 처녀비행</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>먼저 &lt;em&gt;모터/플랩 끔&lt;/em&gt; 상태에서 부드러운 글라이드로 손발진하여 트림과 균형을 확인하세요. 직선으로 활공할 때만 낮은 플랩 주파수와 낮은 맹렬함을 걸어야 합니다. 주파수는 천천히 올리세요. 공명과 공탄성 효과는 대기 속도에 따라 변하므로 각 변경 후 다시 트림하세요. 첫 배터리에서는 일찍 착륙하세요. 목표는 데이터이지 지속시간이 아닙니다.</p>
 </div>
 </main>
 <footer>

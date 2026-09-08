@@ -30,18 +30,16 @@
 <h1>제피로스 자이로 배선</h1>
 <p class='sub-lead'>MPU6050을 I2C 버스에 연결하고 핀 충돌을 해결하고 시리얼 로그로 AHRS를 검증하세요.</p>
 <h2>I2C 핀 선택</h2>
-<p>
-The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
-</p>
+<p>Zephyrus 기본 I2C 핀은 &lt;strong&gt;GPIO4 (SDA)&lt;/strong&gt;와 &lt;strong&gt;GPIO5 (SCL)&lt;/strong&gt;입니다. PWMP7 v1.0에서는 괜찮습니다. &lt;strong&gt;v1.1&lt;/strong&gt;에서는 GPIO2/GPIO5가 노출되지 않아 Zephyrus가 &lt;strong&gt;GPIO1 (SDA, CH2)&lt;/strong&gt;와 &lt;strong&gt;GPIO3 (SCL, CH3)&lt;/strong&gt;를 사용합니다. 항상 실크스크린을 핀 맵과 대조하세요. GPIO4는 SX1280 라디오 인터럽트용으로 하드 예약되어 있어 절대 다른 용도로 쓰면 안 됩니다.</p>
 <h2>GY-521 배선</h2>
 <table>
 <tr>
 <th>GY-521</th>
-<th>Receiver</th>
+<th>수신기</th>
 </tr>
 <tr>
 <td>VCC</td>
-<td>5V rail (onboard regulator makes 3.3V)</td>
+<td>5V 레일(온보드 레귤레이터가 3.3V 생성)</td>
 </tr>
 <tr>
 <td>GND</td>
@@ -49,24 +47,20 @@ The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5
 </tr>
 <tr>
 <td>SDA</td>
-<td>GPIO1 (CH2) — or GPIO5 on v1.0</td>
+<td>GPIO1 (CH2) — v1.0에서는 GPIO5</td>
 </tr>
 <tr>
 <td>SCL</td>
-<td>GPIO3 (CH3) — or GPIO2 on v1.0</td>
+<td>GPIO3 (CH3) — v1.0에서는 GPIO2</td>
 </tr>
 <tr>
 <td>AD0 / INT / XDA / XCL</td>
-<td>leave open</td>
+<td>열어 둠</td>
 </tr>
 </table>
-<p>
-The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
-</p>
+<p>GY-521은 자체 4.7&amp;nbsp;kΩ 풀업과 AMS1117-3.3V 레귤레이터를 갖췄습니다. 5V를 공급하면 자체 3.3V를 만들고 로직 레벨이 자동으로 맞습니다. &lt;strong&gt;총 네 가닥&lt;/strong&gt;, 트레이스 절단 없음, 추가 레귤레이터 없음.</p>
 <h2>캘리브레이션과 검증</h2>
-<p>
-The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
-</p>
+<p>Mahony AHRS는 부팅 시 자이로 바이어스를 자체 보정합니다. 전원 인가 후 1초 동안 기체를 &lt;em&gt;가만히&lt;/em&gt; 두세요. 시리얼 로그로 센서 생존을 확인하세요. 기울이면 피치/롤이 기체를 따라가야 하고, 크레스트 러더는 수동 롤에 반대 작용해야 합니다(오른쪽 롤 → 러더 왼쪽 보정). 부팅 시 버스가 멈추면 예약된 핀에 잘못 연결된 것입니다. 맵을 다시 확인하고 올바른 CH2/CH3 쌍으로 옮기세요.</p>
 </div>
 </main>
 <footer>

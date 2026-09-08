@@ -29,35 +29,32 @@
         %p.sub-lead= zwire_lead
 
         %h2= zwire_h2_pins
-        %p
-          The default Zephyrus I2C pins are <strong>GPIO4 (SDA)</strong> and <strong>GPIO5 (SCL)</strong>. On the PWMP7 v1.0 those are fine; on <strong>v1.1</strong> GPIO2/GPIO5 are not broken out, so Zephyrus uses <strong>GPIO1 (SDA, CH2)</strong> and <strong>GPIO3 (SCL, CH3)</strong>. Always check the silkscreen against the pin map — GPIO4 is hard-reserved for the SX1280 radio interrupt and must never be repurposed.
+        %p= zwire_p1
 
         %h2= zwire_h2_wiring
         %table
           %tr
             %th GY-521
-            %th Receiver
+            %th= zwire_th_rx
           %tr
             %td VCC
-            %td 5V rail (onboard regulator makes 3.3V)
+            %td= zwire_td_vcc_v
           %tr
             %td GND
             %td GND
           %tr
             %td SDA
-            %td GPIO1 (CH2) — or GPIO5 on v1.0
+            %td= zwire_td_sda_v
           %tr
             %td SCL
-            %td GPIO3 (CH3) — or GPIO2 on v1.0
+            %td= zwire_td_scl_v
           %tr
             %td AD0 / INT / XDA / XCL
-            %td leave open
-        %p
-          The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.
+            %td= zwire_td_ad0_v
+        %p= zwire_p2
 
         %h2= zwire_h2_calib
-        %p
-          The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.
+        %p= zwire_p3
 
     %footer
       .lang-switch

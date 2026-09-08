@@ -30,50 +30,40 @@
 <h1>Первый полёт и настройка сервоприводов</h1>
 <p class='sub-lead'>Центрируйте крылья, задайте направления, настройте конечные точки и переживите первый полёт.</p>
 <h2>1 · Центровка сервоприводов</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>Питайте приёмник при &lt;em&gt;привязанном&lt;/em&gt; радио, но с нейтральными стиками. Каждый сервопривод должен стоять на &lt;strong&gt;1500&amp;nbsp;мкс&lt;/strong&gt;. Если рог не перпендикулярен тяге, открутите его и переставьте на ближайший шлиц — никогда не подгоняйте нейтраль субтримом на радио; контроллер полёта уже предполагает истинный центр 1500&amp;nbsp;мкс.</p>
+<p>Пара крыльев — критична: оба крыла должны стоять под &lt;em&gt;одинаковым&lt;/em&gt; геометрическим углом в нейтрали. Разница в пол-зуба между левым и правым видна как крен в полёте и не может быть убрана гироскопом без потери его авторитета.</p>
 <h2>2 · Направление и реверс</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>Стик</th>
+<th>Ожидаемая поверхность</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>Крен вправо</td>
+<td>Правое крыло вверх, левое вниз</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>Кабрирование (тянуть)</td>
+<td>Оба крыла наклоняются, поднимая нос (или эквивалент элевонов)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>Рыскание вправо</td>
+<td>Гребневой руль отклоняется вправо</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>Если поверхность движется не в ту сторону, инвертируйте её &lt;em&gt;в конфигурации контроллера полёта&lt;/em&gt; (флаги направления серво-ядра), а не переворачиванием серво или реверсом канала радио, который сдвигает карту 988–2012&amp;nbsp;мкс. Держите выход радио симметричным около 1500&amp;nbsp;мкс.</p>
 <h2>3 · Конечные точки и пределы</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>Серво-ядро по умолчанию: &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 и &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012. Выставьте механические конечные точки так, чтобы крыло проходило полный ход &lt;em&gt;без заклинивания&lt;/em&gt; на краях. Слушайте жужжание застопоренного серво — отводите конечную точку, пока оно не прекратится. Конечные точки живут в серво-ядре, а не в радио: оставьте радио на ±100%.</p>
 <h2>4 · Предполётные проверки</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>Крылья центрированы в нейтрали, оба направления верны.</li>
+<li>Конечные точки выставлены без жужжания застопоривания.</li>
+<li>Failsafe проверен — передатчик выключен — крылья и руль центрируются.</li>
+<li>Гироскоп отвечает в правильном направлении (наклоните планер — руль должен противодействовать).</li>
+<li>Напряжение батареи соответствует номиналу BEC; сервоприводы не проседают при полном ходе.</li>
 </ul>
 <h2>5 · Первый полёт</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>Сначала запустите с руки в пологий планирующий полёт с &lt;em&gt;выключенным мотором/взмахом&lt;/em&gt;, чтобы подтвердить трим и баланс. Лишь когда он планирует прямо, включайте низкую частоту взмаха и низкую свирепость. Повышайте частоту медленно; резонанс и аэроупругие эффекты меняются со скоростью, поэтому перетриммируйте после каждого изменения. Садитесь рано на первой батарее — цель данные, а не длительность.</p>
 </div>
 </main>
 <footer>

@@ -30,50 +30,40 @@
 <h1>首飞与舵机设置</h1>
 <p class='sub-lead'>中立机翼、设定方向、调整行程并完成首飞。</p>
 <h2>1 · 舵机中立</h2>
-<p>
-Power the receiver with the radio <em>bound</em> but sticks neutral. Every servo must sit at <strong>1500&nbsp;µs</strong>. If a horn is not perpendicular to the linkage, unscrew it and re-seat it on the closest spline — never force the neutral with sub-trim on the radio; the flight controller already assumes a true 1500&nbsp;µs centre.
-</p>
-<p>
-The wing pair is the critical one: both wings must be at the <em>same</em> geometric angle at neutral. A half-tooth difference between left and right is visible as a roll bias in flight and cannot be trimmed away by the gyro without eating into its authority.
-</p>
+<p>在遥控器已&lt;em&gt;绑定&lt;/em&gt;、摇杆居中的情况下给接收机供电。每个舵机都必须处于 &lt;strong&gt;1500&amp;nbsp;µs&lt;/strong&gt;。若舵臂与连杆不垂直，请旋下它并在最近的齿槽上重新就位——绝不要用遥控器的副微调强行居中；飞控已经假定真正的 1500&amp;nbsp;µs 中心。</p>
+<p>机翼对最为关键：两侧机翼在中立时必须在&lt;em&gt;相同&lt;/em&gt;的几何角度上。左右相差半个齿会在飞行中表现为横滚偏置，且无法在不侵蚀陀螺仪权限的情况下通过微调消除。</p>
 <h2>2 · 方向与反向</h2>
 <table>
 <tr>
-<th>Stick</th>
-<th>Expected surface</th>
+<th>摇杆</th>
+<th>预期舵面</th>
 </tr>
 <tr>
-<td>Roll right</td>
-<td>Right wing tips up, left wing tips down</td>
+<td>向右横滚</td>
+<td>右翼尖抬起，左翼尖压下</td>
 </tr>
 <tr>
-<td>Pitch up (pull)</td>
-<td>Both wings tilt to raise the nose (or elevon equivalent)</td>
+<td>抬头(拉杆)</td>
+<td>两翼倾斜以抬起机头(或升降副翼等效)</td>
 </tr>
 <tr>
-<td>Yaw right</td>
-<td>Crest rudder deflects right</td>
+<td>向右偏航</td>
+<td>冠舵向右偏转</td>
 </tr>
 </table>
-<p>
-If a surface moves the wrong way, reverse it <em>in the flight controller config</em> (the servo kernel direction flags), not by flipping the servo or using a radio channel reverse that shifts the 988–2012&nbsp;µs map. Keep the radio output symmetric around 1500&nbsp;µs.
-</p>
+<p>若某个舵面运动方向错误，请在&lt;em&gt;飞控配置&lt;/em&gt;(伺服内核方向标志)中反转它，而不是翻转舵机或使用会偏移 988–2012&amp;nbsp;µs 映射的遥控通道反向。让遥控输出围绕 1500&amp;nbsp;µs 保持对称。</p>
 <h2>3 · 行程与限位</h2>
-<p>
-The servo kernel defaults to <code>servoMinUs</code>&nbsp;988 and <code>servoMaxUs</code>&nbsp;2012. Set mechanical endpoints so the wing sweeps its full travel <em>without binding</em> at the extremes. Listen for the buzz of a stalled servo — back off the endpoint until it stops. Endpoints live in the servo kernel, not in the radio: leave the radio at ±100%.
-</p>
+<p>伺服内核默认 &lt;code&gt;servoMinUs&lt;/code&gt;&amp;nbsp;988 与 &lt;code&gt;servoMaxUs&lt;/code&gt;&amp;nbsp;2012。请设置机械端点，使机翼在两端扫过全行程而&lt;em&gt;不卡死&lt;/em&gt;。聆听堵转舵机的嗡鸣——回退端点直到它停止。端点存在于伺服内核而非遥控器中：让遥控器保持 ±100%。</p>
 <h2>4 · 飞行前检查</h2>
 <ul>
-<li>Wings centred at neutral, both directions correct.</li>
-<li>Endpoints set with no stall buzz.</li>
-<li>Failsafe verified — transmitter off → wings and rudder centre.</li>
-<li>Gyro responds in the correct sense (roll the airframe, rudder should oppose).</li>
-<li>Battery voltage matches the BEC rating; servos do not brown-out on a full sweep.</li>
+<li>机翼在中立时居中，两方向均正确。</li>
+<li>端点已设置且无堵转嗡鸣。</li>
+<li>失控保护已验证——关闭发射机——机翼与方向舵居中。</li>
+<li>陀螺仪以正确方向响应(横滚机体，方向舵应反向作用)。</li>
+<li>电池电压匹配 BEC 额定值；舵机在全行程中不发生欠压。</li>
 </ul>
 <h2>5 · 首飞</h2>
-<p>
-Hand-launch into a gentle glide first, <em>motor/flap off</em>, to confirm trim and balance. Only when it glides straight should you engage a low flap frequency and low ferocity. Increase frequency slowly; resonance and aeroelastic effects change with airspeed, so re-trim after each change. Land early on the first battery — the goal is data, not duration.
-</p>
+<p>先以&lt;em&gt;电机/扑翼关闭&lt;/em&gt;状态手抛进入柔和滑翔，以确认配平与平衡。只有当它直线滑翔后，才应启用较低的扑翼频率与较低的烈度。缓慢提高频率；共振与气动弹性效应会随空速变化，因此每次更改后都要重新配平。第一块电池要尽早降落——目标是数据，而非续航。</p>
 </div>
 </main>
 <footer>
