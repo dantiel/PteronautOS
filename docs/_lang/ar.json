@@ -352,5 +352,6 @@
   "st_h2_status": "حالة التنفيذ والتناقضات المفتوحة",
   "s3t_h2_yoshimitsu": "YOSHIMITSU — البرامج الثابتة المدمجة",
   "s3t_h2_rp2040": "نسخة الجيب RP2040-Tiny",
-  "s3t_h2_rp2040_pins": "خريطة دبابيس RP2040-Tiny"
+  "s3t_h2_rp2040_pins": "خريطة دبابيس RP2040-Tiny",
+  "s3t_h2_jiguang": "JIGUANG — هالة الوضعيات الدائمة"
 }

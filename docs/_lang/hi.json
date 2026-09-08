@@ -352,5 +352,6 @@
   "st_h2_status": "कार्यान्वयन स्थिति और खुली असंगतियाँ",
   "s3t_h2_yoshimitsu": "YOSHIMITSU — संयुक्त फर्मवेयर",
   "s3t_h2_rp2040": "RP2040-Tiny पॉकेट बिल्ड",
-  "s3t_h2_rp2040_pins": "RP2040-Tiny पिन मैप"
+  "s3t_h2_rp2040_pins": "RP2040-Tiny पिन मैप",
+  "s3t_h2_jiguang": "JIGUANG — हमेशा सक्रिय मुद्रा-आभा"
 }

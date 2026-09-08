@@ -388,6 +388,63 @@ The complete pin map is an editable block at the top of
 <code>sketches/yoshimitsu/yoshimitsu.ino</code> — pin ranges and collisions are validated
 by a boot POST, and invalid UART numbers refuse to build rather than misbehaving in the air.
 </p>
+<h2>JIGUANG — the always-on stance aurora</h2>
+<p>
+<strong>JIGUANG</strong> (極光, “the aurora”) is the cheatcode that is <em>always on</em>.
+<code>YOSHI_RGB</code> turns the single onboard WS2812B into a living mood-ring: every stance
+breathes its own colour and rhythm, so you can read the ronin's mind across the room without
+a single serial byte. Colour <em>and</em> blink pattern tell the story — no extra command is
+needed; the stance <em>is</em> the cheatcode, the light is its echo.
+</p>
+<table>
+<tr>
+<th>Stance</th>
+<th>Aurora (colour · rhythm)</th>
+</tr>
+<tr>
+<td>
+<code>KINCHO</code>
+</td>
+<td>slow green breathing + a crisp double-parry flash (the CRC strike)</td>
+</tr>
+<tr>
+<td>
+<code>MANJI_DRAGONFLY</code>
+</td>
+<td>a colour wheel spinning like the gyro rotors (the levitation)</td>
+</tr>
+<tr>
+<td>
+<code>FLEA</code>
+</td>
+<td>frantic rising amber strobe (the lift)</td>
+</tr>
+<tr>
+<td>
+<code>MEDITATION</code>
+</td>
+<td>near-dark violet + one slow heartbeat — ready to be flashed</td>
+</tr>
+<tr>
+<td>
+<code>NSS</code>
+</td>
+<td>sharp triple-tap flash in blue (blade sheathed, tempo up)</td>
+</tr>
+<tr>
+<td>
+<code>BACK_TURNED</code>
+</td>
+<td>near black + one unpredictable crimson glint (the mirror — never looks back)</td>
+</tr>
+</table>
+<p>
+RGB lives on the RP2040-Tiny (<code>RGB_LED_PIN=16</code>) behind <code>YOSHI_RGB</code>;
+the ESP32-S3 keeps its sober status LED. Every colour is pure integer math — no
+<code>float</code>, no <code>malloc</code>, no <code>delay()</code> — and
+<code>pumpRgb()</code> is throttled to ~50&nbsp;fps so the byte-exact flasher bridge is
+never disturbed. The hermetic rule holds: the pose switches, the light follows.
+</p>
 </div>
 </main>
 <footer>

@@ -352,5 +352,6 @@
   "st_h2_status": "Estado da implementação e inconsistências em aberto",
   "s3t_h2_yoshimitsu": "YOSHIMITSU — o firmware combinado",
   "s3t_h2_rp2040": "O build de bolso RP2040-Tiny",
-  "s3t_h2_rp2040_pins": "Mapa de pinos RP2040-Tiny"
+  "s3t_h2_rp2040_pins": "Mapa de pinos RP2040-Tiny",
+  "s3t_h2_jiguang": "JIGUANG — a aurora das posturas sempre ativa"
 }

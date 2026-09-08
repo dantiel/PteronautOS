@@ -352,5 +352,6 @@
   "st_h2_status": "实现状态与未解决的不一致",
   "s3t_h2_yoshimitsu": "YOSHIMITSU — 组合固件",
   "s3t_h2_rp2040": "RP2040-Tiny 袖珍版构建",
-  "s3t_h2_rp2040_pins": "RP2040-Tiny 引脚图"
+  "s3t_h2_rp2040_pins": "RP2040-Tiny 引脚图",
+  "s3t_h2_jiguang": "JIGUANG — 常亮的架势极光"
 }
