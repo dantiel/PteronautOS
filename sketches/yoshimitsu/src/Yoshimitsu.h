@@ -365,7 +365,7 @@ static void bridgeSerialRecover() {
 #endif
 #ifndef ARM_CHANNEL
   #define ARM_CHANNEL ARM_CHANNEL_PADRAO
-#endif  // BOARD PROFILES
+#endif
 
 // =============================================================================
 //  STANCES
@@ -578,7 +578,7 @@ static void printCrsfLine() {}
 static void printCrsfChannels() {}
 static void printHighscore() {}
 static void pumpElrsDebug() {}
-#endif  // BOARD PROFILES
+#endif
 
 // =============================================================================
 //  YOSHI (the aurora) — the RGB cheatcode · always-on stance story
@@ -1638,7 +1638,7 @@ static void applyResetTapStance() {
 }
 #else
 static void applyResetTapStance() { /* ESP32-S3 uses the GPIO0 button */ }
-#endif  // BOARD PROFILES
+#endif
 
 // =============================================================================
 
@@ -1725,3 +1725,4 @@ void loop() {
 #endif
 }
 #endif  // YOSHIMITSU_H
+
