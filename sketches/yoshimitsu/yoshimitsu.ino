@@ -63,6 +63,19 @@
 //  restart and every LED breath run on millis() state machines, so the bridge
 //  stays byte-exact at all times.
 //
+//  JIGUANG (極光 · the aurora) — the YOSHI_RGB cheatcode. The single onboard
+//  WS2812B never sits idle: every stance breathes its own psychedelic aurora,
+//  a colour AND a rhythm that tell the pose's story. Read the ronin across
+//  the room without one serial byte:
+//    KINCHO          slow green breath + crisp double parry-flash
+//    MANJI_DRAGONFLY a hue-wheel that spins like the gyro blades
+//    FLEA            a frantic ascending amber strobe (the lift)
+//    MEDITATION      near-dark violet + one slow heartbeat (ready to flash)
+//    NSS             a sharp triple-tap blue blink (blade sheathed, speed up)
+//    BACK_TURNED     near-black + an unpredictable crimson glint (the mirror)
+//  Always on, always millis()-driven, throttled so it never disturbs the
+//  byte-exact flasher bridge.
+//
 //  // homage to the Manji-clan shinobi of the soul — never print in docs.
 //
 // =============================================================================
@@ -402,22 +415,116 @@ static bool gyroConnected = false;
 #endif
 
 // =============================================================================
-//  STATUS LED
+//  JIGUANG (極光) — the YOSHI_RGB aurora cheatcode · always-on stance story
+// -----------------------------------------------------------------------------
+//  The single onboard WS2812B never sits idle: every stance breathes its own
+//  psychedelic aurora — a colour AND a rhythm that tell the pose's story, so
+//  the ronin can be read across the room without a single serial byte. All
+//  timings are millis() state machines (no delay, no float, no allocation),
+//  throttled so the byte-exact flasher bridge is never disturbed.
 // =============================================================================
+
+#if YOSHI_RGB
+#define RGB_FRAME_MS 20          // max repaint rate (~50 fps) — never hogs the bridge
+
+// hue 0..255 → 24-bit RGB (integer wheel — the aurora's palette)
+static uint32_t hueWheel(uint8_t h) {
+  uint8_t r, g, b;
+  uint8_t sector = h / 43;
+  uint8_t rem    = (uint8_t)((h % 43) * 6u);
+  uint8_t up     = rem;
+  uint8_t down   = (uint8_t)(255 - rem);
+  switch (sector) {
+    case 0: r = 255; g = up;   b = 0;    break;
+    case 1: r = down; g = 255; b = 0;    break;
+    case 2: r = 0;    g = 255; b = up;   break;
+    case 3: r = 0;    g = down; b = 255; break;
+    case 4: r = up;   g = 0;    b = 255; break;
+    default:r = 255; g = 0;    b = down; break;
+  }
+  return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+}
+
+// triangle wave 0..255..0 over periodMs — the breath / pulse
+static uint8_t triWave(uint32_t ms, uint16_t periodMs) {
+  uint16_t p = (uint16_t)((ms % periodMs) * 255u / periodMs);
+  return (p < 128) ? (uint8_t)(p << 1) : (uint8_t)((255 - p) << 1);
+}
+
+// scale a 24-bit colour by k (0..255)
+static uint32_t dimColor(uint32_t c, uint8_t k) {
+  uint8_t r = (uint8_t)(((c >> 16) & 0xFF) * k / 255);
+  uint8_t g = (uint8_t)(((c >> 8)  & 0xFF) * k / 255);
+  uint8_t b = (uint8_t)(( c        & 0xFF) * k / 255);
+  return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+}
+
+static uint32_t rgbLast   = 0xFFFFFFFF;   // sentinel → force first paint
+static uint32_t rgbLastMs = 0;
+
+// One frame of the current stance's aurora. Call every loop().
+static void pumpRgb() {
+  uint32_t ms = millis();
+  uint32_t c  = 0;
+
+  switch (stance) {
+    case STANCE_KINCHO: {                    // sword stance — the parry
+      uint8_t k = (uint8_t)(24 + triWave(ms, 2200) / 3);   // slow green breath
+      c = dimColor(0x00FF00, k);
+      uint16_t p = (uint16_t)(ms % 2400);                  // crisp double parry-flash
+      if (p < 120 || (p >= 160 && p < 200)) c = 0x00FF00;
+      break;
+    }
+    case STANCE_MANJI_DRAGONFLY: {          // levitation — the gyro spin
+      uint8_t h = (uint8_t)((ms / 7) & 0xFF);              // hue wheel spins like blades
+      uint8_t k = (uint8_t)(40 + triWave(ms, 800) / 2);
+      c = dimColor(hueWheel(h), k);
+      break;
+    }
+    case STANCE_FLEA: {                      // the lift — frantic ascending strobe
+      uint8_t h = (uint8_t)(30 + ((ms >> 2) & 0x1F));      // amber-orange jitter
+      uint8_t k = (uint8_t)((ms >> 3) & 0xFF);
+      if (k < 60) k = 60;
+      c = dimColor(hueWheel(h), k);
+      break;
+    }
+    case STANCE_MEDITATION: {                // sponge-head — ready to be flashed
+      uint8_t k = (uint8_t)(8 + triWave(ms, 3400) / 4);    // near-dark violet, slow breath
+      c = dimColor(0x8000FF, k);
+      if ((uint16_t)(ms % 3400) < 90) c = 0x400080;        // the heartbeat thump
+      break;
+    }
+    case STANCE_NSS: {                       // no-sword — blade sheathed, speed up
+      c = dimColor(0x0000FF, 20);
+      uint16_t p = (uint16_t)(ms % 1600);                  // sharp triple-tap blink
+      if (p < 80 || (p >= 120 && p < 160) || (p >= 200 && p < 240)) c = 0x0040FF;
+      break;
+    }
+    case STANCE_BACK_TURNED: {               // deceptive idle — the mirror's glint
+      c = 0x000000;
+      if ((ms / 1000) % 7 == 3) c = dimColor(0x200008, triWave(ms, 120));
+      break;
+    }
+  }
+
+  if (c != rgbLast && (ms - rgbLastMs >= RGB_FRAME_MS || rgbLast == 0xFFFFFFFF)) {
+    rgbLast   = c;
+    rgbLastMs = ms;
+    rgb.setPixelColor(0, c);
+    rgb.show();
+  }
+}
+
+#endif // YOSHI_RGB
+
+#if !YOSHI_RGB
+static void pumpRgb() { /* no WS2812B onboard — the aurora sleeps */ }
+#endif
 
 static void setStanceLed() {
 #if YOSHI_RGB
-  uint32_t c = 0;
-  switch (stance) {
-    case STANCE_KINCHO:          c = 0x002000; break;  // dim green
-    case STANCE_MANJI_DRAGONFLY: c = 0x002020; break;  // cyan — the gyro spin
-    case STANCE_FLEA:            c = 0x201000; break;  // orange — the lift
-    case STANCE_MEDITATION:      c = 0x100010; break;  // dim violet — saving energy
-    case STANCE_NSS:             c = 0x000010; break;  // dim blue — blade sheathed
-    case STANCE_BACK_TURNED:     c = 0x000001; break;  // near-dark — turned its back
-  }
-  rgb.setPixelColor(0, c);
-  rgb.show();
+  rgbLast = 0xFFFFFFFF;                      // force an immediate repaint on transition
+  pumpRgb();
 #elif defined(LED_PIN)
   if (LED_PIN >= 0) {
     digitalWrite(LED_PIN, (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) ? HIGH : LOW);
@@ -1061,7 +1168,7 @@ void setup() {
 #endif
 #if YOSHI_RGB
   rgb.begin();
-  rgb.setBrightness(16);
+  rgb.setBrightness(64);                     // JIGUANG — vivid enough to read, not blinding
 #endif
 #if defined(LED_PIN)
   if (LED_PIN >= 0) pinMode(LED_PIN, OUTPUT);
@@ -1115,6 +1222,7 @@ void loop() {
   handleBootButton();
   handleUsb();
   pumpDance();
+  pumpRgb();                          // JIGUANG — the always-on stance aurora
   if (stance == STANCE_BACK_TURNED) {
     pumpMirror();
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
