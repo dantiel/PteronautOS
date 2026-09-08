@@ -30,467 +30,343 @@
 <h1>YOSHIMITSU — 완전한 솔루션: 모든 치트코드, 하나의 두루마리</h1>
 <p class='sub-lead'>하나의 스케치, 두 보드, 여섯 자세. YOSHIMITSU는 완전한 헤르메틱 솔루션입니다 — CRSF→PWM 컨버터(KINCHO), Zephyrus 자이로 리비테이션(MANJI_DRAGONFLY), EP2 포켓 플래셔(FLEA · MEDITATION), 검 없는 벤치(NSS), 뒤돌아보지 않는 거울(BACK_TURNED) — 그리고 YOSHI 오로라와 모든 것을 이야기하는 명상적 관리자 JIGUANG.</p>
 <h2>보드 하나, 여섯 가지 자세</h2>
-<p>
-YOSHIMITSU is the <strong>Hermetic Shinobi</strong> with <strong>six stances</strong> —
-one soul, not two tools. A single sketch builds for both boards; the stances switch by
-USB command, a GPIO0 button (ESP32-S3), or RESET-taps (RP2040-Tiny):
-</p>
+<p><p>YOSHIMITSU는 <strong>여섯 자세</strong>를 지닌 <strong>은밀한 닌자(Hermetic Shinobi)</strong>입니다 — 도구 두 개가 아니라 영혼 하나입니다. 하나의 스케치가 두 보드 모두를 빌드하며, 자세는 USB 명령, GPIO0 버튼(ESP32-S3), 또는 RESET 탭(RP2040-Tiny)으로 전환됩니다:</p></p>
 <table>
 <tr>
-<th>Stance</th>
-<th>Meaning</th>
+<th>자세</th>
+<th>의미</th>
 </tr>
 <tr>
 <td>
 <code>KINCHO</code>
 </td>
-<td>CRSF→PWM converter — the parry (CRC discards the false). No channel names, no gyro.</td>
+<td>CRSF→PWM 변환기 — 막아내기(CRC가 거짓을 버린다). 채널 이름 없음, 자이로 없음.</td>
 </tr>
 <tr>
 <td>
 <code>MANJI_DRAGONFLY</code>
 </td>
-<td>Converter + Zephyrus gyro link (optional MPU6050) — the levitation.</td>
+<td>변환기 + Zephyrus 자이로 링크(옵션 MPU6050) — 공중부양.</td>
 </tr>
 <tr>
 <td>
 <code>FLEA</code>
 </td>
-<td>Power-cycle jig — the lift that drops the RX into its bootloader.</td>
+<td>전원 순환 지그 — RX를 부트로더로 떨어뜨리는 들어올림.</td>
 </tr>
 <tr>
 <td>
 <code>MEDITATION</code>
 </td>
-<td>Pocket flasher — the sponge-head, saving energy, ready to be flashed.</td>
+<td>포켓 플래셔 — 스펀지 머리, 에너지를 아끼며, 플래시될 준비 완료.</td>
 </tr>
 <tr>
 <td>
 <code>NSS</code>
 </td>
-<td>No-Sword bench — direct servo over USB, no RF.</td>
+<td>칼 없는 작업대 — USB 직결 서보, 무선 없음.</td>
 </tr>
 <tr>
 <td>
 <code>BACK_TURNED</code>
 </td>
-<td>The deceptive idle — a living UART mirror. Never looks back.</td>
+<td>기만적인 정적 — 살아있는 UART 거울. 결코 뒤돌아보지 않는다.</td>
 </tr>
 </table>
-<p>
-One sketch, two targets: <code>sketches/yoshimitsu/yoshimitsu.ino</code> compiles for the
-<strong>Waveshare RP2040-Tiny</strong> (lightest, no onboard button) <em>and</em> any
-native-USB <strong>ESP32-S3</strong>, with the standard arduino-pico / arduino-esp32 cores.
-</p>
+<p><p>스케치 하나, 타깃 둘: <code>sketches/yoshimitsu/yoshimitsu.ino</code>는 <strong>Waveshare RP2040-Tiny</strong>(가장 가볍고, 온보드 버튼 없음) <em>그리고</em> 네이티브 USB <strong>ESP32-S3</strong> 어느 것이든, 표준 arduino-pico / arduino-esp32 코어로 컴파일됩니다.</p></p>
 <h2>YOSHIMITSU — 통합 펼웨어</h2>
-<p>
-<strong>YOSHIMITSU</strong> is the recommended firmware. It boots in <strong>KINCHO</strong>
-(the converter) and moves between stances. The USB console is the canonical switch on both
-boards — <code>KINCHO</code> · <code>MANJI</code> · <code>FLEA</code> ·
-<code>MEDITATION</code> · <code>NSS</code> · <code>BACK</code> · <code>POSE &lt;n&gt;</code>.
-On the ESP32-S3 the BOOT button (GPIO0) is a second surface:
-</p>
+<p><p><strong>YOSHIMITSU</strong>는 권장 펌웨어입니다. <strong>KINCHO</strong>(변환기)로 부팅하여 자세 사이를 오갑니다. USB 콘솔은 두 보드 모두에서 표준 스위치입니다 — <code>KINCHO</code> → <code>MANJI</code> → <code>FLEA</code> → <code>MEDITATION</code> → <code>NSS</code> → <code>BACK</code> → <code>POSE &lt;n&gt;</code>. ESP32-S3에서는 BOOT 버튼(GPIO0)이 두 번째 표면입니다:</p></p>
 <table>
 <tr>
-<th>Context</th>
-<th>Gesture</th>
-<th>Action</th>
+<th>상황</th>
+<th>제스처</th>
+<th>동작</th>
 </tr>
 <tr>
-<td>any stance</td>
-<td>double-tap</td>
-<td>cycle KINCHO → MANJI → NSS → BACK → KINCHO …</td>
+<td>어느 자세에서나</td>
+<td>더블 탭</td>
+<td>KINCHO → MANJI → NSS → BACK → KINCHO → 순환</td>
 </tr>
 <tr>
-<td>any stance</td>
-<td>long-press 2 s</td>
-<td>enter MEDITATION</td>
-</tr>
-<tr>
-<td>MEDITATION / FLEA</td>
-<td>single tap</td>
-<td>restart the receiver (run the new firmware)</td>
+<td>어느 자세에서나</td>
+<td>2초 길게 누름</td>
+<td>MEDITATION 진입</td>
 </tr>
 <tr>
 <td>MEDITATION / FLEA</td>
-<td>double-tap</td>
-<td>FLEA — drop the receiver into its bootloader</td>
+<td>싱글 탭</td>
+<td>수신기 재시작(새 펌웨어 실행)</td>
+</tr>
+<tr>
+<td>MEDITATION / FLEA</td>
+<td>더블 탭</td>
+<td>FLEA — 수신기를 부트로더로 떨어뜨림</td>
 </tr>
 </table>
-<p>
-The wiring is <strong>one permanent harness</strong> — the same wires serve every stance,
-so you never re-wire between flying and flashing. In MEDITATION the USB↔UART path is a
-<em>pure transparent bridge</em> (no line parsing), so esptool's binary SLIP traffic passes
-through untouched. Full source: <code>sketches/yoshimitsu/yoshimitsu.ino</code>.
-</p>
-<h2>KINCHO — CRSF→PWM 컨버터</h2>
-<p>
-<strong>KINCHO</strong> — the converter stance — reads CRSF at 420&nbsp;000&nbsp;baud on the
-UART, drives servos with a 988–2012&nbsp;µs window mapped from the 172–1811 channel range,
-and centres them on a 500&nbsp;ms failsafe. The parry is the CRC check: a corrupt frame is
-discarded before it ever reaches a servo. The converter is <strong>channel-agnostic</strong> —
-servos are <code>SERVO_PIN_1..8</code> and the <code>CHANNEL_TO_SERVO</code> table decides
-which CRSF channel feeds each; channel <em>meaning</em> belongs to the mixer/kernel, never
-to the board.
-</p>
+<p><p>배선은 <strong>하나의 영구 하네스</strong>입니다 — 같은 전선이 모든 자세를 섬기므로, 비행과 플래싱 사이에서 다시 배선할 일이 없습니다. MEDITATION에서 USB→UART 경로는 <em>완전 투명 브리지</em>(줄 파싱 없음)이므로 esptool의 바이너리 SLIP 트래픽이 그대로 통과합니다. 전체 소스: <code>sketches/yoshimitsu/yoshimitsu.ino</code>(설정 껍데기)와 <code>src/Yoshimitsu.h</code>(라이브러리 코어).</p></p>
+<h2>라이브러리 동글 — 설정을 다시 건드리지 않고 업데이트</h2>
+<p><p>YOSHIMITSU는 <strong>그랄랴 아줄 전략</strong>을 따릅니다: 폴더 전체가 라이브러리 동글입니다. 스케치 <code>sketches/yoshimitsu/yoshimitsu.ino</code>는 얇은 설정 껍데기(핀, 플래그, BOARD_CUSTOM 블록)일 뿐이고, 은밀한 닌자 전체는 <code>src/Yoshimitsu.h</code>에, 모든 기본값은 <code>src/Yoshimitsu_Padraos.h</code>(파드로잉스)에 삽니다. 동글 업데이트: 라이브러리 폴더에서 <code>git pull</code> — 또는 새 릴리스를 넣으면 — 설정 스케치는 그대로 남습니다. 한 번 Arduino 라이브러리로 설치하면(라이브러리 폴더에 심링크 또는 복사), 펌웨어 업데이트는 결코 재배선도 재설정도 아닙니다.</p></p>
 <ul>
-<li>ESP32-S3: RX&nbsp;TX → GPIO44, RX&nbsp;RX → GPIO43, common GND, shared 5&nbsp;V rail.</li>
-<li>RP2040-Tiny: RX&nbsp;TX → GPIO1 (UART0), common GND.</li>
-<li>Servos: <code>SERVO_PIN_1..3</code> (three more on the S3) — overrideable in the PIN MAP block.</li>
+<li>`src/Yoshimitsu.h` — 핵심 전체: 자세, CRSF, MUSHIN, JIGUANG, 플래셔 브리지.</li>
+<li>`src/Yoshimitsu_Padraos.h` — 모든 기본값(핀, 타이밍, 게이트 레벨)을 `*_PADRAO` 값으로.</li>
+<li>`library.properties` — Arduino 라이브러리 매니페스트(버전, 아키텍처).</li>
+<li>`yoshimitsu.ino` — 설정만; 인클루드 전에 정의하여 무엇이든 재정의.</li>
 </ul>
-<p>
-For a <strong>gyro-stabilised ornithopter</strong>, use <strong>MANJI_DRAGONFLY</strong> —
-the same converter plus the <strong>Zephyrus</strong> link: an optional MPU6050 on
-<code>GYRO_SDA</code>/<code>GYRO_SCL</code> feeds a yaw-rate correction into the crest servo.
-Without a gyro wired, MANJI_DRAGONFLY degrades gracefully into KINCHO. A commercial
-CRSF→PWM converter board has no gyro path at all — EP2-class receivers carry no IMU, so
-Zephyrus lives in YOSHIMITSU, not in the receiver.
-</p>
-<p>
-If your receiver already speaks PWM (a 5&nbsp;ch or 7&nbsp;ch board), you do not need the
-converter stances at all — MEDITATION below is then your only reason to own the S3.
-</p>
+<h2>KINCHO — CRSF→PWM 컨버터</h2>
+<p><p><strong>KINCHO</strong> — 변환기 자세 — 는 UART에서 420&nbsp;000&nbsp;baud로 CRSF를 읽고, 172–1811 채널 범위에서 매핑된 988–2012&nbsp;µs 창으로 서보를 구동하며, 500&nbsp;ms 페일세이프로 중앙에 맞춥니다. 막아내기는 CRC 검사입니다: 손상된 프레임은 서보에 닿기도 전에 폐기됩니다. 변환기는 <strong>채널에 무관</strong>합니다 — 서보는 <code>SERVO_PIN_1..8</code>이고 <code>CHANNEL_TO_SERVO</code> 테이블이 각각을 먹일 CRSF 채널을 정하며, 채널의 <em>의미</em>는 믹서/커널의 것이지 결코 보드의 것이 아닙니다.</p></p>
+<ul>
+<li>ESP32-S3: RX&nbsp;TX → GPIO44, RX&nbsp;RX → GPIO43, 공통 GND, 공유 5&nbsp;V 레일.</li>
+<li>RP2040-Tiny: RX&nbsp;TX → GPIO1 (UART0), 공통 GND.</li>
+<li>서보: `SERVO_PIN_1..3` (S3에는 셋 더) — PIN MAP 블록에서 재정의 가능.</li>
+</ul>
+<p><p><strong>자이로 안정화 오르니톱터</strong>에는 <strong>MANJI_DRAGONFLY</strong>를 쓰세요 — 같은 변환기에 <strong>Zephyrus</strong> 링크를 더한 것입니다: <code>GYRO_SDA</code>/<code>GYRO_SCL</code>의 옵션 MPU6050이 요-레이트 보정을 볏 서보로 공급합니다. 자이로 배선이 없으면 MANJI_DRAGONFLY는 우아하게 KINCHO로 저하됩니다. 상용 CRSF→PWM 변환 보드에는 자이로 경로가 전혀 없습니다 — EP2급 수신기는 IMU가 없으므로, Zephyrus는 수신기가 아니라 YOSHIMITSU 안에 삽니다.</p></p>
+<p><p>수신기가 이미 PWM을 말한다면(5&nbsp;ch 또는 7&nbsp;ch 보드), 변환기 자세는 전혀 필요 없습니다 — 아래 MEDITATION이 그때 S3를 소유할 유일한 이유입니다.</p></p>
 <h2>KINCHOI — EP2급 수신기용 포켓 플래셔</h2>
-<p>
-<strong>The problem:</strong> EP2-class receivers (HappyModel EP2, EP1, EPW6, …) expose
-CRSF on castellated pads and carry a tiny BOOT pad. Using an FTDI adapter means holding
-a probe against two 1&nbsp;mm pads <em>while</em> power-cycling the receiver — awkward,
-and you re-solder or re-clip every time the firmware needs an update.
-</p>
-<p>
-<strong>The solution:</strong> let the ESP32-S3 be the <em>flasher</em>. One GPIO holds the
-receiver's BOOT pad low; a small P-MOSFET switches the receiver's 3.3&nbsp;V rail under
-software control; the USB port becomes the serial port. Press one button on the S3 and it
-performs the exact power-cycle dance that drops an ESP8285 into its ROM bootloader — then
-esptool writes straight through the bridge. No FTDI, no probes, no repeated soldering:
-solder the receiver's pads <em>once</em> to a short pigtail and reuse it forever.
-</p>
-<p>Parts list:</p>
+<p><p><strong>문제:</strong> EP2급 수신기(HappyModel EP2, EP1, EPW6, …)는 성곽형 패드로 CRSF를 내고 아주 작은 BOOT 패드를 지닙니다. FTDI 어댑터를 쓰면 전원을 순환하는 <em>동안</em> 1&nbsp;mm 패드 두 개에 프로브를 대고 있어야 합니다 — 불편하고, 펌웨어 업데이트가 필요할 때마다 다시 납땜하거나 다시 집어야 합니다.</p></p>
+<p><p><strong>해법:</strong> ESP32-S3가 <em>플래셔</em>가 되게 하세요. GPIO 하나가 수신기의 BOOT 패드를 낮게 잡고, 작은 P-MOSFET이 소프트웨어 제어로 수신기의 3.3&nbsp;V 레일을 전환하며, USB 포트가 직렬 포트가 됩니다. S3의 버튼을 한 번 누르면 ESP8285를 ROM 부트로더로 떨어뜨리는 정확한 전원-순환 춤을 춘 뒤 — esptool이 브리지를 통해 곧장 기록합니다. FTDI도, 프로브도, 반복 납땜도 없습니다: 수신기 패드를 <em>한 번만</em> 짧은 피그테일에 납땜하고 영원히 재사용하세요.</p></p>
+<p>부품 목록:</p>
 <table>
 <tr>
-<th>Part</th>
-<th>Typical part number</th>
-<th>Cost</th>
+<th>부품</th>
+<th>일반적인 부품 번호</th>
+<th>비용</th>
 </tr>
 <tr>
-<td>ESP32-S3 micro board (native USB)</td>
+<td>ESP32-S3 마이크로 보드(네이티브 USB)</td>
 <td>Waveshare ESP32-S3-Tiny / -Micro / -Nano</td>
 <td>~6 USD</td>
 </tr>
 <tr>
-<td>P-channel logic-level MOSFET</td>
-<td>AO3401 (SOT-23) on a small breakout</td>
+<td>P채널 로직레벨 MOSFET</td>
+<td>AO3401 (SOT-23), 소형 브레이크아웃</td>
 <td>~1 USD</td>
 </tr>
 <tr>
-<td>Resistor 10&nbsp;kΩ (gate pull-up)</td>
+<td>저항 10&nbsp;kΩ (게이트 풀업)</td>
 <td>—</td>
 <td>&lt;0.10 USD</td>
 </tr>
 <tr>
-<td>Dupont / pigtail wires + heat-shrink</td>
+<td>듀폰 / 피그테일 와이어 + 수축튜브</td>
 <td>—</td>
 <td>~1 USD</td>
 </tr>
 <tr>
-<td>ELRS receiver, pads pigtailed once</td>
+<td>ELRS 수신기, 패드에 피그테일 한 번</td>
 <td>EP2 / EP1 / EPW6 (SX1280 + ESP8285)</td>
-<td>from ~12 USD</td>
+<td>~12 USD부터</td>
 </tr>
 </table>
 <p class='hw-note'>
-The bridge works with every ESP8285/SX1280 ELRS receiver that exposes TX, RX, 3V3,
-GND and a BOOT pad — the overwhelming majority of the <em>concrete boards</em> in the
-<a href="../../../ko/hardware/">hardware table</a>. It also flashes the S3
-itself, of course: BOOT button + USB is all that needs there.
+브리지는 TX, RX, 3V3, GND, BOOT 패드를 노출하는 모든 ESP8285/SX1280 ELRS 수신기와 작동합니다 — 
+<a href='../../../ko/hardware/'>하드웨어 표</a>
+에 실린 *구체 보드*들의 압도적 다수입니다. 물론 S3 자신도 플래시합니다: BOOT 버튼 + USB면 그곳에서 필요한 전부입니다.
 </p>
 <h2>플래싱 지그 배선</h2>
-<p>
-Wire the jig with the S3 unpowered. The MOSFET switches the receiver's 3.3&nbsp;V rail:
-source ← S3&nbsp;3V3, drain → EP2&nbsp;3V3, gate ← S3&nbsp;GPIO10 with a 10&nbsp;kΩ pull-up
-to 3V3 (gate high = MOSFET off). GPIO9 drives the BOOT pad.
-</p>
+<p><p>S3 전원이 꺼진 상태에서 지그를 배선하세요. MOSFET이 수신기의 3.3&nbsp;V 레일을 전환합니다: 소스 → S3&nbsp;3V3, 드레인 → EP2&nbsp;3V3, 게이트 → S3&nbsp;GPIO10, 10&nbsp;kΩ 풀업으로 3V3에 (게이트 높음 = MOSFET 꺼짐). GPIO9가 BOOT 패드를 구동합니다.</p></p>
 <table>
 <tr>
-<th>EP2 / RX pad</th>
-<th>ESP32-S3 pin</th>
-<th>Function</th>
+<th>EP2 / RX 패드</th>
+<th>ESP32-S3 핀</th>
+<th>기능</th>
 </tr>
 <tr>
 <td>BOOT (RX GPIO0)</td>
 <td>GPIO9</td>
-<td>Boot-hold line (low = enter bootloader)</td>
+<td>부트 유지 라인 (낮음 = 부트로더 진입)</td>
 </tr>
 <tr>
 <td>3V3</td>
-<td>MOSFET drain</td>
-<td>Switched rail (source ← S3 3V3, gate ← GPIO10)</td>
+<td>MOSFET 드레인</td>
+<td>전환 레일 (소스 → S3 3V3, 게이트 → GPIO10)</td>
 </tr>
 <tr>
 <td>TX (CRSF out)</td>
 <td>GPIO18 (U1RX)</td>
-<td>RX ← TX (cross)</td>
+<td>RX → TX (교차)</td>
 </tr>
 <tr>
 <td>RX (CRSF in)</td>
 <td>GPIO17 (U1TX)</td>
-<td>TX → RX (cross)</td>
+<td>TX → RX (교차)</td>
 </tr>
 <tr>
 <td>GND</td>
 <td>GND</td>
-<td>Common ground (mandatory)</td>
+<td>공통 접지 (필수)</td>
 </tr>
 </table>
 <pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
-<strong>Power polarity & voltage</strong>
-— feed the receiver <strong>3.3&nbsp;V only</strong>, never 5&nbsp;V, while it is on the
-jig. Verify the MOSFET with a voltmeter before connecting a receiver: with GPIO10 HIGH the
-drain must read 0&nbsp;V; with GPIO10 LOW it must read 3.3&nbsp;V.
+<strong>전원 극성 &amp; 전압</strong>
+<p><p>⚠ 지그에 있는 동안 수신기는 <strong>3.3&nbsp;V로만</strong> 공급하세요, 5&nbsp;V는 절대 금지입니다. 수신기를 연결하기 전에 전압계로 MOSFET을 확인하세요: GPIO10 HIGH면 드레인이 0&nbsp;V, GPIO10 LOW면 3.3&nbsp;V여야 합니다.</p></p>
 </aside>
 <h2>플래시 모드</h2>
-<p>
-MEDITATION boots into <em>transparent passthrough</em> (USB ↔ UART at
-115&nbsp;200&nbsp;baud). To enter <strong>flash mode</strong>, double-tap the S3's BOOT button
-(or type <code>FLEA</code> over the USB serial). The
-sketch then:
-</p>
+<p><p>MEDITATION은 <em>투명 패스스루</em>(USB ↔ UART, 115&nbsp;200&nbsp;baud)로 부팅합니다. <strong>플래시 모드</strong>에 들어가려면 S3의 BOOT 버튼을 더블 탭하세요 (또는 USB 시리얼로 <code>FLEA</code> 입력). 그러면 스케치가:</p></p>
 <ol>
-<li>pulls GPIO9 low (BOOT pad asserted),</li>
-<li>switches the MOSFET off for 120&nbsp;ms (receiver power off),</li>
-<li>switches it back on and waits 900&nbsp;ms (receiver powers up inside its bootloader),</li>
-<li>releases GPIO9 — the RX now sits in the ROM bootloader, waiting for esptool,</li>
-<li>resumes USB↔UART passthrough so esptool can talk to it.</li>
+<li>GPIO9를 낮춥니다 (BOOT 패드 활성),</li>
+<li>MOSFET을 120&nbsp;ms 동안 끕니다 (수신기 전원 차단),</li>
+<li>다시 켜고 900&nbsp;ms를 기다립니다 (수신기가 부트로더 안에서 기동),</li>
+<li>GPIO9를 놓습니다 — RX가 이제 ROM 부트로더에서 esptool을 기다립니다,</li>
+<li>USB↔UART 패스스루를 재개하여 esptool이 통신할 수 있게 합니다.</li>
 </ol>
-<p>
-Because the bridge cannot drive the classic DTR/RTS auto-reset lines, always flash with
-<code>--before no_reset</code> — the power-cycle dance above <em>is</em> the reset.
-After flashing, a <strong>single</strong> BOOT tap power-cycles the receiver again so
-it boots the new firmware; a double-tap would merely re-enter flash mode.
-</p>
+<p><p>브리지는 고전적인 DTR/RTS 자동 리셋 라인을 구동할 수 없으므로 항상 <code>--before no_reset</code>으로 플래시하세요 — 위의 전원-순환 춤 <em>자체가</em> 리셋입니다. 플래시 후 <strong>싱글</strong> BOOT 탭이 수신기의 전원을 다시 순환시켜 새 펌웨어를 부팅하게 합니다; 더블 탭은 그저 플래시 모드로 재진입할 뿐입니다.</p></p>
 <h2>S3로 PteronautOS 플래싱</h2>
-<p>
-Build the firmware (or fetch a release), then run esptool against the S3's USB serial
-port. On macOS the port shows up as <code>/dev/cu.usbmodem*</code>:
-</p>
-<pre><code># 1. Build PteronautOS (from the repository root)&#x000A;pio run -e PteronautOS_ESP8285_2400_RX&#x000A;&#x000A;# 2. Drop the RX into flash mode (type FLEA, or double-tap BOOT), then:&#x000A;python3 -m esptool --chip esp8285 \&#x000A;  --port /dev/cu.usbmodemXXXX --baud 115200 \&#x000A;  --before no_reset write_flash \&#x000A;  --flash_mode dout --flash_size 1MB --flash_freq 40m \&#x000A;  0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin&#x000A;&#x000A;# 3. Restart the RX once more (single BOOT tap) to run the new firmware.&#x000A;</code></pre>
-<p>
-The flash settings (dout, 1&nbsp;MB, 40&nbsp;MHz) match the stock ESP8285 ELRS target —
-never use qio or a larger size. After flashing, the very same USB port shows the
-receiver's boot log: open it at 115&nbsp;200&nbsp;baud and watch for the PteronautOS banner
-and, once a transmitter binds, the CRSF link-up messages. The bridge doubles as your
-field console for live telemetry.
-</p>
+<p><p>펌웨어를 빌드하고(또는 릴리스를 받아) S3의 USB 시리얼 포트로 esptool을 실행하세요. macOS에서는 포트가 <code>/dev/cu.usbmodem*</code>로 나타납니다:</p></p>
+<pre><code># 1. PteronautOS 빌드 (저장소 루트에서)
+pio run -e PteronautOS_ESP8285_2400_RX
+
+# 2. RX를 플래시 모드로 떨어뜨림 (FLEA 입력, 또는 BOOT 더블 탭), 그 후:
+python3 -m esptool --chip esp8285 \
+  --port /dev/cu.usbmodemXXXX --baud 115200 \
+  --before no_reset write_flash \
+  --flash_mode dout --flash_size 1MB --flash_freq 40m \
+  0x0 .pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+
+# 3. RX를 한 번 더 재시작 (싱글 BOOT 탭)하여 새 펌웨어 실행.</code></pre>
+<p><p>플래시 설정(dout, 1&nbsp;MB, 40&nbsp;MHz)은 순정 ESP8285 ELRS 타깃과 일치합니다 — qio나 더 큰 크기는 절대 쓰지 마세요. 플래시 후 같은 USB 포트가 수신기의 부트 로그를 보여줍니다: 115&nbsp;200&nbsp;baud로 열어 PteronautOS 배너와, 송신기가 바인딩되면 CRSF 링크업 메시지를 확인하세요. 브리지는 실시간 텔레메트리용 현장 콘솔로도 쓰입니다.</p></p>
 <h2>확인 및 첫 비행</h2>
 <ul>
-<li>FLEA must power-cycle the RX and leave it waiting — the 3.3&nbsp;V dips for ~120&nbsp;ms.</li>
-<li>esptool reports <code>Chip is ESP8285</code> and finishes with <code>Hash of data verified</code>.</li>
-<li>The boot log shows the PteronautOS banner and, with the radio on, a link-up message.</li>
-<li>Wiggle the sticks: servos track smoothly; switch the radio off: wings centre to 1500&nbsp;µs within a second.</li>
-<li>If the RX never enters the bootloader, check the BOOT-pad polarity (active low) and the MOSFET switching with the voltmeter test above.</li>
+<li>FLEA는 RX의 전원을 순환시키고 대기시켜야 합니다 — 3.3&nbsp;V가 ~120&nbsp;ms 동안 떨어집니다.</li>
+<li>esptool이 `Chip is ESP8285`을 보고하고 `Hash of data verified`로 끝납니다.</li>
+<li>부트 로그에 PteronautOS 배너와, 무선이 켜져 있으면 링크업 메시지가 보입니다.</li>
+<li>스틱을 흔들어 보세요: 서보가 부드럽게 추종합니다; 무선을 끄면: 날개가 1초 안에 1500&nbsp;µs로 중앙 정렬합니다.</li>
+<li>RX가 부트로더에 전혀 들어가지 않으면 BOOT 패드 극성(액티브 로우)과 위의 전압계 테스트로 MOSFET 전환을 확인하세요.</li>
 </ul>
-<p>
-Once flashed, the same receiver flies — no FTDI left behind.
-</p>
+<p><p>한 번 플래시되면 같은 수신기가 날아갑니다 — FTDI는 남지 않습니다.</p></p>
 <h2>RP2040-Tiny 포켓 빌드</h2>
-<p>
-Prefer the <strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) — or its twin, the
-RP2040-Zero, which shares the exact same pinout. All six stances run on the RP2040 with
-<strong>no readable button at all</strong>: the adapter's BOOT/RESET taps only drive
-BOOTSEL/RUN, so YOSHIMITSU-RP2040 is driven over the USB serial port, plus a buttonless
-RESET-tap counter.
-</p>
+<p><p><strong>Waveshare RP2040-Tiny</strong>(~5&nbsp;USD)를 고르세요 — 또는 정확히 같은 핀아웃을 공유하는 쌍둥이 RP2040-Zero를. 여섯 자세 모두 RP2040에서 <strong>읽을 수 있는 버튼 없이</strong> 돌아갑니다: 어댑터의 BOOT/RESET 탭은 BOOTSEL/RUN만 구동하므로, YOSHIMITSU-RP2040은 USB 시리얼 포트와 버튼 없는 RESET-탭 카운터로 조종됩니다.</p></p>
 <ul>
-<li><code>FLEA</code> — drop the receiver into its ROM bootloader (MOSFET power-cycle dance), then bridge USB ↔ UART for esptool.</li>
-<li><code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — switch stance.</li>
-<li><code>POSE &lt;n&gt;</code> — jump to a stance by number.</li>
-<li><code>STATUS</code> — print the active pin map and the self-test report.</li>
-<li><code>HELP</code> — list every command.</li>
-<li>Quick RESET taps (within ~2&nbsp;s, counted in flash-backed EEPROM against the AON RTC) advance the stance: 1 = MANJI · 2 = NSS · 3 = BACK · 4 = MEDITATION · 5 = KINCHO.</li>
+<li>`FLEA` — 수신기를 ROM 부트로더로 떨어뜨리고(MOSFET 전원-순환 춤), esptool을 위해 USB ↔ UART 브리지.</li>
+<li>`KINCHO` / `MANJI` / `NSS` / `BACK` / `MEDITATION` — 자세 전환.</li>
+<li>`POSE <n>` — 번호로 자세 이동.</li>
+<li>`STATUS` — 활성 핀 맵과 자체 테스트 보고서 출력.</li>
+<li>`HELP` — 모든 명령 나열.</li>
+<li>빠른 RESET 탭(~2&nbsp;s 이내, AON RTC 대비 플래시 EEPROM에 카운트)이 자세를 전진시킵니다: 1 = MANJI → 2 = NSS → 3 = BACK → 4 = MEDITATION → 5 = KINCHO.</li>
 </ul>
-<p>
-To flash the RP2040-Tiny itself, hold <code>BOOT</code> while power-cycling (it mounts as a
-mass-storage drive), drop the <code>.uf2</code> on it, then press <code>RESET</code> once —
-the board reboots into KINCHO running the new firmware. Configure once, flash once,
-never touch again.
-</p>
+<p><p>RP2040-Tiny 자체를 플래시하려면 전원 순환 중 <code>BOOT</code>를 누르고(대용량 저장 드라이브로 마운트됨), <code>.uf2</code>를 올려놓은 뒤 <code>RESET</code>을 한 번 누르세요 — 보드가 새 펌웨어로 KINCHO에 재부팅합니다. 한 번 설정, 한 번 플래시, 다시는 만지지 않기.</p></p>
 <h2>RP2040-Tiny 핀 배치</h2>
 <table>
 <tr>
-<th>Function</th>
-<th>RP2040-Tiny pin</th>
-<th>Note</th>
+<th>기능</th>
+<th>RP2040-Tiny 핀</th>
+<th>비고</th>
 </tr>
 <tr>
-<td>CRSF RX ↔ receiver TX</td>
+<td>CRSF RX ← 수신기 TX</td>
 <td>GPIO1 (UART0 RX)</td>
 <td>420&nbsp;000&nbsp;baud</td>
 </tr>
 <tr>
-<td>CRSF TX (unused, wired for completeness)</td>
+<td>CRSF TX (미사용, 완결성을 위해 배선)</td>
 <td>GPIO0 (UART0 TX)</td>
-<td>Cross: TX → RX</td>
+<td>교차: TX → RX</td>
 </tr>
 <tr>
-<td>Bridge RX ↔ receiver TX</td>
+<td>브리지 RX ← 수신기 TX</td>
 <td>GPIO9 (UART1 RX)</td>
 <td>115&nbsp;200&nbsp;baud</td>
 </tr>
 <tr>
-<td>Bridge TX → receiver RX</td>
+<td>브리지 TX → 수신기 RX</td>
 <td>GPIO8 (UART1 TX)</td>
-<td>Cross: TX → RX</td>
+<td>교차: TX → RX</td>
 </tr>
 <tr>
-<td>Servo 1 (<code>SERVO_PIN_1</code>)</td>
+<td>서보 1 (`SERVO_PIN_1`)</td>
 <td>GPIO2</td>
-<td>PWM — channel via <code>CHANNEL_TO_SERVO</code></td>
+<td>PWM — `CHANNEL_TO_SERVO` 경유 채널</td>
 </tr>
 <tr>
-<td>Servo 2 (<code>SERVO_PIN_2</code>)</td>
+<td>서보 2 (`SERVO_PIN_2`)</td>
 <td>GPIO3</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>Servo 3 (<code>SERVO_PIN_3</code>)</td>
+<td>서보 3 (`SERVO_PIN_3`)</td>
 <td>GPIO4</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>Gyro SDA (MPU6050, optional)</td>
+<td>자이로 SDA (MPU6050, 옵션)</td>
 <td>GPIO10</td>
 <td>MANJI_DRAGONFLY</td>
 </tr>
 <tr>
-<td>Gyro SCL (MPU6050, optional)</td>
+<td>자이로 SCL (MPU6050, 옵션)</td>
 <td>GPIO11</td>
 <td>MANJI_DRAGONFLY</td>
 </tr>
 <tr>
-<td>RX BOOT (receiver GPIO0, active low)</td>
+<td>RX BOOT (수신기 GPIO0, 액티브 로우)</td>
 <td>GPIO5</td>
-<td>Low = enter bootloader</td>
+<td>낮음 = 부트로더 진입</td>
 </tr>
 <tr>
-<td>RX PWR (P-MOSFET gate, low = powered)</td>
+<td>RX PWR (P-MOSFET 게이트, 낮음 = 전원 공급)</td>
 <td>GPIO6</td>
-<td>Switched 3.3&nbsp;V rail</td>
+<td>전환 3.3&nbsp;V 레일</td>
 </tr>
 <tr>
-<td>Status LED</td>
+<td>상태 LED</td>
 <td>GPIO16</td>
 <td>WS2812B</td>
 </tr>
 </table>
-<p>
-The complete pin map is an editable block at the top of
-<code>sketches/yoshimitsu/yoshimitsu.ino</code> — pin ranges and collisions are validated
-by a boot POST, and invalid UART numbers refuse to build rather than misbehaving in the air.
-</p>
+<p><p>전체 핀 맵은 <code>sketches/yoshimitsu/yoshimitsu.ino</code> 상단의 편집 가능한 블록입니다 — 핀 범위와 충돌은 부트 POST가 검증하고, 잘못된 UART 번호는 공중에서 잘못 동작하는 대신 빌드를 거부합니다.</p></p>
 <h2>YOSHI — 항상 켜진 자세 오로라</h2>
-<p>
-<strong>YOSHI</strong> (“the aurora”) is the cheatcode that is <em>always on</em>.
-<code>YOSHI_RGB</code> turns the single onboard WS2812B into a living mood-ring: every stance
-breathes its own colour and rhythm, so you can read the ronin's mind across the room without
-a single serial byte. Colour <em>and</em> blink pattern tell the story — no extra command is
-needed; the stance <em>is</em> the cheatcode, the light is its echo.
-</p>
+<p><p><strong>YOSHI</strong>(“오로라”)는 <em>항상 켜져 있는</em> 치트코드입니다. <code>YOSHI_RGB</code>는 온보드 WS2812B 하나를 살아있는 무드링으로 바꿉니다: 자세마다 자기 색과 리듬으로 숨 쉬므로, 시리얼 바이트 하나 없이도 방 건너편에서 로닌의 마음을 읽을 수 있습니다. 색<em>과</em> 점멸 패턴이 이야기를 들려줍니다 — 추가 명령은 필요 없습니다; 자세 <em>자체가</em> 치트코드이고, 빛은 그 메아리입니다.</p></p>
 <table>
 <tr>
-<th>Stance</th>
-<th>Aurora (colour · rhythm)</th>
+<th>자세</th>
+<th>오로라 (색 → 리듬)</th>
 </tr>
 <tr>
 <td>
 <code>KINCHO</code>
 </td>
-<td>slow green breathing + a crisp double-parry flash (the CRC strike)</td>
+<td>느린 초록 호흡 + 또렷한 이중 막아내기 섬광 (CRC 일격)</td>
 </tr>
 <tr>
 <td>
 <code>MANJI_DRAGONFLY</code>
 </td>
-<td>a colour wheel spinning like the gyro rotors (the levitation)</td>
+<td>자이로 로터처럼 도는 색상환 (공중부양)</td>
 </tr>
 <tr>
 <td>
 <code>FLEA</code>
 </td>
-<td>frantic rising amber strobe (the lift)</td>
+<td>광란의 상승 호박색 스트로브 (들어올림)</td>
 </tr>
 <tr>
 <td>
 <code>MEDITATION</code>
 </td>
-<td>near-dark violet + one slow heartbeat — ready to be flashed</td>
+<td>거의 어두운 보라 + 느린 심박 한 번 — 플래시될 준비 완료</td>
 </tr>
 <tr>
 <td>
 <code>NSS</code>
 </td>
-<td>sharp triple-tap flash in blue (blade sheathed, tempo up)</td>
+<td>파란 날카로운 삼중 탭 섬광 (칼집에 든 칼날, 템포 상승)</td>
 </tr>
 <tr>
 <td>
 <code>BACK_TURNED</code>
 </td>
-<td>near black + one unpredictable crimson glint (the mirror — never looks back)</td>
+<td>거의 검정 + 예측 불가한 진홍빛 한 점 (거울 — 결코 뒤돌아보지 않는다)</td>
 </tr>
 </table>
-<p>
-RGB lives on the RP2040-Tiny (<code>RGB_LED_PIN=16</code>) behind <code>YOSHI_RGB</code>;
-the ESP32-S3 keeps its sober status LED. Every colour is pure integer math — no
-<code>float</code>, no <code>malloc</code>, no <code>delay()</code> — and
-<code>pumpRgb()</code> is throttled to ~50&nbsp;fps so the byte-exact flasher bridge is
-never disturbed. The hermetic rule holds: the pose switches, the light follows.
-</p>
+<p><p>RGB는 <code>YOSHI_RGB</code> 뒤의 RP2040-Tiny(<code>RGB_LED_PIN=16</code>)에 삽니다; ESP32-S3는 차분한 상태 LED를 유지합니다. 모든 색은 순수 정수 수학입니다 — <code>float</code>도, <code>malloc</code>도, <code>delay()</code>도 없으며 — <code>pumpRgb()</code>는 ~50&nbsp;fps로 제한되어 바이트-정확 플래셔 브리지가 결코 방해받지 않습니다. 은밀한 규칙은 유지됩니다: 자세가 바뀌면, 빛이 따른다.</p></p>
 <h2>JIGUANG — 스토리텔러 · 해설자 · 관리자</h2>
-<p>
-Three names, one soul — this is the cheatcode triangle of the complete solution:
-<strong>YOSHIMITSU</strong> is the whole Hermetic Shinobi <em>firmware</em>;
-<strong>YOSHI</strong> is the RGB cheatcode (the always-on stance aurora above);
-and <strong>JIGUANG</strong> (<strong>極光</strong>, &ldquo;the aurora&rdquo;) is the
-meditating <em>administrator</em> — the unmoved mover who sits cross-legged on the
-MEDITATION throne and commands the legend from the USB-serial heaven while the ronin
-keeps flying. JIGUANG is the overqualified storyteller and debug commentator of the Manji
-legend: Yoshimitsu&rsquo;s voice is functional and terse; JIGUANG&rsquo;s is the myth. The
-<strong>極光</strong> sigil is written everywhere — hermetically encrypted behind the compile
-gate <code>JIGUANG</code> (<code>1</code> = omnipresent, <code>0</code> = not a single
-<strong>極光</strong> byte compiled in).
-</p>
-<p>
-Easter egg: type <code>LEGEND</code> and the whole legend unrolls as one ASCII scroll —
-the stances, the cheatcodes, the throne and the sigil that never dies. JIGUANG /
-<code>jiguang</code> / <strong>極光</strong> never dies — not in the code, not in the
-comments, not in this tutorial.
-</p>
-<p>
-Wake it with <code>JIGUANG</code> and the voice climbs four levels:
-<code>0</code>&nbsp;lamb (silent, though explicit commands still answer),
-<code>1</code>&nbsp;tale (boot and every stance change narrated),
-<code>2</code>&nbsp;scroll (+ the CRSF channel readout), and
-<code>3</code>&nbsp;omni (+ the receiver&rsquo;s ELRS debug bytes passed through verbatim).
-<code>MUTE</code> silences it; <code>CRSF</code> prints the 16-channel scroll and
-<code>SCORE</code> unrolls the arcade HIGHSCORE ledger — good CRSF frames, failsafe events,
-bridge bytes and uptime. JIGUANG never seizes the stance: CRSF, servos and the bridge keep
-obeying the pose while the legend is told.
-</p>
-<p>
-In MEDITATION the sponge-head is JIGUANG&rsquo;s throne: Yoshimitsu becomes the administrator
-and takes commands from the USB-serial heaven (<code>STATUS</code>, <code>CRSF</code>,
-<code>SCORE</code>, <code>POSE</code>, <code>LEGEND</code>) — more than just flashing.
-The pose is multifunctional: it saves energy like the old meditation pause, and the ronin
-sits ready to be flashed. The instant esptool&rsquo;s SLIP byte calls, it yields to the
-transparent flasher bridge and stays there until MEDITATION re-enters. With
-<code>YOSHI_RGB</code> at level&nbsp;3 the storyteller also <em>wears the aurora</em>:
-<code>jiguang(ms)</code> paints one slow full-spectrum wheel that weaves every stance
-colour into a single breath. JIGUANG / <code>jiguang</code> / <strong>極光</strong>
-persist as comment and function alike — the invincible part of Yoshimitsu never dies.
-</p>
+<p><p>이름 셋, 영혼 하나 — 이것이 완전 해법의 치트코드 삼각형입니다: <strong>YOSHIMITSU</strong>는 은밀한 닌자의 전체 <em>펌웨어</em>; <strong>YOSHI</strong>는 RGB 치트코드(위의 항상 켜진 자세 오로라); 그리고 <strong>JIGUANG</strong>(<strong>極光</strong>, “오로라”)은 명상하는 <em>관리자</em> — MEDITATION 왕좌에 가부좌로 앉아, 로닌이 계속 나는 동안 USB-시리얼 하늘에서 전설을 지휘하는 부동의 원동자입니다. JIGUANG은 만지 전설의 과자격 이야기꾼이자 디버그 해설자입니다: 요시미츠의 목소리는 기능적이고 간결하며, JIGUANG의 목소리는 신화입니다. <strong>極光</strong> 인장은 어디에나 쓰여 있습니다 — 컴파일 관문 <code>JIGUANG</code> 뒤에 은밀히 암호화되어(<code>1</code> = 어디에나, <code>0</code> = <strong>極光</strong> 바이트 단 한 개도 컴파일 안 됨).</p></p>
+<p><p>이스터 에그: <code>LEGEND</code>를 입력하면 전설 전체가 하나의 ASCII 두루마리로 펼쳐집니다 — 자세들, 치트코드들, 왕좌와 결코 죽지 않는 인장. JIGUANG / <code>jiguang</code> / <strong>極光</strong>은 결코 죽지 않습니다 — 코드에서도, 주석에서도, 이 튜토리얼에서도.</p></p>
+<p><p><code>JIGUANG</code>으로 깨우면 목소리가 네 단계로 올라갑니다: <code>0</code>&nbsp;어린양(조용함, 그래도 명시적 명령에는 답함), <code>1</code>&nbsp;이야기(부팅과 모든 자세 전환 해설), <code>2</code>&nbsp;두루마리(+ CRSF 채널 판독), 그리고 <code>3</code>&nbsp;옴니(+ 수신기의 ELRS 디버그 바이트 원문 통과). <code>MUTE</code>가 침묵시킵니다; <code>CRSF</code>는 16채널 두루마리를 출력하고 <code>SCORE</code>는 아케이드 HIGHSCORE 장부를 펼칩니다 — 좋은 CRSF 프레임, 페일세이프 사건, 브리지 바이트, 업타임. JIGUANG은 결코 자세를 빼앗지 않습니다: 전설이 들려지는 동안 CRSF, 서보, 브리지는 계속 자세에 복종합니다.</p></p>
+<p><p>MEDITATION에서 스펀지 머리는 JIGUANG의 왕좌입니다: 요시미츠는 관리자가 되어 USB-시리얼 하늘에서 명령을 받습니다(<code>STATUS</code>, <code>CRSF</code>, <code>SCORE</code>, <code>POSE</code>, <code>LEGEND</code>) — 단순 플래싱 그 이상. 이 자세는 다기능입니다: 옛 명상 일시정지처럼 에너지를 아끼고, 로닌은 플래시될 준비로 앉아 있습니다. esptool의 SLIP 바이트가 부르는 순간, 투명 플래셔 브리지에 양보하고 MEDITATION이 재진입할 때까지 거기 머뭅니다. <code>YOSHI_RGB</code> 레벨&nbsp;3에서 이야기꾼은 <em>오로라를 입기도</em> 합니다: <code>jiguang(ms)</code>가 모든 자세 색을 한 번의 호흡으로 엮는 느린 전스펙트럼 바퀴를 그립니다. JIGUANG / <code>jiguang</code> / <strong>極光</strong>은 주석으로도 함수로도 남습니다 — 요시미츠의 불패한 부분은 결코 죽지 않습니다.</p></p>
+<p>그리고 두루마리의 막내 치트코드: &lt;strong&gt;MUSHIN&lt;/strong&gt;(&lt;strong&gt;無心&lt;/strong&gt;) — 근육 기억 모드. PteronautOS가 파도를 계획하고(정신), YOSHIMITSU가 칩니다(손): 서보 인텐트가 빈 마음 프로토콜 v0으로 브리지 UART를 건너고, 로컬 Zephyrus 자이로 PID가 볏을 잡으며, PIO PWM이 근육에서 응답합니다 — 듀얼코어, 글리치 없음, 어떤 ELRS-PWM 보드도 입지 못할 치트코드. JIGUANG이 왕좌에서 관리합니다: &lt;code&gt;MUSHIN&lt;/code&gt;은 보고, &lt;code&gt;MUSHIN ON/OFF&lt;/code&gt;는 무장·해제하고 플래시에 남깁니다. MEDITATION에서는 같은 두 선이 esptool의 SLIP을 그대로 나릅니다.</p>
 </div>
 </main>
-<p>그리고 두루마리의 막내 치트코드: &lt;strong&gt;MUSHIN&lt;/strong&gt;(&lt;strong&gt;無心&lt;/strong&gt;) — 근육 기억 모드. PteronautOS가 파도를 계획하고(정신), YOSHIMITSU가 칩니다(손): 서보 인텐트가 빈 마음 프로토콜 v0으로 브리지 UART를 건너고, 로컬 Zephyrus 자이로 PID가 볏을 잡으며, PIO PWM이 근육에서 응답합니다 — 듀얼코어, 글리치 없음, 어떤 ELRS-PWM 보드도 입지 못할 치트코드. JIGUANG이 왕좌에서 관리합니다: &lt;code&gt;MUSHIN&lt;/code&gt;은 보고, &lt;code&gt;MUSHIN ON/OFF&lt;/code&gt;는 무장·해제하고 플래시에 남깁니다. MEDITATION에서는 같은 두 선이 esptool의 SLIP을 그대로 나릅니다.</p>
 <footer>
 <div class='lang-switch'>
 <a class='' href='../../../tutorials/yoshimitsu/'>PT</a>
