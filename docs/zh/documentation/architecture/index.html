@@ -29,250 +29,148 @@
 <h1>架构：内核与数据流</h1>
 <p class='sub-lead'>CRSF 数据流如何化为扑翼与尾翼：模块边界、两个混控内核，以及在链路断开时让翼龙存活的有限状态机。</p>
 <h2>信号通路</h2>
-<p>
-PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-receiver with a dedicated flight-control layer. The data path is deliberately short:
-</p>
+<p>PteronautOS 是 ExpressLRS 4.x 的一个分支，它将接收机的「PWM 直通」末端替换为专用的飞行控制层。数据路径被刻意设计得很短：</p>
 <pre><code>CRSF radio link&#x000A;  │  2.4 GHz SX1280&#x000A;  ▼&#x000A;rx_main / CRSF decoder        → ChannelData[]  (raw 172…1811 µs-window values)&#x000A;  ▼&#x000A;Ornithopter::update()          → _readChannels() → voice* fields&#x000A;  ▼  kernel select: activeProfile ≥ GEARBOX_2VTAIL_1RUD ?&#x000A;_computeServoMixer()   OR   _computeGearboxMixer()&#x000A;  ▼&#x000A;_f[]  (indexed by ServoFunc tag, µs)&#x000A;  ▼&#x000A;PWM output stage               → funcMap channels → wing / rudder / motor servos&#x000A;</code></pre>
-<p>
-Four structural ideas keep the beast stable and the code small:
-</p>
+<p>四个结构性思路让这台野兽保持稳定、代码保持精简：</p>
 <ol>
+<li><strong>通道尽早归一化。</strong>172–1811 CRSF 窗口内的每个原始值都会一次性映射到 −1…+1（<code>_crsfToNorm</code>）或百分比，只有该单位流经混控器——不再重复魔法常量。</li>
 <li>
-<strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-that unit flows through the mixers — no repeated magic constants.
+<strong>输出是打标签的，而非固定引脚。</strong>混控器写入 <code>_f[ServoFunc]</code>。某个标签驱动哪个物理 PWM 输出由配置文件的 <code>funcMap</code> 稍后决定——参见 
+<a href='../../../zh/documentation/mixers/'>混控器参考</a>
+.重新分配模型引脚绝不会触及混控器的数学运算。
 </li>
-<li>
-<strong>Outputs are tagged, not pinned.</strong> The mixers write into
-<code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-the profile's <code>funcMap</code> — see the
-<a href="../../../zh/documentation/mixers/">Mixer Reference</a>.
-Re-pinning a model never touches mixer math.
-</li>
-<li>
-<strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-waveform flapper and the gearbox controller live in the binary; the active profile
-picks the kernel every update tick.
-</li>
-<li>
-<strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-stick-override are explicit gates in <code>update()</code>, so servos can never run
-away while the radio is silent.
-</li>
+<li><strong>内核是编译期家族、运行期选择。</strong>波形扑翼与变速箱控制器都存在于二进制中；活动配置文件在每个更新节拍选择内核。</li>
+<li><strong>失控保护不是事件，而是状态。</strong>链路丢失、台架模式与摇杆覆盖是 <code>update()</code> 中的显式闸门，因此无线电静默时伺服器绝不会失控。</li>
 </ol>
 <h2>两大内核：波形与齿轮箱</h2>
-<p>
-A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-PteronautOS has two families, discriminated by the mixer-profile number:
-</p>
+<p><em>内核</em>是将归一化通道转换为伺服函数 µs 的模块。PteronautOS 有两个族，由混控配置文件编号区分：</p>
 <table>
 <tr>
-<th>Family</th>
-<th>Profiles</th>
-<th>Actuators</th>
-<th>Model archetype</th>
+<th>族</th>
+<th>配置文件</th>
+<th>执行器</th>
+<th>机型原型</th>
 </tr>
 <tr>
-<td>
-<strong>Waveform (servo) kernel</strong>
-</td>
+<td><strong>波形（伺服）内核</strong></td>
 <td>0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING</td>
-<td>Flapping wing servos (2–4), crest rudder</td>
-<td>Direct-drive servo ornithopter — the classic PteronautOS</td>
+<td>扑翼伺服器（2–4）、冠舵</td>
+<td>直驱伺服扑翼机——经典的 PteronautOS</td>
 </tr>
 <tr>
-<td>
-<strong>Gearbox kernel</strong>
-</td>
+<td><strong>变速箱内核</strong></td>
 <td>3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD</td>
-<td>Motor ESC, V-tail or elevator + rudder</td>
-<td>Geared / motorised flapper with conventional tail surfaces</td>
+<td>电机电调、V 尾或升降舵 + 方向舵</td>
+<td>带常规尾翼的齿轮/电机扑翼机</td>
 </tr>
 </table>
-<p>
-Selection happens in <code>update()</code> with the single test
-<code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-airframe without a reflash. There are eight profiles in total; their exact
-<code>funcMap</code> layouts are tabulated in the Mixer Reference.
-</p>
+<p>选择发生在 <code>update()</code> 中，通过单一测试 <code>PROFILE_IS_GEARBOX</code>（<code>activeProfile &ge; 3</code>）。配置文件本身是运行时值：它始于构建标志 <code>MIXER_PROFILE</code>（旧式 <code>ORNITHOPTER_GEARBOX=1</code> 仍映射到配置文件&nbsp;5），但可通过 <code>setOrnithopterProfile()</code> 从 WebUI 实时切换——固件无需重新烧录即可瞄准新机架。共有八个配置文件；其精确的 <code>funcMap</code> 布局已列于混控器参考中。</p>
 <h2>波形内核（舵机扑翼）</h2>
-<p>
-The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
-</p>
+<p>波形内核是大多数人所说的「PteronautOS」：两个机翼伺服器运行相位连续的振荡，其形状在每个周期被雕琢。其构造：</p>
 <ul>
-<li>
-<strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-(default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-</li>
-<li>
-<strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-(µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-</li>
-<li>
-<strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-<code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-frequency — the wing never demands more than the servo can deliver.
-</li>
-<li>
-<strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-shape function.
-</li>
-<li>
-<strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-(<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-(<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-<em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-from desynchronised wings.
-</li>
-<li>
-<strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-mixed against aileron/elevator steering (±60° authority × scale), offset by the
-glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-<code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-</li>
-<li>
-<strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-wings hold a static glide angle — an ideal bench-and-launch state.
-</li>
+<li><strong>带滞回的扑翼闸门。</strong>油门必须越过扑翼阈值（默认原始值 ≈303，≈1.08&nbsp;ms PWM 等值）才能进入扑翼；只有低于阈值 − 50 滞回才退出，因此边缘油门绝不会让机翼抖动。</li>
+<li><strong>频率。</strong>FlappingOscillator 随真实经过时间推进（µs 时钟，dt 上限 100&nbsp;ms）。节拍目标通过配置文件的 <code>throttleFrequencyMix</code> 混合 CH6 扑翼频率通道与油门，范围 0.5&nbsp;Hz…<code>flapBaseFreq</code>/10。</li>
+<li><strong>振幅。</strong>油门占伺服速度上限的百分比 <code>ampMax = degPerSec / (2·f)</code>（其中 <code>degPerSec = 60°/servoSpeed_ms</code>），乘前硬性上限 55°。因此振幅在高频下自然坍缩——机翼从不要求超出伺服器所能提供的量。</li>
+<li><strong>凶猛度。</strong>下冲程（动力）与上冲程（回复）的凶猛度按冲程塑造，由升降舵非对称调制（拉起强化下冲程，推杆强化上冲程）并叠加油门耦合，然后在形状函数前限定于 0…8。</li>
+<li><strong>偏航差动。</strong>方向舵加入左右相反的凶猛度（<code>rudderFerocityRange</code>）与左右相反的振幅（<code>rudderAmplitudeDifferential</code>），而冲程反转相位在两翼之间保持<em>共享</em>——转向权来自非对称停留，而非失步的机翼。</li>
+<li><strong>几何与输出。</strong>塑造后的 −1…+1 波形被缩放为角度，与副翼/升降舵操纵（±60° 权限 × 比例）混合，由滑翔/扑翼中心微调偏移，钳制于 0…180°，再通过可配置的 <code>servoMinUs…servoMaxUs</code> 包络（默认 988…2012）按函数微调转换为 µs。</li>
+<li><strong>滑翔分支。</strong>低于扑翼阈值时振荡器衰减，机翼保持静态滑翔角——台架与发射的理想状态。</li>
 </ul>
-<p>
-The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
-</p>
 <h2>齿轮箱内核（电机＋尾翼）</h2>
-<p>
-The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-no oscillator — and instead:
-</p>
+<p>变速箱内核以电机驱动系加常规尾翼换取纯扑翼。由于电机连续旋转，该内核每个节拍无状态——无振荡器——取而代之：</p>
 <ul>
-<li>
-maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-when disarmed;
-</li>
-<li>
-mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-classic profiles use a separate elevator surface;
-</li>
-<li>
-lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-sensor glitch can never stall a servo;
-</li>
-<li>
-keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-</li>
+<li>将油门（已武装）映射为 1000…2000&nbsp;µs 电调命令（<code>SF_MOTOR</code>），解除武装时空转；</li>
+<li>混合尾翼：V 尾配置文件使用升降副翼混合（副翼+升降舵 / 副翼−升降舵），常规配置文件使用独立的升降舵面；</li>
+<li>让 Zephyrus（启用时）将<em>横滚与俯仰 PID</em>修正注入尾翼伺服器，钳制于 ±250&nbsp;µs（<code>ZEPHYR_GEARBOX_CLAMP_US</code>），使传感器毛刺永远无法使伺服器停转；</li>
+<li>保持与波形内核相同的方向舵混控器及 µs/微调/钳制包络。</li>
 </ul>
-<p>
-One ornithopter rig can even carry both personalities: flapping launch with the waveform
-kernel, cruise on the gearbox — the runtime profile switch is that single line in
-<code>update()</code>.
-</p>
+<p>一架扑翼机甚至可以同时携带两种性格：以波形内核扑翼起飞，以变速箱巡航——运行时配置文件切换就是 <code>update()</code> 中的那一行。</p>
 <h2>状态：链路、台架与失控保护</h2>
-<p>
-<code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-gates on three flags before any mixer runs:
-</p>
+<p><code>update()</code> 以固定约 10&nbsp;ms 节拍从 WiFi/伺服循环调用，并在任何混控器运行前通过三个标志进行闸控：</p>
 <table>
 <tr>
-<th>State</th>
-<th>Condition</th>
-<th>Behaviour</th>
+<th>状态</th>
+<th>条件</th>
+<th>行为</th>
 </tr>
 <tr>
-<td>Normal flight</td>
-<td>linkUp + armed channel live</td>
-<td>Full kernel output follows the sticks</td>
+<td>正常飞行</td>
+<td>linkUp + 武装通道在线</td>
+<td>完整内核输出跟随摇杆</td>
 </tr>
 <tr>
-<td>Bench / panel mode</td>
-<td>%code benchMode (WebUI panel, no RC link)</td>
-<td>Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live</td>
+<td>台架 / 面板模式</td>
+<td><code>benchMode</code>（WebUI 面板，无 RC 链路）</td>
+<td>注入中立摇杆，油门停在扑翼阈值之下——滑翔 + 微调编辑实时可见</td>
 </tr>
 <tr>
-<td>Stick override</td>
-<td>%code stickOverride (virtual channels)</td>
-<td>Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)</td>
+<td>摇杆覆盖</td>
+<td><code>stickOverride</code>（虚拟通道）</td>
+<td>固件注入的通道值完全取代 CRSF（伺服扫掠、测试）</td>
 </tr>
 <tr>
-<td>Failsafe</td>
-<td>link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
-<td>All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level</td>
+<td>失控保护</td>
+<td>链路丢失（<code>onLinkDown</code> / <code>enterFailsafe</code>）</td>
+<td>所有函数居中到 1500&nbsp;µs，振荡器复位，电机 → 最小；CRSF 丢包也在 RX 层居中</td>
 </tr>
 </table>
-<p>
-The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-(including the oscillation state). A dead radio therefore leaves a gliding, controllable
-airframe — never a flailing one.
-</p>
+<p>丢失时居中的行为被有意地重复于两层：CRSF 栈对通道数据做失控保护，而 Ornithopter 层对<em>几何</em>（含振荡状态）做失控保护。因此无线电死亡时留下的是可滑翔、可操纵的机架——绝非狂乱扑腾的机架。</p>
 <h2>源码地图</h2>
 <table>
 <tr>
-<th>Module</th>
-<th>Path</th>
-<th>Responsibility</th>
+<th>模块</th>
+<th>路径</th>
+<th>职责</th>
 </tr>
 <tr>
-<td>Ornithopter layer</td>
+<td>Ornithopter 层</td>
 <td>
 <code>src/lib/Ornithopter/</code>
 </td>
-<td>Kernel select, mixer math, waveform oscillator, profiles, trim</td>
+<td>内核选择、混控数学、波形振荡器、配置文件、微调</td>
 </tr>
 <tr>
-<td>Flight profiles &amp; constants</td>
+<td>飞行配置文件与常量</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterConfig.h</code>
 </td>
-<td>MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults</td>
+<td>MixerProfile 枚举、ServoFunc 标签、funcMap、所有数值默认值</td>
 </tr>
 <tr>
-<td>Oscillator / shape</td>
+<td>振荡器 / 形状</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterWaveform.h</code>
 </td>
-<td>Phase integration, ferocity shaping, reversal logic</td>
+<td>相位积分、凶猛度塑造、反转逻辑</td>
 </tr>
 <tr>
-<td>Zephyrus (optional)</td>
+<td>Zephyrus（可选）</td>
 <td>
 <code>src/lib/Zephyrus/</code>
 </td>
-<td>MPU6050 + Mahony AHRS, dual PID, crest/tail correction</td>
+<td>MPU6050 + Mahony AHRS、双 PID、冠/尾翼修正</td>
 </tr>
 <tr>
-<td>PWM output stage</td>
+<td>PWM 输出级</td>
 <td>
 <code>src/lib/ServoOutput/devServoOutput.cpp</code>
 </td>
-<td>Writes µs synchronised to the CRSF tick</td>
+<td>与 CRSF 节拍同步写入 µs</td>
 </tr>
 <tr>
-<td>WebUI config</td>
+<td>WebUI 配置</td>
 <td>
 <code>src/lib/WIFI/devWIFI.cpp</code>
 </td>
-<td>Runtime profile + tuning persistence (<code>/pteronautos</code>)</td>
+<td>运行时配置文件 + 调校持久化（<code>/pteronautos</code>）</td>
 </tr>
 </table>
 <p>
-The next layer down — exactly which waveform shape the numbers produce, and how every
-profile wires functions to PWM outputs — lives in the
-<a href="../../../zh/documentation/mixers/">Mixer Reference</a>, and the
-servo-timing envelope is documented in the
-<a href="../../../zh/documentation/servo-kernel/">Servo Kernel</a> article.
+再下一层——数字究竟产生何种波形，以及每个配置文件如何将函数接线到 PWM 输出——位于 
+<a href='../../../zh/documentation/mixers/'>混控器参考</a>
+，而伺服时序包络记录于 
+<a href='../../../zh/documentation/servo-kernel/'>伺服内核</a>
+一文。
 </p>
 </div>
 </main>

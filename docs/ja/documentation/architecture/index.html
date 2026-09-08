@@ -29,250 +29,148 @@
 <h1>アーキテクチャ：カーネルとデータフロー</h1>
 <p class='sub-lead'>CRSFストリームが羽ばたきと尾になる仕組み：モジュール境界、2つのミキサーカーネル、リンク断でも翼竜を生かす状態機械。</p>
 <h2>信号経路</h2>
-<p>
-PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-receiver with a dedicated flight-control layer. The data path is deliberately short:
-</p>
+<p>PteronautOS は ExpressLRS 4.x のフォークで、受信機の「PWM パススルー」末尾を専用の飛行制御レイヤーに置き換えました。データ経路は意図的に短く保たれています:</p>
 <pre><code>CRSF radio link&#x000A;  │  2.4 GHz SX1280&#x000A;  ▼&#x000A;rx_main / CRSF decoder        → ChannelData[]  (raw 172…1811 µs-window values)&#x000A;  ▼&#x000A;Ornithopter::update()          → _readChannels() → voice* fields&#x000A;  ▼  kernel select: activeProfile ≥ GEARBOX_2VTAIL_1RUD ?&#x000A;_computeServoMixer()   OR   _computeGearboxMixer()&#x000A;  ▼&#x000A;_f[]  (indexed by ServoFunc tag, µs)&#x000A;  ▼&#x000A;PWM output stage               → funcMap channels → wing / rudder / motor servos&#x000A;</code></pre>
-<p>
-Four structural ideas keep the beast stable and the code small:
-</p>
+<p>4 つの構造上のアイデアが機体を安定させ、コードを小さく保ちます:</p>
 <ol>
+<li><strong>チャンネルは早い段階で正規化されます。</strong> 172–1811 の CRSF ウィンドウ内の生値はすべて −1…+1(<code>_crsfToNorm</code>)またはパーセントに一度だけ写像され、その単位だけがミキサーを流れます — マジック定数の繰り返しはありません。</li>
 <li>
-<strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-that unit flows through the mixers — no repeated magic constants.
+<strong>出力は固定ではなくタグ付けされます。</strong> ミキサーは <code>_f[ServoFunc]</code> に書き込みます。タグがどの物理 PWM 出力を駆動するかは、後でプロファイルの <code>funcMap</code> が決めます — 参照: 
+<a href='../../../ja/documentation/mixers/'>ミキサー・リファレンス</a>
+.モデルの配線を変えても、ミキサーの計算には一切触れません。
 </li>
-<li>
-<strong>Outputs are tagged, not pinned.</strong> The mixers write into
-<code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-the profile's <code>funcMap</code> — see the
-<a href="../../../ja/documentation/mixers/">Mixer Reference</a>.
-Re-pinning a model never touches mixer math.
-</li>
-<li>
-<strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-waveform flapper and the gearbox controller live in the binary; the active profile
-picks the kernel every update tick.
-</li>
-<li>
-<strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-stick-override are explicit gates in <code>update()</code>, so servos can never run
-away while the radio is silent.
-</li>
+<li><strong>カーネルはコンパイル時のファミリーであり、実行時の選択です。</strong> 波形フラッパーとギアボックス・コントローラーはどちらもバイナリ内にあり、アクティブなプロファイルが毎更新ティックでカーネルを選びます。</li>
+<li><strong>フェイルセーフはイベントではなく状態です。</strong> リンク断、ベンチモード、スティック上書きは <code>update()</code> 内の明示的なゲートなので、無線が沈黙している間サーボが暴走することはありません。</li>
 </ol>
 <h2>2つのカーネル：波形とギアボックス</h2>
-<p>
-A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-PteronautOS has two families, discriminated by the mixer-profile number:
-</p>
+<p><em>カーネル</em>とは、正規化されたチャンネルをサーボ機能の µs へ変えるブロックです。PteronautOS にはミキサー・プロファイル番号で区別される 2 つのファミリーがあります:</p>
 <table>
 <tr>
-<th>Family</th>
-<th>Profiles</th>
-<th>Actuators</th>
-<th>Model archetype</th>
+<th>ファミリー</th>
+<th>プロファイル</th>
+<th>アクチュエータ</th>
+<th>モデル原型</th>
 </tr>
 <tr>
-<td>
-<strong>Waveform (servo) kernel</strong>
-</td>
+<td><strong>波形（サーボ）カーネル</strong></td>
 <td>0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING</td>
-<td>Flapping wing servos (2–4), crest rudder</td>
-<td>Direct-drive servo ornithopter — the classic PteronautOS</td>
+<td>羽ばたき翼サーボ(2–4)、冠舵</td>
+<td>ダイレクトドライブ・サーボのオーニソプター — 古典的な PteronautOS</td>
 </tr>
 <tr>
-<td>
-<strong>Gearbox kernel</strong>
-</td>
+<td><strong>ギアボックス・カーネル</strong></td>
 <td>3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD</td>
-<td>Motor ESC, V-tail or elevator + rudder</td>
-<td>Geared / motorised flapper with conventional tail surfaces</td>
+<td>モーター ESC、V テールまたはエレベーター + ラダー</td>
+<td>ギア駆動／モーター駆動フラッパーと一般的な尾翼面</td>
 </tr>
 </table>
-<p>
-Selection happens in <code>update()</code> with the single test
-<code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-airframe without a reflash. There are eight profiles in total; their exact
-<code>funcMap</code> layouts are tabulated in the Mixer Reference.
-</p>
+<p>選択は <code>update()</code> 内の単一テスト <code>PROFILE_IS_GEARBOX</code>(<code>activeProfile &ge; 3</code>)で行われます。プロファイル自体は実行時の値です:ビルドフラグ <code>MIXER_PROFILE</code> から始まり(旧 <code>ORNITHOPTER_GEARBOX=1</code> は今もプロファイル&nbsp;5 にマップ)、WebUI から <code>setOrnithopterProfile()</code> でライブ切替できます — 再フラッシュなしで新しい機体へ照準を移せます。プロファイルは全部で 8 つ。正確な <code>funcMap</code> レイアウトはミキサー・リファレンスに表でまとめられています。</p>
 <h2>波形カーネル（サーボ羽ばたき）</h2>
-<p>
-The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
-</p>
+<p>波形カーネルは、ほとんどの人が「PteronautOS」と呼ぶものです:2 つの翼サーボが位相連続の振動を実行し、その形は毎サイクル彫琢されます。その解剖:</p>
 <ul>
-<li>
-<strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-(default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-</li>
-<li>
-<strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-(µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-</li>
-<li>
-<strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-<code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-frequency — the wing never demands more than the servo can deliver.
-</li>
-<li>
-<strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-shape function.
-</li>
-<li>
-<strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-(<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-(<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-<em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-from desynchronised wings.
-</li>
-<li>
-<strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-mixed against aileron/elevator steering (±60° authority × scale), offset by the
-glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-<code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-</li>
-<li>
-<strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-wings hold a static glide angle — an ideal bench-and-launch state.
-</li>
+<li><strong>ヒステリシス付きフラップゲート。</strong> フラッピングに入るにはスロットルがフラップ閾値(既定の生値 ≈303、PWM 等価 ≈1.08&nbsp;ms)を越える必要があります。閾値 − 50 のヒステリシス未満でのみ抜けるため、境界のスロットルが翼をチャタリングさせることはありません。</li>
+<li><strong>周波数。</strong> FlappingOscillator は実経過時間(µs クロック、dt 上限 100&nbsp;ms)で進みます。ケイデンス目標は、プロファイルの <code>throttleFrequencyMix</code> により CH6 フラップ周波数チャンネルとスロットルを 0.5&nbsp;Hz…<code>flapBaseFreq</code>/10 の範囲で混ぜます。</li>
+<li><strong>振幅。</strong> サーボ速度上限に対するスロットルの割合 <code>ampMax = degPerSec / (2·f)</code>(<code>degPerSec = 60°/servoSpeed_ms</code>)、乗算前に 55° でハードキャップ。したがって振幅は高周波で自然に崩れます — 翼がサーボの能力以上を求めることはありません。</li>
+<li><strong>猛度（フェロシティ）。</strong> ダウンストローク(パワー)とアップストローク(回復)の猛度はストロークごとに成形され、エレベーターで非対称に変調され(引き起こしはダウンストロークを、押し込みはアップストロークを強める)、スロットル結合も加わり、形状関数の前に 0…8 へ制限されます。</li>
+<li><strong>ヨー差動。</strong> ラダーは左右逆相の猛度(<code>rudderFerocityRange</code>)と左右逆相の振幅(<code>rudderAmplitudeDifferential</code>)を加えますが、ストローク反転位相は翼の間で <em>共有</em>されたままです — 旋回の効きは非同期の翼ではなく非対称なドウェルから生まれます。</li>
+<li><strong>幾何と出力。</strong> 成形された −1…+1 の波は度へスケールされ、エルロン/エレベーター操舵(±60° の効き × スケール)に対してミックスされ、グライド/フラップ中心トリムでオフセットされ、0…180° にクランプされた後、構成可能な <code>servoMinUs…servoMaxUs</code> 包絡線(既定 988…2012)を通じて関数別トリム付きで µs へ変換されます。</li>
+<li><strong>グライド分岐。</strong> フラップ閾値未満ではオシレーターが減衰し、翼は静的なグライド角を保ちます — ベンチおよび発進に理想的な状態です。</li>
 </ul>
-<p>
-The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
-</p>
 <h2>ギアボックスカーネル（モーター＋尾翼）</h2>
-<p>
-The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-no oscillator — and instead:
-</p>
+<p>ギアボックス・カーネルは純粋な羽ばたきをモーター駆動系 + 一般的な尾翼面と交換します。モーターは連続回転するため、このカーネルはティックごとにステートレスで — オシレーターはなく — 代わりに:</p>
 <ul>
-<li>
-maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-when disarmed;
-</li>
-<li>
-mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-classic profiles use a separate elevator surface;
-</li>
-<li>
-lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-sensor glitch can never stall a servo;
-</li>
-<li>
-keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-</li>
+<li>スロットル(アーム時)を 1000…2000&nbsp;µs の ESC コマンド(<code>SF_MOTOR</code>)へマップし、ディスアーム時はアイドル;</li>
+<li>尾翼をミックスします:V テールプロファイルはエレボン混合(エルロン+エレベーター / エルロン−エレベーター)を、古典的プロファイルは独立したエレベーター面を使います;</li>
+<li>Zephyrus(有効時)が <em>ロール・ピッチ PID</em> 補正を尾翼サーボへ注入できるようにし、±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)に制限してセンサーのグリッチでサーボが停止しないようにします;</li>
+<li>波形カーネルと同じラダーミキサーと µs/トリム/クランプ包絡線を維持します。</li>
 </ul>
-<p>
-One ornithopter rig can even carry both personalities: flapping launch with the waveform
-kernel, cruise on the gearbox — the runtime profile switch is that single line in
-<code>update()</code>.
-</p>
+<p>1 つのオーニソプター機体が両方の性格を持てます:波形カーネルで羽ばたき発進し、ギアボックスで巡航する — 実行時プロファイル切替は <code>update()</code> 内のその 1 行です。</p>
 <h2>状態：リンク・ベンチ・フェイルセーフ</h2>
-<p>
-<code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-gates on three flags before any mixer runs:
-</p>
+<p><code>update()</code> は WiFi/サーボループから固定 ~10&nbsp;ms のケイデンスで呼ばれ、ミキサー実行前に 3 つのフラグをゲートします:</p>
 <table>
 <tr>
-<th>State</th>
-<th>Condition</th>
-<th>Behaviour</th>
+<th>状態</th>
+<th>条件</th>
+<th>挙動</th>
 </tr>
 <tr>
-<td>Normal flight</td>
-<td>linkUp + armed channel live</td>
-<td>Full kernel output follows the sticks</td>
+<td>通常飛行</td>
+<td>linkUp + アームチャンネル有効</td>
+<td>カーネル出力全体がスティックに追従します</td>
 </tr>
 <tr>
-<td>Bench / panel mode</td>
-<td>%code benchMode (WebUI panel, no RC link)</td>
-<td>Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live</td>
+<td>ベンチ／パネルモード</td>
+<td><code>benchMode</code>(WebUI パネル、RC リンクなし)</td>
+<td>中立スティックが注入され、スロットルはフラップ閾値未満に保持 — グライド + トリムの編集がライブで見えます</td>
 </tr>
 <tr>
-<td>Stick override</td>
-<td>%code stickOverride (virtual channels)</td>
-<td>Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)</td>
+<td>スティック上書き</td>
+<td><code>stickOverride</code>(仮想チャンネル)</td>
+<td>ファームウェア注入のチャンネル値が CRSF を完全に置き換えます(サーボ掃引、テスト)</td>
 </tr>
 <tr>
-<td>Failsafe</td>
-<td>link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
-<td>All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level</td>
+<td>フェイルセーフ</td>
+<td>リンク喪失(<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
+<td>全機能が 1500&nbsp;µs に中央化され、オシレーターリセット、モーター → 最小;CRSF パケット喪失も RX レベルで中央化されます</td>
 </tr>
 </table>
-<p>
-The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-(including the oscillation state). A dead radio therefore leaves a gliding, controllable
-airframe — never a flailing one.
-</p>
+<p>喪失時中央化の挙動は意図的に 2 層へ重複させています:CRSF スタックがチャンネルデータをフェイルセーフし、Ornithopter 層が <em>幾何</em>(振動状態を含む)をフェイルセーフします。したがって死んだ無線は、滑空可能で操縦可能な機体を残します — 決して暴れる機体ではありません。</p>
 <h2>ソースマップ</h2>
 <table>
 <tr>
-<th>Module</th>
-<th>Path</th>
-<th>Responsibility</th>
+<th>モジュール</th>
+<th>パス</th>
+<th>責務</th>
 </tr>
 <tr>
-<td>Ornithopter layer</td>
+<td>Ornithopter レイヤー</td>
 <td>
 <code>src/lib/Ornithopter/</code>
 </td>
-<td>Kernel select, mixer math, waveform oscillator, profiles, trim</td>
+<td>カーネル選択、ミキサー計算、波形オシレーター、プロファイル、トリム</td>
 </tr>
 <tr>
-<td>Flight profiles &amp; constants</td>
+<td>飛行プロファイルと定数</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterConfig.h</code>
 </td>
-<td>MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults</td>
+<td>MixerProfile 列挙、ServoFunc タグ、funcMap、すべての数値デフォルト</td>
 </tr>
 <tr>
-<td>Oscillator / shape</td>
+<td>オシレーター／形状</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterWaveform.h</code>
 </td>
-<td>Phase integration, ferocity shaping, reversal logic</td>
+<td>位相積分、猛度成形、反転ロジック</td>
 </tr>
 <tr>
-<td>Zephyrus (optional)</td>
+<td>Zephyrus(オプション)</td>
 <td>
 <code>src/lib/Zephyrus/</code>
 </td>
-<td>MPU6050 + Mahony AHRS, dual PID, crest/tail correction</td>
+<td>MPU6050 + Mahony AHRS、デュアル PID、冠／尾翼補正</td>
 </tr>
 <tr>
-<td>PWM output stage</td>
+<td>PWM 出力段</td>
 <td>
 <code>src/lib/ServoOutput/devServoOutput.cpp</code>
 </td>
-<td>Writes µs synchronised to the CRSF tick</td>
+<td>CRSF ティックに同期して µs を書き込みます</td>
 </tr>
 <tr>
-<td>WebUI config</td>
+<td>WebUI 設定</td>
 <td>
 <code>src/lib/WIFI/devWIFI.cpp</code>
 </td>
-<td>Runtime profile + tuning persistence (<code>/pteronautos</code>)</td>
+<td>実行時プロファイル + チューニング永続化(<code>/pteronautos</code>)</td>
 </tr>
 </table>
 <p>
-The next layer down — exactly which waveform shape the numbers produce, and how every
-profile wires functions to PWM outputs — lives in the
-<a href="../../../ja/documentation/mixers/">Mixer Reference</a>, and the
-servo-timing envelope is documented in the
-<a href="../../../ja/documentation/servo-kernel/">Servo Kernel</a> article.
+1 つ下の層 — 数値が正確にどの波形を生み、各プロファイルが関数を PWM 出力へどう配線するか — は 
+<a href='../../../ja/documentation/mixers/'>ミキサー・リファレンス</a>
+にあり、サーボタイミング包絡線は 
+<a href='../../../ja/documentation/servo-kernel/'>サーボカーネル</a>
+に記載されています。
 </p>
 </div>
 </main>

@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= archart_title
+    %title!=archart_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -24,13 +24,11 @@
       %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= archart_h1
-        %p.sub-lead= archart_lead
+        %h1!=archart_h1
+        %p.sub-lead!=archart_lead
 
-        %h2= archart_h2_pipeline
-        %p
-          PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-          receiver with a dedicated flight-control layer. The data path is deliberately short:
+        %h2!=archart_h2_pipeline
+        %p!=archart_p1
         %pre
           %code
             :preserve
@@ -46,197 +44,123 @@
               _f[]  (indexed by ServoFunc tag, µs)
                 ▼
               PWM output stage               → funcMap channels → wing / rudder / motor servos
-        %p
-          Four structural ideas keep the beast stable and the code small:
+        %p!=archart_p2
         %ol
+          %li!=archart_li1
           %li
-            <strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-            window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-            that unit flows through the mixers — no repeated magic constants.
-          %li
-            <strong>Outputs are tagged, not pinned.</strong> The mixers write into
-            <code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-            the profile's <code>funcMap</code> — see the
-            <a href="#{asset_prefix}#{lang_dir}documentation/mixers/">Mixer Reference</a>.
-            Re-pinning a model never touches mixer math.
-          %li
-            <strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-            waveform flapper and the gearbox controller live in the binary; the active profile
-            picks the kernel every update tick.
-          %li
-            <strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-            stick-override are explicit gates in <code>update()</code>, so servos can never run
-            away while the radio is silent.
+            !=archart_li2a
+            %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}= archart_ref_mixers
+            !=archart_li2b
+          %li!=archart_li3
+          %li!=archart_li4
 
-        %h2= archart_h2_kernels
-        %p
-          A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-          PteronautOS has two families, discriminated by the mixer-profile number:
+        %h2!=archart_h2_kernels
+        %p!=archart_p3
         %table
           %tr
-            %th Family
-            %th Profiles
-            %th Actuators
-            %th Model archetype
+            %th= archart_th_family
+            %th= archart_th_profiles
+            %th= archart_th_actuators
+            %th= archart_th_model
           %tr
-            %td
-              %strong Waveform (servo) kernel
+            %td!=archart_td_wave
             %td 0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING
-            %td Flapping wing servos (2–4), crest rudder
-            %td Direct-drive servo ornithopter — the classic PteronautOS
+            %td= archart_td_wave_act
+            %td= archart_td_wave_model
           %tr
-            %td
-              %strong Gearbox kernel
+            %td!=archart_td_gear
             %td 3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD
-            %td Motor ESC, V-tail or elevator + rudder
-            %td Geared / motorised flapper with conventional tail surfaces
-        %p
-          Selection happens in <code>update()</code> with the single test
-          <code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-          a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-          <code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-          from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-          airframe without a reflash. There are eight profiles in total; their exact
-          <code>funcMap</code> layouts are tabulated in the Mixer Reference.
+            %td= archart_td_gear_act
+            %td= archart_td_gear_model
+        %p!=archart_p4
 
-        %h2= archart_h2_servo
-        %p
-          The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-          phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
+        %h2!=archart_h2_servo
+        %p!=archart_p5
         %ul
-          %li
-            <strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-            (default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-            below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-          %li
-            <strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-            (µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-            channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-            0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-          %li
-            <strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-            <code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-            hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-            frequency — the wing never demands more than the servo can deliver.
-          %li
-            <strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-            shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-            push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-            shape function.
-          %li
-            <strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-            (<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-            (<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-            <em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-            from desynchronised wings.
-          %li
-            <strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-            mixed against aileron/elevator steering (±60° authority × scale), offset by the
-            glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-            <code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-          %li
-            <strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-            wings hold a static glide angle — an ideal bench-and-launch state.
-        %p
-          The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-          its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
+          %li!=archart_li5
+          %li!=archart_li6
+          %li!=archart_li7
+          %li!=archart_li8
+          %li!=archart_li9
+          %li!=archart_li10
+          %li!=archart_li11
 
-        %h2= archart_h2_gearbox
-        %p
-          The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-          tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-          no oscillator — and instead:
+        %h2!=archart_h2_gearbox
+        %p!=archart_p6
         %ul
-          %li
-            maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-            when disarmed;
-          %li
-            mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-            classic profiles use a separate elevator surface;
-          %li
-            lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-            tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-            sensor glitch can never stall a servo;
-          %li
-            keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-        %p
-          One ornithopter rig can even carry both personalities: flapping launch with the waveform
-          kernel, cruise on the gearbox — the runtime profile switch is that single line in
-          <code>update()</code>.
+          %li!=archart_gb1
+          %li!=archart_gb2
+          %li!=archart_gb3
+          %li!=archart_gb4
+        %p!=archart_p7
 
-        %h2= archart_h2_state
-        %p
-          <code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-          gates on three flags before any mixer runs:
+        %h2!=archart_h2_state
+        %p!=archart_p8
         %table
           %tr
-            %th State
-            %th Condition
-            %th Behaviour
+            %th= archart_th_state
+            %th= archart_th_cond
+            %th= archart_th_behaviour
           %tr
-            %td Normal flight
-            %td linkUp + armed channel live
-            %td Full kernel output follows the sticks
+            %td= archart_st1
+            %td!=archart_st1c
+            %td!=archart_st1b
           %tr
-            %td Bench / panel mode
-            %td %code benchMode (WebUI panel, no RC link)
-            %td Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live
+            %td= archart_st2
+            %td!=archart_st2c
+            %td!=archart_st2b
           %tr
-            %td Stick override
-            %td %code stickOverride (virtual channels)
-            %td Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)
+            %td= archart_st3
+            %td!=archart_st3c
+            %td!=archart_st3b
           %tr
-            %td Failsafe
-            %td link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)
-            %td All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level
-        %p
-          The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-          failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-          (including the oscillation state). A dead radio therefore leaves a gliding, controllable
-          airframe — never a flailing one.
+            %td= archart_st4
+            %td!=archart_st4c
+            %td!=archart_st4b
+        %p!=archart_p9
 
-        %h2= archart_h2_map
+        %h2!=archart_h2_map
         %table
           %tr
-            %th Module
-            %th Path
-            %th Responsibility
+            %th= archart_th_module
+            %th= archart_th_path
+            %th= archart_th_resp
           %tr
-            %td Ornithopter layer
+            %td= archart_m1
             %td
               %code src/lib/Ornithopter/
-            %td Kernel select, mixer math, waveform oscillator, profiles, trim
+            %td!=archart_m1r
           %tr
-            %td Flight profiles &amp; constants
+            %td= archart_m2
             %td
               %code src/lib/Ornithopter/OrnithopterConfig.h
-            %td MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults
+            %td!=archart_m2r
           %tr
-            %td Oscillator / shape
+            %td= archart_m3
             %td
               %code src/lib/Ornithopter/OrnithopterWaveform.h
-            %td Phase integration, ferocity shaping, reversal logic
+            %td!=archart_m3r
           %tr
-            %td Zephyrus (optional)
+            %td= archart_m4
             %td
               %code src/lib/Zephyrus/
-            %td MPU6050 + Mahony AHRS, dual PID, crest/tail correction
+            %td!=archart_m4r
           %tr
-            %td PWM output stage
+            %td= archart_m5
             %td
               %code src/lib/ServoOutput/devServoOutput.cpp
-            %td Writes µs synchronised to the CRSF tick
+            %td!=archart_m5r
           %tr
-            %td WebUI config
+            %td= archart_m6
             %td
               %code src/lib/WIFI/devWIFI.cpp
-            %td Runtime profile + tuning persistence (<code>/pteronautos</code>)
+            %td!=archart_m6r
         %p
-          The next layer down — exactly which waveform shape the numbers produce, and how every
-          profile wires functions to PWM outputs — lives in the
-          <a href="#{asset_prefix}#{lang_dir}documentation/mixers/">Mixer Reference</a>, and the
-          servo-timing envelope is documented in the
-          <a href="#{asset_prefix}#{lang_dir}documentation/servo-kernel/">Servo Kernel</a> article.
+          !=archart_p11
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}= archart_ref_mixers
+          !=archart_p11b
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}= archart_ref_servokernel
+          !=archart_p11c
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT

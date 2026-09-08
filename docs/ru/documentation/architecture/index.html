@@ -29,250 +29,148 @@
 <h1>Архитектура: ядра и потоки данных</h1>
 <p class='sub-lead'>Как поток CRSF превращается во взмах крыла и хвост: границы модулей, два ядра микшера и конечный автомат, который держит птерозавра в живых при потере связи.</p>
 <h2>Сигнальный тракт</h2>
-<p>
-PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-receiver with a dedicated flight-control layer. The data path is deliberately short:
-</p>
+<p>PteronautOS — это форк ExpressLRS 4.x, заменивший «сквозную передачу PWM» в конце приёмника выделенным слоем управления полётом. Путь данных намеренно короткий:</p>
 <pre><code>CRSF radio link&#x000A;  │  2.4 GHz SX1280&#x000A;  ▼&#x000A;rx_main / CRSF decoder        → ChannelData[]  (raw 172…1811 µs-window values)&#x000A;  ▼&#x000A;Ornithopter::update()          → _readChannels() → voice* fields&#x000A;  ▼  kernel select: activeProfile ≥ GEARBOX_2VTAIL_1RUD ?&#x000A;_computeServoMixer()   OR   _computeGearboxMixer()&#x000A;  ▼&#x000A;_f[]  (indexed by ServoFunc tag, µs)&#x000A;  ▼&#x000A;PWM output stage               → funcMap channels → wing / rudder / motor servos&#x000A;</code></pre>
-<p>
-Four structural ideas keep the beast stable and the code small:
-</p>
+<p>Четыре структурные идеи держат машину стабильной, а код — компактным:</p>
 <ol>
+<li><strong>Каналы нормализуются сразу.</strong> Каждое сырое значение в окне CRSF 172–1811 один раз отображается в −1…+1 (<code>_crsfToNorm</code>) или в проценты, и дальше через микшеры течёт только эта величина — никаких повторяющихся магических констант.</li>
 <li>
-<strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-that unit flows through the mixers — no repeated magic constants.
+<strong>Выходы помечаются тегами, а не привязываются.</strong> Микшеры пишут в <code>_f[ServoFunc]</code>. Каким физическим PWM-выходом управляет тег, решается позже через <code>funcMap</code> профиля — см. 
+<a href='../../../ru/documentation/mixers/'>Справочник микшеров</a>
+.Переназначение выводов модели никогда не трогает математику микшера.
 </li>
-<li>
-<strong>Outputs are tagged, not pinned.</strong> The mixers write into
-<code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-the profile's <code>funcMap</code> — see the
-<a href="../../../ru/documentation/mixers/">Mixer Reference</a>.
-Re-pinning a model never touches mixer math.
-</li>
-<li>
-<strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-waveform flapper and the gearbox controller live in the binary; the active profile
-picks the kernel every update tick.
-</li>
-<li>
-<strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-stick-override are explicit gates in <code>update()</code>, so servos can never run
-away while the radio is silent.
-</li>
+<li><strong>Ядро — это семейство на этапе компиляции и выбор в рантайме.</strong> И волновой махатель, и контроллер редуктора живут в бинарнике; активный профиль выбирает ядро на каждом тике обновления.</li>
+<li><strong>Фейлсейф — это не событие, а состояние.</strong> Потеря связи, стендовый режим и переопределение стиков — явные шлюзы в <code>update()</code>, поэтому сервы никогда не «убегут», пока радио молчит.</li>
 </ol>
 <h2>Два ядра: волновое и редукторное</h2>
-<p>
-A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-PteronautOS has two families, discriminated by the mixer-profile number:
-</p>
+<p><em>Ядро</em> — это блок, превращающий нормализованные каналы в µs серво-функций. У PteronautOS две семьи, различаемые номером профиля микшера:</p>
 <table>
 <tr>
-<th>Family</th>
-<th>Profiles</th>
-<th>Actuators</th>
-<th>Model archetype</th>
+<th>Семья</th>
+<th>Профили</th>
+<th>Приводы</th>
+<th>Архетип модели</th>
 </tr>
 <tr>
-<td>
-<strong>Waveform (servo) kernel</strong>
-</td>
+<td><strong>Волновое (серво) ядро</strong></td>
 <td>0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING</td>
-<td>Flapping wing servos (2–4), crest rudder</td>
-<td>Direct-drive servo ornithopter — the classic PteronautOS</td>
+<td>Сервы машущего крыла (2–4), гребневой руль</td>
+<td>Орнитоптер с прямым сервоприводом — классический PteronautOS</td>
 </tr>
 <tr>
-<td>
-<strong>Gearbox kernel</strong>
-</td>
+<td><strong>Редукторное ядро</strong></td>
 <td>3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD</td>
-<td>Motor ESC, V-tail or elevator + rudder</td>
-<td>Geared / motorised flapper with conventional tail surfaces</td>
+<td>Моторный ESC, V-хвост или руль высоты + руль</td>
+<td>Редукторный / моторизованный махатель с обычным хвостовым оперением</td>
 </tr>
 </table>
-<p>
-Selection happens in <code>update()</code> with the single test
-<code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-airframe without a reflash. There are eight profiles in total; their exact
-<code>funcMap</code> layouts are tabulated in the Mixer Reference.
-</p>
+<p>Выбор происходит в <code>update()</code> единственной проверкой <code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). Сам профиль — величина рантайма: он стартует из флага сборки <code>MIXER_PROFILE</code> (устаревший <code>ORNITHOPTER_GEARBOX=1</code> всё ещё отображается на профиль&nbsp;5), но может переключаться на лету из WebUI через <code>setOrnithopterProfile()</code> — прошивка перенацеливается на новый планер без перепрошивки. Всего восемь профилей; их точные раскладки <code>funcMap</code> сведены в Справочнике микшеров.</p>
 <h2>Волновое ядро (сервоприводный мах)</h2>
-<p>
-The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
-</p>
+<p>Волновое ядро — это то, что большинство понимает под «PteronautOS»: два крыльевых серво выполняют фазонепрерывное колебание, форма которого вытачивается каждый цикл. Его анатомия:</p>
 <ul>
-<li>
-<strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-(default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-</li>
-<li>
-<strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-(µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-</li>
-<li>
-<strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-<code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-frequency — the wing never demands more than the servo can deliver.
-</li>
-<li>
-<strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-shape function.
-</li>
-<li>
-<strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-(<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-(<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-<em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-from desynchronised wings.
-</li>
-<li>
-<strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-mixed against aileron/elevator steering (±60° authority × scale), offset by the
-glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-<code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-</li>
-<li>
-<strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-wings hold a static glide angle — an ideal bench-and-launch state.
-</li>
+<li><strong>Шлюз взмаха с гистерезисом.</strong> Газ должен пересечь порог взмаха (сырое ≈303 по умолчанию, ≈1,08&nbsp;мс PWM-эквивалент), чтобы войти в махание; выходит он только ниже порога − 50 гистерезиса, так что пограничный газ никогда не «дребезжит» крыльями.</li>
+<li><strong>Частота.</strong> FlappingOscillator продвигается по реальному времени (такты µs, dt ограничен 100&nbsp;мс). Целевой темп смешивает канал CH6 частоты взмаха и газ через <code>throttleFrequencyMix</code> профиля, в пределах 0,5&nbsp;Гц…<code>flapBaseFreq</code>/10.</li>
+<li><strong>Амплитуда.</strong> Процент газа от потолка скорости серво <code>ampMax = degPerSec / (2·f)</code> (где <code>degPerSec = 60°/servoSpeed_ms</code>), жёстко ограничена 55° до множителя. Поэтому амплитуда естественно падает на высокой частоте — крыло никогда не требует больше, чем может дать серво.</li>
+<li><strong>Свирепость.</strong> Свирепости нисходящего (мощность) и восходящего (восстановление) взмаха формируются на каждый взмах, асимметрично модулируются рулём высоты (подъём ужесточает нисходящий, толчок — восходящий) и связью газа, затем ограничиваются 0…8 до функции формы.</li>
+<li><strong>Дифференциалы рыскания.</strong> Руль добавляет противоположную Л/П свирепость (<code>rudderFerocityRange</code>) и противоположную Л/П амплитуду (<code>rudderAmplitudeDifferential</code>), при этом фаза реверса взмаха остаётся <em>общей</em> для крыльев — власть поворота идёт от асимметричного удержания, а не от рассинхронизации крыльев.</li>
+<li><strong>Геометрия и выход.</strong> Сформированная волна −1…+1 масштабируется в градусы, смешивается с управлением элеронами/рулём высоты (авторитет ±60° × масштаб), смещается триммером центра планирования/взмаха, ограничивается 0…180° и преобразуется в µs через настраиваемый конверт <code>servoMinUs…servoMaxUs</code> (по умолчанию 988…2012) с тримом на функцию.</li>
+<li><strong>Ветвь планирования.</strong> Ниже порога взмаха осциллятор затухает, и крылья удерживают статический угол планирования — идеальное состояние для стенда и запуска.</li>
 </ul>
-<p>
-The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
-</p>
 <h2>Редукторное ядро (мотор + хвосты)</h2>
-<p>
-The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-no oscillator — and instead:
-</p>
+<p>Редукторное ядро меняет чистый взмах на моторизованный привод плюс обычное хвостовое оперение. Поскольку мотор вращается непрерывно, это ядро без состояния на каждый тик — без осциллятора — и вместо этого:</p>
 <ul>
-<li>
-maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-when disarmed;
-</li>
-<li>
-mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-classic profiles use a separate elevator surface;
-</li>
-<li>
-lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-sensor glitch can never stall a servo;
-</li>
-<li>
-keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-</li>
+<li>отображает газ (при вооружении) в команду ESC 1000…2000&nbsp;мкс (<code>SF_MOTOR</code>), холостой ход при снятии с вооружения;</li>
+<li>микширует хвост: V-профили используют элевонную смесь (элерон+руль высоты / элерон−руль высоты), классические — отдельную поверхность руля высоты;</li>
+<li>позволяет Zephyrus (при включении) вводить <em>ПИД крена и тангажа</em> в хвостовые сервы, ограниченные ±250&nbsp;мкс (<code>ZEPHYR_GEARBOX_CLAMP_US</code>), чтобы сбой датчика никогда не застопорил серво;</li>
+<li>сохраняет тот же микшер руля и конверт µs/трим/ограничение, что и волновое ядро.</li>
 </ul>
-<p>
-One ornithopter rig can even carry both personalities: flapping launch with the waveform
-kernel, cruise on the gearbox — the runtime profile switch is that single line in
-<code>update()</code>.
-</p>
+<p>Один орнитоптер может даже нести обе личности: взлёт маханием на волновом ядре, крейсер на редукторе — переключение профиля в рантайме и есть та единственная строка в <code>update()</code>.</p>
 <h2>Состояния: связь, стенд и failsafe</h2>
-<p>
-<code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-gates on three flags before any mixer runs:
-</p>
+<p><code>update()</code> вызывается с фиксированным периодом ~10&nbsp;мс из цикла WiFi/серво и перед запуском любого микшера проверяет три флага:</p>
 <table>
 <tr>
-<th>State</th>
-<th>Condition</th>
-<th>Behaviour</th>
+<th>Состояние</th>
+<th>Условие</th>
+<th>Поведение</th>
 </tr>
 <tr>
-<td>Normal flight</td>
-<td>linkUp + armed channel live</td>
-<td>Full kernel output follows the sticks</td>
+<td>Нормальный полёт</td>
+<td>linkUp + канал вооружения активен</td>
+<td>Полный выход ядра следует за стиками</td>
 </tr>
 <tr>
-<td>Bench / panel mode</td>
-<td>%code benchMode (WebUI panel, no RC link)</td>
-<td>Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live</td>
+<td>Стендовый / панельный режим</td>
+<td><code>benchMode</code> (панель WebUI, без RC-связи)</td>
+<td>Вводятся нейтральные стики, газ удерживается ниже порога взмаха — правки планирования + трима видны вживую</td>
 </tr>
 <tr>
-<td>Stick override</td>
-<td>%code stickOverride (virtual channels)</td>
-<td>Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)</td>
+<td>Переопределение стиков</td>
+<td><code>stickOverride</code> (виртуальные каналы)</td>
+<td>Значения каналов, вводимые прошивкой, полностью заменяют CRSF (прогоны серво, тесты)</td>
 </tr>
 <tr>
-<td>Failsafe</td>
-<td>link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
-<td>All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level</td>
+<td>Фейлсейф</td>
+<td>связь потеряна (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
+<td>Все функции центрируются на 1500&nbsp;мкс, осциллятор сброшен, мотор → мин.; потеря пакетов CRSF также центрирует на уровне RX</td>
 </tr>
 </table>
-<p>
-The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-(including the oscillation state). A dead radio therefore leaves a gliding, controllable
-airframe — never a flailing one.
-</p>
+<p>Поведение «центрирование при потере» намеренно продублировано в двух слоях: стек CRSF фейлсейфит данные каналов, а слой Ornithopter фейлсейфит <em>геометрию</em> (включая состояние осцилляции). Мёртвое радио поэтому оставляет планирующий, управляемый планер — никогда не бьющийся в конвульсиях.</p>
 <h2>Карта исходников</h2>
 <table>
 <tr>
-<th>Module</th>
-<th>Path</th>
-<th>Responsibility</th>
+<th>Модуль</th>
+<th>Путь</th>
+<th>Ответственность</th>
 </tr>
 <tr>
-<td>Ornithopter layer</td>
+<td>Слой Ornithopter</td>
 <td>
 <code>src/lib/Ornithopter/</code>
 </td>
-<td>Kernel select, mixer math, waveform oscillator, profiles, trim</td>
+<td>Выбор ядра, математика микшера, волновой осциллятор, профили, трим</td>
 </tr>
 <tr>
-<td>Flight profiles &amp; constants</td>
+<td>Полётные профили и константы</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterConfig.h</code>
 </td>
-<td>MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults</td>
+<td>Перечисление MixerProfile, теги ServoFunc, funcMap, все числовые значения по умолчанию</td>
 </tr>
 <tr>
-<td>Oscillator / shape</td>
+<td>Осциллятор / форма</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterWaveform.h</code>
 </td>
-<td>Phase integration, ferocity shaping, reversal logic</td>
+<td>Интегрирование фазы, формирование свирепости, логика реверса</td>
 </tr>
 <tr>
-<td>Zephyrus (optional)</td>
+<td>Zephyrus (опционально)</td>
 <td>
 <code>src/lib/Zephyrus/</code>
 </td>
-<td>MPU6050 + Mahony AHRS, dual PID, crest/tail correction</td>
+<td>MPU6050 + Mahony AHRS, двойной ПИД, коррекция гребня/хвоста</td>
 </tr>
 <tr>
-<td>PWM output stage</td>
+<td>Каскад PWM-выхода</td>
 <td>
 <code>src/lib/ServoOutput/devServoOutput.cpp</code>
 </td>
-<td>Writes µs synchronised to the CRSF tick</td>
+<td>Записывает µs синхронно с тиком CRSF</td>
 </tr>
 <tr>
-<td>WebUI config</td>
+<td>Конфигурация WebUI</td>
 <td>
 <code>src/lib/WIFI/devWIFI.cpp</code>
 </td>
-<td>Runtime profile + tuning persistence (<code>/pteronautos</code>)</td>
+<td>Профиль рантайма + сохранение настроек (<code>/pteronautos</code>)</td>
 </tr>
 </table>
 <p>
-The next layer down — exactly which waveform shape the numbers produce, and how every
-profile wires functions to PWM outputs — lives in the
-<a href="../../../ru/documentation/mixers/">Mixer Reference</a>, and the
-servo-timing envelope is documented in the
-<a href="../../../ru/documentation/servo-kernel/">Servo Kernel</a> article.
+Следующий слой вниз — какая именно форма волны получается из чисел и как каждый профиль подключает функции к PWM-выходам — живёт в 
+<a href='../../../ru/documentation/mixers/'>Справочник микшеров</a>
+, а конверт тайминга серво описан в статье 
+<a href='../../../ru/documentation/servo-kernel/'>Серво-ядро</a>
+статье.
 </p>
 </div>
 </main>

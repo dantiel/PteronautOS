@@ -29,250 +29,148 @@
 <h1>البنية: النوى وتدفق البيانات</h1>
 <p class='sub-lead'>كيف يتحول تيار CRSF إلى خفقان أجنحة وذيل: حدود الوحدات، نواتا المزج، وآلة الحالات التي تُبقي التيروصور حيًا عند انقطاع الربط.</p>
 <h2>مسار الإشارة</h2>
-<p>
-PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-receiver with a dedicated flight-control layer. The data path is deliberately short:
-</p>
+<p>PteronautOS هو تفرّع من ExpressLRS 4.x استبدل ذيل «تمرير PWM» في المستقبِل بطبقة مخصّصة للتحكم بالطيران. مسار البيانات قصير عمداً:</p>
 <pre><code>CRSF radio link&#x000A;  │  2.4 GHz SX1280&#x000A;  ▼&#x000A;rx_main / CRSF decoder        → ChannelData[]  (raw 172…1811 µs-window values)&#x000A;  ▼&#x000A;Ornithopter::update()          → _readChannels() → voice* fields&#x000A;  ▼  kernel select: activeProfile ≥ GEARBOX_2VTAIL_1RUD ?&#x000A;_computeServoMixer()   OR   _computeGearboxMixer()&#x000A;  ▼&#x000A;_f[]  (indexed by ServoFunc tag, µs)&#x000A;  ▼&#x000A;PWM output stage               → funcMap channels → wing / rudder / motor servos&#x000A;</code></pre>
-<p>
-Four structural ideas keep the beast stable and the code small:
-</p>
+<p>أربع أفكار بنيوية تُبقي الوحش مستقراً والكود صغيراً:</p>
 <ol>
+<li><strong>تُطبَّع القنوات مبكراً.</strong> كل قيمة خام في نافذة CRSF 172–1811 تُسقَط مرة واحدة على −1…+1(<code>_crsfToNorm</code>) أو على نسبة مئوية، ولا يتدفق عبر الخلّاطات إلا تلك الوحدة — بلا ثوابت سحرية متكررة.</li>
 <li>
-<strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-that unit flows through the mixers — no repeated magic constants.
+<strong>المخرجات موسومة لا مثبّتة.</strong> تكتب الخلّاطات في <code>_f[ServoFunc]</code>. أي مخرج PWM فيزيائي يقوده الوسم يتقرر لاحقاً عبر <code>funcMap</code> الخاص بالملف — انظر 
+<a href='../../../ar/documentation/mixers/'>مرجع الخلّاطات</a>
+.إعادة تثبيت نموذج لا تمسّ أبداً رياضيات الخلّاط.
 </li>
-<li>
-<strong>Outputs are tagged, not pinned.</strong> The mixers write into
-<code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-the profile's <code>funcMap</code> — see the
-<a href="../../../ar/documentation/mixers/">Mixer Reference</a>.
-Re-pinning a model never touches mixer math.
-</li>
-<li>
-<strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-waveform flapper and the gearbox controller live in the binary; the active profile
-picks the kernel every update tick.
-</li>
-<li>
-<strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-stick-override are explicit gates in <code>update()</code>, so servos can never run
-away while the radio is silent.
-</li>
+<li><strong>النواة عائلة وقت الترجمة، واختيار وقت التشغيل.</strong> كلٌّ من الخفّاق الموجي ومتحكم علبة التروس يعيش في الملف الثنائي؛ الملف النشط يختار النواة في كل نبضة تحديث.</li>
+<li><strong>الوضع الآمن ليس حدثاً بل حالة.</strong> انقطاع الوصلة ووضع المنضدة وتجاوز العصا هي بوابات صريحة في <code>update()</code>، فلا تفلت السيرفو أبداً بينما الراديو صامت.</li>
 </ol>
 <h2>نواتان: الموجة وعلبة التروس</h2>
-<p>
-A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-PteronautOS has two families, discriminated by the mixer-profile number:
-</p>
+<p><em>النواة</em> هي الكتلة التي تحوّل القنوات المطبَّعة إلى µs لدوال السيرفو. لدى PteronautOS عائلتان، يُفرَّق بينهما برقم ملف الخلّاط:</p>
 <table>
 <tr>
-<th>Family</th>
-<th>Profiles</th>
-<th>Actuators</th>
-<th>Model archetype</th>
+<th>العائلة</th>
+<th>الملفات</th>
+<th>المشغّلات</th>
+<th>نموذج أصلي</th>
 </tr>
 <tr>
-<td>
-<strong>Waveform (servo) kernel</strong>
-</td>
+<td><strong>نواة الموجة (سيرفو)</strong></td>
 <td>0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING</td>
-<td>Flapping wing servos (2–4), crest rudder</td>
-<td>Direct-drive servo ornithopter — the classic PteronautOS</td>
+<td>سيرفو الجناح الخفّاق (2–4)، دفة العرف</td>
+<td>أورنيثوبتر سيرفو مباشر — PteronautOS الكلاسيكي</td>
 </tr>
 <tr>
-<td>
-<strong>Gearbox kernel</strong>
-</td>
+<td><strong>نواة علبة التروس</strong></td>
 <td>3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD</td>
-<td>Motor ESC, V-tail or elevator + rudder</td>
-<td>Geared / motorised flapper with conventional tail surfaces</td>
+<td>محرك ESC، ذيل V أو رافعة + دفة</td>
+<td>خفّاق مُسنَّن / بمحرك مع أسطح ذيل تقليدية</td>
 </tr>
 </table>
-<p>
-Selection happens in <code>update()</code> with the single test
-<code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-airframe without a reflash. There are eight profiles in total; their exact
-<code>funcMap</code> layouts are tabulated in the Mixer Reference.
-</p>
+<p>يتم الاختيار في <code>update()</code> باختبار واحد <code>PROFILE_IS_GEARBOX</code>(<code>activeProfile &ge; 3</code>). الملف نفسه قيمة وقت تشغيل: يبدأ من علم البناء <code>MIXER_PROFILE</code>(القديم <code>ORNITHOPTER_GEARBOX=1</code> لا يزال يُسقَط على الملف&nbsp;5) لكن يمكن تبديله مباشرة من WebUI عبر <code>setOrnithopterProfile()</code> — تعيد البرمجية الثابتة استهداف هيكل جديد دون إعادة وميض. هناك ثمانية ملفات إجمالاً؛ تخطيطات <code>funcMap</code> الدقيقة مُجدوَلة في مرجع الخلّاطات.</p>
 <h2>نواة الموجة (خفقان بمحركات السيرفو)</h2>
-<p>
-The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
-</p>
+<p>نواة الموجة هي ما يعنيه معظم الناس بـ«PteronautOS»: سيرفوان للجناح ينفّذان تذبذباً متصل الطور يُنحَت شكله كل دورة. تشريحها:</p>
 <ul>
-<li>
-<strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-(default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-</li>
-<li>
-<strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-(µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-</li>
-<li>
-<strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-<code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-frequency — the wing never demands more than the servo can deliver.
-</li>
-<li>
-<strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-shape function.
-</li>
-<li>
-<strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-(<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-(<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-<em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-from desynchronised wings.
-</li>
-<li>
-<strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-mixed against aileron/elevator steering (±60° authority × scale), offset by the
-glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-<code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-</li>
-<li>
-<strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-wings hold a static glide angle — an ideal bench-and-launch state.
-</li>
+<li><strong>بوابة رفرفة مع تخلّف.</strong> يجب أن يتجاوز الخانق عتبة الرفرفة (الخام ≈303 افتراضياً، ما يعادل ≈1.08&nbsp;ms PWM) ليدخل الرفرفة؛ ولا يخرج إلا دون العتبة − 50 تخلّفاً، فلا يجعل الخانق الحديّ الأجنحة ترتجف أبداً.</li>
+<li><strong>التردد.</strong> يتقدّم FlappingOscillator بالزمن المنقضي الفعلي(ساعة µs، dt محدود بـ 100&nbsp;ms). يمزج هدف الإيقاع قناة CH6 لتردد الرفرفة والخانق عبر <code>throttleFrequencyMix</code> الخاص بالملف، ضمن 0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.</li>
+<li><strong>السعة.</strong> نسبة الخانق من سقف سرعة السيرفو <code>ampMax = degPerSec / (2·f)</code>(حيث <code>degPerSec = 60°/servoSpeed_ms</code>)، بسقف صارم 55° قبل المضاعف. لذلك تنهار السعة طبيعياً عند التردد العالي — لا يطلب الجناح أبداً أكثر مما يستطيع السيرفو تقديمه.</li>
+<li><strong>الشراسة.</strong> تُشكَّل شراسة الضربة الهابطة(القدرة) والصاعدة(الاسترداد) لكل ضربة، وتُعدَّل لا تناظرياً بالرافعة(السحب يقسّي الهابطة، والدفع يقسّي الصاعدة) وباقتران الخانق، ثم تُقيَّد 0…8 قبل دالة الشكل.</li>
+<li><strong>تفاضلات الانعراج.</strong> تضيف الدفة شراسة متعاكسة يمين/يسار(<code>rudderFerocityRange</code>) وسعة متعاكسة يمين/يسار(<code>rudderAmplitudeDifferential</code>) بينما تبقى طور انعكاس الضربة <em>مشتركاً</em> بين الجناحين — سلطة الانعطاف تأتي من المكث غير المتناظر، لا من جناحين غير متزامنين.</li>
+<li><strong>الهندسة والإخراج.</strong> تُدرَّج الموجة المشكَّلة −1…+1 إلى درجات، وتُخلَط مع توجيه الجنيح/الرافعة(سلطة ±60° × مقياس)، وتُزاح بتريم مركز الانزلاق/الرفرفة، وتُقيَّد 0…180°، ثم تُحوَّل إلى µs عبر الغلاف القابل للضبط <code>servoMinUs…servoMaxUs</code>(افتراضياً 988…2012) مع تريم لكل دالة.</li>
+<li><strong>فرع الانزلاق.</strong> دون عتبة الرفرفة يضمحل المذبذب وتحافظ الأجنحة على زاوية انزلاق ثابتة — حالة مثالية للمنضدة والإطلاق.</li>
 </ul>
-<p>
-The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
-</p>
 <h2>نواة علبة التروس (محرك + أذناب)</h2>
-<p>
-The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-no oscillator — and instead:
-</p>
+<p>تستبدل نواة علبة التروس رفرفة الجناح الخالصة بمجموعة دفع بمحرك مع أسطح ذيل تقليدية. ولأن المحرك يدور باستمرار، فهذه النواة بلا حالة في كل نبضة — بلا مذبذب — وبدلاً من ذلك:</p>
 <ul>
-<li>
-maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-when disarmed;
-</li>
-<li>
-mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-classic profiles use a separate elevator surface;
-</li>
-<li>
-lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-sensor glitch can never stall a servo;
-</li>
-<li>
-keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-</li>
+<li>يسقط الخانق(المسلَّح) على أمر ESC من 1000…2000&nbsp;µs(<code>SF_MOTOR</code>)، ويخمُد عند نزع السلاح؛</li>
+<li>يخلط الذيل: ملفات الذيل V تستخدم مزيج إلفون(جنيح+رافعة / جنيح−رافعة)، والملفات الكلاسيكية تستخدم سطح رافعة منفصلاً؛</li>
+<li>يسمح لـ Zephyrus(عند التفعيل) بحقن تصحيحات <em>PID للفة والميلان</em> في سيرفو الذيل، مقيَّدة بـ ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>) كي لا تُعطّل ومضة مستشعر سيرفو أبداً؛</li>
+<li>يحافظ على نفس خلّاط الدفة وغلاف µs/تريم/تقييد الخاص بنواة الموجة.</li>
 </ul>
-<p>
-One ornithopter rig can even carry both personalities: flapping launch with the waveform
-kernel, cruise on the gearbox — the runtime profile switch is that single line in
-<code>update()</code>.
-</p>
+<p>يمكن لجهاز أورنيثوبتر واحد أن يحمل الشخصيتين معاً: إطلاق خفّاق بنواة الموجة، وإبحار بعلبة التروس — تبديل الملف وقت التشغيل هو ذلك السطر الواحد في <code>update()</code>.</p>
 <h2>الحالات: الربط والمقعد وفشل الأمان</h2>
-<p>
-<code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-gates on three flags before any mixer runs:
-</p>
+<p>يُستدعى <code>update()</code> بإيقاع ثابت ~10&nbsp;ms من حلقة WiFi/السيرفو ويبوّب على ثلاثة أعلام قبل تشغيل أي خلّاط:</p>
 <table>
 <tr>
-<th>State</th>
-<th>Condition</th>
-<th>Behaviour</th>
+<th>الحالة</th>
+<th>الشرط</th>
+<th>السلوك</th>
 </tr>
 <tr>
-<td>Normal flight</td>
-<td>linkUp + armed channel live</td>
-<td>Full kernel output follows the sticks</td>
+<td>طيران عادي</td>
+<td>linkUp + قناة التسليح حيّة</td>
+<td>خرج النواة الكامل يتبع العصي</td>
 </tr>
 <tr>
-<td>Bench / panel mode</td>
-<td>%code benchMode (WebUI panel, no RC link)</td>
-<td>Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live</td>
+<td>وضع المنضدة / اللوحة</td>
+<td><code>benchMode</code>(لوحة WebUI، بلا وصلة RC)</td>
+<td>تُحقَن عصي محايدة ويُوقف الخانق دون عتبة الرفرفة — تعديلات الانزلاق + التريم مرئية مباشرة</td>
 </tr>
 <tr>
-<td>Stick override</td>
-<td>%code stickOverride (virtual channels)</td>
-<td>Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)</td>
+<td>تجاوز العصا</td>
+<td><code>stickOverride</code>(قنوات افتراضية)</td>
+<td>قيم القنوات المحقونة من البرمجية الثابتة تحل محل CRSF كلياً(مسح السيرفو، اختبارات)</td>
 </tr>
 <tr>
-<td>Failsafe</td>
-<td>link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
-<td>All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level</td>
+<td>الوضع الآمن</td>
+<td>فُقدت الوصلة(<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
+<td>تتوسّط كل الدوال إلى 1500&nbsp;µs، ويُعاد ضبط المذبذب، والمحرك → أدنى؛ وفقدان حزم CRSF يتوسّط أيضاً على مستوى RX</td>
 </tr>
 </table>
-<p>
-The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-(including the oscillation state). A dead radio therefore leaves a gliding, controllable
-airframe — never a flailing one.
-</p>
+<p>سلوك التوسيط عند الفقد مكرَّر عمداً في طبقتين: حزمة CRSF تؤمّن بيانات القنوات، وطبقة Ornithopter تؤمّن <em>الهندسة</em>(بما فيها حالة التذبذب). لذلك يترك راديو ميت هيكلاً منزلقاً قابلاً للتحكم — وليس هيكلاً متخبّطاً أبداً.</p>
 <h2>خريطة المصدر</h2>
 <table>
 <tr>
-<th>Module</th>
-<th>Path</th>
-<th>Responsibility</th>
+<th>الوحدة</th>
+<th>المسار</th>
+<th>المسؤولية</th>
 </tr>
 <tr>
-<td>Ornithopter layer</td>
+<td>طبقة Ornithopter</td>
 <td>
 <code>src/lib/Ornithopter/</code>
 </td>
-<td>Kernel select, mixer math, waveform oscillator, profiles, trim</td>
+<td>اختيار النواة، رياضيات الخلّاط، مذبذب الموجة، الملفات، التريم</td>
 </tr>
 <tr>
-<td>Flight profiles &amp; constants</td>
+<td>ملفات الطيران والثوابت</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterConfig.h</code>
 </td>
-<td>MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults</td>
+<td>تعداد MixerProfile ووسوم ServoFunc وfuncMap وكل القيم الافتراضية الرقمية</td>
 </tr>
 <tr>
-<td>Oscillator / shape</td>
+<td>المذبذب / الشكل</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterWaveform.h</code>
 </td>
-<td>Phase integration, ferocity shaping, reversal logic</td>
+<td>تكامل الطور وتشكيل الشراسة ومنطق الانعكاس</td>
 </tr>
 <tr>
-<td>Zephyrus (optional)</td>
+<td>Zephyrus(اختياري)</td>
 <td>
 <code>src/lib/Zephyrus/</code>
 </td>
-<td>MPU6050 + Mahony AHRS, dual PID, crest/tail correction</td>
+<td>MPU6050 + Mahony AHRS وPID مزدوج وتصحيح العرف/الذيل</td>
 </tr>
 <tr>
-<td>PWM output stage</td>
+<td>مرحلة إخراج PWM</td>
 <td>
 <code>src/lib/ServoOutput/devServoOutput.cpp</code>
 </td>
-<td>Writes µs synchronised to the CRSF tick</td>
+<td>يكتب µs متزامنة مع نبضة CRSF</td>
 </tr>
 <tr>
-<td>WebUI config</td>
+<td>إعداد WebUI</td>
 <td>
 <code>src/lib/WIFI/devWIFI.cpp</code>
 </td>
-<td>Runtime profile + tuning persistence (<code>/pteronautos</code>)</td>
+<td>ملف وقت التشغيل + استمرار الضبط(<code>/pteronautos</code>)</td>
 </tr>
 </table>
 <p>
-The next layer down — exactly which waveform shape the numbers produce, and how every
-profile wires functions to PWM outputs — lives in the
-<a href="../../../ar/documentation/mixers/">Mixer Reference</a>, and the
-servo-timing envelope is documented in the
-<a href="../../../ar/documentation/servo-kernel/">Servo Kernel</a> article.
+الطبقة الأدنى — أي شكل موجة تنتجه الأرقام بالضبط، وكيف يوصّل كل ملف الدوال بمخارج PWM — تعيش في 
+<a href='../../../ar/documentation/mixers/'>مرجع الخلّاطات</a>
+، ويُوثَّق غلاف توقيت السيرفو في مقال 
+<a href='../../../ar/documentation/servo-kernel/'>نواة السيرفو</a>
+مقالاً.
 </p>
 </div>
 </main>

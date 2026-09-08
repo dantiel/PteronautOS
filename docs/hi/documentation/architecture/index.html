@@ -29,250 +29,148 @@
 <h1>आर्किटेक्चर: कर्नेल और डेटा प्रवाह</h1>
 <p class='sub-lead'>CRSF स्ट्रीम पंख-फड़फड़ाहट और पूँछ कैसे बनती है: मॉड्यूल सीमाएँ, दो मिक्सर कर्नेल, और वह स्टेट मशीन जो लिंक टूटने पर टेरोसॉर को जीवित रखती है।</p>
 <h2>सिग्नल पाइपलाइन</h2>
-<p>
-PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the
-receiver with a dedicated flight-control layer. The data path is deliberately short:
-</p>
+<p>PteronautOS ExpressLRS 4.x का एक फोर्क है जिसने रिसीवर की "PWM पासथ्रू" पूँछ को एक समर्पित फ़्लाइट-कंट्रोल परत से बदल दिया। डेटा-पथ जान-बूझकर छोटा है:</p>
 <pre><code>CRSF radio link&#x000A;  │  2.4 GHz SX1280&#x000A;  ▼&#x000A;rx_main / CRSF decoder        → ChannelData[]  (raw 172…1811 µs-window values)&#x000A;  ▼&#x000A;Ornithopter::update()          → _readChannels() → voice* fields&#x000A;  ▼  kernel select: activeProfile ≥ GEARBOX_2VTAIL_1RUD ?&#x000A;_computeServoMixer()   OR   _computeGearboxMixer()&#x000A;  ▼&#x000A;_f[]  (indexed by ServoFunc tag, µs)&#x000A;  ▼&#x000A;PWM output stage               → funcMap channels → wing / rudder / motor servos&#x000A;</code></pre>
-<p>
-Four structural ideas keep the beast stable and the code small:
-</p>
+<p>चार संरचनात्मक विचार जानवर को स्थिर और कोड को छोटा रखते हैं:</p>
 <ol>
+<li><strong>चैनल जल्दी सामान्यीकृत होते हैं.</strong> 172–1811 CRSF विंडो का हर कच्चा मान एक बार −1…+1(<code>_crsfToNorm</code>) या प्रतिशत में मैप होता है, और केवल वही इकाई मिक्सर से बहती है — कोई बार-बार जादुई स्थिरांक नहीं।</li>
 <li>
-<strong>Channels are normalized early.</strong> Every raw value in the 172–1811 CRSF
-window is mapped to −1…+1 (<code>_crsfToNorm</code>) or to a percentage once, and only
-that unit flows through the mixers — no repeated magic constants.
+<strong>आउटपुट टैग होते हैं, पिन से बँधे नहीं.</strong> मिक्सर <code>_f[ServoFunc]</code> में लिखते हैं। कोई टैग किस भौतिक PWM आउटपुट को चलाता है, यह बाद में प्रोफ़ाइल के <code>funcMap</code> से तय होता है — देखें 
+<a href='../../../hi/documentation/mixers/'>मिक्सर संदर्भ</a>
+.मॉडल को फिर से पिन करने से मिक्सर गणित कभी नहीं छूता।
 </li>
-<li>
-<strong>Outputs are tagged, not pinned.</strong> The mixers write into
-<code>_f[ServoFunc]</code>. Which physical PWM output a tag drives is decided later by
-the profile's <code>funcMap</code> — see the
-<a href="../../../hi/documentation/mixers/">Mixer Reference</a>.
-Re-pinning a model never touches mixer math.
-</li>
-<li>
-<strong>The kernel is a compile-time family, a runtime choice.</strong> Both the
-waveform flapper and the gearbox controller live in the binary; the active profile
-picks the kernel every update tick.
-</li>
-<li>
-<strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and
-stick-override are explicit gates in <code>update()</code>, so servos can never run
-away while the radio is silent.
-</li>
+<li><strong>कर्नेल एक कम्पाइल-टाइम परिवार है, रनटाइम चयन.</strong> वेवफ़ॉर्म फ़्लैपर और गियरबॉक्स कंट्रोलर दोनों बाइनरी में रहते हैं; सक्रिय प्रोफ़ाइल हर अपडेट टिक पर कर्नेल चुनती है।</li>
+<li><strong>फेलसेफ़ एक घटना नहीं, एक अवस्था है.</strong> लिंक-डाउन, बेंच मोड और स्टिक-ओवरराइड <code>update()</code> में स्पष्ट द्वार हैं, ताकि रेडियो के शांत रहते सर्वो कभी भाग न सकें।</li>
 </ol>
 <h2>दो कर्नेल: वेवफ़ॉर्म और गियरबॉक्स</h2>
-<p>
-A <em>kernel</em> is the block that turns normalized channels into servo-function µs.
-PteronautOS has two families, discriminated by the mixer-profile number:
-</p>
+<p><em>कर्नेल</em> वह ब्लॉक है जो सामान्यीकृत चैनलों को सर्वो-फ़ंक्शन µs में बदलता है। PteronautOS में दो परिवार हैं, जिन्हें मिक्सर-प्रोफ़ाइल संख्या से पहचाना जाता है:</p>
 <table>
 <tr>
-<th>Family</th>
-<th>Profiles</th>
-<th>Actuators</th>
-<th>Model archetype</th>
+<th>परिवार</th>
+<th>प्रोफ़ाइल</th>
+<th>एक्चुएटर</th>
+<th>मॉडल आदिरूप</th>
 </tr>
 <tr>
-<td>
-<strong>Waveform (servo) kernel</strong>
-</td>
+<td><strong>वेवफ़ॉर्म (सर्वो) कर्नेल</strong></td>
 <td>0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING</td>
-<td>Flapping wing servos (2–4), crest rudder</td>
-<td>Direct-drive servo ornithopter — the classic PteronautOS</td>
+<td>फ़्लैपिंग विंग सर्वो (2–4), क्रेस्ट रडर</td>
+<td>डायरेक्ट-ड्राइव सर्वो ऑर्निथॉप्टर — क्लासिक PteronautOS</td>
 </tr>
 <tr>
-<td>
-<strong>Gearbox kernel</strong>
-</td>
+<td><strong>गियरबॉक्स कर्नेल</strong></td>
 <td>3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD</td>
-<td>Motor ESC, V-tail or elevator + rudder</td>
-<td>Geared / motorised flapper with conventional tail surfaces</td>
+<td>मोटर ESC, V-टेल या एलेवेटर + रडर</td>
+<td>पारंपरिक टेल सतहों वाला गियर/मोटर फ़्लैपर</td>
 </tr>
 </table>
-<p>
-Selection happens in <code>update()</code> with the single test
-<code>PROFILE_IS_GEARBOX</code> (<code>activeProfile &ge; 3</code>). The profile itself is
-a runtime value: it starts from the <code>MIXER_PROFILE</code> build flag (legacy
-<code>ORNITHOPTER_GEARBOX=1</code> still maps to profile&nbsp;5) but can be switched live
-from the WebUI via <code>setOrnithopterProfile()</code> — the firmware re-targets a new
-airframe without a reflash. There are eight profiles in total; their exact
-<code>funcMap</code> layouts are tabulated in the Mixer Reference.
-</p>
+<p>चयन <code>update()</code> में एक ही परीक्षण <code>PROFILE_IS_GEARBOX</code>(<code>activeProfile &ge; 3</code>) से होता है। प्रोफ़ाइल स्वयं एक रनटाइम मान है: यह बिल्ड फ़्लैग <code>MIXER_PROFILE</code> से शुरू होती है(पुराना <code>ORNITHOPTER_GEARBOX=1</code> अब भी प्रोफ़ाइल&nbsp;5 पर मैप होता है) पर इसे WebUI से <code>setOrnithopterProfile()</code> द्वारा लाइव बदला जा सकता है — फ़र्मवेयर बिना रीफ़्लैश नए एयरफ़्रेम पर फिर निशाना साधता है। कुल आठ प्रोफ़ाइल हैं; उनके सटीक <code>funcMap</code> लेआउट मिक्सर संदर्भ में सारणीबद्ध हैं।</p>
 <h2>वेवफ़ॉर्म कर्नेल (सर्वो फ़्लैपिंग)</h2>
-<p>
-The waveform kernel is what most people mean by "PteronautOS": two wing servos run a
-phase-continuous oscillation whose shape is sculpted every cycle. Its anatomy:
-</p>
+<p>वेवफ़ॉर्म कर्नेल वही है जिसे ज़्यादातर लोग "PteronautOS" कहते हैं: दो विंग सर्वो एक फ़ेज़-निरंतर दोलन चलाते हैं जिसका आकार हर चक्र गढ़ा जाता है। इसकी शारीरिक रचना:</p>
 <ul>
-<li>
-<strong>Flap gate with hysteresis.</strong> Throttle must cross the flap threshold
-(default raw ≈303, ≈1.08&nbsp;ms PWM-equivalent) to enter flapping; it leaves only
-below threshold − 50 hysteresis, so marginal throttle never chatters the wings.
-</li>
-<li>
-<strong>Frequency.</strong> A FlappingOscillator advances with real elapsed time
-(µs clock, dt capped at 100&nbsp;ms). The cadence target blends the CH6 flap-frequency
-channel and throttle via the profile's <code>throttleFrequencyMix</code>, within
-0.5&nbsp;Hz…<code>flapBaseFreq</code>/10.
-</li>
-<li>
-<strong>Amplitude.</strong> Throttle percentage of the servo-speed ceiling
-<code>ampMax = degPerSec / (2·f)</code> (with <code>degPerSec = 60°/servoSpeed_ms</code>),
-hard-capped at 55° pre-multiplier. Amplitude therefore collapses naturally at high
-frequency — the wing never demands more than the servo can deliver.
-</li>
-<li>
-<strong>Ferocity.</strong> Down-stroke (power) and up-stroke (recovery) ferocities are
-shaped per stroke, modulated asymmetrically by elevator (pull-up hardens the downstroke,
-push-over hardens the upstroke) and by throttle coupling, then bounded 0…8 before the
-shape function.
-</li>
-<li>
-<strong>Yaw differentials.</strong> Rudder adds L/R-opposed ferocity
-(<code>rudderFerocityRange</code>) and L/R-opposed amplitude
-(<code>rudderAmplitudeDifferential</code>) while the stroke-reversal phase stays
-<em>shared</em> between the wings — the turn authority comes from asymmetric dwell, not
-from desynchronised wings.
-</li>
-<li>
-<strong>Geometry &amp; output.</strong> The shaped −1…+1 wave is scaled into degrees,
-mixed against aileron/elevator steering (±60° authority × scale), offset by the
-glide/flap-centre trim, clamped 0…180°, then converted to µs through the configurable
-<code>servoMinUs…servoMaxUs</code> envelope (988…2012 defaults) with per-function trim.
-</li>
-<li>
-<strong>Glide branch.</strong> Below the flap threshold the oscillator decays, and the
-wings hold a static glide angle — an ideal bench-and-launch state.
-</li>
+<li><strong>हिस्टैरिसीस के साथ फ़्लैप द्वार.</strong> फ़्लैपिंग में प्रवेश के लिए थ्रॉटल को फ़्लैप सीमा(डिफ़ॉल्ट रॉ ≈303, ≈1.08&nbsp;ms PWM-समतुल्य) पार करनी होती है; यह केवल सीमा − 50 हिस्टैरिसीस से नीचे निकलता है, ताकि सीमांत थ्रॉटल कभी पंखों को कँपा न सके।</li>
+<li><strong>आवृत्ति.</strong> एक FlappingOscillator वास्तविक बीते समय(µs घड़ी, dt अधिकतम 100&nbsp;ms) से आगे बढ़ता है। कैडेंस लक्ष्य प्रोफ़ाइल के <code>throttleFrequencyMix</code> से CH6 फ़्लैप-आवृत्ति चैनल और थ्रॉटल को 0.5&nbsp;Hz…<code>flapBaseFreq</code>/10 के भीतर मिलाता है।</li>
+<li><strong>आयाम.</strong> सर्वो-गति सीमा का थ्रॉटल प्रतिशत <code>ampMax = degPerSec / (2·f)</code>(जहाँ <code>degPerSec = 60°/servoSpeed_ms</code>), गुणक से पहले 55° पर हार्ड-कैप। इसलिए उच्च आवृत्ति पर आयाम स्वाभाविक रूप से ढह जाता है — पंख कभी सर्वो की क्षमता से अधिक नहीं माँगता।</li>
+<li><strong>उग्रता.</strong> डाउन-स्ट्रोक(पावर) और अप-स्ट्रोक(रिकवरी) की उग्रता हर स्ट्रोक पर गढ़ी जाती है, एलेवेटर से असममित रूप से मॉड्युलेट होती है(खींचने से डाउनस्ट्रोक, धकेलने से अपस्ट्रोक कठोर होता है) और थ्रॉटल युग्मन से, फिर आकार फ़ंक्शन से पहले 0…8 पर सीमित होती है।</li>
+<li><strong>यॉ अंतर.</strong> रडर बाएँ/दाएँ-विपरीत उग्रता(<code>rudderFerocityRange</code>) और बाएँ/दाएँ-विपरीत आयाम(<code>rudderAmplitudeDifferential</code>) जोड़ता है जबकि स्ट्रोक-रिवर्सल फ़ेज़ पंखों के बीच <em>साझा</em> रहता है — मोड़ की क्षमता असममित ड्वेल से आती है, न कि अतुल्यकालिक पंखों से।</li>
+<li><strong>ज्यामिति और आउटपुट.</strong> गढ़ी गई −1…+1 तरंग को डिग्री में स्केल किया जाता है, एलेरॉन/एलेवेटर स्टीयरिंग(±60° अधिकार × स्केल) के विरुद्ध मिलाया जाता है, ग्लाइड/फ़्लैप-केंद्र ट्रिम से ऑफ़सेट किया जाता है, 0…180° पर क्लैम्प किया जाता है, फिर कॉन्फ़िगर करने योग्य <code>servoMinUs…servoMaxUs</code> लिफ़ाफ़े(डिफ़ॉल्ट 988…2012) से फ़ंक्शन-वार ट्रिम के साथ µs में बदला जाता है।</li>
+<li><strong>ग्लाइड शाखा.</strong> फ़्लैप सीमा से नीचे ऑसिलेटर क्षय होता है और पंख एक स्थिर ग्लाइड कोण रखते हैं — बेंच और प्रक्षेपण के लिए आदर्श स्थिति।</li>
 </ul>
-<p>
-The servo kernel therefore produces <em>pure wingbeat</em>: it never runs a motor ESC, and
-its rudder (when present) is the head/crest rudder carrying yaw + a roll coupling.
-</p>
 <h2>गियरबॉक्स कर्नेल (मोटर + पूँछ)</h2>
-<p>
-The gearbox kernel trades pure wingbeat for a motorised drivetrain plus conventional
-tail surfaces. Because a motor turns continuously, this kernel is stateless per tick —
-no oscillator — and instead:
-</p>
+<p>गियरबॉक्स कर्नेल शुद्ध विंगबीट को मोटरयुक्त ड्राइवट्रेन + पारंपरिक टेल सतहों से बदल देता है। क्योंकि मोटर लगातार घूमती है, यह कर्नेल प्रति टिक स्टेटलेस है — कोई ऑसिलेटर नहीं — और इसके बजाय:</p>
 <ul>
-<li>
-maps throttle (armed) to a 1000…2000&nbsp;µs ESC command (<code>SF_MOTOR</code>), idle
-when disarmed;
-</li>
-<li>
-mixes the tail: V-tail profiles use an elevon blend (aileron+elevator / aileron−elevator),
-classic profiles use a separate elevator surface;
-</li>
-<li>
-lets Zephyrus (when enabled) inject <em>roll and pitch PID</em> corrections into the
-tail servos, clamped to ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) so a
-sensor glitch can never stall a servo;
-</li>
-<li>
-keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.
-</li>
+<li>थ्रॉटल(आर्म्ड) को 1000…2000&nbsp;µs ESC कमांड(<code>SF_MOTOR</code>) में मैप करता है, डिसआर्म पर आइडल;</li>
+<li>टेल मिलाता है: V-टेल प्रोफ़ाइल एलेवॉन ब्लेंड(एलेरॉन+एलेवेटर / एलेरॉन−एलेवेटर) का उपयोग करती हैं, क्लासिक प्रोफ़ाइल अलग एलेवेटर सतह का;</li>
+<li>Zephyrus(सक्षम होने पर) को टेल सर्वो में <em>रोल और पिच PID</em> सुधार इंजेक्ट करने देता है, ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>) पर सीमित ताकि सेंसर गड़बड़ी कभी सर्वो रोक न सके;</li>
+<li>वेवफ़ॉर्म कर्नेल के समान रडर मिक्सर और µs/ट्रिम/क्लैम्प लिफ़ाफ़ा बनाए रखता है।</li>
 </ul>
-<p>
-One ornithopter rig can even carry both personalities: flapping launch with the waveform
-kernel, cruise on the gearbox — the runtime profile switch is that single line in
-<code>update()</code>.
-</p>
+<p>एक ऑर्निथॉप्टर रिग दोनों व्यक्तित्व भी धारण कर सकता है: वेवफ़ॉर्म कर्नेल से फ़्लैपिंग लॉन्च, गियरबॉक्स पर क्रूज़ — रनटाइम प्रोफ़ाइल स्विच <code>update()</code> की वही एक पंक्ति है।</p>
 <h2>अवस्थाएँ: लिंक, बेंच और फ़ेलसेफ़</h2>
-<p>
-<code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and
-gates on three flags before any mixer runs:
-</p>
+<p><code>update()</code> को WiFi/सर्वो लूप से स्थिर ~10&nbsp;ms कैडेंस पर बुलाया जाता है और किसी मिक्सर के चलने से पहले तीन फ़्लैग पर द्वार लगाता है:</p>
 <table>
 <tr>
-<th>State</th>
-<th>Condition</th>
-<th>Behaviour</th>
+<th>अवस्था</th>
+<th>स्थिति</th>
+<th>व्यवहार</th>
 </tr>
 <tr>
-<td>Normal flight</td>
-<td>linkUp + armed channel live</td>
-<td>Full kernel output follows the sticks</td>
+<td>सामान्य उड़ान</td>
+<td>linkUp + आर्म्ड चैनल सक्रिय</td>
+<td>पूर्ण कर्नेल आउटपुट स्टिक का अनुसरण करता है</td>
 </tr>
 <tr>
-<td>Bench / panel mode</td>
-<td>%code benchMode (WebUI panel, no RC link)</td>
-<td>Neutral sticks are injected, throttle parked below the flap threshold — glide + trim edits are visible live</td>
+<td>बेंच / पैनल मोड</td>
+<td><code>benchMode</code>(WebUI पैनल, कोई RC लिंक नहीं)</td>
+<td>न्यूट्रल स्टिक इंजेक्ट होते हैं, थ्रॉटल फ़्लैप सीमा से नीचे रुकता है — ग्लाइड + ट्रिम संपादन लाइव दिखते हैं</td>
 </tr>
 <tr>
-<td>Stick override</td>
-<td>%code stickOverride (virtual channels)</td>
-<td>Firmware-injected channel values replace CRSF entirely (servo sweeps, tests)</td>
+<td>स्टिक ओवरराइड</td>
+<td><code>stickOverride</code>(वर्चुअल चैनल)</td>
+<td>फ़र्मवेयर-इंजेक्टेड चैनल मान CRSF को पूरी तरह बदल देते हैं(सर्वो स्वीप, परीक्षण)</td>
 </tr>
 <tr>
-<td>Failsafe</td>
-<td>link lost (<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
-<td>All functions centre to 1500&nbsp;µs, oscillator reset, motor → min; CRSF packet loss also centres at RX level</td>
+<td>फेलसेफ़</td>
+<td>लिंक खो गया(<code>onLinkDown</code> / <code>enterFailsafe</code>)</td>
+<td>सभी फ़ंक्शन 1500&nbsp;µs पर केंद्रित होते हैं, ऑसिलेटर रीसेट, मोटर → न्यूनतम; CRSF पैकेट हानि भी RX स्तर पर केंद्रित होती है</td>
 </tr>
 </table>
-<p>
-The centre-on-loss behaviour is duplicated in two layers on purpose: the CRSF stack
-failsafes the channel data, and the Ornithopter layer failsafes the <em>geometry</em>
-(including the oscillation state). A dead radio therefore leaves a gliding, controllable
-airframe — never a flailing one.
-</p>
+<p>हानि पर केंद्रित होने का व्यवहार जान-बूझकर दो परतों में दोहराया गया है: CRSF स्टैक चैनल डेटा को फेलसेफ़ करता है, और Ornithopter परत <em>ज्यामिति</em>(दोलन अवस्था सहित) को फेलसेफ़ करती है। इसलिए मृत रेडियो एक ग्लाइडिंग, नियंत्रणीय एयरफ़्रेम छोड़ता है — कभी छटपटाता हुआ नहीं।</p>
 <h2>स्रोत मानचित्र</h2>
 <table>
 <tr>
-<th>Module</th>
-<th>Path</th>
-<th>Responsibility</th>
+<th>मॉड्यूल</th>
+<th>पथ</th>
+<th>उत्तरदायित्व</th>
 </tr>
 <tr>
-<td>Ornithopter layer</td>
+<td>Ornithopter परत</td>
 <td>
 <code>src/lib/Ornithopter/</code>
 </td>
-<td>Kernel select, mixer math, waveform oscillator, profiles, trim</td>
+<td>कर्नेल चयन, मिक्सर गणित, वेवफ़ॉर्म ऑसिलेटर, प्रोफ़ाइल, ट्रिम</td>
 </tr>
 <tr>
-<td>Flight profiles &amp; constants</td>
+<td>फ़्लाइट प्रोफ़ाइल और स्थिरांक</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterConfig.h</code>
 </td>
-<td>MixerProfile enum, ServoFunc tags, funcMap, all numeric defaults</td>
+<td>MixerProfile enum, ServoFunc टैग, funcMap, सभी संख्यात्मक डिफ़ॉल्ट</td>
 </tr>
 <tr>
-<td>Oscillator / shape</td>
+<td>ऑसिलेटर / आकार</td>
 <td>
 <code>src/lib/Ornithopter/OrnithopterWaveform.h</code>
 </td>
-<td>Phase integration, ferocity shaping, reversal logic</td>
+<td>फ़ेज़ समाकलन, उग्रता आकार, रिवर्सल लॉजिक</td>
 </tr>
 <tr>
-<td>Zephyrus (optional)</td>
+<td>Zephyrus(वैकल्पिक)</td>
 <td>
 <code>src/lib/Zephyrus/</code>
 </td>
-<td>MPU6050 + Mahony AHRS, dual PID, crest/tail correction</td>
+<td>MPU6050 + Mahony AHRS, दोहरा PID, क्रेस्ट/टेल सुधार</td>
 </tr>
 <tr>
-<td>PWM output stage</td>
+<td>PWM आउटपुट स्टेज</td>
 <td>
 <code>src/lib/ServoOutput/devServoOutput.cpp</code>
 </td>
-<td>Writes µs synchronised to the CRSF tick</td>
+<td>CRSF टिक से समकालिक µs लिखता है</td>
 </tr>
 <tr>
-<td>WebUI config</td>
+<td>WebUI कॉन्फ़िग</td>
 <td>
 <code>src/lib/WIFI/devWIFI.cpp</code>
 </td>
-<td>Runtime profile + tuning persistence (<code>/pteronautos</code>)</td>
+<td>रनटाइम प्रोफ़ाइल + ट्यूनिंग स्थायित्व(<code>/pteronautos</code>)</td>
 </tr>
 </table>
 <p>
-The next layer down — exactly which waveform shape the numbers produce, and how every
-profile wires functions to PWM outputs — lives in the
-<a href="../../../hi/documentation/mixers/">Mixer Reference</a>, and the
-servo-timing envelope is documented in the
-<a href="../../../hi/documentation/servo-kernel/">Servo Kernel</a> article.
+अगली निचली परत — संख्याएँ ठीक कौन-सा वेवफ़ॉर्म आकार बनाती हैं, और हर प्रोफ़ाइल फ़ंक्शनों को PWM आउटपुट से कैसे जोड़ती है — रहती है 
+<a href='../../../hi/documentation/mixers/'>मिक्सर संदर्भ</a>
+ में, और सर्वो-टाइमिंग लिफ़ाफ़ा 
+<a href='../../../hi/documentation/servo-kernel/'>सर्वो कर्नेल</a>
+में प्रलेखित है।
 </p>
 </div>
 </main>
