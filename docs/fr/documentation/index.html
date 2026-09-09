@@ -28,11 +28,11 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Documentation</h1>
-<p class='sub-lead'>Le manuel, les notes du gyroscope et la référence de l&#39;interface web.</p>
+<p class='sub-lead'>Le manuel, les notes du gyroscope et la référence de l'interface web.</p>
 <h2>Architecture</h2>
 <dl class='grid'>
 <dt>Ornithopter</dt>
-<dd>Mixeur, génération de forme d&#39;onde, filtrage de canaux</dd>
+<dd>Mixeur, génération de forme d'onde, filtrage de canaux</dd>
 <dt>Zéphyros</dt>
 <dd>Gyroscope MPU6050 + Mahony AHRS + double PID</dd>
 <dt>ServoOutput</dt>
@@ -44,15 +44,15 @@
 <div class='tutorial-menu'>
 <a class='tutorial-card' href='../../fr/documentation/architecture/'>
 <strong>Architecture : kernels et flux de données</strong>
-<p>Comment un flux CRSF devient battement d&#39;aile et empennage : frontières des modules, les deux kernels de mixage et la machine d&#39;état qui garde le ptérosaure en vie quand le lien meurt.</p>
+<p>Comment un flux CRSF devient battement d'aile et empennage : frontières des modules, les deux kernels de mixage et la machine d'état qui garde le ptérosaure en vie quand le lien meurt.</p>
 </a>
 <a class='tutorial-card' href='../../fr/documentation/companion-compute/'>
 <strong>Mode Companion Compute</strong>
-<p>La symbiose : PteronautOS est l&#39;esprit, YOSHIMITSU est la main. Deux cartes, un vol — divisé par le pont par une seule commande d&#39;administration : MUSHIN (無心).</p>
+<p>La symbiose : PteronautOS est l'esprit, YOSHIMITSU est la main. Deux cartes, un vol — divisé par le pont par une seule commande d'administration : MUSHIN (無心).</p>
 </a>
 <a class='tutorial-card' href='../../fr/documentation/mixers/'>
 <strong>Référence des mixers</strong>
-<p>Des manches et du gyroscope aux µs sur le fil : la géométrie complète de chaque mixer sélectionnable — axes d&#39;aile, mélanges de dérive, elevons, trims et limites.</p>
+<p>Des manches et du gyroscope aux µs sur le fil : la géométrie complète de chaque mixer sélectionnable — axes d'aile, mélanges de dérive, elevons, trims et limites.</p>
 </a>
 <a class='tutorial-card' href='../../fr/documentation/stabilization/'>
 <strong>Zéphyros : stabilisation et Ondas</strong>
@@ -60,7 +60,7 @@
 </a>
 <a class='tutorial-card' href='../../fr/documentation/servo-kernel/'>
 <strong>Noyau servo</strong>
-<p>Enveloppe de largeur d&#39;impulsion, trim par fonction et limite de vitesse — le contrat servo bas niveau.</p>
+<p>Enveloppe de largeur d'impulsion, trim par fonction et limite de vitesse — le contrat servo bas niveau.</p>
 </a>
 <a class='tutorial-card' href='../../fr/documentation/failsafe/'>
 <strong>Comportement failsafe</strong>
@@ -72,9 +72,9 @@
 </a>
 </div>
 <section class='waveform-docs' id='ferocity-waveform'>
-<h2>Géométrie de la forme d&#39;onde de férocité</h2>
-<p>La férocité contrôle à la fois le caractère et le timing d&#39;une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n&#39;y a pas de pause à zéro.</p>
-<p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu&#39;une moitié à faible férocité reste allongée et sinusoïdale, tandis qu&#39;une moitié à forte férocité s&#39;approche d&#39;un parcours diagonal direct.</p>
+<h2>Géométrie de la forme d'onde de férocité</h2>
+<p>La férocité contrôle à la fois le caractère et le timing d'une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n'y a pas de pause à zéro.</p>
+<p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
@@ -115,7 +115,7 @@
 <div class='waveform-legend'>
 <span>
 <i class='current'></i>
-Forme d&#39;onde actuelle
+Forme d'onde actuelle
 </span>
 <span>
 <i class='direct'></i>
@@ -148,20 +148,20 @@ Diagonale exacte
 </div>
 </div>
 <h3>Lire les combinaisons extrêmes</h3>
-<p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n&#39;alloue qu&#39;environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l&#39;accélération demandées peuvent devenir physiquement inatteignables.</p>
+<p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n'alloue qu'environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l'accélération demandées peuvent devenir physiquement inatteignables.</p>
 <aside class='waveform-caution'>
 <strong>Testez sur banc avant le vol.</strong>
-L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
+L'explorateur décrit la forme d'onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l'amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n'ont pas été vérifiées sans charge aérodynamique.
 </aside>
 </section>
 <h2>Concepts</h2>
 <dl class='grid'>
 <dt>Férocité</dt>
-<dd>Asymétrie entre l&#39;aller et le retour, et temps de maintien — 0 est un sinus pur.</dd>
-<dt>Forme d&#39;onde</dt>
-<dd>La courbe du battement d&#39;aile ; l&#39;amplitude provient de degrés/s ÷ 2·fréquence.</dd>
+<dd>Asymétrie entre l'aller et le retour, et temps de maintien — 0 est un sinus pur.</dd>
+<dt>Forme d'onde</dt>
+<dd>La courbe du battement d'aile ; l'amplitude provient de degrés/s ÷ 2·fréquence.</dd>
 <dt>Angle de plané</dt>
-<dd>Décalage du centre de l&#39;aile pour le vol plané.</dd>
+<dd>Décalage du centre de l'aile pour le vol plané.</dd>
 <dt>Décalage central du battement</dt>
 <dd>Biais central pendant la course de battement (−15…+15 degrés).</dd>
 <dt>Mélange du gouvernail</dt>
@@ -176,7 +176,7 @@ L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un m
 <tr>
 <td>PTERONAUTOS.md</td>
 <td>
-<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manuel principal — architecture, mélangeur, forme d&#39;onde</a>
+<a href='https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md' target='_blank'>Manuel principal — architecture, mélangeur, forme d'onde</a>
 </td>
 </tr>
 <tr>

@@ -306,7 +306,7 @@
 <h2>कार्यान्वयन स्थिति और खुली असंगतियाँ</h2>
 <p><strong>ईमानदार नक्शा, वर्तमान फ़र्मवेयर(Ornithopter.cpp @ 72c63020)।</strong> ऊपर के आदर्श नियम <em>डिज़ाइन</em> हैं; कोड में पूर्ण पैरामीटर सतह, स्थिरांक, WebUI स्लाइडर और ब्रिज शिम हैं — पर एक उड़ान-परीक्षण मचान ब्लॉक वर्तमान में अधिकांश जायरो को सर्वो कर्नेल से अलग करता है:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>i18n कार्य के साथ &quot;STEP 7&quot; NaN-गार्ड परीक्षण के रूप में कमिट और कभी वापस न लिया गया यह ब्लॉक दर्शाता है कि आज का सर्वो-कर्नेल व्यवहार है:</p>
+<p>i18n कार्य के साथ "STEP 7" NaN-गार्ड परीक्षण के रूप में कमिट और कभी वापस न लिया गया यह ब्लॉक दर्शाता है कि आज का सर्वो-कर्नेल व्यवहार है:</p>
 <ul>
 <li><strong>कैडेंस, उग्रता-PD, संतुलन, रेज़ोनेंस, SSFF</strong> — सभी पैरामीटर और ब्रिज में मौजूद हैं, पर उनके उपभोग स्थल(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>) शून्य पर पिन हैं या हर फ़्रेम रीसेट होते हैं(Ornithopter.cpp:282–284, 311–313, 354)।</li>
 <li><strong>क्रेस्ट रडर स्थिरीकरण</strong> <em>फ़्लैपिंग शाखा के भीतर</em> शून्य हो जाता है, इसलिए रडर सुधार वर्तमान में केवल ग्लाइड शाखा में काम करता है — उड़ान की ज़रूरत के विपरीत(अधिकांश विक्षोभ फ़्लैप के बीच आते हैं)।</li>

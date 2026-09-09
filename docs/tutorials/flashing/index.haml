@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= flash_title
+    %title!= flash_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,71 +19,71 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %p.tutorial-number= flash_number
-        %h1= flash_h1
-        %p.sub-lead= flash_lead
+        %p.tutorial-number!= flash_number
+        %h1!= flash_h1
+        %p.sub-lead!= flash_lead
 
-        %p= flash_p1
-        %p= flash_p2
+        %p!= flash_p1
+        %p!= flash_p2
 
         .video-embed
           %iframe{src: "https://www.youtube.com/embed/h_MSh6qvfEA", title: flash_iframe_title, loading: "lazy", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowfullscreen: true}
 
-        %h2= flash_h2_build
-        %p= flash_build_p
+        %h2!= flash_h2_build
+        %p!= flash_build_p
         %pre
           %code pio run -d src -e PteronautOS_ESP8285_2400_RX
 
-        %h2= flash_h2_connect
-        %p= flash_connect_p
+        %h2!= flash_h2_connect
+        %p!= flash_connect_p
         %table
           %tr
-            %th= flash_th_ftdi
-            %th= flash_th_rx
+            %th!= flash_th_ftdi
+            %th!= flash_th_rx
           %tr
-            %td= flash_row_gnd
-            %td= flash_row_gnd_v
+            %td!= flash_row_gnd
+            %td!= flash_row_gnd_v
           %tr
-            %td= flash_row_vcc
-            %td= flash_row_vcc_v
+            %td!= flash_row_vcc
+            %td!= flash_row_vcc_v
           %tr
-            %td= flash_row_tx
-            %td= flash_row_tx_v
+            %td!= flash_row_tx
+            %td!= flash_row_tx_v
           %tr
-            %td= flash_row_rx
-            %td= flash_row_rx_v
-        %p= flash_connect_note
+            %td!= flash_row_rx
+            %td!= flash_row_rx_v
+        %p!= flash_connect_note
 
-        %h2= flash_h2_boot
-        %p= flash_boot_p
+        %h2!= flash_h2_boot
+        %p!= flash_boot_p
 
-        %h2= flash_h2_write
-        %p= flash_write_p1
+        %h2!= flash_h2_write
+        %p!= flash_write_p1
         %pre
           %code ./scripts/flash.sh
-        %p= flash_write_p2
+        %p!= flash_write_p2
         %pre
           %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX
-        %p= flash_write_p3
+        %p!= flash_write_p3
         %pre
           %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check
 
-        %h2= flash_h2_verify
+        %h2!= flash_h2_verify
         %p
-          = flash_verify_p_a
+          != flash_verify_p_a
           %code Pteronaut OS
-          = flash_verify_p_b
+          != flash_verify_p_b
           %code flynatural
-          = flash_verify_p_c
+          != flash_verify_p_c
         %p
-          = flash_verify_continue
-          %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= flash_verify_hw_link
-          = flash_verify_continue_rest
+          != flash_verify_continue
+          %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= flash_verify_hw_link
+          != flash_verify_continue_rest
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -98,5 +98,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

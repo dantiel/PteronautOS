@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= cc_title
+    %title!= cc_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -24,16 +24,16 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= cc_h1
-        %p.sub-lead= cc_lead
+        %h1!= cc_h1
+        %p.sub-lead!= cc_lead
 
-        %h2= cc_h2_arch
-        %p= cc_arch_p1
+        %h2!= cc_h2_arch
+        %p!= cc_arch_p1
         %pre.mermaid
           :preserve
             graph LR
@@ -54,48 +54,48 @@
               C1 -- "samples" --> C0
               C0 --> SRV["servos · wing L/R · crest rudder"]
 
-        %h2= cc_h2_gyro
-        %p= cc_gyro_p1
+        %h2!= cc_h2_gyro
+        %p!= cc_gyro_p1
 
-        %h2= cc_h2_split
-        %p= cc_split_p1
+        %h2!= cc_h2_split
+        %p!= cc_split_p1
         %table
           %tr
-            %th= cc_th_role
-            %th= cc_th_board
-            %th= cc_th_duty
+            %th!= cc_th_role
+            %th!= cc_th_board
+            %th!= cc_th_duty
           %tr
             %td
               %strong PTERONAUTOS
             %td
               %code ESP8285
-            %td= cc_ptero_duty
+            %td!= cc_ptero_duty
           %tr
             %td
               %strong YOSHIMITSU
             %td
               %code RP2040-Tiny
-            %td= cc_yoshi_duty
+            %td!= cc_yoshi_duty
 
-        %h2= cc_h2_cores
-        %p= cc_cores_p1
+        %h2!= cc_h2_cores
+        %p!= cc_cores_p1
         %ul
           %li
-            %strong= cc_core1
-            = cc_core1_duty
+            %strong!= cc_core1
+            != cc_core1_duty
           %li
-            %strong= cc_core0
-            = cc_core0_duty
+            %strong!= cc_core0
+            != cc_core0_duty
 
-        %h2= cc_h2_flag
-        %p= cc_flag_p1
+        %h2!= cc_h2_flag
+        %p!= cc_flag_p1
 
-        %h2= cc_h2_cheat
-        %p= cc_cheat_p1
-        %p= cc_cheat_p2
+        %h2!= cc_h2_cheat
+        %p!= cc_cheat_p1
+        %p!= cc_cheat_p2
 
-        %h2= cc_h2_hermetic
-        %p= cc_hermetic_p1
+        %h2!= cc_h2_hermetic
+        %p!= cc_hermetic_p1
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -110,5 +110,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

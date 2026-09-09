@@ -27,11 +27,11 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Référence des mixers</h1>
-<p class='sub-lead'>Des manches et du gyroscope aux µs sur le fil : la géométrie complète de chaque mixer sélectionnable — axes d&#39;aile, mélanges de dérive, elevons, trims et limites.</p>
+<p class='sub-lead'>Des manches et du gyroscope aux µs sur le fil : la géométrie complète de chaque mixer sélectionnable — axes d'aile, mélanges de dérive, elevons, trims et limites.</p>
 <p>
 Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.cpp</code> et le système de profils de <code>OrnithopterConfig.h</code>. Pour l'architecture environnante, commencez par l'
 <a href='../../../fr/documentation/architecture/'>article Architecture</a>
- ; pour la temporisation des impulsions et les plages de trim, voir l&#39;
+ ; pour la temporisation des impulsions et les plages de trim, voir l'
 <a href='../../../fr/documentation/servo-kernel/'>Noyau servo</a>
  article.
 </p>
@@ -59,7 +59,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SF_LEFT_WING / SF_RIGHT_WING</code>
 </td>
-<td>Ailes battantes avant (noyau forme d&#39;onde)</td>
+<td>Ailes battantes avant (noyau forme d'onde)</td>
 </tr>
 <tr>
 <td>
@@ -68,7 +68,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SF_RUDDER</code>
 </td>
-<td>Gouvernail de tête/crête (forme d&#39;onde) ou de dérive (boîte) — mélange lacet + roulis</td>
+<td>Gouvernail de tête/crête (forme d'onde) ou de dérive (boîte) — mélange lacet + roulis</td>
 </tr>
 <tr>
 <td>
@@ -77,7 +77,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SF_MOTOR</code>
 </td>
-<td>Gaz d&#39;ESC brushless (noyau boîte uniquement)</td>
+<td>Gaz d'ESC brushless (noyau boîte uniquement)</td>
 </tr>
 <tr>
 <td>
@@ -104,7 +104,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING</code>
 </td>
-<td>Paire d&#39;ailes arrière d&#39;une cellule 4 ailes (miroir de la paire avant, trim propre)</td>
+<td>Paire d'ailes arrière d'une cellule 4 ailes (miroir de la paire avant, trim propre)</td>
 </tr>
 </table>
 <p>Un <em>profil</em> d'exécution fournit la <code>funcMap</code> : un tableau qui mappe l'index de sortie PWM → ServoFunc. Les trois premiers créneaux (PWM 1…3) sont toujours <code>SF_NONE</code> — ils appartiennent à la sangle BOOT et au bus I2C — donc les vraies fonctions de servo commencent à l'index PWM 3 (le commentaire du firmware l'explicite : index 3 = CH4, 4 = CH5, 5 = CH6).</p>
@@ -125,7 +125,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SERVO_2WING</code>
 </td>
-<td>forme d&#39;onde</td>
+<td>forme d'onde</td>
 <td>2</td>
 <td>Aile gauche · Aile droite · —</td>
 </tr>
@@ -136,7 +136,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SERVO_2WING_1RUD</code>
 </td>
-<td>forme d&#39;onde</td>
+<td>forme d'onde</td>
 <td>3</td>
 <td>Aile gauche · Aile droite · Gouverne</td>
 </tr>
@@ -147,7 +147,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>
 <code>SERVO_4WING</code>
 </td>
-<td>forme d&#39;onde</td>
+<td>forme d'onde</td>
 <td>4 (arrière-droite partage le miroir arrière-gauche)</td>
 <td>Aile gauche · Aile droite · Aile arrière gauche</td>
 </tr>
@@ -208,7 +208,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 </tr>
 </table>
 <p>Sélection : drapeau de build <code>MIXER_PROFILE</code> (ancien <code>ORNITHOPTER_GEARBOX=1</code> → profil 5), puis remplaçable à l'exécution via la WebUI (<code>setOrnithopterProfile</code>). Le test de noyau est simplement <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
-<h2>Mixage des axes d&#39;aile (kernel onde)</h2>
+<h2>Mixage des axes d'aile (kernel onde)</h2>
 <p>Toutes les valeurs de canaux entrent normalisées dans les mixeurs : <code>_crsfToNorm</code> mappe linéairement la fenêtre brute 172…1811 vers −1…+1. Les commandes de pilotage sont ensuite mises à l'échelle par les curseurs d'autorité par profil (<code>aileronScale</code>, <code>elevatorScale</code>, 0–100 %) fois ±60° (<code>ORNI_STEER_MAX_DEG</code>).</p>
 <p><strong>Géométrie en miroir.</strong> Les servos d'aile sont montés en miroir, ce qui inverse le sens des termes de mode commun et différentiel. Le code traite donc l'aileron (roulis) comme <em>commun</em> — il s'ajoute aux deux ailes, devenant une déflexion <em>physique</em> différentielle — et la profondeur (tangage) comme <em>différentielle</em> dans le code, devenant une déflexion physique commune. Les équations d'angle, avec <code>ORNI_NEUTRAL_ANGLE_DEG = 100°</code> et le multiplicateur 2× appliqué seulement aux termes d'écart :</p>
 <pre><code>angleLeft  = NEUTRAL + (aileron + elevator + flapCentre − degL) · 2&#x000A;angleRight = NEUTRAL + (aileron − elevator − flapCentre + degR) · 2&#x000A;&#x000A;flapping:  degL/R = amplitudeL/R · shapedWave(rawPhase, ferocityL/R, …)&#x000A;glide:     degL = degR = 0 → static glide offset takes over&#x000A;</code></pre>
@@ -223,7 +223,7 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Défauts : <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (réglables à l'exécution dans la WebUI, stockés par sauvegarde). Le couplage de roulis sur la gouverne permet à un ptérosaure lourd d'aile de tenir des virages coordonnés sans acrobatie de fil de lacet ; réduisez le poids de roulis si la gouverne de tête semble trop agressive en roulis.</p>
 <h2>Mixage empennage et elevons (boîte à engrenages)</h2>
-<p>Le noyau boîte s&#39;exécute sans état à chaque tick. Ses trois sous-mixeurs :</p>
+<p>Le noyau boîte s'exécute sans état à chaque tick. Ses trois sous-mixeurs :</p>
 <ul>
 <li><strong>Moteur</strong> — <code>SF_MOTOR</code> : armé, gaz 0…1 mappe vers 1000…2000&nbsp;µs ; désarmé ou liaison perdue force le minimum (moteur arrêté).</li>
 <li><strong>Gouverne</strong> — équation identique à la section ci-dessus.</li>
@@ -232,11 +232,11 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>Sur le noyau boîte, Zephyrus injecte <em>les deux</em> corrections PID de roulis et tangage dans les servos d'empennage (roulis en opposition de phase, tangage en mode commun), chacune bornée dur à ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Un glitch de gyro peut donc faire osciller, mais jamais caler, un servo d'empennage.</p>
 <h2>Injection Zéphyros, trims et failsafe</h2>
-<p>Trois points d&#39;injection différents existent selon le noyau et l&#39;axe :</p>
+<p>Trois points d'injection différents existent selon le noyau et l'axe :</p>
 <table>
 <tr>
 <th>Axe</th>
-<th>Noyau forme d&#39;onde</th>
+<th>Noyau forme d'onde</th>
 <th>Noyau boîte</th>
 </tr>
 <tr>
@@ -246,20 +246,20 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 </tr>
 <tr>
 <td>Roulis (aileron)</td>
-<td>— (les ailes à forme d&#39;onde ne portent pas de PID de roulis)</td>
+<td>— (les ailes à forme d'onde ne portent pas de PID de roulis)</td>
 <td><code>gyroAileronCorrection</code>, opposition de phase sur empennage V, borné ±250&nbsp;µs</td>
 </tr>
 <tr>
 <td>Tangage (profondeur)</td>
-<td>— (injecté comme modulation d&#39;onde dans la couche Zephyrus)</td>
+<td>— (injecté comme modulation d'onde dans la couche Zephyrus)</td>
 <td><code>gyroElevatorCorrection</code>, mode commun, borné ±250&nbsp;µs</td>
 </tr>
 </table>
 <p><strong>Trims &amp; limites.</strong> Chaque fonction a un trim signé par servo (<code>servoTrimUs[tag]</code>, défaut 0, ±300&nbsp;µs) ajouté en dernier, et chaque valeur passe <code>_clampServo</code> — une borne de sécurité absolue 500…2500&nbsp;µs qui prime sur tout. En failsafe ou liaison perdue, toutes les fonctions reviennent à 1500&nbsp;µs et un moteur de boîte au minimum, si bien que le modèle plane toujours vers le neutre.</p>
 <p>
 Prêt pour la couche pratique ? Le 
-<a href='../../../fr/tutorials/waveform-tuning/'>Réglage de la forme d&#39;onde</a>
- montre comment ces nombres se ressentent aux manches, et l&#39;
+<a href='../../../fr/tutorials/waveform-tuning/'>Réglage de la forme d'onde</a>
+ montre comment ces nombres se ressentent aux manches, et l'
 <a href='../../../fr/documentation/architecture/'>Architecture</a>
  montre où chaque mixeur se situe dans le pipeline.
 </p>

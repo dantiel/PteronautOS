@@ -59,7 +59,7 @@
 </tr>
 </table>
 <p>The GY-521 carries its own 4.7&nbsp;kΩ pull-ups and an AMS1117-3.3V regulator: feed it 5V, it makes its own 3.3V and the logic levels auto-match. <strong>Four wires total</strong>, no trace cutting, no extra regulator.</p>
-<h2>Calibration & verification</h2>
+<h2>Calibration &amp; verification</h2>
 <p>The Mahony AHRS self-calibrates the gyro bias at boot — keep the airframe <em>still</em> for the first second after power-up. Verify the sensor is alive via the serial log: pitch/roll should track the airframe when you tilt it, and the crest rudder should oppose a manual roll (right roll → rudder corrects left). If the bus hangs at boot, you've landed on a reserved pin — re-check the map and move to the correct CH2/CH3 pair.</p>
 </div>
 </main>

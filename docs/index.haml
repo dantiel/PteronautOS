@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= title
+    %title!= title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -20,17 +20,17 @@
         %span
         %span
         %span
-      %a.home-link{href: "#", onclick: "majesticScroll(); return false;", title: "Scroll to top — PteronautOS"}= nav_home
+      %a.home-link{href: "#", onclick: "majesticScroll(); return false;", title: "Scroll to top — PteronautOS"}!= nav_home
       .nav-links#nav-links
-        %span.nav-group= nav_group_page
-        %a{href: "#essence"}= nav_essence
-        %a{href: "#architecture"}= nav_architecture
-        %a{href: "#zephyrus"}= nav_zephyrus
+        %span.nav-group!= nav_group_page
+        %a{href: "#essence"}!= nav_essence
+        %a{href: "#architecture"}!= nav_architecture
+        %a{href: "#zephyrus"}!= nav_zephyrus
         %span.nav-separator
-        %span.nav-group= nav_group_explore
-        %a{href: "#{asset_prefix}/#{lang_dir}tutorials/"}= nav_tutorials
-        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}= nav_hardware
-        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}= nav_documentation
+        %span.nav-group!= nav_group_explore
+        %a{href: "#{asset_prefix}/#{lang_dir}tutorials/"}!= nav_tutorials
+        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}!= nav_hardware
+        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}!= nav_documentation
       %button.nav-toggle{type: "button", "aria-label": "Menu", "aria-expanded": "false", "aria-controls": "nav-links"}
         %span
         %span
@@ -42,8 +42,8 @@
           %h1
             %span.pteronaut> PTERONAUT
             %span.os OS
-          %p.subhead= hero_subhead
-          %p.greeting= hero_greeting
+          %p.subhead!= hero_subhead
+          %p.greeting!= hero_greeting
           %pre.glyph
             :preserve
 
@@ -65,69 +65,69 @@
                                         \\\\      WWW      
                                         '
               
-          %p.version= hero_version
+          %p.version!= hero_version
 
     %main
       %section#essence
         %h2
-          %span.section-num= essence_num
-          = essence_title
+          %span.section-num!= essence_num
+          != essence_title
         %p.lead!= essence_lead
         %p!= essence_body
         .highlight
-          %code= essence_highlight
+          %code!= essence_highlight
 
       %section#architecture
         %h2
-          %span.section-num= arch_num
-          = arch_title
+          %span.section-num!= arch_num
+          != arch_title
         %dl.grid
-          %dt= arch_ornithopter_title
-          %dd= arch_ornithopter_desc
-          %dt= arch_zephyrus_title
-          %dd= arch_zephyrus_desc
-          %dt= arch_servo_title
-          %dd= arch_servo_desc
-          %dt= arch_target_title
-          %dd= arch_target_desc
+          %dt!= arch_ornithopter_title
+          %dd!= arch_ornithopter_desc
+          %dt!= arch_zephyrus_title
+          %dd!= arch_zephyrus_desc
+          %dt!= arch_servo_title
+          %dd!= arch_servo_desc
+          %dt!= arch_target_title
+          %dd!= arch_target_desc
 
       %section#zephyrus
         %h2
-          %span.section-num= zeph_num
-          = zeph_title
-        %p.lead= zeph_lead
+          %span.section-num!= zeph_num
+          != zeph_title
+        %p.lead!= zeph_lead
         %table.specs
           %tr
-            %td= zeph_sensor_label
-            %td= zeph_sensor_val
+            %td!= zeph_sensor_label
+            %td!= zeph_sensor_val
           %tr
-            %td= zeph_interface_label
-            %td= zeph_interface_val
+            %td!= zeph_interface_label
+            %td!= zeph_interface_val
           %tr
-            %td= zeph_ahrs_label
-            %td= zeph_ahrs_val
+            %td!= zeph_ahrs_label
+            %td!= zeph_ahrs_val
           %tr
-            %td= zeph_pid_label
-            %td= zeph_pid_val
+            %td!= zeph_pid_label
+            %td!= zeph_pid_val
           %tr
-            %td= zeph_output_label
-            %td= zeph_output_val
+            %td!= zeph_output_label
+            %td!= zeph_output_val
           %tr
-            %td= zeph_ram_label
-            %td.value= zeph_ram_val
+            %td!= zeph_ram_label
+            %td.value!= zeph_ram_val
           %tr
-            %td= zeph_flash_label
-            %td.value= zeph_flash_val
+            %td!= zeph_flash_label
+            %td.value!= zeph_flash_val
         %p.doc-link
-          %a{ href: "https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md" }= zeph_readme_link
+          %a{ href: "https://github.com/dantiel/PteronautOS/blob/master/src/lib/Zephyrus/README.md" }!= zeph_readme_link
 
       %section.build
         %h2
-          %span.section-num= build_num
-          = build_title
+          %span.section-num!= build_num
+          != build_title
         %pre
-          %code= build_line
-        %p.compatible= build_compatible
+          %code!= build_line
+        %p.compatible!= build_compatible
 
     %footer
       .lang-switch
@@ -143,13 +143,13 @@
         %a{href: lang_href_ar, class: lang_class_ar} عربي
         %a{href: lang_href_hi, class: lang_class_hi} हिन्दी
       %p.footer-links
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
         %span.sep ·
-        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}= nav_documentation
+        %a{href: "#{asset_prefix}/#{lang_dir}documentation/"}!= nav_documentation
         %span.sep ·
-        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}= nav_hardware
-      %p= footer_hermetic
-      %p.credit= footer_credit
+        %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}!= nav_hardware
+      %p!= footer_hermetic
+      %p.credit!= footer_credit
 
     %button.scroll-top{onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": "Scroll to top"}
 

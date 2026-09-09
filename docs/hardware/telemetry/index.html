@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Telemetry & Sensors — PteronautOS</title>
+<title>Telemetry &amp; Sensors — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,11 +26,11 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Telemetry & Sensors</h1>
+<h1>Telemetry &amp; Sensors</h1>
 <p class='sub-lead'>VBAT, RSSI, link quality and gyro telemetry back to the radio — what is exposed and what is planned.</p>
 <h2>VBAT</h2>
 <p>O receptor mede a tensão da bateria em seu pino ADC (GPIO17 no PWMP7) e a reporta pela telemetria CRSF. Ligue um divisor de tensão da bateria principal ao pad do ADC; calibre a razão do divisor na configuração para que o rádio leia a tensão real do pack.</p>
-<h2>RSSI & link quality</h2>
+<h2>RSSI &amp; link quality</h2>
 <p>RSSI e qualidade de link vêm diretamente do SX1280 e são expostos nos slots de telemetria ELRS padrão. Use LQ (qualidade de link) em vez do RSSI bruto para decisões de alcance — é a métrica mais significativa em 2,4&nbsp;GHz.</p>
 <h2>Telemetria do giroscópio</h2>
 <p>O AHRS Zephyrus pode transmitir roll, pitch e taxa de guinada como telemetria personalizada, para ajustar o giroscópio em voo ou reproduzir um voo depois. É telemetria de diagnóstico — mantenha-a fora do caminho rápido em builds de produção para não inundar o link.</p>

@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>PteronautOS-Architektur — Kernel & Datenfluss — PteronautOS</title>
+<title>PteronautOS-Architektur — Kernel &amp; Datenfluss — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,7 +26,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Architektur: Kernel & Datenfluss</h1>
+<h1>Architektur: Kernel &amp; Datenfluss</h1>
 <p class='sub-lead'>Wie ein CRSF-Datenstrom zu Flügelschlag und Leitwerk wird: Modulgrenzen, die zwei Misch-Kernel und die Zustandsmaschine, die den Pterosaurier am Leben hält, wenn der Link stirbt.</p>
 <h2>Signalpfad</h2>
 <p>PteronautOS ist ein ExpressLRS-4.x-Fork, der den „PWM-Durchreichen“-Schwanz des Empfängers durch eine eigene Flugsteuer-Schicht ersetzt hat. Der Datenweg ist bewusst kurz:</p>
@@ -42,7 +42,7 @@
 <li><strong>Der Kernel ist eine Compilezeit-Familie, eine Laufzeit-Entscheidung.</strong> Sowohl der Wellenform-Flatterer als auch der Getriebe-Controller leben im Binärbild; das aktive Profil wählt den Kernel jeden Update-Tick.</li>
 <li><strong>Failsafe ist kein Ereignis, sondern ein Zustand.</strong> Link-Verlust, Bank-Modus und Stick-Override sind explizite Gates in <code>update()</code>, damit Servos nie durchgehen, solange das Radio schweigt.</li>
 </ol>
-<h2>Zwei Kernel: Waveform & Getriebe</h2>
+<h2>Zwei Kernel: Waveform &amp; Getriebe</h2>
 <p>Ein <em>Kernel</em> ist der Block, der normalisierte Kanäle in Servo-Funktions-µs verwandelt. PteronautOS hat zwei Familien, unterschieden anhand der Mixer-Profilnummer:</p>
 <table>
 <tr>
@@ -85,7 +85,7 @@
 <li>behält denselben Ruder-Mixer und dieselbe µs/Trim/Clamp-Hülle wie das Wellenform-Kernel.</li>
 </ul>
 <p>Ein Ornithopter-Rig kann sogar beide Persönlichkeiten tragen: Flatterstart mit dem Wellenform-Kernel, Reiseflug mit dem Getriebe — der Laufzeit-Profilwechsel ist jene eine Zeile in <code>update()</code>.</p>
-<h2>Zustände: Link, Bench & Failsafe</h2>
+<h2>Zustände: Link, Bench &amp; Failsafe</h2>
 <p><code>update()</code> wird mit festem ~10&nbsp;ms-Takt aus der WiFi/Servo-Schleife aufgerufen und prüft vor jedem Mixer drei Flags:</p>
 <table>
 <tr>

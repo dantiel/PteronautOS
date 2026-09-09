@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Flash & RAM Budget — PteronautOS</title>
+<title>Flash &amp; RAM Budget — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,7 +26,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Flash & RAM Budget</h1>
+<h1>Flash &amp; RAM Budget</h1>
 <p class='sub-lead'>Where the 1MB flash and ~23KB heap go, and how to keep the build under the 60% flash / 65% RAM limits.</p>
 <h2>Flash budget</h2>
 <p>The 1&nbsp;MB ESP8285 flash is dominated by the <strong>WebUI</strong>: the bundled client build is ~160&nbsp;KB compressed (~16% of flash) after tree-shaking. The float runtime (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) is ~9.7&nbsp;KB — real but not the biggest lever. Current baseline sits at ~68.6% flash; the 60% target needs a ~83&nbsp;KB cut, and the WebUI is the only lever large enough to reach it.</p>

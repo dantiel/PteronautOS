@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= yos_title
+    %title!= yos_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,16 +19,16 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %p.tutorial-number= tut_card_yos_number
-        %h1= yos_h1
-        %p.sub-lead= yos_lead
+        %p.tutorial-number!= tut_card_yos_number
+        %h1!= yos_h1
+        %p.sub-lead!= yos_lead
 
-        %h2= yos_h2_dual
+        %h2!= yos_h2_dual
         %p!= yos_dual_intro_markdown
         %table
           %tr
@@ -60,7 +60,7 @@
             %td!= yos_stance_back_html
         %p!= yos_targets_markdown
 
-        %h2= yos_h2_yoshimitsu
+        %h2!= yos_h2_yoshimitsu
         %p!= yos_yoshimitsu_markdown
         %table
           %tr
@@ -85,7 +85,7 @@
             %td!= yos_boot_act4_html
         %p!= yos_harness_markdown
 
-        %h2= yos_h2_library
+        %h2!= yos_h2_library
         %p!= yos_library_markdown
         %ul
           %li!= yos_library_li1_html
@@ -93,7 +93,7 @@
           %li!= yos_library_li3_html
           %li!= yos_library_li4_html
 
-        %h2= yos_h2_conv
+        %h2!= yos_h2_conv
         %p!= yos_conv_markdown
         %ul
           %li!= yos_conv_li1_html
@@ -102,7 +102,7 @@
         %p!= yos_manji_markdown
         %p!= yos_pwm_markdown
 
-        %h2= yos_h2_flasher
+        %h2!= yos_h2_flasher
         %p!= yos_flasher_problem_markdown
         %p!= yos_flasher_solution_markdown
         %p!= yos_parts_label_html
@@ -136,7 +136,7 @@
           %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= yos_bridge_note_link_html
           != yos_bridge_note_b_html
 
-        %h2= yos_h2_wiring
+        %h2!= yos_h2_wiring
         %p!= yos_wiring_markdown
         %table
           %tr
@@ -176,7 +176,7 @@
           %strong!= yos_polarity_html
           %p!= yos_polarity_body_markdown
 
-        %h2= yos_h2_mode
+        %h2!= yos_h2_mode
         %p!= yos_mode_markdown
         %ol
           %li!= yos_mode_li1_html
@@ -186,13 +186,13 @@
           %li!= yos_mode_li5_html
         %p!= yos_mode_reset_markdown
 
-        %h2= yos_h2_esptool
+        %h2!= yos_h2_esptool
         %p!= yos_esptool_markdown
         %pre
           %code!= yos_esptool_code_html
         %p!= yos_esptool_after_markdown
 
-        %h2= yos_h2_verify
+        %h2!= yos_h2_verify
         %ul
           %li!= yos_verify_li1_html
           %li!= yos_verify_li2_html
@@ -201,7 +201,7 @@
           %li!= yos_verify_li5_html
         %p!= yos_verify_done_markdown
 
-        %h2= yos_h2_rp2040
+        %h2!= yos_h2_rp2040
         %p!= yos_rp2040_markdown
         %ul
           %li!= yos_rp2040_li1_html
@@ -212,7 +212,7 @@
           %li!= yos_rp2040_li6_html
         %p!= yos_rp2040_flash_markdown
 
-        %h2= yos_h2_rp2040_pins
+        %h2!= yos_h2_rp2040_pins
         %table
           %tr
             %th!= yos_pins_th1_html
@@ -268,7 +268,7 @@
             %td!= yos_pins_n12_html
         %p!= yos_rp2040_pinmap_markdown
 
-        %h2= yos_h2_yoshi
+        %h2!= yos_h2_yoshi
         %p!= yos_yoshi_markdown
         %table
           %tr
@@ -299,12 +299,12 @@
               %code BACK_TURNED
             %td!= yos_aurora_back_html
         %p!= yos_rgb_markdown
-        %h2= yos_h2_jiguang
+        %h2!= yos_h2_jiguang
         %p!= yos_jiguang_triangle_markdown
         %p!= yos_jiguang_legend_markdown
         %p!= yos_jiguang_levels_markdown
         %p!= yos_jiguang_throne_markdown
-        %p= yos_jiguang_mushin
+        %p!= yos_jiguang_mushin
 
     %footer
       .lang-switch
@@ -320,6 +320,6 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit
 

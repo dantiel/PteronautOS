@@ -19,29 +19,29 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
         %h1!=tel_h1
-        %p.sub-lead= tel_lead
+        %p.sub-lead!= tel_lead
 
-        %h2= tel_h2_vbat
-        %p= tel_p1
+        %h2!= tel_h2_vbat
+        %p!= tel_p1
 
         %h2!=tel_h2_rssi
         %p!=tel_p2
 
-        %h2= tel_h2_gyro
-        %p= tel_p3
+        %h2!= tel_h2_gyro
+        %p!= tel_p3
 
-        %h2= tel_h2_future
+        %h2!= tel_h2_future
         %ul
-          %li= tel_li1
-          %li= tel_li2
-          %li= tel_li3
-          %li= tel_li4
+          %li!= tel_li1
+          %li!= tel_li2
+          %li!= tel_li3
+          %li!= tel_li4
 
     %footer
       .lang-switch
@@ -57,5 +57,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

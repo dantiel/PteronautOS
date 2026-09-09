@@ -55,9 +55,9 @@
 </tr>
 </table>
 <p>Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).</p>
-<h2>Endpoints & direction</h2>
+<h2>Endpoints &amp; direction</h2>
 <p>Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.</p>
-<h2>Rates & expo</h2>
+<h2>Rates &amp; expo</h2>
 <p>Start with <strong>100% rates and 0% expo</strong>. Flap authority is dominated by waveform amplitude, not stick throw, so aggressive radio rates just make the aircraft twitchy. Once it glides and flaps well, add mild expo (15–25%) for a softer centre, and reduce rates only if the roll response over-commands the wings.</p>
 <h2>Verification</h2>
 <ul>

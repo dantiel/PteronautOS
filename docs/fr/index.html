@@ -59,7 +59,7 @@ Essence
 <p class='lead'>PteronautOS est <strong>construit sur ExpressLRS</strong>, transformé en contrôleur de vol pour ornithoptères.</p>
 <p>Pas un quad — pas de moteurs, pas d'ESC, pas de Betaflight. Le mouvement est généré par des <strong>formes d'onde</strong> pilotant deux servos d'aile et un servo de gouvernail de crête.</p>
 <div class='highlight'>
-<code>CRSF (radio) → rx_main → Ornithopter → forme d&#39;onde → servos PWM</code>
+<code>CRSF (radio) → rx_main → Ornithopter → forme d'onde → servos PWM</code>
 </div>
 </section>
 <section id='architecture'>
@@ -69,7 +69,7 @@ Architecture
 </h2>
 <dl class='grid'>
 <dt>Ornithopter</dt>
-<dd>Mixeur, génération de forme d&#39;onde, filtrage de canaux</dd>
+<dd>Mixeur, génération de forme d'onde, filtrage de canaux</dd>
 <dt>Zéphyros</dt>
 <dd>Gyroscope MPU6050 + Mahony AHRS + double PID</dd>
 <dt>ServoOutput</dt>
@@ -83,7 +83,7 @@ Architecture
 <span class='section-num'>03</span>
 Module Gyroscopique Zéphyros
 </h2>
-<p class='lead'>Stabilisation du gouvernail de crête céphalique via MPU6050. Mahony AHRS pour l&#39;estimation d&#39;attitude, double PID pour correction d&#39;angle de roulis et de taux de lacet.</p>
+<p class='lead'>Stabilisation du gouvernail de crête céphalique via MPU6050. Mahony AHRS pour l'estimation d'attitude, double PID pour correction d'angle de roulis et de taux de lacet.</p>
 <table class='specs'>
 <tr>
 <td>Capteur</td>

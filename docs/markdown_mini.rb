@@ -8,6 +8,12 @@
 module MarkdownMini
   ENTITY = /&(?:\#\d+|\#x[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]{1,10});/
 
+  # True when the value carries intentional raw HTML (<strong>, <code>, <a …>).
+  # A literal "< b" (space) is NOT html — only a tag letter right after "<".
+  def self.htmlish?(src)
+    src =~ /<[a-zA-Z][^>]*>/ ? true : false
+  end
+
   def self.escape(src)
     stash = {}
     i = 0

@@ -29,16 +29,16 @@
 <p class='tutorial-number'>Tutoriel 01</p>
 <h1>Flasher PteronautOS</h1>
 <p class='sub-lead'>Compilez et installez le firmware hermétique en utilisant un récepteur CYCLONE ELRS 2,4 GHz 7CH PWM RX comme exemple.</p>
-<p>PteronautOS prend aussi en charge d&#39;autres cartes réceptrices. Partager un ESP8285 ne rend pas leur câblage identique : les GPIO exposés, l&#39;affectation des canaux, les connexions de programmation et les révisions de PCB peuvent différer. L&#39;alimentation et le câblage CH2/CH3 ci-dessous s&#39;appliquent à cet exemple CYCLONE ; vérifiez le brochage de votre carte et la configuration matérielle prise en charge avant de connecter un autre récepteur.</p>
-<p>Avant de brancher l&#39;alimentation, retirez les charges propulsives du mécanisme d&#39;aile et assurez-vous qu&#39;aucun servo ne puisse atteindre une butée dure. Le flashage est un travail électrique ; la cellule doit rester mécaniquement sûre pendant toute la procédure.</p>
+<p>PteronautOS prend aussi en charge d'autres cartes réceptrices. Partager un ESP8285 ne rend pas leur câblage identique : les GPIO exposés, l'affectation des canaux, les connexions de programmation et les révisions de PCB peuvent différer. L'alimentation et le câblage CH2/CH3 ci-dessous s'appliquent à cet exemple CYCLONE ; vérifiez le brochage de votre carte et la configuration matérielle prise en charge avant de connecter un autre récepteur.</p>
+<p>Avant de brancher l'alimentation, retirez les charges propulsives du mécanisme d'aile et assurez-vous qu'aucun servo ne puisse atteindre une butée dure. Le flashage est un travail électrique ; la cellule doit rester mécaniquement sûre pendant toute la procédure.</p>
 <div class='video-embed'>
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='Tutoriel de flashage PteronautOS'></iframe>
 </div>
 <h2>01 · Compiler le firmware</h2>
-<p>Clonez le dépôt, installez PlatformIO et exécutez la commande suivante depuis la racine du dépôt. Le projet PlatformIO est dans src ; cette commande compile l&#39;environnement dédié du récepteur ESP8285 utilisé dans cet exemple.</p>
+<p>Clonez le dépôt, installez PlatformIO et exécutez la commande suivante depuis la racine du dépôt. Le projet PlatformIO est dans src ; cette commande compile l'environnement dédié du récepteur ESP8285 utilisé dans cet exemple.</p>
 <pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
 <h2>02 · Connecter le récepteur</h2>
-<p>Pour ce récepteur CYCLONE, utilisez la sortie 5 V de l&#39;adaptateur FTDI pour l&#39;alimentation du récepteur, pas sa sortie 3,3 V. Ses connexions UART sont sur les broches de signal des canaux 2 et 3 — nul besoin de repérer des pastilles UART séparées.</p>
+<p>Pour ce récepteur CYCLONE, utilisez la sortie 5 V de l'adaptateur FTDI pour l'alimentation du récepteur, pas sa sortie 3,3 V. Ses connexions UART sont sur les broches de signal des canaux 2 et 3 — nul besoin de repérer des pastilles UART séparées.</p>
 <table>
 <tr>
 <th>Adaptateur FTDI</th>
@@ -61,19 +61,19 @@
 <td>Signal CH2 — TX du récepteur (GPIO1)</td>
 </tr>
 </table>
-<p>Le réglage 5 V concerne l&#39;alimentation du récepteur. Consultez la documentation de votre adaptateur : TX/RX doivent utiliser une logique 3,3 V compatible ESP8285, même lorsque la sortie d&#39;alimentation est de 5 V. Ne branchez pas une seconde alimentation en même temps.</p>
+<p>Le réglage 5 V concerne l'alimentation du récepteur. Consultez la documentation de votre adaptateur : TX/RX doivent utiliser une logique 3,3 V compatible ESP8285, même lorsque la sortie d'alimentation est de 5 V. Ne branchez pas une seconde alimentation en même temps.</p>
 <h2>03 · Entrer dans le bootloader</h2>
-<p>Maintenez BOOT (GPIO0) enfoncé, débranchez et rebranchez le câble USB du FTDI, gardez BOOT enfoncé environ une seconde puis relâchez-le. Le script de flashage n&#39;effectue pas de réinitialisation automatique : entrez donc dans le bootloader manuellement avant de l&#39;exécuter.</p>
-<h2>04 · Écrire l&#39;image</h2>
-<p>Depuis la racine du dépôt, exécutez le script de flashage fourni. Il localise un outil de flashage fourni avec PlatformIO et le firmware compilé, sélectionne un port série et écrit l&#39;image avec les réglages flash requis.</p>
+<p>Maintenez BOOT (GPIO0) enfoncé, débranchez et rebranchez le câble USB du FTDI, gardez BOOT enfoncé environ une seconde puis relâchez-le. Le script de flashage n'effectue pas de réinitialisation automatique : entrez donc dans le bootloader manuellement avant de l'exécuter.</p>
+<h2>04 · Écrire l'image</h2>
+<p>Depuis la racine du dépôt, exécutez le script de flashage fourni. Il localise un outil de flashage fourni avec PlatformIO et le firmware compilé, sélectionne un port série et écrit l'image avec les réglages flash requis.</p>
 <pre><code>./scripts/flash.sh</code></pre>
-<p>La sélection automatique du port recherche les périphériques macOS /dev/cu.*. Si plusieurs périphériques série sont connectés, ou si vous utilisez un autre système d&#39;exploitation, sélectionnez explicitement le port de l&#39;adaptateur du récepteur. Remplacez l&#39;exemple ci-dessous par le chemin réel de votre périphérique.</p>
+<p>La sélection automatique du port recherche les périphériques macOS /dev/cu.*. Si plusieurs périphériques série sont connectés, ou si vous utilisez un autre système d'exploitation, sélectionnez explicitement le port de l'adaptateur du récepteur. Remplacez l'exemple ci-dessous par le chemin réel de votre périphérique.</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
-<p>Pour vérifier la communication avec le bootloader sans écrire le firmware, utilisez le mode de vérification optionnel. En cas d&#39;échec, répétez le cycle d&#39;alimentation de BOOT avant de réessayer.</p>
+<p>Pour vérifier la communication avec le bootloader sans écrire le firmware, utilisez le mode de vérification optionnel. En cas d'échec, répétez le cycle d'alimentation de BOOT avant de réessayer.</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
-<h2>05 · Vérifier l&#39;installation</h2>
+<h2>05 · Vérifier l'installation</h2>
 <p>
-Redémarrez le récepteur sans maintenir BOOT. Confirmez que son point d&#39;accès WiFi et sa WebUI deviennent disponibles (SSID : 
+Redémarrez le récepteur sans maintenir BOOT. Confirmez que son point d'accès WiFi et sa WebUI deviennent disponibles (SSID : 
 <code>Pteronaut OS</code>
 , mot de passe : 
 <code>flynatural</code>

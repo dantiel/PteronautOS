@@ -32,7 +32,7 @@
 <p>Le flash 1&nbsp;Mo de l’ESP8285 est dominé par la <strong>WebUI</strong> : le build client empaqueté fait ~160&nbsp;Ko compressés (~16% du flash) après tree-shaking. Le runtime float (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) fait ~9,7&nbsp;Ko — réel mais pas le plus gros levier. La base actuelle est à ~68,6% de flash ; l’objectif de 60% exige une coupe de ~83&nbsp;Ko, et la WebUI est le seul levier assez grand pour l’atteindre.</p>
 <h2>Budget RAM</h2>
 <p>L’ESP8285 expose environ <strong>23&nbsp;Ko de tas</strong>. Les sauvegardes de config ne doivent jamais allouer un gros document JSON sur le tas — le sauveur de config de l’ornithoptère écrit directement dans LittleFS pour éviter d’épuiser le tas et de redémarrer en plein sondage. Gardez <code>DynamicJsonDocument</code> hors du chemin chaud ; préférez les tampons de pile et les écritures directes.</p>
-<h2>Conseils d&#39;optimisation</h2>
+<h2>Conseils d'optimisation</h2>
 <ul>
 <li>Élaguez (tree-shake) les pages ELRS-RX inutilisées du bundle WebUI.</li>
 <li>Évitez la concaténation de <code>String</code> dans les boucles — elle fragmente le tas.</li>

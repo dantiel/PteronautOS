@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Flash & RAM Budget — PteronautOS</title>
+<title>Flash &amp; RAM Budget — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,7 +26,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Flash & RAM Budget</h1>
+<h1>Flash &amp; RAM Budget</h1>
 <p class='sub-lead'>Where the 1MB flash and ~23KB heap go, and how to keep the build under the 60% flash / 65% RAM limits.</p>
 <h2>Flash budget</h2>
 <p>O flash de 1&nbsp;MB do ESP8285 é dominado pela <strong>WebUI</strong>: o build de cliente empacotado tem ~160&nbsp;KB comprimidos (~16% do flash) após tree-shaking. O runtime de float (<code>_scanf_float</code>, <code>_printf_float</code>, <code>_dtoa_r</code>, <code>_strtod_l</code> …) tem ~9,7&nbsp;KB — real, mas não é a maior alavanca. A linha de base atual está em ~68,6% de flash; a meta de 60% exige um corte de ~83&nbsp;KB, e a WebUI é a única alavanca grande o bastante para alcançá-la.</p>

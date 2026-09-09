@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>05</p>
 <h1>Câblage du gyroscope Zéphyros</h1>
-<p class='sub-lead'>Câble un MPU6050 sur le bus I2C, résous les conflits de broches et vérifie l&#39;AHRS via le journal série.</p>
+<p class='sub-lead'>Câble un MPU6050 sur le bus I2C, résous les conflits de broches et vérifie l'AHRS via le journal série.</p>
 <h2>Choix des broches I2C</h2>
 <p>Les broches I2C par défaut de Zephyrus sont <strong>GPIO4 (SDA)</strong> et <strong>GPIO5 (SCL)</strong>. Sur le PWMP7 v1.0 c’est bon ; sur la <strong>v1.1</strong> GPIO2/GPIO5 ne sont pas sortis, donc Zephyrus utilise <strong>GPIO1 (SDA, CH2)</strong> et <strong>GPIO3 (SCL, CH3)</strong>. Vérifiez toujours la sérigraphie contre la carte des broches — GPIO4 est réservé en dur à l’interruption radio du SX1280 et ne doit jamais être réaffecté.</p>
 <h2>Câblage du GY-521</h2>

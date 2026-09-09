@@ -20,25 +20,25 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
         %h1!=st_h1
-        %p.sub-lead= st_lead
+        %p.sub-lead!= st_lead
 
-        %h2= st_h2_lineage
+        %h2!= st_h2_lineage
         %p
           !=st_lineage1a
           %a{href: "https://dantiel.github.io/OrniFlight/", target: "_blank"} OrniFlight
-          = st_lineage1b
+          != st_lineage1b
           %a{href: "https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html", target: "_blank"} servo-efficiency table
-          = st_lineage1c
+          != st_lineage1c
         %p!=st_lineage2
 
-        %h2= st_h2_pipeline
-        %p= st_pipeline
+        %h2!= st_h2_pipeline
+        %p!= st_pipeline
         %pre
           %code
             :preserve
@@ -64,33 +64,33 @@
         %p!=st_nan
         %table
           %tr
-            %th= st_bridge_th_field
-            %th= st_bridge_th_source
-            %th= st_bridge_th_consumed
+            %th!= st_bridge_th_field
+            %th!= st_bridge_th_source
+            %th!= st_bridge_th_consumed
           %tr
             %td
               %code gyroPitchPTerm
             %td
               %code pitchPTerm
-            %td= st_bridge_1
+            %td!= st_bridge_1
           %tr
             %td
               %code gyroPitchITerm
             %td
               %code pitchITerm
-            %td= st_bridge_2
+            %td!= st_bridge_2
           %tr
             %td
               %code gyroPitchDTerm
             %td
               %code pitchDTerm
-            %td= st_bridge_3
+            %td!= st_bridge_3
           %tr
             %td
               %code gyroPitchErrorRate
             %td
               %code pitchErrorRate
-            %td= st_bridge_4
+            %td!= st_bridge_4
           %tr
             %td
               %code gyroRudderCorrection
@@ -103,7 +103,7 @@
             %td
               %code rollCorrection
               × gearbox gain
-            %td= st_bridge_6
+            %td!= st_bridge_6
           %tr
             %td
               %code gyroElevatorCorrection
@@ -111,20 +111,20 @@
               %code pitchCorrection
               × gain ×
               %code aeroGainScale
-            %td= st_bridge_7
+            %td!= st_bridge_7
 
-        %h2= st_h2_ondas
+        %h2!= st_h2_ondas
         %p!=st_ondas
-        %h3= st_h3_cadence
-        %p= st_cadence1
+        %h3!= st_h3_cadence
+        %p!= st_cadence1
         %pre
           %code
             :preserve
               _osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;
               // clamped to [0.5, 2.0] — phase can at most double or halve
         %p!=st_cadence2
-        %h3= st_h3_ferocity
-        %p= st_ferocity1
+        %h3!= st_h3_ferocity
+        %p!= st_ferocity1
         %pre
           %code
             :preserve
@@ -132,8 +132,8 @@
                                + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
               // clamped to [-0.5, 0.5], added to both stroke and return ferocity
         %p!=st_ferocity2
-        %h3= st_h3_balance
-        %p= st_balance1
+        %h3!= st_h3_balance
+        %p!= st_balance1
         %pre
           %code
             :preserve
@@ -148,13 +148,13 @@
 
         %h2!=st_h2_shape
         %p!=st_shape
-        %p= doc_wave_p1
-        %p= doc_wave_p2
+        %p!= doc_wave_p1
+        %p!= doc_wave_p2
 
         .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
           .waveform-controls
             %label{for: "st-wave-down-ferocity"}
-              %span= doc_wave_down
+              %span!= doc_wave_down
               %output{"data-value": "down", for: "st-wave-down-ferocity"} 8.0
               %input#st-wave-down-ferocity{"data-control": "down", type: "range", min: "0", max: "8", step: "0.1", value: "8"}
             .lock-ferocity
@@ -165,53 +165,53 @@
                   %rect.body{x: "4", y: "11", width: "16", height: "10", rx: "2", fill: "none"}
               .lock-lines
             %label{for: "st-wave-up-ferocity"}
-              %span= doc_wave_up
+              %span!= doc_wave_up
               %output{"data-value": "up", for: "st-wave-up-ferocity"} 0.0
               %input#st-wave-up-ferocity{"data-control": "up", type: "range", min: "0", max: "8", step: "0.1", value: "0"}
             %label{for: "st-wave-shape-mix"}
-              %span= doc_wave_mix
+              %span!= doc_wave_mix
               %output{"data-value": "mix", for: "st-wave-shape-mix"} 100%
               %input#st-wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
           .waveform-presets{"aria-label": doc_presets_label}
-            %button{type: "button", "data-preset": "8,0,100"}= doc_preset_extreme
-            %button{type: "button", "data-preset": "7,1,100"}= doc_preset_near
-            %button{type: "button", "data-preset": "8,6,100"}= doc_preset_high
-            %button{type: "button", "data-preset": "8,6,50"}= doc_preset_mixed
+            %button{type: "button", "data-preset": "8,0,100"}!= doc_preset_extreme
+            %button{type: "button", "data-preset": "7,1,100"}!= doc_preset_near
+            %button{type: "button", "data-preset": "8,6,100"}!= doc_preset_high
+            %button{type: "button", "data-preset": "8,6,50"}!= doc_preset_mixed
           %p.waveform-metric{"data-waveform-metric": true, "aria-live": "polite"}
           .waveform-chart
-            %h3= doc_chart_whole
+            %h3!= doc_chart_whole
             .waveform-legend
               %span
                 %i.current
-                = doc_legend_current
+                != doc_legend_current
               %span
                 %i.direct
-                = doc_legend_direct
+                != doc_legend_direct
               %span
                 %i.boundary
-                = doc_legend_reversal
+                != doc_legend_reversal
             %svg{"data-chart": "cycle", role: "img", "aria-label": doc_chart_aria_cycle}
           .waveform-chart
-            %h3= doc_chart_halves
+            %h3!= doc_chart_halves
             .waveform-legend
               %span
                 %i.down
-                = doc_legend_down
+                != doc_legend_down
               %span
                 %i.up
-                = doc_legend_up
+                != doc_legend_up
               %span
                 %i.direct
-                = doc_legend_diagonal
+                != doc_legend_diagonal
             %svg{"data-chart": "halves", role: "img", "aria-label": doc_chart_aria_halves}
         %aside.waveform-caution
-          %strong= doc_caution_title
-          = doc_caution_body
-        %h3= doc_read_h3
-        %p= doc_read_p
+          %strong!= doc_caution_title
+          != doc_caution_body
+        %h3!= doc_read_h3
+        %p!= doc_read_p
 
-        %h2= st_h2_anchor
-        %p= st_anchor1
+        %h2!= st_h2_anchor
+        %p!= st_anchor1
         %pre
           %code
             :preserve
@@ -220,7 +220,7 @@
                     - kDamp * cadence;
         %p!=st_anchor2
 
-        %h2= st_h2_resonance
+        %h2!= st_h2_resonance
         %p!=st_resonance1
         %pre
           %code
@@ -231,7 +231,7 @@
               clamp(_resonanceAccum, -2.0f, 2.0f);
         %p!=st_resonance2
 
-        %h2= st_h2_ssff
+        %h2!= st_h2_ssff
         %p!=st_ssff1
         %pre
           %code
@@ -243,7 +243,7 @@
               // downstroke just ended      → bias feeds the upstroke (recovery)
         %p!=st_ssff2
 
-        %h2= st_h2_aero
+        %h2!= st_h2_aero
         %p!=st_aero1
         %pre
           %code
@@ -253,42 +253,42 @@
         %p!=st_aero2
         %table
           %tr
-            %th= st_aero_th_coeff
-            %th= st_aero_th_default
-            %th= st_aero_th_range
-            %th= st_aero_th_when
+            %th!= st_aero_th_coeff
+            %th!= st_aero_th_default
+            %th!= st_aero_th_range
+            %th!= st_aero_th_when
           %tr
             %td
               %code aeroGlideCoeff
             %td 40
             %td 0–100
-            %td= st_aero_glide_when
+            %td!= st_aero_glide_when
           %tr
             %td
               %code aeroFlapCoeff
             %td 40
             %td 0–100
-            %td= st_aero_flap_when
+            %td!= st_aero_flap_when
         %p!=st_authority
         %table
           %tr
-            %th= st_auth_th_authority
-            %th= st_auth_th_servo
-            %th= st_auth_th_gear
+            %th!= st_auth_th_authority
+            %th!= st_auth_th_servo
+            %th!= st_auth_th_gear
           %tr
-            %td= st_auth_crest
-            %td= st_auth_crest_servo
-            %td= st_auth_crest_gear
+            %td!= st_auth_crest
+            %td!= st_auth_crest_servo
+            %td!= st_auth_crest_gear
           %tr
-            %td= st_auth_wing
-            %td= st_auth_wing_servo
+            %td!= st_auth_wing
+            %td!= st_auth_wing_servo
             %td —
           %tr
-            %td= st_auth_leg
+            %td!= st_auth_leg
             %td —
-            %td= st_auth_leg_gear
+            %td!= st_auth_leg_gear
           %tr
-            %td= st_auth_elevon
+            %td!= st_auth_elevon
             %td —
             %td!=st_auth_elevon_gear
         %p!=st_lag
@@ -309,8 +309,8 @@
               }
         %p!=st_webui2
 
-        %h2= st_h2_tuning
-        %p= st_tuning
+        %h2!= st_h2_tuning
+        %p!= st_tuning
         %ol
           %li!=st_tune_li1
           %li!=st_tune_li2
@@ -321,8 +321,8 @@
           %li!=st_tune_li7
           %li!=st_tune_li8
         %aside.waveform-caution
-          %strong= doc_caution_title
-          = doc_caution_body
+          %strong!= doc_caution_title
+          != doc_caution_body
 
         %h2!=st_h2_status
         %p!=st_status_intro
@@ -337,18 +337,18 @@
                   gyroAileronCorrection = 0.0f;
                   gyroElevatorCorrection= 0.0f;
               #endif
-        %p= st_status_p1
+        %p!= st_status_p1
         %ul
           %li!=st_status_li1
           %li!=st_status_li2
           %li!=st_status_li3
         %p!=st_status_p2
         %p
-          = st_status_final_a
+          != st_status_final_a
           %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"} STABILIZATION.md
-          = st_status_final_b
+          != st_status_final_b
           %a{href: "https://dantiel.github.io/OrniFlight/", target: "_blank"} OrniFlight
-          = st_status_final_c
+          != st_status_final_c
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -363,5 +363,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

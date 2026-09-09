@@ -19,47 +19,47 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %p.tutorial-number= tut_card_first_number
+        %p.tutorial-number!= tut_card_first_number
         %h1!=first_h1
-        %p.sub-lead= first_lead
+        %p.sub-lead!= first_lead
 
-        %h2= first_h2_center
+        %h2!= first_h2_center
         %p!=first_p1
         %p!=first_p2
 
         %h2!=first_h2_direction
         %table
           %tr
-            %th= first_th_stick
-            %th= first_th_surface
+            %th!= first_th_stick
+            %th!= first_th_surface
           %tr
-            %td= first_td_roll
-            %td= first_td_roll_v
+            %td!= first_td_roll
+            %td!= first_td_roll_v
           %tr
-            %td= first_td_pitch
-            %td= first_td_pitch_v
+            %td!= first_td_pitch
+            %td!= first_td_pitch_v
           %tr
-            %td= first_td_yaw
-            %td= first_td_yaw_v
+            %td!= first_td_yaw
+            %td!= first_td_yaw_v
         %p!=first_p3
 
         %h2!=first_h2_endpoints
         %p!=first_p4
 
-        %h2= first_h2_preflight
+        %h2!= first_h2_preflight
         %ul
-          %li= first_li1
-          %li= first_li2
-          %li= first_li3
-          %li= first_li4
-          %li= first_li5
+          %li!= first_li1
+          %li!= first_li2
+          %li!= first_li3
+          %li!= first_li4
+          %li!= first_li5
 
-        %h2= first_h2_maiden
+        %h2!= first_h2_maiden
         %p!=first_p5
 
     %footer
@@ -76,5 +76,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

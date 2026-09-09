@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= zwire_title
+    %title!= zwire_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,38 +19,38 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %p.tutorial-number= tut_card_zeph_number
-        %h1= zwire_h1
-        %p.sub-lead= zwire_lead
+        %p.tutorial-number!= tut_card_zeph_number
+        %h1!= zwire_h1
+        %p.sub-lead!= zwire_lead
 
-        %h2= zwire_h2_pins
+        %h2!= zwire_h2_pins
         %p!=zwire_p1
 
-        %h2= zwire_h2_wiring
+        %h2!= zwire_h2_wiring
         %table
           %tr
             %th GY-521
-            %th= zwire_th_rx
+            %th!= zwire_th_rx
           %tr
             %td VCC
-            %td= zwire_td_vcc_v
+            %td!= zwire_td_vcc_v
           %tr
             %td GND
             %td GND
           %tr
             %td SDA
-            %td= zwire_td_sda_v
+            %td!= zwire_td_sda_v
           %tr
             %td SCL
-            %td= zwire_td_scl_v
+            %td!= zwire_td_scl_v
           %tr
             %td AD0 / INT / XDA / XCL
-            %td= zwire_td_ad0_v
+            %td!= zwire_td_ad0_v
         %p!=zwire_p2
 
         %h2!=zwire_h2_calib
@@ -70,5 +70,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

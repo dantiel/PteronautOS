@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= tut_title
+    %title!= tut_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,44 +19,44 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= tut_h1
-        %p.sub-lead= tut_lead
-        %p= tut_p1
-        %p= tut_p2
+        %h1!= tut_h1
+        %p.sub-lead!= tut_lead
+        %p!= tut_p1
+        %p!= tut_p2
         .tutorial-menu
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/flashing/"}
-            %span.tutorial-number= tut_card_number
-            %strong= tut_card_title
-            %p= tut_card_desc
+            %span.tutorial-number!= tut_card_number
+            %strong!= tut_card_title
+            %p!= tut_card_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/first-flight/"}
-            %span.tutorial-number= tut_card_first_number
+            %span.tutorial-number!= tut_card_first_number
             %strong!=tut_card_first_title
-            %p= tut_card_first_desc
+            %p!= tut_card_first_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/transmitter/"}
-            %span.tutorial-number= tut_card_tx_number
-            %strong= tut_card_tx_title
-            %p= tut_card_tx_desc
+            %span.tutorial-number!= tut_card_tx_number
+            %strong!= tut_card_tx_title
+            %p!= tut_card_tx_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/waveform-tuning/"}
-            %span.tutorial-number= tut_card_wave_number
-            %strong= tut_card_wave_title
-            %p= tut_card_wave_desc
+            %span.tutorial-number!= tut_card_wave_number
+            %strong!= tut_card_wave_title
+            %p!= tut_card_wave_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/zephyrus-wiring/"}
-            %span.tutorial-number= tut_card_zeph_number
-            %strong= tut_card_zeph_title
-            %p= tut_card_zeph_desc
+            %span.tutorial-number!= tut_card_zeph_number
+            %strong!= tut_card_zeph_title
+            %p!= tut_card_zeph_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/yoshimitsu/"}
-            %span.tutorial-number= tut_card_yos_number
-            %strong= tut_card_yos_title
-            %p= tut_card_yos_desc
+            %span.tutorial-number!= tut_card_yos_number
+            %strong!= tut_card_yos_title
+            %p!= tut_card_yos_desc
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}tutorials/companion-compute/"}
-            %span.tutorial-number= tut_card_cc_number
-            %strong= tut_card_cc_title
-            %p= tut_card_cc_desc
+            %span.tutorial-number!= tut_card_cc_number
+            %strong!= tut_card_cc_title
+            %p!= tut_card_cc_desc
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -71,5 +71,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

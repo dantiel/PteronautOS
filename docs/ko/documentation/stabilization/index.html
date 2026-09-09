@@ -306,7 +306,7 @@
 <h2>구현 상태 및 미해결 불일치</h2>
 <p><strong>정직한 지도, 현재 펌웨어(Ornithopter.cpp @ 72c63020).</strong> 위의 이상 법칙은 <em>설계</em>입니다; 코드는 전체 파라미터 표면, 상수, WebUI 슬라이더, 브리지 심을 포함하지만 — 비행 시험 스캐폴딩 블록이 현재 자이로 대부분을 서보 커널에서 분리합니다:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>i18n 작업과 함께 &quot;STEP 7&quot; NaN-가드 테스트로 커밋되고 롤백된 적 없는 이 블록은 오늘날의 서보 커널 동작이 다음과 같음을 의미합니다:</p>
+<p>i18n 작업과 함께 "STEP 7" NaN-가드 테스트로 커밋되고 롤백된 적 없는 이 블록은 오늘날의 서보 커널 동작이 다음과 같음을 의미합니다:</p>
 <ul>
 <li><strong>케이던스, 격렬도-PD, 밸런스, 공진, SSFF</strong> — 모두 파라미터와 브리지에 존재하지만, 소비 지점(<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>)이 0으로 고정되거나 매 프레임 리셋됩니다(Ornithopter.cpp:282–284, 311–313, 354).</li>
 <li><strong>크레스트 러더 안정화</strong>는 <em>플래핑 분기 내부에서</em> 0이 되므로, 러더 보정은 현재 글라이드 분기에서만 작동합니다 — 비행에 필요한 것과 반대입니다(대부분의 교란이 플랩 중간에 도달).</li>

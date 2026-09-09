@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= mix_title
+    %title!= mix_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,148 +19,148 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= mix_h1
-        %p.sub-lead= mix_lead
+        %h1!= mix_h1
+        %p.sub-lead!= mix_lead
 
         %p
           !=mix_p1a
-          %a{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}= mix_link_arch
-          = mix_p1b
-          %a{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}= mix_link_servokernel
-          = mix_p1c
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}!= mix_link_arch
+          != mix_p1b
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}!= mix_link_servokernel
+          != mix_p1c
 
-        %h2= mix_h2_tags
+        %h2!= mix_h2_tags
         %p!=mix_p3_tags_intro
         %table
           %tr
-            %th= mix_th_tag
-            %th= mix_th_name
-            %th= mix_th_meaning
+            %th!= mix_th_tag
+            %th!= mix_th_name
+            %th!= mix_th_meaning
           %tr
             %td
               %code 0
             %td
               %code SF_NONE
-            %td= mix_meaning_none
+            %td!= mix_meaning_none
           %tr
             %td
               %code 1 / 2
             %td
               %code SF_LEFT_WING / SF_RIGHT_WING
-            %td= mix_meaning_wing
+            %td!= mix_meaning_wing
           %tr
             %td
               %code 3
             %td
               %code SF_RUDDER
-            %td= mix_meaning_rudder
+            %td!= mix_meaning_rudder
           %tr
             %td
               %code 4
             %td
               %code SF_MOTOR
-            %td= mix_meaning_motor
+            %td!= mix_meaning_motor
           %tr
             %td
               %code 5 / 6
             %td
               %code SF_VTAIL_LEFT / SF_VTAIL_RIGHT
-            %td= mix_meaning_vtail
+            %td!= mix_meaning_vtail
           %tr
             %td
               %code 7
             %td
               %code SF_ELEVATOR
-            %td= mix_meaning_elevator
+            %td!= mix_meaning_elevator
           %tr
             %td
               %code 8 / 9
             %td
               %code SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING
-            %td= mix_meaning_backwing
+            %td!= mix_meaning_backwing
         %p!=mix_p3
 
-        %h2= mix_h2_profiles
+        %h2!= mix_h2_profiles
         %p!=mix_p4_intro
         %table
           %tr
             %th #
-            %th= mix_th_prof
-            %th= mix_th_kernel
-            %th= mix_th_servos
+            %th!= mix_th_prof
+            %th!= mix_th_kernel
+            %th!= mix_th_servos
             %th funcMap (PWM 3 · 4 · 5)
           %tr
             %td
               %code 0
             %td
               %code SERVO_2WING
-            %td= mix_kernel_wave
+            %td!= mix_kernel_wave
             %td 2
-            %td= mix_fm_row0
+            %td!= mix_fm_row0
           %tr
             %td
               %code 1
             %td
               %code SERVO_2WING_1RUD
-            %td= mix_kernel_wave
+            %td!= mix_kernel_wave
             %td 3
-            %td= mix_fm_row1
+            %td!= mix_fm_row1
           %tr
             %td
               %code 2
             %td
               %code SERVO_4WING
-            %td= mix_kernel_wave
-            %td= mix_servo4
-            %td= mix_fm_row2
+            %td!= mix_kernel_wave
+            %td!= mix_servo4
+            %td!= mix_fm_row2
           %tr
             %td
               %code 3
             %td
               %code GEARBOX_2VTAIL_1RUD
-            %td= mix_kernel_gear
+            %td!= mix_kernel_gear
             %td 3
-            %td= mix_fm_row3
+            %td!= mix_fm_row3
           %tr
             %td
               %code 4
             %td
               %code GEARBOX_1MOT_2VTAIL
-            %td= mix_kernel_gear
+            %td!= mix_kernel_gear
             %td 3
-            %td= mix_fm_row4
+            %td!= mix_fm_row4
           %tr
             %td
               %code 5
             %td
               %code GEARBOX_1MOT_2VTAIL_1RUD
-            %td= mix_kernel_gear
-            %td= mix_servo4b
-            %td= mix_fm_row5
+            %td!= mix_kernel_gear
+            %td!= mix_servo4b
+            %td!= mix_fm_row5
           %tr
             %td
               %code 6
             %td
               %code GEARBOX_1ELE_1RUD
-            %td= mix_kernel_gear
+            %td!= mix_kernel_gear
             %td 2
-            %td= mix_fm_row6
+            %td!= mix_fm_row6
           %tr
             %td
               %code 7
             %td
               %code GEARBOX_1MOT_1ELE_1RUD
-            %td= mix_kernel_gear
+            %td!= mix_kernel_gear
             %td 3
-            %td= mix_fm_row7
+            %td!= mix_fm_row7
         %p!=mix_p4
 
-        %h2= mix_h2_wing
+        %h2!= mix_h2_wing
         %p!=mix_p5
         %p!=mix_p6
         %pre
@@ -177,7 +177,7 @@
           %li!=mix_li2
         %p!=mix_p8
 
-        %h2= mix_h2_rudder
+        %h2!= mix_h2_rudder
         %p!=mix_p9
         %pre
           %code
@@ -190,7 +190,7 @@
         %p!=mix_p10
 
         %h2!=mix_h2_gearbox
-        %p= mix_p11
+        %p!= mix_p11
         %ul
           %li!=mix_gb1
           %li!=mix_gb2
@@ -204,32 +204,32 @@
         %p!=mix_p12
 
         %h2!=mix_h2_gyro
-        %p= mix_p13
+        %p!= mix_p13
         %table
           %tr
-            %th= mix_th_axis
-            %th= mix_th_wavek
-            %th= mix_th_geark
+            %th!= mix_th_axis
+            %th!= mix_th_wavek
+            %th!= mix_th_geark
           %tr
-            %td= mix_gyro_rudder
+            %td!= mix_gyro_rudder
             %td!=mix_gyro_rudder_wave
             %td!=mix_gyro_rudder_gear
           %tr
-            %td= mix_gyro_roll
-            %td= mix_gyro_roll_wave
+            %td!= mix_gyro_roll
+            %td!= mix_gyro_roll_wave
             %td!=mix_gyro_roll_gear
           %tr
-            %td= mix_gyro_pitch
-            %td= mix_gyro_pitch_wave
+            %td!= mix_gyro_pitch
+            %td!= mix_gyro_pitch_wave
             %td!=mix_gyro_pitch_gear
         %p!=mix_p14
 
         %p
-          = mix_p15a
-          %a{href: "#{asset_prefix}#{lang_dir}tutorials/waveform-tuning/"}= mix_link_waveform
-          = mix_p15b
-          %a{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}= mix_link_arch2
-          = mix_p15c
+          != mix_p15a
+          %a{href: "#{asset_prefix}#{lang_dir}tutorials/waveform-tuning/"}!= mix_link_waveform
+          != mix_p15b
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}!= mix_link_arch2
+          != mix_p15c
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -244,5 +244,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

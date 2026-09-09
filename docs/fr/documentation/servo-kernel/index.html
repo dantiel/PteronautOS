@@ -27,8 +27,8 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Noyau servo</h1>
-<p class='sub-lead'>Enveloppe de largeur d&#39;impulsion, trim par fonction et limite de vitesse — le contrat servo bas niveau.</p>
-<h2>Enveloppe de largeur d&#39;impulsion</h2>
+<p class='sub-lead'>Enveloppe de largeur d'impulsion, trim par fonction et limite de vitesse — le contrat servo bas niveau.</p>
+<h2>Enveloppe de largeur d'impulsion</h2>
 <p>Le noyau servo mappe un angle normalisé (−1…+1) vers une largeur d’impulsion à travers une enveloppe globale définie par <code>servoMinUs</code> (défaut <strong>988</strong>) et <code>servoMaxUs</code> (défaut <strong>2012</strong>). Cela a remplacé les anciennes constantes de compilation afin que la course de 0°/180° s’adapte à n’importe quel servo sans recompiler. Les valeurs sont bornées à <code>[500…1490]</code> et <code>[1510…2500]</code> avec <code>min &lt; max</code> imposé.</p>
 <h2>Trim par fonction</h2>
 <p><code>servoTrimUs[]</code> est une correction par <em>ServoFunc</em> (±300&nbsp;µs) appliquée après le mixage. Elle couvre la paire d’ailes (indices 1/2), la gouverne (3) et les ailes arrière (8/9). Utilisez-la pour annuler un décalage de demi-dent du palonnier sur une seule surface — pas pour corriger un déséquilibre de la cellule, qui relève du mixeur ou du gyro.</p>

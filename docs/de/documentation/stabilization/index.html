@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Zephyrus: Stabilisierung & Ondas — PteronautOS</title>
+<title>Zephyrus: Stabilisierung &amp; Ondas — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,7 +27,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Zephyrus: Stabilisierung & Ondas</h1>
+<h1>Zephyrus: Stabilisierung &amp; Ondas</h1>
 <p class='sub-lead'>Das Idealbild der Brücke vom Gyro zum Flügelschlag: Ondas-Atemmodulation, schlag-synchrones Feed-Forward, phasenverriegelte Resonanz und aeroelastische PID-Verstärkung — und eine ehrliche Karte dessen, was die aktuelle Firmware wirklich verdrahtet.</p>
 <h2>Herkunft: OrniFlight und ein vereinfachtes Ondas</h2>
 <p>
@@ -132,7 +132,7 @@
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
 <p>Balance ist bei hohem Wert der destabilisierendste Kanal — der ideale Tuning-Guide hält ihn niedrig (5–15) und fügt ihn zuletzt hinzu. Die Heftigkeits-Anwendung, die Pilotkommando, Ondas- und SSFF-Bias kombiniert, hält die Autorität des Piloten über das volle <code>[1.0, 8.0]</code>-Fenster:</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
-<h2>Wellenformung & PD-Mischung</h2>
+<h2>Wellenformung &amp; PD-Mischung</h2>
 <p>Die Wellenform selbst folgt der OrniFlight-Schlagfamilie: Jede Hälfte nutzt ihre eigene Heftigkeit, eine geteilte Umkehrschwelle hält linke/rechte Flügel in Phase, und ein <em>Shape-Mix</em> pro Profil verwandelt kontinuierlich einen flachen Dwell/Plateau-Schlag in einen gerundeten Pyramidenpfad. Der interaktive Explorer unten rendert die befohlene Geometrie für jedes Ab-/Auf-Heftigkeitspaar — dieselbe Kurve, die der Mixer jeden Tick anfordert.</p>
 <p>Heftigkeit steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Heftigkeit verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Heftigkeit verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
 <p>Die profilbezogene Heftigkeitsform-Steuerung wählt den Hoch-Heftigkeits-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Heftigkeit, sodass eine Hälfte mit niedriger Heftigkeit gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Heftigkeit sich einer direkten diagonalen Traverse nähert.</p>
@@ -283,7 +283,7 @@ Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garanti
 </tr>
 </table>
 <p>Getriebe-PID-Korrekturen werden vor dem Mixen auf ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) begrenzt; der Kamm-Ruder-Pfad auf ±200 µs. Ein Frame Verzögerung ist inhärent: <code>aeroGainScale</code> wird im Getriebe-Mixer berechnet, aber vom <em>nächsten</em> <code>zephyrusUpdate()</code> verbraucht — 4 ms bei 250 Hz, vernachlässigbar für mechanische Servos.</p>
-<h2>WebUI-Panel & Konfigurations-Endpunkte</h2>
+<h2>WebUI-Panel &amp; Konfigurations-Endpunkte</h2>
 <p>Das Ornithopter-Panel zeigt zwei Stabilisierungsgruppen, wenn der Build Zephyrus enthält. Ondas- &amp; SSFF-Slider (0–100): Kadenz P→Phase, Heftigkeit D→Verweilen, Heftigkeit P→Verweilen, Balance I→Asymmetrie, Anker k₂, Resonanz, SSFF-Gain. Aeroelastik-Gruppe: Gleit-Koeffizient und Flatter-Koeffizient. Alle Werte persistieren über <code>POST /pteronautos/config</code> und strömen über <code>GET /pteronautos/state</code> zurück:</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
 <p><code>aero_gain_scale</code> wird berechnet und ist schreibgeschützt. POST akzeptiert Teil-Updates und klemmt jedes Feld serverseitig auf <code>[0, 100]</code>.</p>
@@ -303,7 +303,7 @@ Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garanti
 <strong>Vor dem Flug auf dem Prüfstand testen.</strong>
 Der Explorer beschreibt die kommandierte mathematische Wellenform, keine garantierte Servobewegung. Vermeiden Sie extreme asymmetrische Einstellungen, bis Amplitude, Frequenz, Gestängegeometrie und Servo-Geschwindigkeitsgrenzen ohne aerodynamische Last verifiziert wurden.
 </aside>
-<h2>Implementierungsstand & offene Inkonsistenzen</h2>
+<h2>Implementierungsstand &amp; offene Inkonsistenzen</h2>
 <p><strong>Ehrliche Karte, aktuelle Firmware (Ornithopter.cpp @ 72c63020).</strong> Die idealen Gesetze oben sind das <em>Design</em>; der Code enthält die volle Parameterfläche, die Konstanten, die WebUI-Slider und den Bridge-Shim — aber ein Flugtest-Gerüstblock trennt derzeit den Großteil des Gyros vom Servo-Kernel:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
 <p>Mit der i18n-Arbeit als „STEP 7“-NaN-Guard-Test committet und nie zurückgerollt, bedeutet dieser Block, dass das heutige Servo-Kernel-Verhalten ist:</p>

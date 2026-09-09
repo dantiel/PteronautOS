@@ -19,34 +19,34 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
         %h1!=budget_h1
-        %p.sub-lead= budget_lead
+        %p.sub-lead!= budget_lead
 
-        %h2= budget_h2_flash
+        %h2!= budget_h2_flash
         %p!=budget_p1
 
-        %h2= budget_h2_ram
+        %h2!= budget_h2_ram
         %p!=budget_p2
 
-        %h2= budget_h2_tips
+        %h2!= budget_h2_tips
         %ul
-          %li= budget_li1
+          %li!= budget_li1
           %li!=budget_li2
           %li!=budget_li3
-          %li= budget_li4
+          %li!= budget_li4
           %li!=budget_li5
 
-        %h2= budget_h2_targets
+        %h2!= budget_h2_targets
         %table
           %tr
-            %th= budget_th_target
-            %th= budget_th_flash
-            %th= budget_th_ram
+            %th!= budget_th_target
+            %th!= budget_th_flash
+            %th!= budget_th_ram
           %tr
             %td PteronautOS_ESP8285_2400_RX
             %td ≤ 60%
@@ -67,5 +67,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

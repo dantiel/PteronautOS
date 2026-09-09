@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Zephyrus: Stabilization & Ondas — PteronautOS</title>
+<title>Zephyrus: Stabilization &amp; Ondas — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,7 +27,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Zephyrus: Stabilization & Ondas</h1>
+<h1>Zephyrus: Stabilization &amp; Ondas</h1>
 <p class='sub-lead'>The ideal design of the gyro-to-wingbeat bridge: Ondas breath modulation, stroke-synchronous feed-forward, phase-locked resonance and aeroelastic PID gain scaling — and an honest map of what the current firmware actually wires up.</p>
 <h2>Lineage: OrniFlight and a simplified Ondas</h2>
 <p>
@@ -124,7 +124,7 @@
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
 <p>The oscillator <code>advance()</code> consumes it as <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Tuning range 0–100, default 20.</p>
 <h3>Ferocity — PD blend into dwell</h3>
-<p>The P and D terms are blended into a single ferocity signal that sharpens or softens the waveform&#39;s dwell:</p>
+<p>The P and D terms are blended into a single ferocity signal that sharpens or softens the waveform's dwell:</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
 <p>With <code>ferocityPGain = 0</code> (the default) the behaviour is D-only — rapid pitch changes produce sharper strokes while steady flight stays sinusoidal.</p>
 <h3>Balance — I into asymmetry</h3>
@@ -132,7 +132,7 @@
 <pre><code>float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;&#x000A;// clamped to [-3.0, 3.0]; added to strokeFer, subtracted from returnFer&#x000A;</code></pre>
 <p>Balance is the most destabilising channel when set high — the ideal tuning guide keeps it low (5–15) and adds it last. Ferocity application, combining pilot command, Ondas and SSFF biases, keeps the pilot's authority over the full <code>[1.0, 8.0]</code> window:</p>
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
-<h2>Waveform shaping & PD-blend</h2>
+<h2>Waveform shaping &amp; PD-blend</h2>
 <p>The waveform itself follows the OrniFlight stroke family: each half uses its own ferocity, a shared reversal threshold keeps left/right wings in phase, and a per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into a rounded pyramidal path. The interactive explorer below renders the commanded geometry for any down/up ferocity pair — the same curve the mixer requests each tick.</p>
 <p>Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.</p>
 <p>The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.</p>
@@ -215,7 +215,7 @@ The explorer describes the commanded mathematical waveform, not guaranteed servo
 <h3>Reading extreme combinations</h3>
 <p>A 7 / 1 combination clearly produces a short pointed downstroke and a long sinusoidal return. Exact and near-maximum values require care: the current duration law uses the amount remaining below ferocity 8. Consequently, 8 / 0 allocates only about 0.125% of the cycle to the downstroke, while even 8 / 6 allocates about 0.5%. Position remains continuous, but the requested speed and acceleration can become physically unreachable.</p>
 <h2>Anchor damping (k₂)</h2>
-<p>The oscillator&#39;s damping is exposed as a tunable anchor. The base law is a damped spring toward the cadence target:</p>
+<p>The oscillator's damping is exposed as a tunable anchor. The base law is a damped spring toward the cadence target:</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
 <p>At <code>anchorGain = 0</code> (default) damping is tight — rapid convergence to the commanded cadence. Higher values raise k₂ toward 110 at gain 100, locking the rhythm harder and rejecting perturbations. Tuning range 0–100.</p>
 <h2>Resonance — phase-locked pump</h2>
@@ -283,7 +283,7 @@ The explorer describes the commanded mathematical waveform, not guaranteed servo
 </tr>
 </table>
 <p>Gearbox PID corrections are clamped to ±250 µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>) before mixing; the crest-rudder path is clamped to ±200 µs. One frame of lag is inherent: <code>aeroGainScale</code> is computed in the gearbox mixer but consumed by the <em>next</em> <code>zephyrusUpdate()</code> — 4 ms at 250 Hz, negligible for mechanical servos.</p>
-<h2>WebUI panel & configuration endpoints</h2>
+<h2>WebUI panel &amp; configuration endpoints</h2>
 <p>The ornithopter panel shows two stabilization groups when the build includes Zephyrus. Ondas &amp; SSFF sliders (0–100): Cadence P→Phase, Ferocity D→Dwell, Ferocity P→Dwell, Balance I→Asymmetry, Anchor k₂, Resonance, SSFF Gain. Aeroelastic group: Glide Coefficient and Flap Coefficient. All values persist through <code>POST /pteronautos/config</code> and stream back through <code>GET /pteronautos/state</code>:</p>
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
 <p><code>aero_gain_scale</code> is computed and read-only. POST accepts partial updates and clamps every field to <code>[0, 100]</code> server-side.</p>
@@ -303,10 +303,10 @@ The explorer describes the commanded mathematical waveform, not guaranteed servo
 <strong>Bench-test before flight.</strong>
 The explorer describes the commanded mathematical waveform, not guaranteed servo motion. Avoid extreme asymmetric settings until amplitude, frequency, linkage geometry, and servo-speed limits have been verified without aerodynamic load.
 </aside>
-<h2>Implementation status & open inconsistencies</h2>
+<h2>Implementation status &amp; open inconsistencies</h2>
 <p><strong>Honest map, current firmware (Ornithopter.cpp @ 72c63020).</strong> The ideal laws above are the <em>design</em>; the code contains the full parameter surface, the constants, the WebUI sliders and the bridge shim — but a flight-test scaffolding block currently disconnects most of the gyro from the servo kernel:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>Committed with the i18n work as a &quot;STEP 7&quot; NaN-guard test and never rolled back, this block means today&#39;s servo-kernel behaviour is:</p>
+<p>Committed with the i18n work as a "STEP 7" NaN-guard test and never rolled back, this block means today's servo-kernel behaviour is:</p>
 <ul>
 <li><strong>Cadence, Ferocity-PD, Balance, Resonance, SSFF</strong> — all present as parameters and in the bridge, but their consumption sites (<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>) are pinned to zero or reset every frame (Ornithopter.cpp:282–284, 311–313, 354).</li>
 <li><strong>Crest rudder stabilization</strong> is zeroed <em>inside the flapping branch</em>, so the rudder correction currently acts only in the glide branch — the opposite of what flight needs (most disturbances arrive mid-flap).</li>

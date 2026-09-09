@@ -222,7 +222,7 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 <p>Der Ruder-Mixer wird <em>von beiden Kerneln wörtlich geteilt</em> — eine Gleichung, zwei Zellen:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Standard: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (zur Laufzeit in der WebUI tunbar, pro Backup gespeichert). Die Roll-Kopplung auf dem Ruder lässt einen flügelschweren Pterosaurier koordinierte Kurven ohne Gierfaden-Akrobatik halten; reduzieren Sie das Roll-Gewicht, wenn das Kopf-Ruder im Roll zu aggressiv wirkt.</p>
-<h2>Leitwerks- & Elevon-Mixing (Getriebe)</h2>
+<h2>Leitwerks- &amp; Elevon-Mixing (Getriebe)</h2>
 <p>Das Getriebe-Kernel läuft zustandslos jeden Tick. Seine drei Sub-Mixer:</p>
 <ul>
 <li><strong>Motor</strong> — <code>SF_MOTOR</code>: bei scharf mappt Schub 0…1 auf 1000…2000&nbsp;µs; entschärft oder Link-Verlust erzwingt das Minimum (Motor gestoppt).</li>
@@ -231,7 +231,7 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>Auf dem Getriebe-Kernel speist Zephyrus <em>beide</em> Roll- und Nick-PID-Korrekturen in die Leitwerk-Servos ein (Roll gegenphasig, Nick gleichtaktig), jeweils hart auf ±250&nbsp;µs begrenzt (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Ein Gyro-Glitch kann daher wackeln, aber nie einen Leitwerk-Servo blockieren.</p>
-<h2>Zephyrus-Einspeisung, Trims & Failsafe</h2>
+<h2>Zephyrus-Einspeisung, Trims &amp; Failsafe</h2>
 <p>Je nach Kernel und Achse existieren drei verschiedene Einspeisepunkte:</p>
 <table>
 <tr>

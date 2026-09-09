@@ -19,24 +19,24 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
         %h1!=pwr_h1
-        %p.sub-lead= pwr_lead
+        %p.sub-lead!= pwr_lead
 
-        %h2= pwr_h2_servo
+        %h2!= pwr_h2_servo
         %p!=pwr_p1
 
-        %h2= pwr_h2_bec
+        %h2!= pwr_h2_bec
         %p!=pwr_p2
 
-        %h2= pwr_h2_rx
+        %h2!= pwr_h2_rx
         %p!=pwr_p3
 
-        %h2= pwr_h2_wiring
+        %h2!= pwr_h2_wiring
         %pre
           %code
             :preserve
@@ -46,7 +46,7 @@
                         │
                         ├── RX (4.5–8.4V rail)
                         └── GY-521 (5V, onboard 3.3V reg)
-        %p= pwr_p4
+        %p!= pwr_p4
 
     %footer
       .lang-switch
@@ -62,5 +62,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

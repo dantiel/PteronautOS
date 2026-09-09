@@ -39,7 +39,7 @@
 </p>
 <p>PteronautOS embarque une <strong>implémentation partiellement simplifiée</strong> : la même géométrie mathématique de respiration, mise à l'échelle d'un ESP8285 avec un MPU6050 et jusqu'à neuf servos. Là où OrniFlight simule l'aéroélasticité continue et explore des familles d'enveloppes entières hors ligne, PteronautOS doit décider <em>en ticks de 4 ms</em>, sur un cœur à 80 MHz, la pile radio ExpressLRS partageant le même silicium. Chaque gain de cet article existe dans les deux projets ; les constantes de firmware ci-dessous sont le sous-ensemble embarqué.</p>
 <h2>Chaîne du signal — de Zéphyros à Ornithopter</h2>
-<p>Le pont entre le gyro et le battement d&#39;aile est volontairement court — quatre fichiers, aucune allocation dynamique, aucune file :</p>
+<p>Le pont entre le gyro et le battement d'aile est volontairement court — quatre fichiers, aucune allocation dynamique, aucune file :</p>
 <pre><code>MPU6050 raw (I2C, 1 kHz register reads)&#x000A;  ▼&#x000A;Zephyrus::update()            Mahony AHRS → roll°, pitch°, yawRate °/s&#x000A;  ▼                            dual PID: roll→0°, pitch→0°, yawRate→0°/s&#x000A;4 raw pitch terms exposed      pitchPTerm · pitchITerm · pitchDTerm · pitchErrorRate&#x000A;  ▼&#x000A;ZephyrusFilter.h (250 Hz)      copies terms onto ornithopter.gyroPitch*&#x000A;  ▼&#x000A;Ornithopter::_computeServoMixer() / _computeGearboxMixer()&#x000A;  ▼   Ondas P → phase · PD → dwell · I → asymmetry · SSFF → next stroke&#x000A;_f[]  →  funcMap → wing / crest-rudder / tail servos (µs)&#x000A;</code></pre>
 <p>Les quatre termes bruts sont écrits dans <code>Zephyrus::update()</code> immédiatement après que le PID de tangage a calculé sa correction :</p>
 <pre><code>pitchPTerm     = ZEPHYR_PID_PITCH_KP * pitchErr;                 // raw proportional&#x000A;pitchITerm     = _pidPitch.integrator;                           // accumulated error&#x000A;pitchDTerm     = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative; // low-pass filtered D&#x000A;pitchErrorRate = _pidPitch.lastDerivative;                       // °/s, for SSFF&#x000A;</code></pre>
@@ -103,7 +103,7 @@
 <code>rollCorrection</code>
 × gearbox gain
 </td>
-<td>Boîte : PID de roulis → surfaces d&#39;aileron d&#39;empennage V</td>
+<td>Boîte : PID de roulis → surfaces d'aileron d'empennage V</td>
 </tr>
 <tr>
 <td>
@@ -120,11 +120,11 @@
 <h2>Modulation Ondas — respiration à trois canaux</h2>
 <p><em>Ondas</em> (portugais « ondes ») est le système de respiration à trois canaux qui mappe les termes bruts P, I et D du PID de tangage sur trois dimensions orthogonales de la forme d'onde de battement. C'est une <strong>boucle proprioceptive</strong> : la perception du tangage par le gyro façonne directement le mouvement de l'aile, et le mouvement de l'aile change le tangage ressenti par le gyro.</p>
 <h3>Cadence — P → avance de phase</h3>
-<p>Une erreur de tangage positive (nez vers le haut) avance la phase de l&#39;oscillateur, raccourcissant la demi-course en cours ; une erreur négative la retarde. La loi idéale met à l&#39;échelle le ressort de l&#39;oscillateur :</p>
+<p>Une erreur de tangage positive (nez vers le haut) avance la phase de l'oscillateur, raccourcissant la demi-course en cours ; une erreur négative la retarde. La loi idéale met à l'échelle le ressort de l'oscillateur :</p>
 <pre><code>_osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;&#x000A;// clamped to [0.5, 2.0] — phase can at most double or halve&#x000A;</code></pre>
 <p>L'<code>advance()</code> de l'oscillateur le consomme comme <code>error = kGain · kGainMod · cadenceTarget − kDamp · cadence</code>. Plage de réglage 0–100, défaut 20.</p>
 <h3>Férocité — mélange PD dans le dwell</h3>
-<p>Les termes P et D sont mélangés en un unique signal de férocité qui durcit ou adoucit le dwell de la forme d&#39;onde :</p>
+<p>Les termes P et D sont mélangés en un unique signal de férocité qui durcit ou adoucit le dwell de la forme d'onde :</p>
 <pre><code>ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f&#x000A;                 + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;&#x000A;// clamped to [-0.5, 0.5], added to both stroke and return ferocity&#x000A;</code></pre>
 <p>Avec <code>ferocityPGain = 0</code> (le défaut), le comportement est D-seul — des changements rapides de tangage produisent des courses plus nettes tandis que le vol stable reste sinusoïdal.</p>
 <h3>Balance — I en asymétrie</h3>
@@ -134,8 +134,8 @@
 <pre><code>strokeFer = pilot(stroke) + ferocitySignal + iBias + _ssffFerocityUpBias&#x000A;returnFer = pilot(return) + ferocitySignal − iBias + _ssffFerocityDownBias&#x000A;</code></pre>
 <h2>Mise en forme de l'onde et mélange PD</h2>
 <p>La forme d'onde elle-même suit la famille de courses OrniFlight : chaque moitié utilise sa propre férocité, un seuil d'inversion partagé maintient les ailes gauche/droite en phase, et un <em>mélange de forme</em> par profil transmute continuellement une course plate de dwell/plateau en un chemin pyramidal arrondi. L'explorateur interactif ci-dessous rend la géométrie commandée pour toute paire de férocité bas/haut — la même courbe que le mixeur demande à chaque tick.</p>
-<p>La férocité contrôle à la fois le caractère et le timing d&#39;une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n&#39;y a pas de pause à zéro.</p>
-<p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu&#39;une moitié à faible férocité reste allongée et sinusoïdale, tandis qu&#39;une moitié à forte férocité s&#39;approche d&#39;un parcours diagonal direct.</p>
+<p>La férocité contrôle à la fois le caractère et le timing d'une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n'y a pas de pause à zéro.</p>
+<p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -176,7 +176,7 @@
 <div class='waveform-legend'>
 <span>
 <i class='current'></i>
-Forme d&#39;onde actuelle
+Forme d'onde actuelle
 </span>
 <span>
 <i class='direct'></i>
@@ -210,12 +210,12 @@ Diagonale exacte
 </div>
 <aside class='waveform-caution'>
 <strong>Testez sur banc avant le vol.</strong>
-L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
+L'explorateur décrit la forme d'onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l'amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n'ont pas été vérifiées sans charge aérodynamique.
 </aside>
 <h3>Lire les combinaisons extrêmes</h3>
-<p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n&#39;alloue qu&#39;environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l&#39;accélération demandées peuvent devenir physiquement inatteignables.</p>
-<h2>Amortissement d&#39;ancrage (k₂)</h2>
-<p>L&#39;amortissement de l&#39;oscillateur est exposé comme une ancre réglable. La loi de base est un ressort amorti vers la cible de cadence :</p>
+<p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n'alloue qu'environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l'accélération demandées peuvent devenir physiquement inatteignables.</p>
+<h2>Amortissement d'ancrage (k₂)</h2>
+<p>L'amortissement de l'oscillateur est exposé comme une ancre réglable. La loi de base est un ressort amorti vers la cible de cadence :</p>
 <pre><code>kDamp = 10.0f + anchorGain;                  // anchorGain 0 → k₂=10 (tight)&#x000A;error = kGain * kGainMod * cadenceTarget&#x000A;      - kDamp * cadence;&#x000A;</code></pre>
 <p>À <code>anchorGain = 0</code> (défaut), l'amortissement est serré — convergence rapide vers la cadence commandée. Des valeurs plus élevées montent k₂ vers 110 au gain 100, verrouillant plus fort le rythme et rejetant les perturbations. Plage 0–100.</p>
 <h2>Résonance — pompe à verrouillage de phase</h2>
@@ -258,7 +258,7 @@ L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un m
 <table>
 <tr>
 <th>Autorité</th>
-<th>Noyau servo (forme d&#39;onde)</th>
+<th>Noyau servo (forme d'onde)</th>
 <th>Noyau boîte</th>
 </tr>
 <tr>
@@ -267,7 +267,7 @@ L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un m
 <td>lacet seul (roulis/tangage vont aux pattes)</td>
 </tr>
 <tr>
-<td>Forme d&#39;onde d&#39;aile</td>
+<td>Forme d'onde d'aile</td>
 <td>Modulation de respiration complète Ondas / SSFF</td>
 <td>—</td>
 </tr>
@@ -288,7 +288,7 @@ L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un m
 <pre><code>{&#x000A;  "ornithopter": {&#x000A;    "cadence_gain": 20.0, "ferocity_d_gain": 20.0, "balance_gain": 10.0,&#x000A;    "ferocity_p_gain": 0.0, "anchor_gain": 0.0, "resonance_gain": 0.0,&#x000A;    "ssff_gain": 0.0,&#x000A;    "aero_glide_coeff": 40.0, "aero_flap_coeff": 40.0,&#x000A;    "aero_gain_scale": 0.4&#x000A;  }&#x000A;}&#x000A;</code></pre>
 <p><code>aero_gain_scale</code> est calculé et en lecture seule. POST accepte des mises à jour partielles et borne chaque champ à <code>[0, 100]</code> côté serveur.</p>
 <h2>Guide de réglage</h2>
-<p>La séquence idéale d&#39;essai en vol — chaque étape est un vol, pas un glissement de curseur :</p>
+<p>La séquence idéale d'essai en vol — chaque étape est un vol, pas un glissement de curseur :</p>
 <ol>
 <li><strong>Mettez chaque gain à zéro.</strong> Volez en manuel seul ; la cellule doit être stable et prévisible avant que le gyro gagne un vote.</li>
 <li><strong>Activez la gouverne de crête de Zephyrus</strong> (PID roulis+lacet). Vérifiez que la gouverne résiste à un léger balancement d'aile avant de toucher la forme d'onde.</li>
@@ -301,12 +301,12 @@ L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un m
 </ol>
 <aside class='waveform-caution'>
 <strong>Testez sur banc avant le vol.</strong>
-L&#39;explorateur décrit la forme d&#39;onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l&#39;amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n&#39;ont pas été vérifiées sans charge aérodynamique.
+L'explorateur décrit la forme d'onde mathématique commandée, pas un mouvement de servo garanti. Évitez les réglages asymétriques extrêmes tant que l'amplitude, la fréquence, la géométrie de tringlerie et les limites de vitesse du servo n'ont pas été vérifiées sans charge aérodynamique.
 </aside>
 <h2>État de l'implémentation et incohérences ouvertes</h2>
 <p><strong>Carte honnête, firmware actuel (Ornithopter.cpp @ 72c63020).</strong> Les lois idéales ci-dessus sont la <em>conception</em> ; le code contient la surface de paramètres complète, les constantes, les curseurs WebUI et le shim de pont — mais un bloc d'échafaudage de test en vol déconnecte actuellement l'essentiel du gyro du noyau servo :</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>Committé avec le travail d&#39;i18n comme test de garde NaN « STEP 7 » et jamais annulé, ce bloc signifie que le comportement actuel du noyau servo est :</p>
+<p>Committé avec le travail d'i18n comme test de garde NaN « STEP 7 » et jamais annulé, ce bloc signifie que le comportement actuel du noyau servo est :</p>
 <ul>
 <li><strong>Cadence, Férocité-PD, Balance, Résonance, SSFF</strong> — tous présents comme paramètres et dans le pont, mais leurs points de consommation (<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>) sont épinglés à zéro ou réinitialisés à chaque frame (Ornithopter.cpp:282–284, 311–313, 354).</li>
 <li><strong>La stabilisation de la gouverne de crête</strong> est mise à zéro <em>dans la branche de battement</em>, si bien que la correction de gouverne n'agit actuellement que dans la branche de plané — l'opposé de ce dont le vol a besoin (la plupart des perturbations arrivent en plein battement).</li>

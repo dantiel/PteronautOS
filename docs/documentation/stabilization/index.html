@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>Zéfiros: Estabilização & Ondas — PteronautOS</title>
+<title>Zéfiros: Estabilização &amp; Ondas — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -27,7 +27,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Zéfiros: Estabilização & Ondas</h1>
+<h1>Zéfiros: Estabilização &amp; Ondas</h1>
 <p class='sub-lead'>O desenho ideal da ponte giroscópio–batimento: modulação respiratória Ondas, feed-forward síncrono ao golpe, ressonância com bloqueio de fase e modulação aeroelástica do ganho PID — e um mapa honesto do que o firmware atual realmente liga.</p>
 <h2>Linhagem: OrniFlight e um Ondas simplificado</h2>
 <p>
@@ -306,7 +306,7 @@ O explorador descreve a forma de onda matemática comandada, não o movimento ga
 <h2>Estado da implementação e inconsistências em aberto</h2>
 <p><strong>Mapa honesto, firmware atual (Ornithopter.cpp @ 72c63020).</strong> As leis ideais acima são o <em>design</em>; o código contém a superfície completa de parâmetros, as constantes, os sliders da WebUI e o shim de ponte — mas um bloco de andaime de teste em voo desliga atualmente a maior parte do giroscópio do kernel servo:</p>
 <pre><code>// Ornithopter.cpp:269-275  (inside the flapping branch)&#x000A;#ifdef ZEPHYRUS_ENABLED&#x000A;    // STEP 7: ALL gyro values hard-zeroed (NaN guard test)&#x000A;    _osc.kGainMod = 1.0f;              // cadence channel OFF&#x000A;    gyroRudderCorrection  = 0.0f;      // crest rudder OFF while flapping&#x000A;    gyroAileronCorrection = 0.0f;&#x000A;    gyroElevatorCorrection= 0.0f;&#x000A;#endif&#x000A;</code></pre>
-<p>Cometido com o trabalho de i18n como um teste de guarda NaN &quot;STEP 7&quot; e nunca revertido, este bloco significa que o comportamento atual do kernel servo é:</p>
+<p>Cometido com o trabalho de i18n como um teste de guarda NaN "STEP 7" e nunca revertido, este bloco significa que o comportamento atual do kernel servo é:</p>
 <ul>
 <li><strong>Cadência, Ferocidade-PD, Equilíbrio, Ressonância, SSFF</strong> — todos presentes como parâmetros e na ponte, mas os seus locais de consumo (<code>kGainMod</code>, <code>ferocitySignal</code>, <code>iBias</code>, <code>resonanceBias</code>) estão fixados a zero ou reiniciados a cada frame (Ornithopter.cpp:282–284, 311–313, 354).</li>
 <li><strong>A estabilização do leme de crista</strong> é zerada <em>dentro do ramo de batimento</em>, pelo que a correção do leme atua atualmente apenas no ramo de planagem — o oposto do que o voo precisa (a maioria das perturbações chega a meio da batida).</li>

@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= doc_title
+    %title!= doc_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -20,58 +20,58 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= doc_h1
-        %p.sub-lead= doc_lead
+        %h1!= doc_h1
+        %p.sub-lead!= doc_lead
 
-        %h2= arch_title
+        %h2!= arch_title
         %dl.grid
-          %dt= arch_ornithopter_title
-          %dd= arch_ornithopter_desc
-          %dt= arch_zephyrus_title
-          %dd= arch_zephyrus_desc
-          %dt= arch_servo_title
-          %dd= arch_servo_desc
-          %dt= arch_target_title
-          %dd= arch_target_desc
+          %dt!= arch_ornithopter_title
+          %dd!= arch_ornithopter_desc
+          %dt!= arch_zephyrus_title
+          %dd!= arch_zephyrus_desc
+          %dt!= arch_servo_title
+          %dd!= arch_servo_desc
+          %dt!= arch_target_title
+          %dd!= arch_target_desc
 
-        %h2= doc_h2_articles
+        %h2!= doc_h2_articles
         .tutorial-menu
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/architecture/"}
             %strong!=archart_h1
-            %p= archart_lead
+            %p!= archart_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/companion-compute/"}
-            %strong= cc_h1
-            %p= cc_lead
+            %strong!= cc_h1
+            %p!= cc_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}
-            %strong= mix_h1
-            %p= mix_lead
+            %strong!= mix_h1
+            %p!= mix_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/stabilization/"}
             %strong!=st_h1
-            %p= st_lead
+            %p!= st_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}
-            %strong= sk_h1
-            %p= sk_lead
+            %strong!= sk_h1
+            %p!= sk_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/failsafe/"}
-            %strong= fs_h1
-            %p= fs_lead
+            %strong!= fs_h1
+            %p!= fs_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}documentation/budget/"}
             %strong!=budget_h1
-            %p= budget_lead
+            %p!= budget_lead
 
         %section#ferocity-waveform.waveform-docs
-          %h2= doc_wave_h2
-          %p= doc_wave_p1
-          %p= doc_wave_p2
+          %h2!= doc_wave_h2
+          %p!= doc_wave_p1
+          %p!= doc_wave_p2
 
           .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
             .waveform-controls
               %label{for: "wave-down-ferocity"}
-                %span= doc_wave_down
+                %span!= doc_wave_down
                 %output{"data-value": "down", for: "wave-down-ferocity"} 8.0
                 %input#wave-down-ferocity{"data-control": "down", type: "range", min: "0", max: "8", step: "0.1", value: "8"}
               .lock-ferocity
@@ -82,91 +82,91 @@
                     %rect.body{x: "4", y: "11", width: "16", height: "10", rx: "2", fill: "none"}
                 .lock-lines
               %label{for: "wave-up-ferocity"}
-                %span= doc_wave_up
+                %span!= doc_wave_up
                 %output{"data-value": "up", for: "wave-up-ferocity"} 0.0
                 %input#wave-up-ferocity{"data-control": "up", type: "range", min: "0", max: "8", step: "0.1", value: "0"}
               %label{for: "wave-shape-mix"}
-                %span= doc_wave_mix
+                %span!= doc_wave_mix
                 %output{"data-value": "mix", for: "wave-shape-mix"} 100%
                 %input#wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
 
             .waveform-presets{"aria-label": doc_presets_label}
-              %button{type: "button", "data-preset": "8,0,100"}= doc_preset_extreme
-              %button{type: "button", "data-preset": "7,1,100"}= doc_preset_near
-              %button{type: "button", "data-preset": "8,6,100"}= doc_preset_high
-              %button{type: "button", "data-preset": "8,6,50"}= doc_preset_mixed
+              %button{type: "button", "data-preset": "8,0,100"}!= doc_preset_extreme
+              %button{type: "button", "data-preset": "7,1,100"}!= doc_preset_near
+              %button{type: "button", "data-preset": "8,6,100"}!= doc_preset_high
+              %button{type: "button", "data-preset": "8,6,50"}!= doc_preset_mixed
 
             %p.waveform-metric{"data-waveform-metric": true, "aria-live": "polite"}
 
             .waveform-chart
-              %h3= doc_chart_whole
+              %h3!= doc_chart_whole
               .waveform-legend
                 %span
                   %i.current
-                  = doc_legend_current
+                  != doc_legend_current
                 %span
                   %i.direct
-                  = doc_legend_direct
+                  != doc_legend_direct
                 %span
                   %i.boundary
-                  = doc_legend_reversal
+                  != doc_legend_reversal
               %svg{"data-chart": "cycle", role: "img", "aria-label": doc_chart_aria_cycle}
 
             .waveform-chart
-              %h3= doc_chart_halves
+              %h3!= doc_chart_halves
               .waveform-legend
                 %span
                   %i.down
-                  = doc_legend_down
+                  != doc_legend_down
                 %span
                   %i.up
-                  = doc_legend_up
+                  != doc_legend_up
                 %span
                   %i.direct
-                  = doc_legend_diagonal
+                  != doc_legend_diagonal
               %svg{"data-chart": "halves", role: "img", "aria-label": doc_chart_aria_halves}
 
-          %h3= doc_read_h3
-          %p= doc_read_p
+          %h3!= doc_read_h3
+          %p!= doc_read_p
           %aside.waveform-caution
-            %strong= doc_caution_title
-            = doc_caution_body
+            %strong!= doc_caution_title
+            != doc_caution_body
 
-        %h2= doc_h2_concepts
+        %h2!= doc_h2_concepts
         %dl.grid
-          %dt= doc_c_ferocity
-          %dd= doc_c_ferocity_d
-          %dt= doc_c_waveform
-          %dd= doc_c_waveform_d
-          %dt= doc_c_glide
-          %dd= doc_c_glide_d
-          %dt= doc_c_flap
-          %dd= doc_c_flap_d
-          %dt= doc_c_rudder
-          %dd= doc_c_rudder_d
-          %dt= doc_c_throttle
-          %dd= doc_c_throttle_d
-          %dt= doc_c_failsafe
-          %dd= doc_c_failsafe_d
+          %dt!= doc_c_ferocity
+          %dd!= doc_c_ferocity_d
+          %dt!= doc_c_waveform
+          %dd!= doc_c_waveform_d
+          %dt!= doc_c_glide
+          %dd!= doc_c_glide_d
+          %dt!= doc_c_flap
+          %dd!= doc_c_flap_d
+          %dt!= doc_c_rudder
+          %dd!= doc_c_rudder_d
+          %dt!= doc_c_throttle
+          %dd!= doc_c_throttle_d
+          %dt!= doc_c_failsafe
+          %dd!= doc_c_failsafe_d
 
-        %h2= doc_h2_manuals
+        %h2!= doc_h2_manuals
         %table
           %tr
             %td= "PTERONAUTOS.md"
             %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md", target: "_blank"}= doc_manual_main
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/PTERONAUTOS.md", target: "_blank"}!= doc_manual_main
           %tr
             %td= "STABILIZATION.md"
             %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"}= doc_manual_stab
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/STABILIZATION.md", target: "_blank"}!= doc_manual_stab
           %tr
             %td= "WEBUI_I18N.md"
             %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md", target: "_blank"}= doc_manual_webui
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/docs/WEBUI_I18N.md", target: "_blank"}!= doc_manual_webui
           %tr
             %td= "HARDWARE.md"
             %td
-              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= doc_manual_hw
+              %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}!= doc_manual_hw
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -181,5 +181,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

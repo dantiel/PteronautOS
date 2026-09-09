@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>PteronautOS Architecture — Kernels & Data Flow — PteronautOS</title>
+<title>PteronautOS Architecture — Kernels &amp; Data Flow — PteronautOS</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,7 +26,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Architecture: Kernels & Data Flow</h1>
+<h1>Architecture: Kernels &amp; Data Flow</h1>
 <p class='sub-lead'>How a CRSF datastream becomes wingbeat and tail: module boundaries, the two mixer kernels, and the state machine that keeps the pterosaur alive when the link dies.</p>
 <h2>Signal pipeline</h2>
 <p>PteronautOS is an ExpressLRS 4.x fork that replaced the "PWM passthrough" tail of the receiver with a dedicated flight-control layer. The data path is deliberately short:</p>
@@ -42,7 +42,7 @@
 <li><strong>The kernel is a compile-time family, a runtime choice.</strong> Both the waveform flapper and the gearbox controller live in the binary; the active profile picks the kernel every update tick.</li>
 <li><strong>Failsafe is not an event, it is a state.</strong> Link-down, bench mode and stick-override are explicit gates in <code>update()</code>, so servos can never run away while the radio is silent.</li>
 </ol>
-<h2>Two kernels: waveform & gearbox</h2>
+<h2>Two kernels: waveform &amp; gearbox</h2>
 <p>A <em>kernel</em> is the block that turns normalized channels into servo-function µs. PteronautOS has two families, discriminated by the mixer-profile number:</p>
 <table>
 <tr>
@@ -85,7 +85,7 @@
 <li>keeps the same rudder mixer and µs/trim/clamp envelope as the waveform kernel.</li>
 </ul>
 <p>One ornithopter rig can even carry both personalities: flapping launch with the waveform kernel, cruise on the gearbox — the runtime profile switch is that single line in <code>update()</code>.</p>
-<h2>Link, bench & failsafe states</h2>
+<h2>Link, bench &amp; failsafe states</h2>
 <p><code>update()</code> is called on a fixed ~10&nbsp;ms cadence from the WiFi/servo loop and gates on three flags before any mixer runs:</p>
 <table>
 <tr>

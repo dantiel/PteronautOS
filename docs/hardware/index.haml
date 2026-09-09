@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= hw_title
+    %title!= hw_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -20,28 +20,28 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/", class: "active"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= hw_h1
-        %p.sub-lead= hw_lead
+        %h1!= hw_h1
+        %p.sub-lead!= hw_lead
 
-        %h2= hw_h2_boards
+        %h2!= hw_h2_boards
         %table
           %tr
-            %td= hw_th_board
-            %td= hw_th_mcu
+            %td!= hw_th_board
+            %td!= hw_th_mcu
           %tr
-            %td= hw_board_v10
-            %td= hw_mcu_val
+            %td!= hw_board_v10
+            %td!= hw_mcu_val
           %tr
-            %td= hw_board_v11
-            %td= hw_mcu_val
+            %td!= hw_board_v11
+            %td!= hw_mcu_val
 
-        %h2= hw_h2_compat
-        %p= hw_compat_lead
+        %h2!= hw_h2_compat
+        %p!= hw_compat_lead
         .hw-toolbar
           %input.hw-filter{type: "search", placeholder: hw_sort_search, "aria-label": hw_sort_search, "data-hw-filter": true}
           %span.hw-count{"data-hw-count": true, "data-count-label": hw_sort_count}
@@ -49,13 +49,13 @@
           %table.hw-table{"data-hw-table": true}
             %thead
               %tr
-                %th{"data-sort": "board", "data-type": "alpha"}= hw_th_board
-                %th{"data-sort": "ch", "data-type": "num"}= hw_th_ch
-                %th{"data-sort": "volt", "data-type": "num"}= hw_th_volt
-                %th{"data-sort": "weight", "data-type": "num"}= hw_th_weight
-                %th{"data-sort": "price", "data-type": "num"}= hw_th_price
-                %th= hw_th_mcu
-                %th= hw_th_notes
+                %th{"data-sort": "board", "data-type": "alpha"}!= hw_th_board
+                %th{"data-sort": "ch", "data-type": "num"}!= hw_th_ch
+                %th{"data-sort": "volt", "data-type": "num"}!= hw_th_volt
+                %th{"data-sort": "weight", "data-type": "num"}!= hw_th_weight
+                %th{"data-sort": "price", "data-type": "num"}!= hw_th_price
+                %th!= hw_th_mcu
+                %th!= hw_th_notes
             %tbody
               %tr
                 %td{"data-val": "radiomaster er4"}
@@ -156,7 +156,7 @@
                 %td{"data-val": "0.6"} 0.6 g
                 %td{"data-val": "12"} ~$12
                 %td ESP8285 · SX1280
-                %td= hw_note_crsfonly
+                %td!= hw_note_crsfonly
               %tr
                 %td{"data-val": "crsf pwm 12ch adapter"}
                   %strong CRSF→PWM 12CH Adapter
@@ -166,42 +166,42 @@
                 %td{"data-val": "2.0"} 2.0 g
                 %td{"data-val": "10"} ~$10
                 %td — (passive)
-                %td= hw_note_conv12
-        %p.hw-note= hw_weight_note
-        %p.hw-note= hw_esp32_note
-        %p.hw-note= hw_ep2_note
+                %td!= hw_note_conv12
+        %p.hw-note!= hw_weight_note
+        %p.hw-note!= hw_esp32_note
+        %p.hw-note!= hw_ep2_note
 
-        %h2= hw_h2_specs
+        %h2!= hw_h2_specs
         %table
           %tr
-            %td= hw_spec_mcu
-            %td= hw_spec_mcu_v
+            %td!= hw_spec_mcu
+            %td!= hw_spec_mcu_v
           %tr
-            %td= hw_spec_radio
-            %td= hw_spec_radio_v
+            %td!= hw_spec_radio
+            %td!= hw_spec_radio_v
           %tr
-            %td= hw_spec_gyro
-            %td= hw_spec_gyro_v
+            %td!= hw_spec_gyro
+            %td!= hw_spec_gyro_v
           %tr
-            %td= hw_spec_servos
-            %td= hw_spec_servos_v
+            %td!= hw_spec_servos
+            %td!= hw_spec_servos_v
 
-        %h2= hw_h2_wiring
-        %p= hw_wiring_p
+        %h2!= hw_h2_wiring
+        %p!= hw_wiring_p
         .tutorial-menu
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/power/"}
             %strong!=pwr_h1
-            %p= pwr_lead
+            %p!= pwr_lead
           %a.tutorial-card{href: "#{asset_prefix}#{lang_dir}hardware/telemetry/"}
             %strong!=tel_h1
-            %p= tel_lead
+            %p!= tel_lead
         %p
-          %a{href: "#{asset_prefix}en/hardware-pwmp7/"}= hw_link_pwmp7
+          %a{href: "#{asset_prefix}en/hardware-pwmp7/"}!= hw_link_pwmp7
         %p
-          %a{href: "https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html", target: "_blank"}= hw_link_orniflight
-        %p.hw-note= hw_servo_note
+          %a{href: "https://dantiel.github.io/OrniFlight/en/wiki/servo_efficiency.html", target: "_blank"}!= hw_link_orniflight
+        %p.hw-note!= hw_servo_note
         %p
-          %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}= hw_link_full
+          %a{href: "https://github.com/dantiel/PteronautOS/blob/master/HARDWARE.md", target: "_blank"}!= hw_link_full
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
@@ -216,5 +216,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

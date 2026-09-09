@@ -4,15 +4,25 @@ require "json"
 require "haml"
 require_relative "markdown_mini"
 
-# Hermetic suffix convention (identical across all 11 languages):
-#   *_markdown ??? markdown source, rendered to HTML at build time (use != in HAML)
-#   *_html     ??? raw HTML (tags/entities), rendered unescaped (use != in HAML)
-#   anything else ??? plain text, rendered escaped (= in HAML)
+# Hermetic i18n rendering — the parser is the single authority.
+# enrich_translations recognises each key BY NAME and BY CONTENT and emits FINAL
+# HTML for every value, so HAML carries zero logic and uses one uniform operator:
+#   *_markdown ??? markdown source, rendered to HTML here
+#   *_html     ??? raw HTML (tags/entities), emitted as-is
+#   raw <tag>  ??? legacy inline HTML (no suffix) — emitted as-is, never escaped
+#   anything   ??? plain text, escaped here (entity-aware: bare & < > escaped,
+#                 existing entities like &nbsp; preserved)
 def enrich_translations(vars)
   vars.each do |k, v|
-    if k.end_with?("_markdown") && v.is_a?(String)
-      vars[k] = MarkdownMini.render(v)
-    end
+    next unless v.is_a?(String)
+    vars[k] =
+      if k.end_with?("_markdown")
+        MarkdownMini.render(v)
+      elsif k.end_with?("_html") || MarkdownMini.htmlish?(v)
+        v
+      else
+        MarkdownMini.escape(v)
+      end
   end
   vars
 end

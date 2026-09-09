@@ -19,9 +19,9 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
         %h1!=archart_h1
@@ -49,7 +49,7 @@
           %li!=archart_li1
           %li
             !=archart_li2a
-            %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}= archart_ref_mixers
+            %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}!= archart_ref_mixers
             !=archart_li2b
           %li!=archart_li3
           %li!=archart_li4
@@ -58,20 +58,20 @@
         %p!=archart_p3
         %table
           %tr
-            %th= archart_th_family
-            %th= archart_th_profiles
-            %th= archart_th_actuators
-            %th= archart_th_model
+            %th!= archart_th_family
+            %th!= archart_th_profiles
+            %th!= archart_th_actuators
+            %th!= archart_th_model
           %tr
             %td!=archart_td_wave
             %td 0 SERVO_2WING · 1 SERVO_2WING_1RUD · 2 SERVO_4WING
-            %td= archart_td_wave_act
-            %td= archart_td_wave_model
+            %td!= archart_td_wave_act
+            %td!= archart_td_wave_model
           %tr
             %td!=archart_td_gear
             %td 3 GEARBOX_2VTAIL_1RUD · 4 GEARBOX_1MOT_2VTAIL · 5 GEARBOX_1MOT_2VTAIL_1RUD · 6 GEARBOX_1ELE_1RUD · 7 GEARBOX_1MOT_1ELE_1RUD
-            %td= archart_td_gear_act
-            %td= archart_td_gear_model
+            %td!= archart_td_gear_act
+            %td!= archart_td_gear_model
         %p!=archart_p4
 
         %h2!=archart_h2_servo
@@ -98,23 +98,23 @@
         %p!=archart_p8
         %table
           %tr
-            %th= archart_th_state
-            %th= archart_th_cond
-            %th= archart_th_behaviour
+            %th!= archart_th_state
+            %th!= archart_th_cond
+            %th!= archart_th_behaviour
           %tr
-            %td= archart_st1
+            %td!= archart_st1
             %td!=archart_st1c
             %td!=archart_st1b
           %tr
-            %td= archart_st2
+            %td!= archart_st2
             %td!=archart_st2c
             %td!=archart_st2b
           %tr
-            %td= archart_st3
+            %td!= archart_st3
             %td!=archart_st3c
             %td!=archart_st3b
           %tr
-            %td= archart_st4
+            %td!= archart_st4
             %td!=archart_st4c
             %td!=archart_st4b
         %p!=archart_p9
@@ -122,11 +122,11 @@
         %h2!=archart_h2_map
         %table
           %tr
-            %th= archart_th_module
-            %th= archart_th_path
-            %th= archart_th_resp
+            %th!= archart_th_module
+            %th!= archart_th_path
+            %th!= archart_th_resp
           %tr
-            %td= archart_m1
+            %td!= archart_m1
             %td
               %code src/lib/Ornithopter/
             %td!=archart_m1r
@@ -136,30 +136,30 @@
               %code src/lib/Ornithopter/OrnithopterConfig.h
             %td!=archart_m2r
           %tr
-            %td= archart_m3
+            %td!= archart_m3
             %td
               %code src/lib/Ornithopter/OrnithopterWaveform.h
             %td!=archart_m3r
           %tr
-            %td= archart_m4
+            %td!= archart_m4
             %td
               %code src/lib/Zephyrus/
             %td!=archart_m4r
           %tr
-            %td= archart_m5
+            %td!= archart_m5
             %td
               %code src/lib/ServoOutput/devServoOutput.cpp
             %td!=archart_m5r
           %tr
-            %td= archart_m6
+            %td!= archart_m6
             %td
               %code src/lib/WIFI/devWIFI.cpp
             %td!=archart_m6r
         %p
           !=archart_p11
-          %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}= archart_ref_mixers
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/mixers/"}!= archart_ref_mixers
           !=archart_p11b
-          %a{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}= archart_ref_servokernel
+          %a{href: "#{asset_prefix}#{lang_dir}documentation/servo-kernel/"}!= archart_ref_servokernel
           !=archart_p11c
     %footer
       .lang-switch
@@ -175,5 +175,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit

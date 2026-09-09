@@ -3,7 +3,7 @@
   %head
     %meta{charset: "utf-8"}
     %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
-    %title= fs_title
+    %title!= fs_title
     %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
     %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
     %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
@@ -19,29 +19,29 @@
       %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
         %span.pteronaut> PTERONAUT
         %span.os OS
-      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}= nav_tutorials
-      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}= nav_hardware
-      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/", class: "active"}!= nav_documentation
     %main.sub-main
       .sub-content
-        %h1= fs_h1
-        %p.sub-lead= fs_lead
+        %h1!= fs_h1
+        %p.sub-lead!= fs_lead
 
-        %h2= fs_h2_trigger
+        %h2!= fs_h2_trigger
         %p!=fs_p1
 
-        %h2= fs_h2_center
+        %h2!= fs_h2_center
         %p!=fs_p2
 
-        %h2= fs_h2_grace
+        %h2!= fs_h2_grace
         %p!=fs_p3
 
-        %h2= fs_h2_recover
-        %p= fs_p4
+        %h2!= fs_h2_recover
+        %p!= fs_p4
 
         %aside.waveform-caution
-          %strong= doc_caution_title
-          = doc_caution_body
+          %strong!= doc_caution_title
+          != doc_caution_body
 
     %footer
       .lang-switch
@@ -57,5 +57,5 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}= footer_github
-      %p.credit= footer_credit
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit
