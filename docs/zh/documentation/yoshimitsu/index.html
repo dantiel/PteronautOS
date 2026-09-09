@@ -95,7 +95,7 @@
 <p><p>姿态命令保持开放：<code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>，以及 <code>STATUS</code>、<code>SERVO i us</code> 和 <code>HELP</code>。管理命令被锁在提示符之后：先输入 <code>極光</code>，然后输入 <code>DOC</code>、<code>SETUP</code>、<code>JIGUANG</code>、<code>MUTE</code>、<code>CRSF</code>、<code>SCORE</code>、<code>ELRS</code>、<code>LEGEND</code>、<code>BRIDGE</code>、<code>ADMIN</code> 或 <code>MUSHIN</code>。</p></p>
 <p><p><code>極光 DOC</code> 打印秘籍目录；<code>極光 SETUP</code> 打印冥想向导(姿态、声音级别、MUSHIN 状态、接收机电源)。没有提示符的行触碰到受保护命令时，会回答<em>“王座受到守护”</em>并返回。</p></p>
 <h2>MUSHIN 無心 — 无心协议</h2>
-<p><p>肌肉记忆桥(geist→手)通过刷写器所用的同两根线传输 4 字段帧。开机即武装，并持久化到闪存。</p></p>
+<p><p>肌肉记忆桥(灵→手)通过刷写器所用的同两根线传输 4 字段帧。开机即武装，并持久化到闪存。</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>部署</h2>
 <p><p>将 <code>sketches/yoshimitsu</code> 文件夹安装为 Arduino 库，然后打开 <strong>文件 → 示例 → Yoshimitsu → Yoshimitsu_Default</strong>。刷写一次后，后续更新只需 <code>git pull</code> 或新版本——草图保持不变。</p></p>

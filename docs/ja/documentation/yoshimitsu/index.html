@@ -95,7 +95,7 @@
 <p><p>構えコマンドは開いたままです: <code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>、加えて <code>STATUS</code>、<code>SERVO i us</code>、<code>HELP</code>。管理者コマンドはプロンプトの後ろに施錠されています。まず <code>極光</code> を打ち、それから <code>DOC</code>、<code>SETUP</code>、<code>JIGUANG</code>、<code>MUTE</code>、<code>CRSF</code>、<code>SCORE</code>、<code>ELRS</code>、<code>LEGEND</code>、<code>BRIDGE</code>、<code>ADMIN</code>、<code>MUSHIN</code> を打ちます。</p></p>
 <p><p><code>極光 DOC</code> はチートコード一覧を、<code>極光 SETUP</code> は瞑想ウィザード(構え・声のレベル・MUSHIN 状態・受信機電源)を印字します。プロンプトなしの行が施錠コマンドに当たると <em>「王座は守られている」</em> と答え、戻ります。</p></p>
 <h2>MUSHIN 無心 — 無心のプロトコル</h2>
-<p><p>筋記憶の橋(geist→手)は、フラッシャーと同じ2本のワイヤで4フィールドのフレームを話します。装填状態で起動し、フラッシュに永続化されます。</p></p>
+<p><p>筋記憶の橋(精神→手)は、フラッシャーと同じ2本のワイヤで4フィールドのフレームを話します。装填状態で起動し、フラッシュに永続化されます。</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>導入</h2>
 <p><p><code>sketches/yoshimitsu</code> フォルダを Arduino ライブラリとしてインストールし、<strong>ファイル → スケッチ例 → Yoshimitsu → Yoshimitsu_Default</strong> を開きます。一度書き込めば、以後の更新は <code>git pull</code> または新リリースで、スケッチはそのまま残ります。</p></p>

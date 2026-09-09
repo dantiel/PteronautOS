@@ -95,7 +95,7 @@
 <p><p>Команды стоек остаются открытыми: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, плюс <code>STATUS</code>, <code>SERVO i us</code> и <code>HELP</code>. Команды администратора заперты за промптом: сначала введите <code>極光</code>, затем <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> или <code>MUSHIN</code>.</p></p>
 <p><p><code>極光 DOC</code> печатает каталог чит-кодов; <code>極光 SETUP</code> печатает мастер медитации (стойка, уровень голоса, состояние MUSHIN, питание приёмника). Строка без промпта, попавшая на защищённую команду, отвечает <em>«трон охраняется»</em> и возвращается.</p></p>
 <h2>MUSHIN 無心 — протокол без-ума</h2>
-<p><p>Мост мышечной памяти (geist→рука) говорит кадром из 4 полей по тем же двум проводам, что и прошивальщик. Стартует взведённым, сохраняется во флеш.</p></p>
+<p><p>Мост мышечной памяти (дух→рука) говорит кадром из 4 полей по тем же двум проводам, что и прошивальщик. Стартует взведённым, сохраняется во флеш.</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>Развёртывание</h2>
 <p><p>Установите папку <code>sketches/yoshimitsu</code> как библиотеку Arduino и откройте <strong>Файл → Примеры → Yoshimitsu → Yoshimitsu_Default</strong>. Прошейте один раз; далее обновления — это <code>git pull</code> или новый релиз — скетч остаётся нетронутым.</p></p>

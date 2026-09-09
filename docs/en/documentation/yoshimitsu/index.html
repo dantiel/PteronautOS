@@ -95,7 +95,7 @@
 <p><p>Stance commands stay open: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, plus <code>STATUS</code>, <code>SERVO i us</code> and <code>HELP</code>. Administrator commands are gated behind the prompt: type <code>極光</code> first, then <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> or <code>MUSHIN</code>.</p></p>
 <p><p><code>極光 DOC</code> prints the cheatcode catalog; <code>極光 SETUP</code> prints the meditation wizard (stance, voice level, MUSHIN state, receiver power). A non-prompt line hitting a gated command answers <em>"the throne is guarded"</em> and returns.</p></p>
 <h2>MUSHIN 無心 — the no-mind protocol</h2>
-<p><p>The muscle-memory bridge (geist→hand) speaks a 4-field frame over the same two wires as the flasher. Boots armed, persisted in flash.</p></p>
+<p><p>The muscle-memory bridge (spirit→hand) speaks a 4-field frame over the same two wires as the flasher. Boots armed, persisted in flash.</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>Deployment</h2>
 <p><p>Install the <code>sketches/yoshimitsu</code> folder as an Arduino library, then open <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>. Flash once; after that, updates are <code>git pull</code> or a new release — the sketch stays untouched.</p></p>

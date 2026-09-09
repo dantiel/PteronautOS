@@ -95,7 +95,7 @@
 <p><p>Los comandos de postura quedan abiertos: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, más <code>STATUS</code>, <code>SERVO i us</code> y <code>HELP</code>. Los comandos de administrador están protegidos tras el prompt: escribe primero <code>極光</code> y luego <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> o <code>MUSHIN</code>.</p></p>
 <p><p><code>極光 DOC</code> imprime el catálogo de trucos; <code>極光 SETUP</code> imprime el asistente de meditación (postura, nivel de voz, estado MUSHIN, energía del receptor). Una línea sin prompt que toque un comando protegido responde <em>"el trono está custodiado"</em> y regresa.</p></p>
 <h2>MUSHIN 無心 — el protocolo sin-mente</h2>
-<p><p>El puente de memoria muscular (geist→mano) habla una trama de 4 campos por los mismos dos cables del flasher. Arranca armado, persistido en flash.</p></p>
+<p><p>El puente de memoria muscular (espíritu→mano) habla una trama de 4 campos por los mismos dos cables del flasher. Arranca armado, persistido en flash.</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>Despliegue</h2>
 <p><p>Instala la carpeta <code>sketches/yoshimitsu</code> como biblioteca de Arduino y abre <strong>Archivo → Ejemplos → Yoshimitsu → Yoshimitsu_Default</strong>. Flashea una vez; después, las actualizaciones son <code>git pull</code> o una nueva versión — el sketch queda intacto.</p></p>
