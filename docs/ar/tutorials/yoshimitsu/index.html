@@ -117,7 +117,7 @@
 <ul>
 <li>ESP32-S3: RX&nbsp;TX ← GPIO44، RX&nbsp;RX ← GPIO43، GND مشترك، خط 5&nbsp;فولت مشترك.</li>
 <li>RP2040-Tiny: RX&nbsp;TX ← GPIO1 (UART0)، GND مشترك.</li>
-<li>السيرفو: `SERVO_PIN_1..3` (ثلاثة أخرى على S3) — قابلة للتجاوز في كتلة PIN MAP.</li>
+<li><p>السيرفو: <code>SERVO_PIN_1..3</code> (ثلاثة أخرى على S3) — قابلة للتجاوز في كتلة PIN MAP.</p></li>
 </ul>
 <p><p>للطائر <strong>المستقر بالجيروسكوب</strong>، استخدم <strong>MANJI_DRAGONFLY</strong> — نفس المحوّل مع وصلة <strong>Zephyrus</strong>: MPU6050 اختياري على <code>GYRO_SDA</code>/<code>GYRO_SCL</code> يغذي تصحيح معدل الانعراج إلى سيرفو العُرف. دون جيروسكوب موصول، يتراجع MANJI_DRAGONFLY برشاقة إلى KINCHO. لوحة المحوّل التجارية CRSF→PWM بلا مسار جيروسكوب إطلاقًا — مستقبلات فئة EP2 لا تحمل IMU، لذا يعيش Zephyrus في يوشيميتسو، لا في المستقبِل.</p></p>
 <p><p>إن كان مستقبِلك يتكلم PWM أصلًا (لوحة 5&nbsp;ch أو 7&nbsp;ch)، فلست بحاجة إلى وضعيات المحوّل إطلاقًا — MEDITATION أدناه حينها سببك الوحيد لامتلاك S3.</p></p>
@@ -228,7 +228,7 @@ python3 -m esptool --chip esp8285 \
 <h2>التحقق وأول رحلة</h2>
 <ul>
 <li>يجب أن يدوّر FLEA طاقة RX ويتركه منتظرًا — ينخفض 3.3&nbsp;فولت نحو 120&nbsp;ملّي ثانية.</li>
-<li>يُبلغ esptool بـ`Chip is ESP8285` وينتهي بـ`Hash of data verified`.</li>
+<li><p>يُبلغ esptool بـ<code>Chip is ESP8285</code> وينتهي بـ<code>Hash of data verified</code>.</p></li>
 <li>يعرض سجل الإقلاع شعار PteronautOS، ومع تشغيل الراديو، رسالة اتصال.</li>
 <li>حرّك العصي: تتبع السيرفو بسلاسة؛ أطفئ الراديو: تتوسّط الأجنحة عند 1500&nbsp;ميكروثانية خلال ثانية.</li>
 <li>إن لم يدخل RX المحمّل إطلاقًا، فافحص قطبية وسادة BOOT (منخفض فعّال) وتبديل MOSFET باختبار الفولتميتر أعلاه.</li>
@@ -237,11 +237,11 @@ python3 -m esptool --chip esp8285 \
 <h2>نسخة الجيب RP2040-Tiny</h2>
 <p><p>فضّل <strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) — أو توأمه، RP2040-Zero، الذي يشاركه تمامًا نفس توزيع الدبابيس. تعمل الوضعيات الست كلها على RP2040 <strong>بلا أي زر قابل للقراءة إطلاقًا</strong>: نقرات BOOT/RESET للمحوّل تقود فقط BOOTSEL/RUN، لذا يُقاد YOSHIMITSU-RP2040 عبر منفذ USB التسلسلي، إضافة إلى عدّاد نقرات RESET بلا زر.</p></p>
 <ul>
-<li>`FLEA` — إسقاط المستقبِل في محمّل ROM الخاص به (رقصة دورة طاقة MOSFET)، ثم جسر USB ↔ UART لـesptool.</li>
-<li>`KINCHO` / `MANJI` / `NSS` / `BACK` / `MEDITATION` — تبديل الوضعية.</li>
-<li>`POSE <n>` — القفز إلى وضعية بالرقم.</li>
-<li>`STATUS` — طباعة خريطة الدبابيس النشطة وتقرير الاختبار الذاتي.</li>
-<li>`HELP` — سرد كل الأوامر.</li>
+<li><p><code>FLEA</code> — إسقاط المستقبِل في محمّل ROM الخاص به (رقصة دورة طاقة MOSFET)، ثم جسر USB ↔ UART لـesptool.</p></li>
+<li><p><code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — تبديل الوضعية.</p></li>
+<li><p><code>POSE &lt;n&gt;</code> — القفز إلى وضعية بالرقم.</p></li>
+<li><p><code>STATUS</code> — طباعة خريطة الدبابيس النشطة وتقرير الاختبار الذاتي.</p></li>
+<li><p><code>HELP</code> — سرد كل الأوامر.</p></li>
 <li>نقرات RESET سريعة (خلال ~2&nbsp;ثانية، تُعدّ في EEPROM المدعوم بالفلاش مقابل RTC من نوع AON) تقدّم الوضعية: 1 = MANJI ← 2 = NSS ← 3 = BACK ← 4 = MEDITATION ← 5 = KINCHO.</li>
 </ul>
 <p><p>لوميض RP2040-Tiny نفسه، أمسك <code>BOOT</code> أثناء دورة الطاقة (يُركَّب كقرص تخزين شامل)، ألقِ <code>.uf2</code> عليه، ثم اضغط <code>RESET</code> مرة واحدة — تعيد اللوحة الإقلاع في KINCHO بالبرنامج الثابت الجديد. اضبط مرة، اومض مرة، ولا تلمس بعدها أبدًا.</p></p>
@@ -273,17 +273,17 @@ python3 -m esptool --chip esp8285 \
 <td>متقاطع: TX ← RX</td>
 </tr>
 <tr>
-<td>سيرفو 1 (`SERVO_PIN_1`)</td>
+<td><p>سيرفو 1 (<code>SERVO_PIN_1</code>)</p></td>
 <td>GPIO2</td>
-<td>PWM — قناة عبر `CHANNEL_TO_SERVO`</td>
+<td><p>PWM — قناة عبر <code>CHANNEL_TO_SERVO</code></p></td>
 </tr>
 <tr>
-<td>سيرفو 2 (`SERVO_PIN_2`)</td>
+<td><p>سيرفو 2 (<code>SERVO_PIN_2</code>)</p></td>
 <td>GPIO3</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>سيرفو 3 (`SERVO_PIN_3`)</td>
+<td><p>سيرفو 3 (<code>SERVO_PIN_3</code>)</p></td>
 <td>GPIO4</td>
 <td>PWM</td>
 </tr>

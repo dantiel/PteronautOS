@@ -875,7 +875,7 @@ static void mushinParse(uint8_t b) {
       break;
     case MS_TYPE:
       msType = b; msXor ^= b; msIdx = 0;
-      msState = MS_PAY;
+      msState = (msLen == 0) ? MS_XOR : MS_PAY;   // 0-length frame: no payload to swallow
       break;
     case MS_PAY:
       msBuf[msIdx++] = b; msXor ^= b;
@@ -1303,7 +1303,7 @@ static void printSetup() {
   jigCmd(); Serial.print("  voice     JIGUANG level "); Serial.println((int)jigLevel);
   jigCmd(); Serial.print("  muscle    MUSHIN "); Serial.println(mushin ? "ON — boots armed" : "OFF — disarmed");
   jigCmd(); Serial.print("  receiver  "); Serial.println(rxPowered ? "powered" : "powered down");
-  jigCmd(); Serial.println("  Change any setting with ' + JIG + ' + command (see ' + JIG + ' DOC).");
+  jigCmd(); Serial.println("  Change any setting with " JIGUANG_PROMPT " + command (see " JIGUANG_PROMPT " DOC).");
 }
 #endif
 
@@ -1406,7 +1406,7 @@ static void runCommand(const char* line) {
       while (*line == ' ') line++;
     }
     if (!admin && adminRequired(line)) {
-      jigCmd(); Serial.println("the throne is guarded — type ' + JIG + ' and then the command.");
+      jigCmd(); Serial.println("the throne is guarded — type " JIGUANG_PROMPT " and then the command.");
       return;
     }
   }

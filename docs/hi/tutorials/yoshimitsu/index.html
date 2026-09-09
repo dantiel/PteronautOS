@@ -117,7 +117,7 @@
 <ul>
 <li>ESP32-S3: RX&nbsp;TX → GPIO44, RX&nbsp;RX → GPIO43, साझा GND, साझा 5&nbsp;V रेल।</li>
 <li>RP2040-Tiny: RX&nbsp;TX → GPIO1 (UART0), साझा GND।</li>
-<li>सर्वो: `SERVO_PIN_1..3` (S3 पर तीन और) — PIN MAP ब्लॉक में बदले जा सकते हैं।</li>
+<li><p>सर्वो: <code>SERVO_PIN_1..3</code> (S3 पर तीन और) — PIN MAP ब्लॉक में बदले जा सकते हैं।</p></li>
 </ul>
 <p><p><strong>जायरो-स्थिर ऑर्निथॉप्टर</strong> के लिए <strong>MANJI_DRAGONFLY</strong> का उपयोग करें — वही परिवर्तक और <strong>Zephyrus</strong> कड़ी: <code>GYRO_SDA</code>/<code>GYRO_SCL</code> पर वैकल्पिक MPU6050 शिखा-सर्वो में यॉ-रेट सुधार भरता है। जायरो बिना जुड़े, MANJI_DRAGONFLY शालीनता से KINCHO में उतर जाता है। व्यावसायिक CRSF→PWM परिवर्तक बोर्ड में जायरो-पथ है ही नहीं — EP2-श्रेणी रिसीवर IMU नहीं रखते, इसलिए Zephyrus रिसीवर में नहीं, YOSHIMITSU में रहता है।</p></p>
 <p><p>यदि आपका रिसीवर पहले से PWM बोलता है (5&nbsp;ch या 7&nbsp;ch बोर्ड), तो परिवर्तक मुद्राओं की आवश्यकता ही नहीं — नीचे MEDITATION तब S3 रखने का आपका एकमात्र कारण है।</p></p>
@@ -228,7 +228,7 @@ python3 -m esptool --chip esp8285 \
 <h2>जाँच और पहली उड़ान</h2>
 <ul>
 <li>FLEA को RX की पावर साइकिल कर उसे प्रतीक्षा में छोड़ना चाहिए — 3.3&nbsp;V लगभग 120&nbsp;ms के लिए गिरता है।</li>
-<li>esptool `Chip is ESP8285` बताता है और `Hash of data verified` के साथ समाप्त होता है।</li>
+<li><p>esptool <code>Chip is ESP8285</code> बताता है और <code>Hash of data verified</code> के साथ समाप्त होता है।</p></li>
 <li>बूट लॉग PteronautOS बैनर और, रेडियो चालू होने पर, लिंक-अप संदेश दिखाता है।</li>
 <li>स्टिक हिलाएँ: सर्वो सहजता से पीछा करते हैं; रेडियो बंद करें: पंख एक सेकंड में 1500&nbsp;µs पर केंद्रित होते हैं।</li>
 <li>यदि RX बूटलोडर में जाता ही नहीं, तो BOOT पैड ध्रुवता (सक्रिय-निम्न) और ऊपर के वोल्टमीटर परीक्षण से MOSFET स्विचिंग जाँचें।</li>
@@ -237,11 +237,11 @@ python3 -m esptool --chip esp8285 \
 <h2>RP2040-Tiny पॉकेट बिल्ड</h2>
 <p><p><strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) चुनें — या उसका जुड़वाँ RP2040-Zero, जो बिल्कुल वही पिनआउट साझा करता है। छहों मुद्राएँ RP2040 पर <strong>बिना किसी पढ़ने योग्य बटन के</strong> चलती हैं: एडाप्टर के BOOT/RESET टैप केवल BOOTSEL/RUN चलाते हैं, इसलिए YOSHIMITSU-RP2040 USB सीरियल पोर्ट से चलता है, साथ में एक बटन-रहित RESET-टैप काउंटर।</p></p>
 <ul>
-<li>`FLEA` — रिसीवर को उसके ROM बूटलोडर में गिराएँ (MOSFET पावर-साइकिल नृत्य), फिर esptool के लिए USB ↔ UART ब्रिज करें।</li>
-<li>`KINCHO` / `MANJI` / `NSS` / `BACK` / `MEDITATION` — मुद्रा बदलें।</li>
-<li>`POSE <n>` — संख्या से मुद्रा पर कूदें।</li>
-<li>`STATUS` — सक्रिय पिन मैप और स्व-परीक्षण रिपोर्ट छापें।</li>
-<li>`HELP` — हर कमांड सूचीबद्ध करें।</li>
+<li><p><code>FLEA</code> — रिसीवर को उसके ROM बूटलोडर में गिराएँ (MOSFET पावर-साइकिल नृत्य), फिर esptool के लिए USB ↔ UART ब्रिज करें।</p></li>
+<li><p><code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — मुद्रा बदलें।</p></li>
+<li><p><code>POSE &lt;n&gt;</code> — संख्या से मुद्रा पर कूदें।</p></li>
+<li><p><code>STATUS</code> — सक्रिय पिन मैप और स्व-परीक्षण रिपोर्ट छापें।</p></li>
+<li><p><code>HELP</code> — हर कमांड सूचीबद्ध करें।</p></li>
 <li>तेज़ RESET टैप (~2&nbsp;s के भीतर, AON RTC के मुकाबले फ्लैश-बैक्ड EEPROM में गिने हुए) मुद्रा आगे बढ़ाते हैं: 1 = MANJI → 2 = NSS → 3 = BACK → 4 = MEDITATION → 5 = KINCHO।</li>
 </ul>
 <p><p>RP2040-Tiny को खुद फ्लैश करने के लिए, पावर साइकिल के दौरान <code>BOOT</code> दबाए रखें (वह मास-स्टोरेज ड्राइव की तरह माउंट होता है), <code>.uf2</code> उस पर डालें, फिर <code>RESET</code> एक बार दबाएँ — बोर्ड नए फ़र्मवेयर के साथ KINCHO में रीबूट करता है। एक बार कॉन्फ़िगर, एक बार फ्लैश, फिर कभी हाथ न लगाएँ।</p></p>
@@ -273,17 +273,17 @@ python3 -m esptool --chip esp8285 \
 <td>क्रॉस: TX → RX</td>
 </tr>
 <tr>
-<td>सर्वो 1 (`SERVO_PIN_1`)</td>
+<td><p>सर्वो 1 (<code>SERVO_PIN_1</code>)</p></td>
 <td>GPIO2</td>
-<td>PWM — `CHANNEL_TO_SERVO` द्वारा चैनल</td>
+<td><p>PWM — <code>CHANNEL_TO_SERVO</code> द्वारा चैनल</p></td>
 </tr>
 <tr>
-<td>सर्वो 2 (`SERVO_PIN_2`)</td>
+<td><p>सर्वो 2 (<code>SERVO_PIN_2</code>)</p></td>
 <td>GPIO3</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>सर्वो 3 (`SERVO_PIN_3`)</td>
+<td><p>सर्वो 3 (<code>SERVO_PIN_3</code>)</p></td>
 <td>GPIO4</td>
 <td>PWM</td>
 </tr>

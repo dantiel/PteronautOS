@@ -117,7 +117,7 @@
 <ul>
 <li>ESP32-S3: RX&nbsp;TX → GPIO44, RX&nbsp;RX → GPIO43, GND común, raíl de 5&nbsp;V compartido.</li>
 <li>RP2040-Tiny: RX&nbsp;TX → GPIO1 (UART0), GND común.</li>
-<li>Servos: `SERVO_PIN_1..3` (tres más en el S3) — reemplazables en el bloque PIN MAP.</li>
+<li><p>Servos: <code>SERVO_PIN_1..3</code> (tres más en el S3) — reemplazables en el bloque PIN MAP.</p></li>
 </ul>
 <p><p>Para un <strong>ornitóptero estabilizado por giroscopio</strong>, usa <strong>MANJI_DRAGONFLY</strong> — el mismo convertidor más el enlace <strong>Zephyrus</strong>: un MPU6050 opcional en <code>GYRO_SDA</code>/<code>GYRO_SCL</code> alimenta una corrección de tasa de guiñada al servo de cresta. Sin giroscopio cableado, MANJI_DRAGONFLY degrada con gracia a KINCHO. Una placa convertidora CRSF→PWM comercial no tiene vía de giroscopio alguna — los receptores clase EP2 no llevan IMU, así que Zephyrus vive en YOSHIMITSU, no en el receptor.</p></p>
 <p><p>Si tu receptor ya habla PWM (una placa de 5&nbsp;ch o 7&nbsp;ch), no necesitas las posturas convertidoras en absoluto — MEDITATION abajo es entonces tu única razón para poseer el S3.</p></p>
@@ -228,7 +228,7 @@ python3 -m esptool --chip esp8285 \
 <h2>Verificación y primer vuelo</h2>
 <ul>
 <li>FLEA debe ciclar la alimentación del RX y dejarlo esperando — los 3,3&nbsp;V caen durante ~120&nbsp;ms.</li>
-<li>esptool informa `Chip is ESP8285` y termina con `Hash of data verified`.</li>
+<li><p>esptool informa <code>Chip is ESP8285</code> y termina con <code>Hash of data verified</code>.</p></li>
 <li>El registro de arranque muestra el banner de PteronautOS y, con la radio encendida, un mensaje de enlace.</li>
 <li>Mueve las palancas: los servos siguen suaves; apaga la radio: las alas centran a 1500&nbsp;µs en un segundo.</li>
 <li>Si el RX nunca entra en el bootloader, comprueba la polaridad del pad BOOT (activo bajo) y la conmutación del MOSFET con la prueba del voltímetro de arriba.</li>
@@ -237,11 +237,11 @@ python3 -m esptool --chip esp8285 \
 <h2>El build de bolsillo RP2040-Tiny</h2>
 <p><p>Prefiere el <strong>Waveshare RP2040-Tiny</strong> (~5&nbsp;USD) — o su gemelo, el RP2040-Zero, que comparte exactamente el mismo pinout. Las seis posturas corren en el RP2040 <strong>sin ningún botón legible</strong>: los toques BOOT/RESET del adaptador solo gobiernan BOOTSEL/RUN, así que YOSHIMITSU-RP2040 se gobierna por el puerto serie USB, más un contador de toques RESET sin botón.</p></p>
 <ul>
-<li>`FLEA` — dejar caer el receptor en su bootloader de ROM (danza de ciclo de potencia del MOSFET), luego puentear USB ↔ UART para esptool.</li>
-<li>`KINCHO` / `MANJI` / `NSS` / `BACK` / `MEDITATION` — cambiar de postura.</li>
-<li>`POSE <n>` — saltar a una postura por número.</li>
-<li>`STATUS` — imprimir el mapa de pines activo y el informe de autocomprobación.</li>
-<li>`HELP` — listar todos los comandos.</li>
+<li><p><code>FLEA</code> — dejar caer el receptor en su bootloader de ROM (danza de ciclo de potencia del MOSFET), luego puentear USB ↔ UART para esptool.</p></li>
+<li><p><code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — cambiar de postura.</p></li>
+<li><p><code>POSE &lt;n&gt;</code> — saltar a una postura por número.</p></li>
+<li><p><code>STATUS</code> — imprimir el mapa de pines activo y el informe de autocomprobación.</p></li>
+<li><p><code>HELP</code> — listar todos los comandos.</p></li>
 <li>Toques rápidos de RESET (en ~2&nbsp;s, contados en EEPROM respaldada por flash contra el RTC AON) avanzan la postura: 1 = MANJI → 2 = NSS → 3 = BACK → 4 = MEDITATION → 5 = KINCHO.</li>
 </ul>
 <p><p>Para flashear el propio RP2040-Tiny, mantén <code>BOOT</code> mientras ciclas la alimentación (monta como disco de almacenamiento masivo), suelta el <code>.uf2</code> dentro y pulsa <code>RESET</code> una vez — la placa reinicia en KINCHO ejecutando el nuevo firmware. Configura una vez, flashea una vez, no toques nunca más.</p></p>
@@ -273,17 +273,17 @@ python3 -m esptool --chip esp8285 \
 <td>Cruzado: TX → RX</td>
 </tr>
 <tr>
-<td>Servo 1 (`SERVO_PIN_1`)</td>
+<td><p>Servo 1 (<code>SERVO_PIN_1</code>)</p></td>
 <td>GPIO2</td>
-<td>PWM — canal vía `CHANNEL_TO_SERVO`</td>
+<td><p>PWM — canal vía <code>CHANNEL_TO_SERVO</code></p></td>
 </tr>
 <tr>
-<td>Servo 2 (`SERVO_PIN_2`)</td>
+<td><p>Servo 2 (<code>SERVO_PIN_2</code>)</p></td>
 <td>GPIO3</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>Servo 3 (`SERVO_PIN_3`)</td>
+<td><p>Servo 3 (<code>SERVO_PIN_3</code>)</p></td>
 <td>GPIO4</td>
 <td>PWM</td>
 </tr>

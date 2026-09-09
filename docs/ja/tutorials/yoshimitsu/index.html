@@ -117,7 +117,7 @@
 <ul>
 <li>ESP32-S3：RX&nbsp;TX → GPIO44、RX&nbsp;RX → GPIO43、共通GND、共有5&nbsp;Vレール。</li>
 <li>RP2040-Tiny：RX&nbsp;TX → GPIO1（UART0）、共通GND。</li>
-<li>サーボ：`SERVO_PIN_1..3`（S3ではさらに3つ）——PIN MAPブロックで上書き可能。</li>
+<li><p>サーボ：<code>SERVO_PIN_1..3</code>（S3ではさらに3つ）——PIN MAPブロックで上書き可能。</p></li>
 </ul>
 <p><p><strong>ジャイロ安定オーニソプター</strong>には<strong>MANJI_DRAGONFLY</strong>を使います——同じコンバータに<strong>Zephyrus</strong>リンクを加えたもの：<code>GYRO_SDA</code>/<code>GYRO_SCL</code>上の任意のMPU6050がヨーレート補正を冠羽サーボへ送ります。ジャイロ未配線なら、MANJI_DRAGONFLYは優雅にKINCHOへ退行します。市販のCRSF→PWMコンバータ基板にはジャイロ経路がまったくありません——EP2級受信機はIMUを積まないので、Zephyrusは受信機ではなくYOSHIMITSUの中に生きています。</p></p>
 <p><p>受信機がすでにPWMを話すなら（5&nbsp;chまたは7&nbsp;ch基板）、コンバータの構えは一切不要です——その場合、下のMEDITATIONがS3を所有する唯一の理由になります。</p></p>
@@ -228,7 +228,7 @@ python3 -m esptool --chip esp8285 \
 <h2>確認と初飛行</h2>
 <ul>
 <li>FLEAはRXの電源を巡らせて待機させねばなりません——3.3&nbsp;Vが約120&nbsp;ms落ち込みます。</li>
-<li>esptoolが`Chip is ESP8285`を報告し、`Hash of data verified`で終わります。</li>
+<li><p>esptoolが<code>Chip is ESP8285</code>を報告し、<code>Hash of data verified</code>で終わります。</p></li>
 <li>ブートログにPteronautOSバナーと、無線オンならリンクアップメッセージが出ます。</li>
 <li>スティックを揺らす：サーボは滑らかに追従します；無線を切ると：翼は1秒以内に1500&nbsp;µsへ中央に戻ります。</li>
 <li>RXが一向にブートローダーへ入らない場合は、BOOTパッドの極性（アクティブロー）と、上の電圧計テストでMOSFETの切替を確認してください。</li>
@@ -237,11 +237,11 @@ python3 -m esptool --chip esp8285 \
 <h2>RP2040-Tiny ポケットビルド</h2>
 <p><p><strong>Waveshare RP2040-Tiny</strong>（約5&nbsp;USD）を選びましょう——または、まったく同じピン配置を共有する双子のRP2040-Zeroを。六つの構えはすべてRP2040上で<strong>読み取り可能なボタンなしに</strong>動きます：アダプタのBOOT/RESETタップはBOOTSEL/RUNのみを駆動するので、YOSHIMITSU-RP2040はUSBシリアルポートと、ボタンなしのRESETタップ計数器で操られます。</p></p>
 <ul>
-<li>`FLEA` — 受信機をROMブートローダーへ落とし（MOSFET電源サイクルの舞い）、esptoolのためにUSB ↔ UARTを橋渡し。</li>
-<li>`KINCHO` / `MANJI` / `NSS` / `BACK` / `MEDITATION` — 構えを切替。</li>
-<li>`POSE <n>` — 番号で構えへ跳ぶ。</li>
-<li>`STATUS` — 有効なピンマップと自己診断報告を印字。</li>
-<li>`HELP` — 全コマンドを列挙。</li>
+<li><p><code>FLEA</code> — 受信機をROMブートローダーへ落とし（MOSFET電源サイクルの舞い）、esptoolのためにUSB ↔ UARTを橋渡し。</p></li>
+<li><p><code>KINCHO</code> / <code>MANJI</code> / <code>NSS</code> / <code>BACK</code> / <code>MEDITATION</code> — 構えを切替。</p></li>
+<li><p><code>POSE &lt;n&gt;</code> — 番号で構えへ跳ぶ。</p></li>
+<li><p><code>STATUS</code> — 有効なピンマップと自己診断報告を印字。</p></li>
+<li><p><code>HELP</code> — 全コマンドを列挙。</p></li>
 <li>素早いRESETタップ（約2&nbsp;s以内、AON RTCに対するフラッシュEEPROMで計数）が構えを進めます：1 = MANJI → 2 = NSS → 3 = BACK → 4 = MEDITATION → 5 = KINCHO。</li>
 </ul>
 <p><p>RP2040-Tiny自体をフラッシュするには、電源循環中に<code>BOOT</code>を押し（大容量ストレージとしてマウントされる）、<code>.uf2</code>を置き、<code>RESET</code>を一度押します——ボードは新ファームウェアでKINCHOへ再起動します。一度設定、一度フラッシュ、二度と触れない。</p></p>
@@ -273,17 +273,17 @@ python3 -m esptool --chip esp8285 \
 <td>交差：TX → RX</td>
 </tr>
 <tr>
-<td>サーボ1（`SERVO_PIN_1`）</td>
+<td><p>サーボ1（<code>SERVO_PIN_1</code>）</p></td>
 <td>GPIO2</td>
-<td>PWM — `CHANNEL_TO_SERVO`経由のチャンネル</td>
+<td><p>PWM — <code>CHANNEL_TO_SERVO</code>経由のチャンネル</p></td>
 </tr>
 <tr>
-<td>サーボ2（`SERVO_PIN_2`）</td>
+<td><p>サーボ2（<code>SERVO_PIN_2</code>）</p></td>
 <td>GPIO3</td>
 <td>PWM</td>
 </tr>
 <tr>
-<td>サーボ3（`SERVO_PIN_3`）</td>
+<td><p>サーボ3（<code>SERVO_PIN_3</code>）</p></td>
 <td>GPIO4</td>
 <td>PWM</td>
 </tr>
