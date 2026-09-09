@@ -95,7 +95,7 @@
 <p><p>मुद्रा कमांड खुले रहते हैं: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, साथ ही <code>STATUS</code>, <code>SERVO i us</code> और <code>HELP</code>। व्यवस्थापक कमांड प्रॉम्प्ट के पीछे बंद हैं: पहले <code>極光</code> टाइप करें, फिर <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> या <code>MUSHIN</code>।</p></p>
 <p><p><code>極光 DOC</code> चीटकोड कैटलॉग छापता है; <code>極光 SETUP</code> ध्यान विज़ार्ड (मुद्रा, आवाज़ स्तर, MUSHIN स्थिति, रिसीवर पावर) छापता है। बिना प्रॉम्प्ट वाली पंक्ति किसी बंद कमांड पर पड़ती है तो <em>"सिंहासन सुरक्षित है"</em> कहकर लौट आती है।</p></p>
 <h2>MUSHIN 無心 — नो-माइंड प्रोटोकॉल</h2>
-<p><p>मसल-मेमोरी ब्रिज (आत्मा→हाथ) फ्लैशर वाले उन्हीं दो तारों पर 4-फ़ील्ड फ्रेम बोलता है। लैस अवस्था में बूट होता है, फ्लैश में संग्रहीत।</p></p>
+<p><p>मसल-मेमोरी ब्रिज (आत्मा→मांसपेशी) फ्लैशर वाले उन्हीं दो तारों पर 4-फ़ील्ड फ्रेम बोलता है। लैस अवस्था में बूट होता है, फ्लैश में संग्रहीत।</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>तैनाती</h2>
 <p><p><code>sketches/yoshimitsu</code> फ़ोल्डर को Arduino लाइब्रेरी के रूप में इंस्टॉल करें, फिर <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong> खोलें। एक बार फ्लैश करें; उसके बाद अपडेट <code>git pull</code> या नया रिलीज़ है — स्केच अछूता रहता है।</p></p>

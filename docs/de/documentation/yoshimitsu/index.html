@@ -95,7 +95,7 @@
 <p><p>Stellungsbefehle bleiben offen: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, plus <code>STATUS</code>, <code>SERVO i us</code> und <code>HELP</code>. Administratorbefehle sind hinter dem Prompt verriegelt: tippe zuerst <code>極光</code>, dann <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> oder <code>MUSHIN</code>.</p></p>
 <p><p><code>極光 DOC</code> druckt den Cheatcode-Katalog; <code>極光 SETUP</code> druckt den Meditations-Assistenten (Stellung, Stimmlage, MUSHIN-Zustand, Empfängerstrom). Eine promptlose Zeile, die einen gesperrten Befehl trifft, antwortet <em>„der Thron ist bewacht“</em> und kehrt zurück.</p></p>
 <h2>MUSHIN 無心 — das No-Mind-Protokoll</h2>
-<p><p>Die Muskelgedächtnis-Brücke (Geist→Hand) spricht einen 4-Feld-Frame über dieselben zwei Drähte wie der Flasher. Bootet scharf, in Flash persistiert.</p></p>
+<p><p>Die Muskelgedächtnis-Brücke (Geist→Muskel) spricht einen 4-Feld-Frame über dieselben zwei Drähte wie der Flasher. Bootet scharf, in Flash persistiert.</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>Bereitstellung</h2>
 <p><p>Installiere den Ordner <code>sketches/yoshimitsu</code> als Arduino-Bibliothek und öffne <strong>Datei → Beispiele → Yoshimitsu → Yoshimitsu_Default</strong>. Flashe einmal; danach sind Updates <code>git pull</code> oder ein neues Release — der Sketch bleibt unangetastet.</p></p>

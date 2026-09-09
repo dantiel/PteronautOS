@@ -95,7 +95,7 @@
 <p><p>스탠스 명령은 열려 있습니다: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, 그리고 <code>STATUS</code>, <code>SERVO i us</code>, <code>HELP</code>. 관리자 명령은 프롬프트 뒤에 잠겨 있습니다: 먼저 <code>極光</code>을 입력한 다음 <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> 또는 <code>MUSHIN</code>을 입력하세요.</p></p>
 <p><p><code>極光 DOC</code>은 치트코드 카탈로그를, <code>極光 SETUP</code>은 명상 마법사(스탠스·음성 레벨·MUSHIN 상태·수신기 전원)를 출력합니다. 프롬프트 없이 잠긴 명령을 치면 <em>"왕좌는 지켜지고 있다"</em>고 답하고 돌아갑니다.</p></p>
 <h2>MUSHIN 無心 — 무심 프로토콜</h2>
-<p><p>근육 기억 브리지(정신→손)는 플래셔와 같은 두 와이어로 4필드 프레임을 말합니다. 장전된 채 부팅되며 플래시에 저장됩니다.</p></p>
+<p><p>근육 기억 브리지(정신→근육)는 플래셔와 같은 두 와이어로 4필드 프레임을 말합니다. 장전된 채 부팅되며 플래시에 저장됩니다.</p></p>
 <pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
 <h2>배포</h2>
 <p><p><code>sketches/yoshimitsu</code> 폴더를 Arduino 라이브러리로 설치한 뒤 <strong>파일 → 예제 → Yoshimitsu → Yoshimitsu_Default</strong>를 여세요. 한 번 플래시하면 이후 업데이트는 <code>git pull</code> 또는 새 릴리스이며 스케치는 그대로 남습니다.</p></p>

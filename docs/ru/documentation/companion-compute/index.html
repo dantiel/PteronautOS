@@ -33,12 +33,12 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Режим Companion Compute</h1>
-<p class='sub-lead'>Симбиоз: PteronautOS — дух, YOSHIMITSU — рука. Две платы, один полёт — разделённые мостом одной командой администратора: MUSHIN (無心).</p>
+<p class='sub-lead'>Симбиоз: PteronautOS — дух, YOSHIMITSU — мышца. Две платы, один полёт — разделённые мостом одной командой администратора: MUSHIN (無心).</p>
 <h2>Архитектура</h2>
 <p>В режиме companion два МК перестают быть приёмником и конвертером и становятся одним мозгом с двумя половинами. Эта диаграмма — вечная карта:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y[&quot;YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the muscle&quot;]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>Почему гироскоп остаётся на RP2040</h2>
-<p>MPU6050 физически подключён к RP2040 — поэтому PID тоже вычисляется там. Отправлять сырые отсчёты гироскопа через мост в PteronautOS, чтобы там регулировать их и возвращать поправки, — чистая жертва задержке. Рука, держащая гироскоп, правит удар: Zephyrus живёт на companion, а не на приёмнике.</p>
+<p>MPU6050 физически подключён к RP2040 — поэтому PID тоже вычисляется там. Отправлять сырые отсчёты гироскопа через мост в PteronautOS, чтобы там регулировать их и возвращать поправки, — чистая жертва задержке. Мышца, держащая гироскоп, правит удар: Zephyrus живёт на companion, а не на приёмнике.</p>
 <h2>Разделение</h2>
 <p>Каждая половина вычисляет то, что к ней ближе всего.</p>
 <table>
@@ -66,12 +66,12 @@
 <td>гироскоп + PID (Zephyrus, локально) + companion compute + PIO servo-PWM — то, что ближе к мышечной памяти</td>
 </tr>
 </table>
-<h2>Два ядра, две руки</h2>
+<h2>Два ядра, один удар</h2>
 <p>RP2040-Tiny — единственная платформа ELRS-PWM с аппаратными машинами состояний PIO — их восемь — для servo-PWM без глитчей. Два его ядра Cortex-M0+ делятся чисто:</p>
 <ul>
 <li>
 <strong>Core1 · companion compute</strong>
- — выгрузка микшера + флаппинга: траектория, которую прочертит рука.
+ — выгрузка микшера + флаппинга: траектория, которую прочертит мышца.
 </li>
 <li>
 <strong>Core0 · мышечная память</strong>
@@ -79,12 +79,12 @@
 </li>
 </ul>
 <h2>MUSHIN — чит-код мышечной памяти</h2>
-<p>MUSHIN (無心, пустой разум) решает, остаётся ли YOSHIMITSU молчаливым конвертером или просыпается рукой-спутником. Он стартует вооружённым — чит-код; консоль администратора JIGUANG командует им через USB-Serial: MUSHIN докладывает, MUSHIN ON/OFF взводит или снимает. Выбор живёт во флеше (байт 6 EEPROM на RP2040) — конфигурация командой, а не перекомпиляцией.</p>
+<p>MUSHIN (無心, пустой разум) решает, остаётся ли YOSHIMITSU молчаливым конвертером или просыпается мышцей-спутницей. Он стартует вооружённым — чит-код; консоль администратора JIGUANG командует им через USB-Serial: MUSHIN докладывает, MUSHIN ON/OFF взводит или снимает. Выбор живёт во флеше (байт 6 EEPROM на RP2040) — конфигурация командой, а не перекомпиляцией.</p>
 <h2>Почему это чит-код</h2>
 <p>Ни одна другая плата ELRS-PWM не несёт dual-core с аппаратным PIO. За цену крошечной платы получаешь два ядра — один чистый мускул, один компьютер companion. В другом месте заплатил бы больше и всегда был бы слабее.</p>
 <p>Дешевле и всегда сильнее: таков ответ герметического синоби рынку.</p>
 <h2>Вертолёт или мах — тот же удар</h2>
-<p>С точки зрения меча вертолёт или мах — одно и то же: микшер выдаёт каноническую траекторию — путь от канала к серво — и рука никогда не спрашивает, какое средство несёт. Спиной — поза летит дальше, меняется лишь взгляд.</p>
+<p>С точки зрения меча вертолёт или мах — одно и то же: микшер выдаёт каноническую траекторию — путь от канала к серво — и меч никогда не спрашивает, какое средство несёт. Спиной — поза летит дальше, меняется лишь взгляд.</p>
 </div>
 </main>
 <footer>

@@ -33,12 +33,12 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>Companion-Compute-Modus</h1>
-<p class='sub-lead'>Die Symbiose: PteronautOS ist der Geist, YOSHIMITSU ist die Hand. Zwei Boards, ein Flug — über die Brücke geteilt durch einen einzigen Admin-Befehl: MUSHIN (無心).</p>
+<p class='sub-lead'>Die Symbiose: PteronautOS ist der Geist, YOSHIMITSU ist der Muskel. Zwei Boards, ein Flug — über die Brücke geteilt durch einen einzigen Admin-Befehl: MUSHIN (無心).</p>
 <h2>Architektur</h2>
 <p>Im Companion-Modus hören die beiden MCUs auf, Empfänger und Konverter zu sein, und werden ein Gehirn mit zwei Hälften. Dieses Diagramm ist die ewige Karte:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y[&quot;YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the muscle&quot;]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>Warum das Gyro am RP2040 bleibt</h2>
-<p>Das MPU6050 ist physisch am RP2040 verdrahtet — also wird auch der PID dort berechnet. Rohe Gyro-Samples über die Brücke zu PteronautOS zu schicken, nur um sie dort zu regeln und Korrekturen zurückzusenden, wäre reine Latenz-Andacht. Die Hand, die das Gyro hält, korrigiert den Schlag: Zephyrus lebt auf dem Companion, nicht auf dem Empfänger.</p>
+<p>Das MPU6050 ist physisch am RP2040 verdrahtet — also wird auch der PID dort berechnet. Rohe Gyro-Samples über die Brücke zu PteronautOS zu schicken, nur um sie dort zu regeln und Korrekturen zurückzusenden, wäre reine Latenz-Andacht. Der Muskel, der das Gyro hält, korrigiert den Schlag: Zephyrus lebt auf dem Companion, nicht auf dem Empfänger.</p>
 <h2>Die Aufteilung</h2>
 <p>Jede Hälfte rechnet, was ihr am nächsten ist.</p>
 <table>
@@ -66,12 +66,12 @@
 <td>Gyro + PID (Zephyrus, lokal) + Companion-Compute + PIO-Servo-PWM — was näher am Muskelgedächtnis ist</td>
 </tr>
 </table>
-<h2>Zwei Kerne, zwei Hände</h2>
+<h2>Zwei Kerne, ein Schlag</h2>
 <p>Der RP2040-Tiny ist die einzige ELRS-PWM-Plattform mit Hardware-PIO-State-Machines — acht Stück — für glitch-freie Servo-PWM. Seine zwei Cortex-M0+-Kerne teilen sich sauber:</p>
 <ul>
 <li>
 <strong>Core1 · Companion-Compute</strong>
- — Mixer- + Flapping-Auslagerung: die Bahn, die die Hand ziehen wird.
+ — Mixer- + Flapping-Auslagerung: die Bahn, die der Muskel ziehen wird.
 </li>
 <li>
 <strong>Core0 · Muskelgedächtnis</strong>
@@ -79,12 +79,12 @@
 </li>
 </ul>
 <h2>MUSHIN — der Muscle-Memory-Cheatcode</h2>
-<p>MUSHIN (無心, das Nicht-Denken) entscheidet, ob YOSHIMITSU ein stiller Konverter bleibt oder als Companion-Hand erwacht. Es bootet bewaffnet — der Cheatcode; die JIGUANG-Admin-Konsole kommandiert ihn über USB-Serial: MUSHIN meldet, MUSHIN ON/OFF rüstet auf oder ab. Die Wahl überdauert im Flash (EEPROM-Byte 6 auf dem RP2040) — Konfiguration per Befehl, nicht per Recompile.</p>
+<p>MUSHIN (無心, das Nicht-Denken) entscheidet, ob YOSHIMITSU ein stiller Konverter bleibt oder als Companion-Muskel erwacht. Es bootet bewaffnet — der Cheatcode; die JIGUANG-Admin-Konsole kommandiert ihn über USB-Serial: MUSHIN meldet, MUSHIN ON/OFF rüstet auf oder ab. Die Wahl überdauert im Flash (EEPROM-Byte 6 auf dem RP2040) — Konfiguration per Befehl, nicht per Recompile.</p>
 <h2>Warum es ein Cheatcode ist</h2>
 <p>Kein anderes ELRS-PWM-Board trägt einen Dual-Core mit Hardware-PIO. Für den Preis des kleinen Boards bekommst du zwei Kerne — ein reiner Muskel, ein Companion-Computer. Anderswo zahlst du mehr und bist immer schwächer.</p>
 <p>Billiger und immer stärker: das ist die Antwort des hermetischen Shinobi an den Markt.</p>
 <h2>Helikopter oder Flattern — derselbe Schlag</h2>
-<p>Aus Schwert-Sicht ist Helikopter oder Flattern dasselbe: Der Mixer sendet eine kanonische Trajektorie — Kanal-zu-Servo-Pfad — und die Hand fragt nie, welches Gefährt sie trägt. Back-turned — die Pose fliegt weiter, nur der Blick wechselt.</p>
+<p>Aus Schwert-Sicht ist Helikopter oder Flattern dasselbe: Der Mixer sendet eine kanonische Trajektorie — Kanal-zu-Servo-Pfad — und das Schwert fragt nie, welches Gefährt sie trägt. Back-turned — die Pose fliegt weiter, nur der Blick wechselt.</p>
 </div>
 </main>
 <footer>

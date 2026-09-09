@@ -33,12 +33,12 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>컴패니언 컴퓨트 모드</h1>
-<p class='sub-lead'>공생: PteronautOS는 정신, YOSHIMITSU는 손. 두 보드, 하나의 비행 — 단 하나의 관리 명령 MUSHIN(無心)이 브리지 너머 나눕니다.</p>
+<p class='sub-lead'>공생: PteronautOS는 정신, YOSHIMITSU는 근육. 두 보드, 하나의 비행 — 단 하나의 관리 명령 MUSHIN(無心)이 브리지 너머 나눕니다.</p>
 <h2>아키텍처</h2>
 <p>컴패니언 모드에서 두 MCU는 수신기와 컨버터이기를 멈추고 두 반쪽을 가진 하나의 뇌가 됩니다. 이 다이어그램은 영원한 지도입니다:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y[&quot;YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the muscle&quot;]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>자이로가 RP2040에 머무는 이유</h2>
-<p>MPU6050은 물리적으로 RP2040에 연결되어 있으므로 PID도 그곳에서 계산됩니다. 원시 자이로 샘플을 브리지로 PteronautOS에 보내 PID 처리하고 보정값을 되돌리는 것은 순전한 지연 숭배일 뿐입니다. 자이로를 쥔 손이 칼질을 바로잡습니다: Zephyrus는 수신기가 아니라 컴패니언에 삽니다.</p>
+<p>MPU6050은 물리적으로 RP2040에 연결되어 있으므로 PID도 그곳에서 계산됩니다. 원시 자이로 샘플을 브리지로 PteronautOS에 보내 PID 처리하고 보정값을 되돌리는 것은 순전한 지연 숭배일 뿐입니다. 자이로를 쥔 근육이 칼질을 바로잡습니다: Zephyrus는 수신기가 아니라 컴패니언에 삽니다.</p>
 <h2>분할</h2>
 <p>각 반쪽은 자신에게 가장 가까운 것을 계산합니다.</p>
 <table>
@@ -66,12 +66,12 @@
 <td>자이로 + PID(Zephyrus, 로컬) + 컴패니언 컴퓨트 + PIO 서보-PWM — 근육 기억에 더 가까운 것</td>
 </tr>
 </table>
-<h2>코어 둘, 손 둘</h2>
+<h2>코어 둘, 일격 하나</h2>
 <p>RP2040-Tiny는 글리치 없는 서보-PWM을 위한 하드웨어 PIO 상태 머신 — 여덟 개 — 을 가진 유일한 ELRS-PWM 플랫폼입니다. 두 Cortex-M0+ 코어는 깔끔하게 나뉩니다:</p>
 <ul>
 <li>
 <strong>Core1 · 컴패니언 컴퓨트</strong>
- — 믹서 + 플래핑 오프로드: 손이 그릴 궤적.
+ — 믹서 + 플래핑 오프로드: 근육이 그릴 궤적.
 </li>
 <li>
 <strong>Core0 · 근육 기억</strong>
@@ -79,12 +79,12 @@
 </li>
 </ul>
 <h2>MUSHIN — 근육 기억의 치트코드</h2>
-<p>MUSHIN(無心, 빈 마음)이 YOSHIMITSU를 조용한 변환기로 둘지, 동반의 손으로 깨울지 결정합니다. 무장한 채 부팅 — 이것이 치트코드; JIGUANG 관리 콘솔이 USB 시리얼로 명령합니다: MUSHIN은 보고하고, MUSHIN ON/OFF는 무장·해제합니다. 선택은 플래시에 남습니다 (RP2040의 EEPROM 6번 바이트) — 재컴파일이 아닌 명령에 의한 설정.</p>
+<p>MUSHIN(無心, 빈 마음)이 YOSHIMITSU를 조용한 변환기로 둘지, 동반의 근육으로 깨울지 결정합니다. 무장한 채 부팅 — 이것이 치트코드; JIGUANG 관리 콘솔이 USB 시리얼로 명령합니다: MUSHIN은 보고하고, MUSHIN ON/OFF는 무장·해제합니다. 선택은 플래시에 남습니다 (RP2040의 EEPROM 6번 바이트) — 재컴파일이 아닌 명령에 의한 설정.</p>
 <h2>치트코드인 이유</h2>
 <p>다른 어떤 ELRS-PWM 보드도 하드웨어 PIO를 갖춘 듀얼코어를 지니지 않습니다. 작은 보드 가격으로 코어 둘 — 하나는 순수한 근육, 하나는 컴패니언 컴퓨터 — 을 얻습니다. 다른 곳이라면 더 내고도 언제나 더 약할 것입니다.</p>
 <p>더 싸고 언제나 더 강함: 이것이 시장에 대한 은둔 시노비의 답입니다.</p>
 <h2>헬리콥터든 날갯짓이든 — 같은 칼질</h2>
-<p>칼의 시선에서 헬리콥터든 날갯짓이든 같습니다: 믹서는 정규 궤적 — 채널에서 서보로 가는 길 — 을 내보내고 손은 어떤 탈것을 지니는지 묻지 않습니다. 등을 돌림 — 자세는 날아가고 시선만 바뀝니다.</p>
+<p>칼의 시선에서 헬리콥터든 날갯짓이든 같습니다: 믹서는 정규 궤적 — 채널에서 서보로 가는 길 — 을 내보내고 검은 어떤 탈것을 지니는지 묻지 않습니다. 등을 돌림 — 자세는 날아가고 시선만 바뀝니다.</p>
 </div>
 </main>
 <footer>

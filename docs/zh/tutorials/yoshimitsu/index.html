@@ -365,10 +365,10 @@ python3 -m esptool --chip esp8285 \
 <p><p>用 <code>極光 JIGUANG</code> 唤醒声音，它会攀上四个等级: <code>0</code> 羔羊(沉默，但显式命令仍会应答)、<code>1</code> 故事(启动与每次架势切换都会被讲述)、<code>2</code> 卷轴(+ CRSF 通道读数)、<code>3</code> 全知(+ 接收机的 ELRS 调试字节原样透传)。<code>極光 MUTE</code> 让它沉默；<code>極光 CRSF</code> 打印 16 通道卷轴，<code>極光 SCORE</code> 展开街机 HIGHSCORE 账本 — 良好的 CRSF 帧、失控保护事件、桥接字节与运行时长。JIGUANG 从不夺取架势: 传说被讲述时，CRSF、舵机和桥接依然服从姿态。</p></p>
 <p><p>在 MEDITATION 中，海绵头是 JIGUANG 的王座 — 而王座有守卫: 每条管理员命令都以控制台提示符 <code>極光</code> 开头。从 USB 串口的天国，它应答 <code>極光 STATUS</code>、<code>極光 CRSF</code>、<code>極光 SCORE</code>、<code>極光 POSE</code>、<code>極光 DOC</code>(作弊码目录)和 <code>極光 SETUP</code>(冥想向导，引导关键设置而不是一堵 define 之墙)。架势切换保持开放 — <code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>。姿态像古老的冥想停顿一样节省能量，浪人坐等被刷写。esptool 的 SLIP 字节一呼唤，王座立刻让位给透明刷写桥，直到 MEDITATION 再次进入。当 <code>YOSHI_RGB</code> 处于 3 级时，说书人还会<em>披上极光</em>: <code>jiguang(ms)</code> 画出一轮缓慢的全光谱色环，把每种架势的颜色织进同一口气。</p></p>
 <h2>MUSHIN 無心 — 肌肉记忆作弊码</h2>
-<p><p><strong>MUSHIN</strong>(<strong>無心</strong>，“无心”)是英雄功能 — 先于思想出手的剑。PteronautOS 是<em>灵</em>: 它规划翼波，并通过桥发送舵机意图。YOSHIMITSU 是<em>手</em> — 而手即是心 — 它应用本地的 Zephyrus 陀螺仪 PID，并在肌肉处驱动舵机，除非它化为剑。双核，一击 — 没有其他 ELRS-PWM 板能穿得上它。</p></p>
+<p><p><strong>MUSHIN</strong>(<strong>無心</strong>，“无心”)是英雄功能 — 无执，先于思想出手的剑。在剑道中，无心是放下自身的心: 所见与所行之间不留间隙。PteronautOS 是<em>灵</em> — 它规划翼波，并通过桥发送舵机意图。YOSHIMITSU 不执着于计划: 它用本地的 Zephyrus 陀螺仪 PID 在肌肉处回应，舵机在下一次思绪抓住之前就已移动。双核，一击 — 没有其他 ELRS-PWM 板能穿得上它。</p></p>
 <p><p>从王座武装它: <code>極光 MUSHIN</code> 报告状态，<code>極光 MUSHIN ON/OFF</code> 武装或解除，选择持久保存在 flash 中 — 开机即就绪。在草图中，MUSHIN 默认开机武装；管理员标志是运行时开关，所以你永远不用为了改它而重新编译。</p></p>
-<p><p>无心协议 v0 与刷写器共用同样的两根线: <code>[0x9B][len][type][payload][xor]</code> — <code>0x01</code> 意图(灵→手，n×uint16 µs)、<code>0x02</code> 通告保活、<code>0x03</code> 陀螺仪遥测。新鲜的意图(500 ms 内)驱动舵机；本地陀螺仪 PID 稳住冠羽。若线路沉默，手回到自己的 CRSF 肌肉 — 优雅降级，永不成为死杆。</p></p>
-<p><p>飞行中，分工是双赢: 接收机在出手<em>之前</em>思考(CRSF、Zephyrus、混控之魂)，而 YOSHIMITSU 做的是<em>在</em>肌肉处的工作(无毛刺的 PIO PWM)。直升机还是扑翼 — 从剑的视角看都一样: 一条规范轨迹，而手从不问自己承载的是哪艘船。姿态继续飞行；改变的只是样貌。</p></p>
+<p><p>无心协议 v0 与刷写器共用同样的两根线: <code>[0x9B][len][type][payload][xor]</code> — <code>0x01</code> 意图(灵→肌肉，n×uint16 µs)、<code>0x02</code> 通告保活、<code>0x03</code> 陀螺仪遥测。新鲜的意图(500 ms 内)驱动舵机；本地陀螺仪 PID 稳住冠羽。若线路沉默，YOSHIMITSU 回到自己的 CRSF 肌肉 — 优雅降级，永不成为死杆。</p></p>
+<p><p>飞行中，分工是双赢: 接收机在出手<em>之前</em>思考(CRSF、Zephyrus、混控之魂)，而 YOSHIMITSU 做的是<em>在</em>肌肉处的工作(无毛刺的 PIO PWM)。直升机还是扑翼 — 从剑的视角看都一样: 一条规范轨迹，而剑从不问自己承载的是哪艘船。姿态继续飞行；改变的只是样貌。</p></p>
 </div>
 </main>
 <footer>

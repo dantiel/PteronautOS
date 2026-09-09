@@ -33,12 +33,12 @@
 <main class='sub-main'>
 <div class='sub-content'>
 <h1>وضع الحوسبة المرافقة</h1>
-<p class='sub-lead'>التكافل: PteronautOS هو الروح، وYOSHIMITSU هو اليد. لوحتان، رحلة واحدة — يقسمهما عبر الجسر أمر إدارة واحد: MUSHIN (無心).</p>
+<p class='sub-lead'>التكافل: PteronautOS هو الروح، وYOSHIMITSU هو العضلة. لوحتان، رحلة واحدة — يقسمهما عبر الجسر أمر إدارة واحد: MUSHIN (無心).</p>
 <h2>البنية</h2>
 <p>في الوضع المرافق يتوقف المتحكمان عن كونهما مستقبلاً ومحوّلاً ويصبحان دماغاً واحداً بنصفين. هذا الرسم هو الخريطة الأبدية:</p>
-<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y["YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the hand"]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
+<pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y[&quot;YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the muscle&quot;]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>
 <h2>لماذا يبقى الجيروسكوب على RP2040</h2>
-<p>إن MPU6050 موصول فيزيائياً بـ RP2040 — لذلك يُحسب PID هناك أيضاً. إرسال عينات الجيروسكوب الخام عبر الجسر إلى PteronautOS، فقط لضبطها هناك وإعادة التصحيحات، هو تكريس محض للزمن الكامن. اليد التي تمسك الجيروسكوب تصحح الضربة: Zephyrus يسكن المرافق، لا المستقبل.</p>
+<p>إن MPU6050 موصول فيزيائياً بـ RP2040 — لذلك يُحسب PID هناك أيضاً. إرسال عينات الجيروسكوب الخام عبر الجسر إلى PteronautOS، فقط لضبطها هناك وإعادة التصحيحات، هو تكريس محض للزمن الكامن. العضلة التي تمسك الجيروسكوب تصحح الضربة: Zephyrus يسكن المرافق، لا المستقبل.</p>
 <h2>التقسيم</h2>
 <p>كل نصف يحسب ما هو أقرب إليه.</p>
 <table>
@@ -66,12 +66,12 @@
 <td>جيروسكوب + PID (Zephyrus، محلياً) + حوسبة مرافقة + PIO servo-PWM — ما هو أقرب إلى ذاكرة العضلات</td>
 </tr>
 </table>
-<h2>نواتان، يدان</h2>
+<h2>نواتان، ضربة واحدة</h2>
 <p>إن RP2040-Tiny هو المنصة الوحيدة ELRS-PWM بآلات حالة PIO عتادية — ثماني منها — من أجل servo-PWM بلا خلل. نواتاه Cortex-M0+ تنقسمان بوضوح:</p>
 <ul>
 <li>
 <strong>Core1 · حوسبة مرافقة</strong>
- — تفريغ المازج + الرفرفة: المسار الذي سترسمه اليد.
+ — تفريغ المازج + الرفرفة: المسار الذي سترسمه العضلة.
 </li>
 <li>
 <strong>Core0 · ذاكرة العضلات</strong>
@@ -79,12 +79,12 @@
 </li>
 </ul>
 <h2>MUSHIN — شيت كود ذاكرة العضلات</h2>
-<p>MUSHIN (無心، العقل الفارغ) يقرر إن كان YOSHIMITSU سيبقى محوّلاً صامتاً أم يستيقظ كاليد المرافقة. يقلع مسلّحاً — هذا هو الشيت كود؛ كونسول الإدارة JIGUANG يأمره عبر USB التسلسلي: MUSHIN يقرّر، وMUSHIN ON/OFF يسلّح أو ينزع. الخيار يبقى في الفلاش (البايت 6 من EEPROM على RP2040) — إعداد بالأمر، لا بإعادة الترجمة.</p>
+<p>MUSHIN (無心، العقل الفارغ) يقرر إن كان YOSHIMITSU سيبقى محوّلاً صامتاً أم يستيقظ كالعضلة المرافقة. يقلع مسلّحاً — هذا هو الشيت كود؛ كونسول الإدارة JIGUANG يأمره عبر USB التسلسلي: MUSHIN يقرّر، وMUSHIN ON/OFF يسلّح أو ينزع. الخيار يبقى في الفلاش (البايت 6 من EEPROM على RP2040) — إعداد بالأمر، لا بإعادة الترجمة.</p>
 <h2>لماذا هو شفرة غش</h2>
 <p>لا توجد لوحة ELRS-PWM أخرى تحمل نواة مزدوجة مع PIO عتادي. بثمن اللوحة الصغيرة تحصل على نواتين — واحدة عضلة خالصة، وواحدة حاسوب مرافق. في مكان آخر ستدفع أكثر وتكون دائماً أضعف.</p>
 <p>أرخص، ودائماً أقوى: هذه إجابة الشينوبي الهرمسي للسوق.</p>
 <h2>مروحية أم رفرفة — الضربة ذاتها</h2>
-<p>من منظور السيف، المروحية أو الرفرفة سواء: يبث المازج مساراً قانونياً — طريقاً من القناة إلى المأخذ — واليد لا تسأل أبداً أي مركبة تحمل. مولي الظهر — تستمر الوضعية في الطيران، ولا يتغير إلا النظر.</p>
+<p>من منظور السيف، المروحية أو الرفرفة سواء: يبث المازج مساراً قانونياً — طريقاً من القناة إلى المأخذ — والسيف لا يسأل أبداً أي مركبة تحمل. مولي الظهر — تستمر الوضعية في الطيران، ولا يتغير إلا النظر.</p>
 </div>
 </main>
 <footer>
