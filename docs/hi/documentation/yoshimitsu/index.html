@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='hi'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>YOSHIMITSU — API संदर्भ</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='ऊपर जाएँ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='ऊपर जाएँ' type='button'>↑</button>
+<a class='home-link' href='../../../hi/' title='PteronautOS होम'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../hi/tutorials/'>ट्यूटोरियल</a>
+<a href='../../../hi/hardware/'>हार्डवेयर</a>
+<a class='active' href='../../../hi/documentation/'>दस्तावेज़</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>YOSHIMITSU · API संदर्भ</h1>
+<p class='sub-lead'>एक पुस्तकालय के रूप में हर्मेटिक शिनोबी: एक आरामदायक स्केच, दो लक्ष्य, छह मुद्राएँ, और 極光-गेटेड कंसोल जो सिंहासन का प्रशासन करता है।</p>
+<h2>वास्तुकला</h2>
+<p><p>YOSHIMITSU एक <strong>ऊपर पतले स्केच वाली लाइब्रेरी</strong> है। पूरा कोर <code>src/Yoshimitsu.h</code> में रहता है; हर डिफ़ॉल्ट <code>src/Yoshimitsu_Loadout.h</code> में <code><em>_DEFAULT</code> मानों (पिन, टाइमिंग, गेट स्तर) के रूप में रहता है। स्केच — <code>yoshimitsu.ino</code> या <code>examples/Yoshimitsu_Default/</code> प्रति — केवल </em>आपका* कॉन्फ़िगरेशन और include से पहले परिभाषित ओवरराइड रखता है। स्केच को दोबारा छुए बिना लाइब्रेरी अपडेट करें।</p></p>
+<p><p><strong>लक्ष्य पहचान</strong> स्वचालित है: <code>ARDUINO_ARCH_RP2040</code> RP2040-Tiny पथ चुनता है (<code>Servo.h</code>, RESET-टैप मुद्रा बदलाव), <code>ARDUINO_ARCH_ESP32</code>/<code>ARDUINO_ARCH_ESP32S3</code> ESP32-S3 पथ चुनता है (<code>ESP32Servo.h</code>, नेटिव USB)। बाकी सब स्पष्ट <code>#error</code> के साथ कंपाइल-टाइम पर विफल हो जाता है।</p></p>
+<pre class='mermaid'>graph TB&#x000A;  SKETCH["yoshimitsu.ino<br/>the relaxed sketch — config only"]&#x000A;  LOADOUT["Yoshimitsu_Loadout.h<br/>the starting loadout · *_DEFAULT"]&#x000A;  CORE["src/Yoshimitsu.h<br/>the whole core"]&#x000A;  STANCES["six stances<br/>KINCHO · MANJI · FLEA<br/>MEDITATION · NSS · BACK"]&#x000A;  CONSOLE["USB-serial console<br/>極光-gated admin"]&#x000A;  CRSF["CRSF RX"]&#x000A;  BRIDGE["MUSHIN bridge<br/>無心 no-mind protocol"]&#x000A;  PWM["servo PWM<br/>wing L/R · crest"]&#x000A;  SKETCH --> CORE&#x000A;  LOADOUT --> CORE&#x000A;  CRSF --> CORE&#x000A;  BRIDGE --> CORE&#x000A;  CONSOLE --> CORE&#x000A;  CORE --> STANCES&#x000A;  STANCES --> PWM&#x000A;</pre>
+<h2>छह मुद्राएँ</h2>
+<p><p>हर मुद्रा एक <code>Stance</code> enum मान (0–5) है जिसे रनटाइम पर चुना जाता है — USB कमांड, GPIO0 बटन (ESP32-S3) या RESET-टैप (RP2040-Tiny) से।</p></p>
+<table>
+<tr>
+<th>मुद्रा</th>
+<th>कर्तव्य</th>
+</tr>
+<tr>
+<td>
+<code>KINCHO</code>
+</td>
+<td><p>रोक — CRSF→PWM कन्वर्टर; रेडियो चैनल सर्वो माइक्रोसेकंड बन जाते हैं।</p></td>
+</tr>
+<tr>
+<td>
+<code>MANJI_DRAGONFLY</code>
+</td>
+<td><p>उत्तोलन — कन्वर्टर के साथ शिखर पर स्थानीय Zephyrus जाइरो PID।</p></td>
+</tr>
+<tr>
+<td>
+<code>FLEA</code>
+</td>
+<td><p>उठान — पावर-साइकिल जिग जो रिसीवर को बूटलोडर में गिराता है, फिर MEDITATION।</p></td>
+</tr>
+<tr>
+<td>
+<code>MEDITATION</code>
+</td>
+<td><p>स्पंज-शीर्ष — पॉकेट फ्लैशर; USB↔UART esptool के लिए शुद्ध पारदर्शी ब्रिज है।</p></td>
+</tr>
+<tr>
+<td>
+<code>NSS</code>
+</td>
+<td><p>बिना तलवार का बेंच — सीधा सर्वो ड्राइव (<code>SERVO i us</code>), कोई रेडियो नहीं।</p></td>
+</tr>
+<tr>
+<td>
+<code>BACK_TURNED</code>
+</td>
+<td><p>दर्पण — भ्रामक निष्क्रियता; UART प्रतिध्वनि कभी पीछे नहीं देखती।</p></td>
+</tr>
+</table>
+<h2>कंपाइल-टाइम गेट</h2>
+<p><p>हर वैकल्पिक चीज़ अक्षम करने पर साफ़ तौर पर कंपाइल से बाहर हो जाती है — कोई मृत बाइट नहीं, कोई लटकता संदर्भ नहीं। include से पहले स्केच में इनमें से कोई भी ओवरराइड करें।</p></p>
+<ul>
+<li><code>JIGUANG</code> — कथाकार / व्यवस्थापक (<code>1</code> = सर्वव्यापी, <code>0</code> = 極光 का शून्य बाइट कंपाइल)।</li>
+<li><code>YOSHI_GYRO</code> — Zephyrus MPU6050 जाइरो पथ।</li>
+<li><code>YOSHI_RGB</code> — ऑनबोर्ड WS2812B ऑरोरा (हमेशा चालू मुद्रा रंग)।</li>
+<li><code>JIGUANG_PROMPT</code> — व्यवस्थापक कंसोल प्रॉम्प्ट स्ट्रिंग (डिफ़ॉल्ट <code>"極光"</code>); स्केच में इसका नाम बदलें।</li>
+<li><code>BOARD_CUSTOM</code> — अपने <code>CUSTOM_RP2040_*_DEFAULT</code> / <code>CUSTOM_S3_*_DEFAULT</code> पिन दें।</li>
+</ul>
+<h2>कंसोल API</h2>
+<p><p>मुद्रा कमांड खुले रहते हैं: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, साथ ही <code>STATUS</code>, <code>SERVO i us</code> और <code>HELP</code>। व्यवस्थापक कमांड प्रॉम्प्ट के पीछे बंद हैं: पहले <code>極光</code> टाइप करें, फिर <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> या <code>MUSHIN</code>।</p></p>
+<p><p><code>極光 DOC</code> चीटकोड कैटलॉग छापता है; <code>極光 SETUP</code> ध्यान विज़ार्ड (मुद्रा, आवाज़ स्तर, MUSHIN स्थिति, रिसीवर पावर) छापता है। बिना प्रॉम्प्ट वाली पंक्ति किसी बंद कमांड पर पड़ती है तो <em>"सिंहासन सुरक्षित है"</em> कहकर लौट आती है।</p></p>
+<h2>MUSHIN 無心 — नो-माइंड प्रोटोकॉल</h2>
+<p><p>मसल-मेमोरी ब्रिज (geist→हाथ) फ्लैशर वाले उन्हीं दो तारों पर 4-फ़ील्ड फ्रेम बोलता है। लैस अवस्था में बूट होता है, फ्लैश में संग्रहीत।</p></p>
+<pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
+<h2>तैनाती</h2>
+<p><p><code>sketches/yoshimitsu</code> फ़ोल्डर को Arduino लाइब्रेरी के रूप में इंस्टॉल करें, फिर <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong> खोलें। एक बार फ्लैश करें; उसके बाद अपडेट <code>git pull</code> या नया रिलीज़ है — स्केच अछूता रहता है।</p></p>
+<h2>समस्या निवारण</h2>
+<ul>
+<li><p><code>YOSHIMITSU targets ESP32-S3 or RP2040 only</code> — आपका बोर्ड दोनों में से कोई नहीं है; <strong>Tools → Board</strong> जाँचें या <code>BOARD_CUSTOM</code> परिभाषित करें।</p></li>
+<li><p>कोई कमांड <em>"सिंहासन सुरक्षित है"</em> कहता है — वह व्यवस्थापक कमांड है; पहले <code>極光</code> टाइप करें।</p></li>
+<li><p>MEDITATION में esptool टाइमआउट हो जाता है — पुष्टि करें कि ब्रिज UART पिन (<code>BRIDGE_RX_PIN</code>/<code>BRIDGE_TX_PIN</code>) आपकी वायरिंग से मेल खाते हैं।</p></li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/yoshimitsu/'>PT</a>
+<a class='' href='../../../en/documentation/yoshimitsu/'>EN</a>
+<a class='' href='../../../es/documentation/yoshimitsu/'>ES</a>
+<a class='' href='../../../fr/documentation/yoshimitsu/'>FR</a>
+<a class='' href='../../../de/documentation/yoshimitsu/'>DE</a>
+<a class='' href='../../../ru/documentation/yoshimitsu/'>RU</a>
+<a class='' href='../../../ko/documentation/yoshimitsu/'>한국어</a>
+<a class='' href='../../../ja/documentation/yoshimitsu/'>日本語</a>
+<a class='' href='../../../zh/documentation/yoshimitsu/'>中文</a>
+<a class='' href='../../../ar/documentation/yoshimitsu/'>عربي</a>
+<a class='active' href='../../../hi/documentation/yoshimitsu/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

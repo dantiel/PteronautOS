@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ko'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>YOSHIMITSU — API 참조</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='맨 위로' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='맨 위로' type='button'>↑</button>
+<a class='home-link' href='../../../ko/' title='PteronautOS 홈'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../ko/tutorials/'>튜토리얼</a>
+<a href='../../../ko/hardware/'>하드웨어</a>
+<a class='active' href='../../../ko/documentation/'>문서</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>YOSHIMITSU · API 참조</h1>
+<p class='sub-lead'>라이브러리로서의 헤르메틱 시노비: 가벼운 스케치 하나, 타깃 둘, 스탠스 여섯, 그리고 왕좌를 다스리는 極光 게이트 콘솔.</p>
+<h2>아키텍처</h2>
+<p><p>YOSHIMITSU는 <strong>그 위에 얇은 스케치를 얹은 라이브러리</strong>입니다. 핵심 전체는 <code>src/Yoshimitsu.h</code>에, 모든 기본값은 <code>src/Yoshimitsu_Loadout.h</code>에 <code><em>_DEFAULT</code> 값(핀·타이밍·게이트 레벨)으로 살고 있습니다. 스케치(<code>yoshimitsu.ino</code> 또는 <code>examples/Yoshimitsu_Default/</code> 사본)는 </em>사용자의* 설정과 include 앞에서 정의한 오버라이드만 담습니다. 스케치를 다시 건드리지 않고 라이브러리를 업데이트하세요.</p></p>
+<p><p><strong>타깃 감지</strong>는 자동입니다. <code>ARDUINO_ARCH_RP2040</code>이면 RP2040-Tiny 경로(<code>Servo.h</code>, RESET 탭으로 스탠스 전환)를, <code>ARDUINO_ARCH_ESP32</code>/<code>ARDUINO_ARCH_ESP32S3</code>이면 ESP32-S3 경로(<code>ESP32Servo.h</code>, 네이티브 USB)를 선택합니다. 그 외에는 명확한 <code>#error</code>와 함께 컴파일이 실패합니다.</p></p>
+<pre class='mermaid'>graph TB&#x000A;  SKETCH["yoshimitsu.ino<br/>the relaxed sketch — config only"]&#x000A;  LOADOUT["Yoshimitsu_Loadout.h<br/>the starting loadout · *_DEFAULT"]&#x000A;  CORE["src/Yoshimitsu.h<br/>the whole core"]&#x000A;  STANCES["six stances<br/>KINCHO · MANJI · FLEA<br/>MEDITATION · NSS · BACK"]&#x000A;  CONSOLE["USB-serial console<br/>極光-gated admin"]&#x000A;  CRSF["CRSF RX"]&#x000A;  BRIDGE["MUSHIN bridge<br/>無心 no-mind protocol"]&#x000A;  PWM["servo PWM<br/>wing L/R · crest"]&#x000A;  SKETCH --> CORE&#x000A;  LOADOUT --> CORE&#x000A;  CRSF --> CORE&#x000A;  BRIDGE --> CORE&#x000A;  CONSOLE --> CORE&#x000A;  CORE --> STANCES&#x000A;  STANCES --> PWM&#x000A;</pre>
+<h2>여섯 스탠스</h2>
+<p><p>모든 스탠스는 런타임에 선택되는 <code>Stance</code> 열거형 값(0–5)입니다 — USB 명령, GPIO0 버튼(ESP32-S3), 또는 RESET 탭(RP2040-Tiny)으로요.</p></p>
+<table>
+<tr>
+<th>스탠스</th>
+<th>임무</th>
+</tr>
+<tr>
+<td>
+<code>KINCHO</code>
+</td>
+<td><p>막아내기 — CRSF→PWM 변환기; 라디오 채널이 서보 마이크로초가 됩니다.</p></td>
+</tr>
+<tr>
+<td>
+<code>MANJI_DRAGONFLY</code>
+</td>
+<td><p>부양 — 변환기에 더해 크레스트의 로컬 Zephyrus 자이로 PID.</p></td>
+</tr>
+<tr>
+<td>
+<code>FLEA</code>
+</td>
+<td><p>들어올리기 — 수신기를 부트로더로 떨어뜨린 뒤 MEDITATION으로 보내는 전원 사이클 지그.</p></td>
+</tr>
+<tr>
+<td>
+<code>MEDITATION</code>
+</td>
+<td><p>스펀지 머리 — 주머니 플래셔; USB↔UART는 esptool을 위한 순수 투명 브리지입니다.</p></td>
+</tr>
+<tr>
+<td>
+<code>NSS</code>
+</td>
+<td><p>칼 없는 벤치 — 직접 서보 구동(<code>SERVO i us</code>), 라디오 없음.</p></td>
+</tr>
+<tr>
+<td>
+<code>BACK_TURNED</code>
+</td>
+<td><p>거울 — 기만적인 대기; UART 에코는 결코 뒤돌아보지 않습니다.</p></td>
+</tr>
+</table>
+<h2>컴파일타임 게이트</h2>
+<p><p>선택 사항은 비활성화하면 깔끔하게 컴파일에서 빠집니다 — 죽은 바이트도, 매달린 참조도 없습니다. include 앞의 스케치에서 이 중 어느 것이든 오버라이드하세요.</p></p>
+<ul>
+<li><code>JIGUANG</code> — 이야기꾼 / 관리자(<code>1</code> = 상시 존재, <code>0</code> = 極光 바이트 0개 컴파일).</li>
+<li><code>YOSHI_GYRO</code> — Zephyrus MPU6050 자이로 경로.</li>
+<li><code>YOSHI_RGB</code> — 온보드 WS2812B 오로라(항상 켜진 스탠스 색).</li>
+<li><code>JIGUANG_PROMPT</code> — 관리 콘솔 프롬프트 문자열(기본값 <code>"極光"</code>); 스케치에서 이름을 바꾸세요.</li>
+<li><code>BOARD_CUSTOM</code> — 나만의 <code>CUSTOM_RP2040_*_DEFAULT</code> / <code>CUSTOM_S3_*_DEFAULT</code> 핀을 제공하세요.</li>
+</ul>
+<h2>콘솔 API</h2>
+<p><p>스탠스 명령은 열려 있습니다: <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, 그리고 <code>STATUS</code>, <code>SERVO i us</code>, <code>HELP</code>. 관리자 명령은 프롬프트 뒤에 잠겨 있습니다: 먼저 <code>極光</code>을 입력한 다음 <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> 또는 <code>MUSHIN</code>을 입력하세요.</p></p>
+<p><p><code>極光 DOC</code>은 치트코드 카탈로그를, <code>極光 SETUP</code>은 명상 마법사(스탠스·음성 레벨·MUSHIN 상태·수신기 전원)를 출력합니다. 프롬프트 없이 잠긴 명령을 치면 <em>"왕좌는 지켜지고 있다"</em>고 답하고 돌아갑니다.</p></p>
+<h2>MUSHIN 無心 — 무심 프로토콜</h2>
+<p><p>근육 기억 브리지(geist→손)는 플래셔와 같은 두 와이어로 4필드 프레임을 말합니다. 장전된 채 부팅되며 플래시에 저장됩니다.</p></p>
+<pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
+<h2>배포</h2>
+<p><p><code>sketches/yoshimitsu</code> 폴더를 Arduino 라이브러리로 설치한 뒤 <strong>파일 → 예제 → Yoshimitsu → Yoshimitsu_Default</strong>를 여세요. 한 번 플래시하면 이후 업데이트는 <code>git pull</code> 또는 새 릴리스이며 스케치는 그대로 남습니다.</p></p>
+<h2>문제 해결</h2>
+<ul>
+<li><p><code>YOSHIMITSU targets ESP32-S3 or RP2040 only</code> — 보드가 둘 다 아닙니다. <strong>도구 → 보드</strong>를 확인하거나 <code>BOARD_CUSTOM</code>을 정의하세요.</p></li>
+<li><p>명령이 <em>"왕좌는 지켜지고 있다"</em>고 답한다면 — 관리자 명령입니다. 먼저 <code>極光</code>을 입력하세요.</p></li>
+<li><p>MEDITATION에서 esptool이 타임아웃됩니다 — 브리지 UART 핀(<code>BRIDGE_RX_PIN</code>/<code>BRIDGE_TX_PIN</code>)이 배선과 일치하는지 확인하세요.</p></li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/yoshimitsu/'>PT</a>
+<a class='' href='../../../en/documentation/yoshimitsu/'>EN</a>
+<a class='' href='../../../es/documentation/yoshimitsu/'>ES</a>
+<a class='' href='../../../fr/documentation/yoshimitsu/'>FR</a>
+<a class='' href='../../../de/documentation/yoshimitsu/'>DE</a>
+<a class='' href='../../../ru/documentation/yoshimitsu/'>RU</a>
+<a class='active' href='../../../ko/documentation/yoshimitsu/'>한국어</a>
+<a class='' href='../../../ja/documentation/yoshimitsu/'>日本語</a>
+<a class='' href='../../../zh/documentation/yoshimitsu/'>中文</a>
+<a class='' href='../../../ar/documentation/yoshimitsu/'>عربي</a>
+<a class='' href='../../../hi/documentation/yoshimitsu/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

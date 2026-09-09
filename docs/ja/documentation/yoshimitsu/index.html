@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>YOSHIMITSU — API リファレンス</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='トップへ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='トップへ' type='button'>↑</button>
+<a class='home-link' href='../../../ja/' title='PteronautOS ホーム'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../ja/tutorials/'>チュートリアル</a>
+<a href='../../../ja/hardware/'>ハードウェア</a>
+<a class='active' href='../../../ja/documentation/'>ドキュメント</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>YOSHIMITSU · API リファレンス</h1>
+<p class='sub-lead'>ライブラリとしてのヘルメティック・シノビ：気楽なスケッチ1つ、ターゲット2種、構え6つ、そして王座を統べる極光ゲートのコンソール。</p>
+<h2>アーキテクチャ</h2>
+<p><p>YOSHIMITSU は<strong>薄いスケッチを上に載せたライブラリ</strong>です。核はすべて <code>src/Yoshimitsu.h</code> に、すべてのデフォルトは <code>src/Yoshimitsu_Loadout.h</code> に <code><em>_DEFAULT</code> 値(ピン・タイミング・ゲートレベル)として生きています。スケッチ(<code>yoshimitsu.ino</code> または <code>examples/Yoshimitsu_Default/</code> のコピー)は、</em>あなたの*設定と include の前に定義した上書きだけを持ちます。スケッチを触り直さずにライブラリを更新できます。</p></p>
+<p><p><strong>ターゲット検出</strong>は自動です。<code>ARDUINO_ARCH_RP2040</code> なら RP2040-Tiny 経路(<code>Servo.h</code>、RESET タップで構え切替)、<code>ARDUINO_ARCH_ESP32</code>/<code>ARDUINO_ARCH_ESP32S3</code> なら ESP32-S3 経路(<code>ESP32Servo.h</code>、ネイティブ USB)を選びます。それ以外は明快な <code>#error</code> でコンパイル時に失敗します。</p></p>
+<pre class='mermaid'>graph TB&#x000A;  SKETCH["yoshimitsu.ino<br/>the relaxed sketch — config only"]&#x000A;  LOADOUT["Yoshimitsu_Loadout.h<br/>the starting loadout · *_DEFAULT"]&#x000A;  CORE["src/Yoshimitsu.h<br/>the whole core"]&#x000A;  STANCES["six stances<br/>KINCHO · MANJI · FLEA<br/>MEDITATION · NSS · BACK"]&#x000A;  CONSOLE["USB-serial console<br/>極光-gated admin"]&#x000A;  CRSF["CRSF RX"]&#x000A;  BRIDGE["MUSHIN bridge<br/>無心 no-mind protocol"]&#x000A;  PWM["servo PWM<br/>wing L/R · crest"]&#x000A;  SKETCH --> CORE&#x000A;  LOADOUT --> CORE&#x000A;  CRSF --> CORE&#x000A;  BRIDGE --> CORE&#x000A;  CONSOLE --> CORE&#x000A;  CORE --> STANCES&#x000A;  STANCES --> PWM&#x000A;</pre>
+<h2>六つの構え</h2>
+<p><p>どの構えも <code>Stance</code> 列挙型の値(0–5)で、実行時に選ばれます — USB コマンド、GPIO0 ボタン(ESP32-S3)、RESET タップ(RP2040-Tiny)のいずれかで。</p></p>
+<table>
+<tr>
+<th>構え</th>
+<th>役割</th>
+</tr>
+<tr>
+<td>
+<code>KINCHO</code>
+</td>
+<td><p>受け流し — CRSF→PWM 変換器。無線チャンネルがサーボのマイクロ秒になります。</p></td>
+</tr>
+<tr>
+<td>
+<code>MANJI_DRAGONFLY</code>
+</td>
+<td><p>浮揚 — 変換器に加えて、冠羽(クレスト)のローカル Zephyrus ジャイロ PID。</p></td>
+</tr>
+<tr>
+<td>
+<code>FLEA</code>
+</td>
+<td><p>持ち上げ — 受信機をブートローダーへ落とし、その後 MEDITATION へ移す電源サイクルの治具。</p></td>
+</tr>
+<tr>
+<td>
+<code>MEDITATION</code>
+</td>
+<td><p>スポンジ頭 — ポケットフラッシャー。USB↔UART は esptool のための純粋な透過ブリッジです。</p></td>
+</tr>
+<tr>
+<td>
+<code>NSS</code>
+</td>
+<td><p>無刀の台 — サーボ直接駆動(<code>SERVO i us</code>)、無線なし。</p></td>
+</tr>
+<tr>
+<td>
+<code>BACK_TURNED</code>
+</td>
+<td><p>鏡 — 惑わす静寂。UART のこだまは決して振り返りません。</p></td>
+</tr>
+</table>
+<h2>コンパイル時ゲート</h2>
+<p><p>オプションは無効にすればきれいにコンパイルから外れます — 死んだバイトも、ぶら下がった参照もなし。include の前のスケッチで、これらのどれでも上書きできます。</p></p>
+<ul>
+<li><code>JIGUANG</code> — 語り手 / 管理者(<code>1</code> = 常駐、<code>0</code> = 極光バイトを一切コンパイルしない)。</li>
+<li><code>YOSHI_GYRO</code> — Zephyrus MPU6050 ジャイロ経路。</li>
+<li><code>YOSHI_RGB</code> — オンボード WS2812B のオーロラ(常時点灯の構えの色)。</li>
+<li><code>JIGUANG_PROMPT</code> — 管理コンソールのプロンプト文字列(デフォルト <code>"極光"</code>)。スケッチで名前を変えられます。</li>
+<li><code>BOARD_CUSTOM</code> — 独自の <code>CUSTOM_RP2040_*_DEFAULT</code> / <code>CUSTOM_S3_*_DEFAULT</code> ピンを用意します。</li>
+</ul>
+<h2>コンソール API</h2>
+<p><p>構えコマンドは開いたままです: <code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>、加えて <code>STATUS</code>、<code>SERVO i us</code>、<code>HELP</code>。管理者コマンドはプロンプトの後ろに施錠されています。まず <code>極光</code> を打ち、それから <code>DOC</code>、<code>SETUP</code>、<code>JIGUANG</code>、<code>MUTE</code>、<code>CRSF</code>、<code>SCORE</code>、<code>ELRS</code>、<code>LEGEND</code>、<code>BRIDGE</code>、<code>ADMIN</code>、<code>MUSHIN</code> を打ちます。</p></p>
+<p><p><code>極光 DOC</code> はチートコード一覧を、<code>極光 SETUP</code> は瞑想ウィザード(構え・声のレベル・MUSHIN 状態・受信機電源)を印字します。プロンプトなしの行が施錠コマンドに当たると <em>「王座は守られている」</em> と答え、戻ります。</p></p>
+<h2>MUSHIN 無心 — 無心のプロトコル</h2>
+<p><p>筋記憶の橋(geist→手)は、フラッシャーと同じ2本のワイヤで4フィールドのフレームを話します。装填状態で起動し、フラッシュに永続化されます。</p></p>
+<pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
+<h2>導入</h2>
+<p><p><code>sketches/yoshimitsu</code> フォルダを Arduino ライブラリとしてインストールし、<strong>ファイル → スケッチ例 → Yoshimitsu → Yoshimitsu_Default</strong> を開きます。一度書き込めば、以後の更新は <code>git pull</code> または新リリースで、スケッチはそのまま残ります。</p></p>
+<h2>トラブルシューティング</h2>
+<ul>
+<li><p><code>YOSHIMITSU targets ESP32-S3 or RP2040 only</code> — ボードがどちらでもありません。<strong>ツール → ボード</strong>を確認するか、<code>BOARD_CUSTOM</code> を定義してください。</p></li>
+<li><p>コマンドが <em>「王座は守られている」</em> と答えるなら — それは管理者コマンドです。まず <code>極光</code> を打ってください。</p></li>
+<li><p>MEDITATION で esptool がタイムアウトします — ブリッジ UART ピン(<code>BRIDGE_RX_PIN</code>/<code>BRIDGE_TX_PIN</code>)が配線と一致するか確認してください。</p></li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/yoshimitsu/'>PT</a>
+<a class='' href='../../../en/documentation/yoshimitsu/'>EN</a>
+<a class='' href='../../../es/documentation/yoshimitsu/'>ES</a>
+<a class='' href='../../../fr/documentation/yoshimitsu/'>FR</a>
+<a class='' href='../../../de/documentation/yoshimitsu/'>DE</a>
+<a class='' href='../../../ru/documentation/yoshimitsu/'>RU</a>
+<a class='' href='../../../ko/documentation/yoshimitsu/'>한국어</a>
+<a class='active' href='../../../ja/documentation/yoshimitsu/'>日本語</a>
+<a class='' href='../../../zh/documentation/yoshimitsu/'>中文</a>
+<a class='' href='../../../ar/documentation/yoshimitsu/'>عربي</a>
+<a class='' href='../../../hi/documentation/yoshimitsu/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

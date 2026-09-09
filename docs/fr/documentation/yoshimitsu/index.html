@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='fr'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>YOSHIMITSU — Référence de l'API</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  });
+</script>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Remonter en haut' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Remonter en haut' type='button'>↑</button>
+<a class='home-link' href='../../../fr/' title='Accueil PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../../fr/tutorials/'>Tutoriels</a>
+<a href='../../../fr/hardware/'>Matériel</a>
+<a class='active' href='../../../fr/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>YOSHIMITSU · Référence de l'API</h1>
+<p class='sub-lead'>Le Shinobi Hermétique en bibliothèque : un sketch détendu, deux cibles, six postures et la console verrouillée par 極光 qui administre le trône.</p>
+<h2>Architecture</h2>
+<p><p>YOSHIMITSU est une <strong>bibliothèque surmontée d'un sketch mince</strong>. Tout le cœur vit dans <code>src/Yoshimitsu.h</code> ; chaque défaut vit dans <code>src/Yoshimitsu_Loadout.h</code> sous forme de valeurs <code><em>_DEFAULT</code> (broches, timings, niveaux de portes). Le sketch — <code>yoshimitsu.ino</code> ou la copie <code>examples/Yoshimitsu_Default/</code> — ne garde que </em>votre* configuration et les surcharges définies avant l'include. Mettez à jour la bibliothèque sans retoucher votre sketch.</p></p>
+<p><p>La <strong>détection de cible</strong> est automatique : <code>ARDUINO_ARCH_RP2040</code> choisit la voie RP2040-Tiny (<code>Servo.h</code>, changement de posture par appuis RESET), <code>ARDUINO_ARCH_ESP32</code>/<code>ARDUINO_ARCH_ESP32S3</code> choisit la voie ESP32-S3 (<code>ESP32Servo.h</code>, USB natif). Tout le reste échoue à la compilation avec un <code>#error</code> clair.</p></p>
+<pre class='mermaid'>graph TB&#x000A;  SKETCH["yoshimitsu.ino<br/>the relaxed sketch — config only"]&#x000A;  LOADOUT["Yoshimitsu_Loadout.h<br/>the starting loadout · *_DEFAULT"]&#x000A;  CORE["src/Yoshimitsu.h<br/>the whole core"]&#x000A;  STANCES["six stances<br/>KINCHO · MANJI · FLEA<br/>MEDITATION · NSS · BACK"]&#x000A;  CONSOLE["USB-serial console<br/>極光-gated admin"]&#x000A;  CRSF["CRSF RX"]&#x000A;  BRIDGE["MUSHIN bridge<br/>無心 no-mind protocol"]&#x000A;  PWM["servo PWM<br/>wing L/R · crest"]&#x000A;  SKETCH --> CORE&#x000A;  LOADOUT --> CORE&#x000A;  CRSF --> CORE&#x000A;  BRIDGE --> CORE&#x000A;  CONSOLE --> CORE&#x000A;  CORE --> STANCES&#x000A;  STANCES --> PWM&#x000A;</pre>
+<h2>Les Six Postures</h2>
+<p><p>Chaque posture est une valeur de l'enum <code>Stance</code> (0–5) choisie à l'exécution — par commande USB, le bouton GPIO0 (ESP32-S3) ou des appuis RESET (RP2040-Tiny).</p></p>
+<table>
+<tr>
+<th>Posture</th>
+<th>Rôle</th>
+</tr>
+<tr>
+<td>
+<code>KINCHO</code>
+</td>
+<td><p>La parade — convertisseur CRSF→PWM ; les canaux radio deviennent des microsecondes de servo.</p></td>
+</tr>
+<tr>
+<td>
+<code>MANJI_DRAGONFLY</code>
+</td>
+<td><p>La lévitation — convertisseur plus le PID gyroscopique Zephyrus local sur la crête.</p></td>
+</tr>
+<tr>
+<td>
+<code>FLEA</code>
+</td>
+<td><p>L'essor — gabarit de cycle d'alimentation qui fait tomber le récepteur en bootloader, puis MEDITATION.</p></td>
+</tr>
+<tr>
+<td>
+<code>MEDITATION</code>
+</td>
+<td><p>La tête-éponge — flasheur de poche ; l'USB↔UART est un pont purement transparent pour esptool.</p></td>
+</tr>
+<tr>
+<td>
+<code>NSS</code>
+</td>
+<td><p>Le banc sans épée — pilotage direct du servo (<code>SERVO i us</code>), sans radio.</p></td>
+</tr>
+<tr>
+<td>
+<code>BACK_TURNED</code>
+</td>
+<td><p>Le miroir — repos trompeur ; l'écho UART ne regarde jamais en arrière.</p></td>
+</tr>
+</table>
+<h2>Portes de Compilation</h2>
+<p><p>Tout l'optionnel se compile proprement en moins lorsqu'il est désactivé — aucun octet mort, aucune référence pendante. Surchargez n'importe lequel dans votre sketch avant l'include.</p></p>
+<ul>
+<li><code>JIGUANG</code> — le conteur / administrateur (<code>1</code> = omniprésent, <code>0</code> = zéro octet de 極光 compilé).</li>
+<li><code>YOSHI_GYRO</code> — la voie du gyroscope Zephyrus MPU6050.</li>
+<li><code>YOSHI_RGB</code> — l'aurore WS2812B embarquée (la couleur de posture toujours allumée).</li>
+<li><code>JIGUANG_PROMPT</code> — la chaîne du prompt de la console d'administration (défaut <code>"極光"</code>) ; renommez-la dans le sketch.</li>
+<li><code>BOARD_CUSTOM</code> — fournissez vos propres broches <code>CUSTOM_RP2040_*_DEFAULT</code> / <code>CUSTOM_S3_*_DEFAULT</code>.</li>
+</ul>
+<h2>API de la Console</h2>
+<p><p>Les commandes de posture restent ouvertes : <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>, plus <code>STATUS</code>, <code>SERVO i us</code> et <code>HELP</code>. Les commandes d'administration sont verrouillées derrière le prompt : tapez d'abord <code>極光</code>, puis <code>DOC</code>, <code>SETUP</code>, <code>JIGUANG</code>, <code>MUTE</code>, <code>CRSF</code>, <code>SCORE</code>, <code>ELRS</code>, <code>LEGEND</code>, <code>BRIDGE</code>, <code>ADMIN</code> ou <code>MUSHIN</code>.</p></p>
+<p><p><code>極光 DOC</code> imprime le catalogue de cheatcodes ; <code>極光 SETUP</code> imprime l'assistant de méditation (posture, niveau de voix, état MUSHIN, alimentation du récepteur). Une ligne sans prompt qui touche une commande verrouillée répond <em>« le trône est gardé »</em> et revient.</p></p>
+<h2>MUSHIN 無心 — le protocole sans-esprit</h2>
+<p><p>Le pont de mémoire musculaire (geist→main) parle une trame à 4 champs sur les deux mêmes fils que le flasheur. Démarre armé, persisté en flash.</p></p>
+<pre><code>[0x9B][len][type][payload][xor]&#x000A;  0x01  INTENT    n × uint16 µs per servo&#x000A;  0x02  ANNOUNCE  1 Hz keepalive&#x000A;  0x03  TELEMETRY gyro rate + correction&#x000A;</code></pre>
+<h2>Déploiement</h2>
+<p><p>Installez le dossier <code>sketches/yoshimitsu</code> comme bibliothèque Arduino, puis ouvrez <strong>Fichier → Exemples → Yoshimitsu → Yoshimitsu_Default</strong>. Flashez une fois ; ensuite, les mises à jour sont <code>git pull</code> ou une nouvelle version — le sketch reste intact.</p></p>
+<h2>Dépannage</h2>
+<ul>
+<li><p><code>YOSHIMITSU targets ESP32-S3 or RP2040 only</code> — votre carte n'est ni l'une ni l'autre ; vérifiez <strong>Outils → Type de carte</strong> ou définissez <code>BOARD_CUSTOM</code>.</p></li>
+<li><p>Une commande répond <em>« le trône est gardé »</em> — c'est une commande d'administration ; tapez d'abord <code>極光</code>.</p></li>
+<li><p>esptool expire en MEDITATION — confirmez que les broches UART du pont (<code>BRIDGE_RX_PIN</code>/<code>BRIDGE_TX_PIN</code>) correspondent à votre câblage.</p></li>
+</ul>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../documentation/yoshimitsu/'>PT</a>
+<a class='' href='../../../en/documentation/yoshimitsu/'>EN</a>
+<a class='' href='../../../es/documentation/yoshimitsu/'>ES</a>
+<a class='active' href='../../../fr/documentation/yoshimitsu/'>FR</a>
+<a class='' href='../../../de/documentation/yoshimitsu/'>DE</a>
+<a class='' href='../../../ru/documentation/yoshimitsu/'>RU</a>
+<a class='' href='../../../ko/documentation/yoshimitsu/'>한국어</a>
+<a class='' href='../../../ja/documentation/yoshimitsu/'>日本語</a>
+<a class='' href='../../../zh/documentation/yoshimitsu/'>中文</a>
+<a class='' href='../../../ar/documentation/yoshimitsu/'>عربي</a>
+<a class='' href='../../../hi/documentation/yoshimitsu/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

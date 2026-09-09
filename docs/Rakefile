@@ -44,6 +44,7 @@ PAGES = %w[
   documentation
   documentation/architecture
   documentation/companion-compute
+  documentation/yoshimitsu
   documentation/mixers
   documentation/stabilization
   documentation/servo-kernel
