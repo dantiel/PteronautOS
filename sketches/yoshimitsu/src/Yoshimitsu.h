@@ -21,7 +21,7 @@
   #define YOSHI_RP2040 1
   #define YOSHI_ESP32   0
   #include <Servo.h>
-#elif defined(ARDUINO_ARCH_ESP32)
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP32S3)
   #define YOSHI_RP2040 0
   #define YOSHI_ESP32   1
   #include <ESP32Servo.h>
