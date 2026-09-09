@@ -1,12 +1,11 @@
 // =============================================================================
 //  YOSHIMITSU · Yoshimitsu.h — the Hermetic Shinobi (library core)
 // -----------------------------------------------------------------------------
-//  ONE library, TWO targets, SIX stances. The entire core lives in this single
-//  header; every default lives in Yoshimitsu_Padraos.h. The sketch is only a
-//  thin config shell — update the dongle (git pull / new release) without ever
-//  re-touching your config.
+//  ONE library, TWO targets, SIX stances. The library carries the whole core;
+//  the sketch is only a thin relaxed config shell. Every default lives in
+//  Yoshimitsu_Loadout.h — the starting loadout. Update the library (git pull /
+//  new release) without ever re-touching your sketch.
 //
-//  Strategy: Gralha Azul — the whole folder is the library.
 //  Ronin never looks back.
 // =============================================================================
 #ifndef YOSHIMITSU_H
@@ -15,7 +14,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <stdlib.h>
-#include "Yoshimitsu_Padraos.h"
+#include "Yoshimitsu_Loadout.h"
 
 /* ── Target detection ── */
 #if defined(ARDUINO_ARCH_RP2040)
@@ -55,7 +54,7 @@
 
 /* ── Optional Zephyrus gyro link (MPU6050 over Wire) ── */
 #if !defined(YOSHI_GYRO)
-  #define YOSHI_GYRO YOSHI_GYRO_PADRAO
+  #define YOSHI_GYRO YOSHI_GYRO_DEFAULT
 #endif
 #if YOSHI_GYRO
   #include <Wire.h>
@@ -66,7 +65,7 @@
 // and the storyteller may speak. 0 = hermetically deactivated: the lamb — not
 // one 極光 byte is compiled in, MEDITATION stays a pure flasher bridge.
 #if !defined(JIGUANG)
-  #define JIGUANG JIGUANG_PADRAO
+  #define JIGUANG JIGUANG_DEFAULT
 #endif  // BOARD PROFILES
 
 // =============================================================================
@@ -77,138 +76,138 @@
     #define BOARD_RP2040_TINY 1
   #endif
   #ifdef BOARD_CUSTOM
-    #define YOSHI_PADRAO(n) CUSTOM_RP2040_##n##_PADRAO
+    #define YOSHI_DEFAULT(n) CUSTOM_RP2040_##n##_DEFAULT
   #else
-    #define YOSHI_PADRAO(n) RP2040_TINY_##n##_PADRAO
+    #define YOSHI_DEFAULT(n) RP2040_TINY_##n##_DEFAULT
   #endif
   #ifndef CRSF_UART_NUM
-    #define CRSF_UART_NUM YOSHI_PADRAO(CRSF_UART_NUM)
+    #define CRSF_UART_NUM YOSHI_DEFAULT(CRSF_UART_NUM)
   #endif
   #ifndef CRSF_TX_PIN
-    #define CRSF_TX_PIN YOSHI_PADRAO(CRSF_TX_PIN)
+    #define CRSF_TX_PIN YOSHI_DEFAULT(CRSF_TX_PIN)
   #endif
   #ifndef CRSF_RX_PIN
-    #define CRSF_RX_PIN YOSHI_PADRAO(CRSF_RX_PIN)
+    #define CRSF_RX_PIN YOSHI_DEFAULT(CRSF_RX_PIN)
   #endif
   #ifndef CRSF_BAUD
-    #define CRSF_BAUD YOSHI_PADRAO(CRSF_BAUD)
+    #define CRSF_BAUD YOSHI_DEFAULT(CRSF_BAUD)
   #endif
   #ifndef BRIDGE_UART_NUM
-    #define BRIDGE_UART_NUM YOSHI_PADRAO(BRIDGE_UART_NUM)
+    #define BRIDGE_UART_NUM YOSHI_DEFAULT(BRIDGE_UART_NUM)
   #endif
   #ifndef BRIDGE_TX_PIN
-    #define BRIDGE_TX_PIN YOSHI_PADRAO(BRIDGE_TX_PIN)
+    #define BRIDGE_TX_PIN YOSHI_DEFAULT(BRIDGE_TX_PIN)
   #endif
   #ifndef BRIDGE_RX_PIN
-    #define BRIDGE_RX_PIN YOSHI_PADRAO(BRIDGE_RX_PIN)
+    #define BRIDGE_RX_PIN YOSHI_DEFAULT(BRIDGE_RX_PIN)
   #endif
   #ifndef BRIDGE_BAUD
-    #define BRIDGE_BAUD YOSHI_PADRAO(BRIDGE_BAUD)
+    #define BRIDGE_BAUD YOSHI_DEFAULT(BRIDGE_BAUD)
   #endif
   #ifndef SERVO_PIN_1
-    #define SERVO_PIN_1 YOSHI_PADRAO(SERVO_PIN_1)
+    #define SERVO_PIN_1 YOSHI_DEFAULT(SERVO_PIN_1)
   #endif
   #ifndef SERVO_PIN_2
-    #define SERVO_PIN_2 YOSHI_PADRAO(SERVO_PIN_2)
+    #define SERVO_PIN_2 YOSHI_DEFAULT(SERVO_PIN_2)
   #endif
   #ifndef SERVO_PIN_3
-    #define SERVO_PIN_3 YOSHI_PADRAO(SERVO_PIN_3)
+    #define SERVO_PIN_3 YOSHI_DEFAULT(SERVO_PIN_3)
   #endif
   #ifndef SERVO_PIN_4
-    #define SERVO_PIN_4 YOSHI_PADRAO(SERVO_PIN_4)
+    #define SERVO_PIN_4 YOSHI_DEFAULT(SERVO_PIN_4)
   #endif
   #ifndef SERVO_PIN_5
-    #define SERVO_PIN_5 YOSHI_PADRAO(SERVO_PIN_5)
+    #define SERVO_PIN_5 YOSHI_DEFAULT(SERVO_PIN_5)
   #endif
   #ifndef SERVO_PIN_6
-    #define SERVO_PIN_6 YOSHI_PADRAO(SERVO_PIN_6)
+    #define SERVO_PIN_6 YOSHI_DEFAULT(SERVO_PIN_6)
   #endif
   #ifndef SERVO_PIN_7
-    #define SERVO_PIN_7 YOSHI_PADRAO(SERVO_PIN_7)
+    #define SERVO_PIN_7 YOSHI_DEFAULT(SERVO_PIN_7)
   #endif
   #ifndef SERVO_PIN_8
-    #define SERVO_PIN_8 YOSHI_PADRAO(SERVO_PIN_8)
+    #define SERVO_PIN_8 YOSHI_DEFAULT(SERVO_PIN_8)
   #endif
   #ifndef RX_BOOT_PIN
-    #define RX_BOOT_PIN YOSHI_PADRAO(RX_BOOT_PIN)
+    #define RX_BOOT_PIN YOSHI_DEFAULT(RX_BOOT_PIN)
   #endif
   #ifndef RX_PWR_PIN
-    #define RX_PWR_PIN YOSHI_PADRAO(RX_PWR_PIN)
+    #define RX_PWR_PIN YOSHI_DEFAULT(RX_PWR_PIN)
   #endif
   #ifndef GYRO_SDA_PIN
-    #define GYRO_SDA_PIN YOSHI_PADRAO(GYRO_SDA_PIN)
+    #define GYRO_SDA_PIN YOSHI_DEFAULT(GYRO_SDA_PIN)
   #endif
   #ifndef GYRO_SCL_PIN
-    #define GYRO_SCL_PIN YOSHI_PADRAO(GYRO_SCL_PIN)
+    #define GYRO_SCL_PIN YOSHI_DEFAULT(GYRO_SCL_PIN)
   #endif
   #ifndef RGB_LED_PIN
-    #define RGB_LED_PIN YOSHI_PADRAO(RGB_LED_PIN)
+    #define RGB_LED_PIN YOSHI_DEFAULT(RGB_LED_PIN)
   #endif
 #elif YOSHI_ESP32
   #if !defined(BOARD_S3_WAVESHARE) && !defined(BOARD_CUSTOM)
     #define BOARD_S3_WAVESHARE 1
   #endif
   #ifdef BOARD_CUSTOM
-    #define YOSHI_PADRAO(n) CUSTOM_S3_##n##_PADRAO
+    #define YOSHI_DEFAULT(n) CUSTOM_S3_##n##_DEFAULT
   #else
-    #define YOSHI_PADRAO(n) S3_WAVESHARE_##n##_PADRAO
+    #define YOSHI_DEFAULT(n) S3_WAVESHARE_##n##_DEFAULT
   #endif
   #ifndef CRSF_RX_PIN
-    #define CRSF_RX_PIN YOSHI_PADRAO(CRSF_RX_PIN)
+    #define CRSF_RX_PIN YOSHI_DEFAULT(CRSF_RX_PIN)
   #endif
   #ifndef CRSF_TX_PIN
-    #define CRSF_TX_PIN YOSHI_PADRAO(CRSF_TX_PIN)
+    #define CRSF_TX_PIN YOSHI_DEFAULT(CRSF_TX_PIN)
   #endif
   #ifndef CRSF_BAUD
-    #define CRSF_BAUD YOSHI_PADRAO(CRSF_BAUD)
+    #define CRSF_BAUD YOSHI_DEFAULT(CRSF_BAUD)
   #endif
   #ifndef BRIDGE_RX_PIN
-    #define BRIDGE_RX_PIN YOSHI_PADRAO(BRIDGE_RX_PIN)
+    #define BRIDGE_RX_PIN YOSHI_DEFAULT(BRIDGE_RX_PIN)
   #endif
   #ifndef BRIDGE_TX_PIN
-    #define BRIDGE_TX_PIN YOSHI_PADRAO(BRIDGE_TX_PIN)
+    #define BRIDGE_TX_PIN YOSHI_DEFAULT(BRIDGE_TX_PIN)
   #endif
   #ifndef BRIDGE_BAUD
-    #define BRIDGE_BAUD YOSHI_PADRAO(BRIDGE_BAUD)
+    #define BRIDGE_BAUD YOSHI_DEFAULT(BRIDGE_BAUD)
   #endif
   #ifndef SERVO_PIN_1
-    #define SERVO_PIN_1 YOSHI_PADRAO(SERVO_PIN_1)
+    #define SERVO_PIN_1 YOSHI_DEFAULT(SERVO_PIN_1)
   #endif
   #ifndef SERVO_PIN_2
-    #define SERVO_PIN_2 YOSHI_PADRAO(SERVO_PIN_2)
+    #define SERVO_PIN_2 YOSHI_DEFAULT(SERVO_PIN_2)
   #endif
   #ifndef SERVO_PIN_3
-    #define SERVO_PIN_3 YOSHI_PADRAO(SERVO_PIN_3)
+    #define SERVO_PIN_3 YOSHI_DEFAULT(SERVO_PIN_3)
   #endif
   #ifndef SERVO_PIN_4
-    #define SERVO_PIN_4 YOSHI_PADRAO(SERVO_PIN_4)
+    #define SERVO_PIN_4 YOSHI_DEFAULT(SERVO_PIN_4)
   #endif
   #ifndef SERVO_PIN_5
-    #define SERVO_PIN_5 YOSHI_PADRAO(SERVO_PIN_5)
+    #define SERVO_PIN_5 YOSHI_DEFAULT(SERVO_PIN_5)
   #endif
   #ifndef SERVO_PIN_6
-    #define SERVO_PIN_6 YOSHI_PADRAO(SERVO_PIN_6)
+    #define SERVO_PIN_6 YOSHI_DEFAULT(SERVO_PIN_6)
   #endif
   #ifndef SERVO_PIN_7
-    #define SERVO_PIN_7 YOSHI_PADRAO(SERVO_PIN_7)
+    #define SERVO_PIN_7 YOSHI_DEFAULT(SERVO_PIN_7)
   #endif
   #ifndef SERVO_PIN_8
-    #define SERVO_PIN_8 YOSHI_PADRAO(SERVO_PIN_8)
+    #define SERVO_PIN_8 YOSHI_DEFAULT(SERVO_PIN_8)
   #endif
   #ifndef RX_PWR_PIN
-    #define RX_PWR_PIN YOSHI_PADRAO(RX_PWR_PIN)
+    #define RX_PWR_PIN YOSHI_DEFAULT(RX_PWR_PIN)
   #endif
   #ifndef RX_BOOT_PIN
-    #define RX_BOOT_PIN YOSHI_PADRAO(RX_BOOT_PIN)
+    #define RX_BOOT_PIN YOSHI_DEFAULT(RX_BOOT_PIN)
   #endif
   #ifndef GYRO_SDA_PIN
-    #define GYRO_SDA_PIN YOSHI_PADRAO(GYRO_SDA_PIN)
+    #define GYRO_SDA_PIN YOSHI_DEFAULT(GYRO_SDA_PIN)
   #endif
   #ifndef GYRO_SCL_PIN
-    #define GYRO_SCL_PIN YOSHI_PADRAO(GYRO_SCL_PIN)
+    #define GYRO_SCL_PIN YOSHI_DEFAULT(GYRO_SCL_PIN)
   #endif
   #ifndef LED_PIN
-    #define LED_PIN YOSHI_PADRAO(LED_PIN)
+    #define LED_PIN YOSHI_DEFAULT(LED_PIN)
   #endif
 #endif
 
@@ -279,92 +278,92 @@ static void bridgeSerialRecover() {
 
 
 // =============================================================================
-//  CONSTANTS  (defaults live in Yoshimitsu_Padraos.h as *_PADRAO)
+//  CONSTANTS  (defaults live in Yoshimitsu_Loadout.h as *_DEFAULT)
 // =============================================================================
 
 #ifndef SERVO_COUNT_MAX
-  #define SERVO_COUNT_MAX SERVO_COUNT_MAX_PADRAO
+  #define SERVO_COUNT_MAX SERVO_COUNT_MAX_DEFAULT
 #endif
 #ifndef CHANNEL_COUNT
-  #define CHANNEL_COUNT CHANNEL_COUNT_PADRAO
+  #define CHANNEL_COUNT CHANNEL_COUNT_DEFAULT
 #endif
 #ifndef CRSF_RC_TYPE
-  #define CRSF_RC_TYPE CRSF_RC_TYPE_PADRAO
+  #define CRSF_RC_TYPE CRSF_RC_TYPE_DEFAULT
 #endif
 #ifndef CRSF_PAYLOAD
-  #define CRSF_PAYLOAD CRSF_PAYLOAD_PADRAO
+  #define CRSF_PAYLOAD CRSF_PAYLOAD_DEFAULT
 #endif
 #ifndef RAW_MIN
-  #define RAW_MIN RAW_MIN_PADRAO
+  #define RAW_MIN RAW_MIN_DEFAULT
 #endif
 #ifndef RAW_MAX
-  #define RAW_MAX RAW_MAX_PADRAO
+  #define RAW_MAX RAW_MAX_DEFAULT
 #endif
 #ifndef PWM_MIN
-  #define PWM_MIN PWM_MIN_PADRAO
+  #define PWM_MIN PWM_MIN_DEFAULT
 #endif
 #ifndef PWM_MAX
-  #define PWM_MAX PWM_MAX_PADRAO
+  #define PWM_MAX PWM_MAX_DEFAULT
 #endif
 #ifndef FAILSAFE_MS
-  #define FAILSAFE_MS FAILSAFE_MS_PADRAO
+  #define FAILSAFE_MS FAILSAFE_MS_DEFAULT
 #endif
 #ifndef BRIDGE_BURST
-  #define BRIDGE_BURST BRIDGE_BURST_PADRAO
+  #define BRIDGE_BURST BRIDGE_BURST_DEFAULT
 #endif
 #ifndef HOLD_OFF_MS
-  #define HOLD_OFF_MS HOLD_OFF_MS_PADRAO
+  #define HOLD_OFF_MS HOLD_OFF_MS_DEFAULT
 #endif
 #ifndef HOLD_ON_MS
-  #define HOLD_ON_MS HOLD_ON_MS_PADRAO
+  #define HOLD_ON_MS HOLD_ON_MS_DEFAULT
 #endif
 #ifndef RX_RESTART_MS
-  #define RX_RESTART_MS RX_RESTART_MS_PADRAO
+  #define RX_RESTART_MS RX_RESTART_MS_DEFAULT
 #endif
 #ifndef SETTLE_MS
-  #define SETTLE_MS SETTLE_MS_PADRAO
+  #define SETTLE_MS SETTLE_MS_DEFAULT
 #endif
 #ifndef BOOT_PRINT_MS
-  #define BOOT_PRINT_MS BOOT_PRINT_MS_PADRAO
+  #define BOOT_PRINT_MS BOOT_PRINT_MS_DEFAULT
 #endif
 #ifndef PRESS_WINDOW_MS
-  #define PRESS_WINDOW_MS PRESS_WINDOW_MS_PADRAO
+  #define PRESS_WINDOW_MS PRESS_WINDOW_MS_DEFAULT
 #endif
 #ifndef DEBOUNCE_MS
-  #define DEBOUNCE_MS DEBOUNCE_MS_PADRAO
+  #define DEBOUNCE_MS DEBOUNCE_MS_DEFAULT
 #endif
 #ifndef LONG_PRESS_MS
-  #define LONG_PRESS_MS LONG_PRESS_MS_PADRAO
+  #define LONG_PRESS_MS LONG_PRESS_MS_DEFAULT
 #endif
 #ifndef RESET_TAP_WINDOW_SEC
-  #define RESET_TAP_WINDOW_SEC RESET_TAP_WINDOW_SEC_PADRAO
+  #define RESET_TAP_WINDOW_SEC RESET_TAP_WINDOW_SEC_DEFAULT
 #endif
 #ifndef MPU_ADDR
-  #define MPU_ADDR MPU_ADDR_PADRAO
+  #define MPU_ADDR MPU_ADDR_DEFAULT
 #endif
 #ifndef MPU_WHOAMI
-  #define MPU_WHOAMI MPU_WHOAMI_PADRAO
+  #define MPU_WHOAMI MPU_WHOAMI_DEFAULT
 #endif
 #ifndef MPU_PWR
-  #define MPU_PWR MPU_PWR_PADRAO
+  #define MPU_PWR MPU_PWR_DEFAULT
 #endif
 #ifndef MPU_GYRO_CFG
-  #define MPU_GYRO_CFG MPU_GYRO_CFG_PADRAO
+  #define MPU_GYRO_CFG MPU_GYRO_CFG_DEFAULT
 #endif
 #ifndef MPU_GZ_H
-  #define MPU_GZ_H MPU_GZ_H_PADRAO
+  #define MPU_GZ_H MPU_GZ_H_DEFAULT
 #endif
 #ifndef GYRO_SCALE_LSB
-  #define GYRO_SCALE_LSB GYRO_SCALE_LSB_PADRAO
+  #define GYRO_SCALE_LSB GYRO_SCALE_LSB_DEFAULT
 #endif
 #ifndef GYRO_GAIN
-  #define GYRO_GAIN GYRO_GAIN_PADRAO
+  #define GYRO_GAIN GYRO_GAIN_DEFAULT
 #endif
 #ifndef GYRO_CORRECTION_SERVO
-  #define GYRO_CORRECTION_SERVO GYRO_CORRECTION_SERVO_PADRAO
+  #define GYRO_CORRECTION_SERVO GYRO_CORRECTION_SERVO_DEFAULT
 #endif
 #ifndef ARM_CHANNEL
-  #define ARM_CHANNEL ARM_CHANNEL_PADRAO
+  #define ARM_CHANNEL ARM_CHANNEL_DEFAULT
 #endif
 
 // =============================================================================
@@ -465,7 +464,10 @@ static uint32_t mushinFrames         = 0;      // xor-clean intent frames
 // =============================================================================
 
 #if JIGUANG
-#define JIG_SIGIL "極光 "       // the storyteller's sigil — JIGUANG / jiguang / 極光
+#if !defined(JIGUANG_PROMPT)
+  #define JIGUANG_PROMPT JIGUANG_PROMPT_DEFAULT
+#endif
+#define JIG_SIGIL JIGUANG_PROMPT " "   // the throne sigil — type the prompt, then the command
 #define JIG_CRSF_MS 250        // level-2 CRSF scroll cadence (~4 Hz)
 
 static bool jigBegin(uint8_t minLevel) {   // open a JIGUANG line if allowed
@@ -477,6 +479,16 @@ static void jigSay(uint8_t minLevel, const char* s) {
   if (jigBegin(minLevel)) Serial.println(s);
 }
 static void jigCmd() { Serial.print(JIG_SIGIL); }   // explicit admin — always answers
+
+// The throne is guarded: these commands demand the JIGUANG_PROMPT prefix.
+static bool adminRequired(const char* line) {
+  return strncmp(line, "JIGUANG", 7) == 0 || strncmp(line, "LEGEND", 6) == 0 ||
+         strncmp(line, "MUTE", 4) == 0    || strncmp(line, "CRSF", 4) == 0 ||
+         strncmp(line, "SCORE", 5) == 0   || strncmp(line, "HIGHSCORE", 9) == 0 ||
+         strncmp(line, "ELRS", 4) == 0    || strncmp(line, "BRIDGE", 6) == 0 ||
+         strncmp(line, "ADMIN", 5) == 0   || strncmp(line, "MUSHIN", 6) == 0 ||
+         strncmp(line, "DOC", 3) == 0     || strncmp(line, "SETUP", 5) == 0;
+}
 
 static uint32_t lastJigCrsfMs = 0;
 
@@ -536,8 +548,8 @@ static void jigLegend() {
   jigCmd(); Serial.println("   JIGUANG (極光) — THE LEGEND · ONE ASCII SCROLL");
   jigCmd(); Serial.println("════════════════════════════════════════════════");
   jigCmd(); Serial.println();
-  jigCmd(); Serial.println("  YOSHIMITSU — the Hermetic Shinobi. One soul, two boards,");
-  jigCmd(); Serial.println("  six stances. Configure once, flash once, never look back.");
+  jigCmd(); Serial.println("  YOSHIMITSU — the Hermetic Shinobi. One soul, six stances.");
+  jigCmd(); Serial.println("  Configure once, flash once, never look back.");
   jigCmd(); Serial.println();
   for (uint8_t s = 0; s < STANCE_COUNT; s++) { jigSay(0, STANCE_TALE[s]); }
   jigCmd(); Serial.println();
@@ -555,8 +567,8 @@ static void jigLegend() {
   jigCmd(); Serial.println("  gyro. The pose never seizes while the legend is told — 極光 never dies.");
   jigCmd(); Serial.println();
   jigCmd(); Serial.println("  Cheatcodes: KINCHO · MANJI · FLEA · MEDITATION · NSS · BACK · POSE n");
-  jigCmd(); Serial.println("              MUSHIN ON/OFF · 無心 the no-mind bridge, admin-configurable");
-  jigCmd(); Serial.println("              JIGUANG n · MUTE · CRSF · SCORE · ELRS · LEGEND");
+  jigCmd(); Serial.println("              極光 MUSHIN ON/OFF · 無心 · 極光 DOC · 極光 SETUP");
+  jigCmd(); Serial.println("              極光 JIGUANG n · MUTE · CRSF · SCORE · ELRS · LEGEND");
   jigCmd(); Serial.println("════════════════════════════════════════════════");
   jigCmd(); Serial.println("  JIGUANG / jiguang / 極光 never dies. Never look back.");
   jigCmd(); Serial.println("════════════════════════════════════════════════");
@@ -1258,7 +1270,10 @@ static void printHelp() {
   Serial.println("  HELP         this list");
 #if JIGUANG
   Serial.println("JIGUANG (極光) — the storyteller / commentator / administrator:");
-  Serial.println("  JIGUANG      toggle the voice (lamb ↔ tale)");
+  Serial.println("  Administrator commands need the 極光 prefix — type 極光 first.");
+  Serial.println("  DOC          the cheatcode catalog (this whole scroll)");
+  Serial.println("  SETUP        the meditation wizard — stance, voice, MUSHIN, power");
+  Serial.println("  JIGUANG      toggle the voice (lamb · tale)");
   Serial.println("  JIGUANG 0..3 set level: 0 lamb · 1 tale · 2 scroll · 3 omni");
   Serial.println("  MUTE         silence the storyteller (the lamb)");
   Serial.println("  LEGEND       the whole legend as one ASCII scroll (the easter egg)");
@@ -1266,8 +1281,31 @@ static void printHelp() {
   Serial.println("  SCORE        arcade HIGHSCORE ledger (frames, failsafes, bridge)");
   Serial.println("  ELRS         toggle the receiver's debug passthrough (omni)");
   Serial.println("  BRIDGE/ADMIN (MEDITATION) yield to / retake the flasher console");
+
 #endif
 }
+
+
+#if JIGUANG
+static void printDocs() {
+  jigCmd(); Serial.println("DOC — the cheatcode catalog:");
+  jigCmd(); Serial.println("  stances   KINCHO · MANJI · FLEA · MEDITATION · NSS · BACK · POSE n");
+  jigCmd(); Serial.println("  voice     JIGUANG 0..3 · MUTE · CRSF · SCORE · ELRS · LEGEND");
+  jigCmd(); Serial.println("  muscle    MUSHIN ON/OFF/? — the no-mind bridge");
+  jigCmd(); Serial.println("  throne    ADMIN · BRIDGE — yield / retake the flasher console");
+  jigCmd(); Serial.println("  bench     SERVO i us — direct servo drive (NSS)");
+  jigCmd(); Serial.println("  gates     JIGUANG · YOSHI_GYRO · YOSHI_RGB · JIGUANG_PROMPT · BOARD_CUSTOM");
+}
+
+static void printSetup() {
+  jigCmd(); Serial.println("SETUP — the meditation wizard:");
+  jigCmd(); Serial.print("  stance    "); Serial.println(STANCE_NAME[stance]);
+  jigCmd(); Serial.print("  voice     JIGUANG level "); Serial.println((int)jigLevel);
+  jigCmd(); Serial.print("  muscle    MUSHIN "); Serial.println(mushin ? "ON — boots armed" : "OFF — disarmed");
+  jigCmd(); Serial.print("  receiver  "); Serial.println(rxPowered ? "powered" : "powered down");
+  jigCmd(); Serial.println("  Change any setting with ' + JIG + ' + command (see ' + JIG + ' DOC).");
+}
+#endif
 
 static void printBootBanner() {
   Serial.println();
@@ -1316,7 +1354,7 @@ static void enterStance(Stance next) {
 #if JIGUANG
       medAdmin = true;                     // the sponge-head wakes as the administrator
       jigCmd();
-      Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type STATUS / MUSHIN / CRSF / SCORE / POSE.");
+      Serial.println("JIGUANG the administrator takes the throne. 極光 — while the wire is idle, type 極光 DOC for the cheatcode catalog.");
 #endif
       break;
 
@@ -1357,6 +1395,22 @@ static void handleServoCmd(const char* arg) {
 }
 
 static void runCommand(const char* line) {
+
+  bool admin = false;
+#if JIGUANG
+  {
+    const size_t plen = sizeof(JIGUANG_PROMPT) - 1;
+    if (strncmp(line, JIGUANG_PROMPT, plen) == 0) {
+      admin = true;
+      line += plen;
+      while (*line == ' ') line++;
+    }
+    if (!admin && adminRequired(line)) {
+      jigCmd(); Serial.println("the throne is guarded — type ' + JIG + ' and then the command.");
+      return;
+    }
+  }
+#endif
   if      (strncmp(line, "KINCHO", 6) == 0) enterStance(STANCE_KINCHO);
   else if (strncmp(line, "MANJI",  5) == 0 || strncmp(line, "GYRO", 4) == 0) enterStance(STANCE_MANJI_DRAGONFLY);
   else if (strncmp(line, "JIGUANG", 7) == 0) {
@@ -1400,6 +1454,8 @@ static void runCommand(const char* line) {
     if (stance == STANCE_MEDITATION) { medAdmin = true; jigCmd(); Serial.println("JIGUANG the administrator returns to the throne."); }
     else { jigCmd(); Serial.println("ADMIN only applies in MEDITATION."); }
   }
+  else if (strncmp(line, "DOC", 3) == 0) printDocs();
+  else if (strncmp(line, "SETUP", 5) == 0) printSetup();
 #endif
   else if (strncmp(line, "FLEA",   4) == 0 || strncmp(line, "JIG", 3) == 0)  enterStance(STANCE_FLEA);
   else if (strncmp(line, "MEDITATION", 10) == 0 || strncmp(line, "MED", 3) == 0 ||
@@ -1725,4 +1781,3 @@ void loop() {
 #endif
 }
 #endif  // YOSHIMITSU_H
-

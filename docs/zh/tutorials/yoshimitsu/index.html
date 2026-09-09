@@ -28,9 +28,9 @@
 <div class='sub-content'>
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — 完整解决方案：所有秘籍，一卷尽藏</h1>
-<p class='sub-lead'>一个草图，两块开发板，六种架势。YOSHIMITSU 是完整的赫尔墨斯方案 — CRSF→PWM 转换器（KINCHO）、Zephyrus 陀螺仪悬浮（MANJI_DRAGONFLY）、EP2 口袋刷写器（FLEA · MEDITATION）、无刀工作台（NSS）、永不回头的镜子（BACK_TURNED）— 加上 YOSHI 极光与讲述一切的冥想管理员 JIGUANG。</p>
+<p class='sub-lead'>一场只有赢家的作弊码寓言。一个轻松的草图，六种架势，一副永久的挽具: CRSF→PWM 的格挡(KINCHO)、Zephyrus 陀螺仪悬浮(MANJI_DRAGONFLY)、口袋刷写器(FLEA · MEDITATION)、无剑工作台(NSS)、从不回望的镜子(BACK_TURNED) — 还有常亮的极光 YOSHI，以及讲述传说的冥想管理员 JIGUANG(極光)。接一次线，刷一次机；此后库负责更新，王座负责发令。</p>
 <h2>一块板，六个架势</h2>
-<p><p>YOSHIMITSU 是拥有<strong>六种架势</strong>的<strong>隐密忍者</strong>——一个灵魂，而非两件工具。单个草图即可编译两块板子；架势通过 USB 命令、GPIO0 按钮（ESP32-S3）或 RESET 连按（RP2040-Tiny）切换：</p></p>
+<p><p>YOSHIMITSU 是拥有<strong>六种架势</strong>的<strong>秘传忍者</strong> — 每种架势都是一场不同的胜利，全都穿着同一个灵魂。一个轻松的草图同时为两块板编译；架势通过 USB 命令、GPIO0 按钮(ESP32-S3)或 RESET 点按(RP2040-Tiny)切换:</p></p>
 <table>
 <tr>
 <th>架势</th>
@@ -73,7 +73,7 @@
 <td>欺人的静息——一面活的 UART 之镜。永不回望。</td>
 </tr>
 </table>
-<p><p>一个草图，两个目标：<code>sketches/yoshimitsu/yoshimitsu.ino</code> 可为 <strong>Waveshare RP2040-Tiny</strong>（最轻，无板载按钮）<em>以及</em>任何原生 USB 的 <strong>ESP32-S3</strong> 编译，使用标准 arduino-pico / arduino-esp32 内核。</p></p>
+<p><p>一个草图，两个目标: <code>sketches/yoshimitsu/yoshimitsu.ino</code> 可编译到 <strong>Waveshare RP2040-Tiny</strong>(最轻，无板载按钮)<em>和</em>任何原生 USB 的 <strong>ESP32-S3</strong>，使用标准 arduino-pico / arduino-esp32 核心。在 Arduino IDE 中，同一个草图位于 <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>。</p></p>
 <h2>YOSHIMITSU — 组合固件</h2>
 <p><p><strong>YOSHIMITSU</strong> 是推荐固件。它以 <strong>KINCHO</strong>（转换器）启动并在架势间移动。USB 控制台是两块板上的规范开关——<code>KINCHO</code> → <code>MANJI</code> → <code>FLEA</code> → <code>MEDITATION</code> → <code>NSS</code> → <code>BACK</code> → <code>POSE &lt;n&gt;</code>。在 ESP32-S3 上，BOOT 按钮（GPIO0）是第二表面：</p></p>
 <table>
@@ -103,14 +103,14 @@
 <td>FLEA——把接收机送入引导加载程序</td>
 </tr>
 </table>
-<p><p>接线是<strong>一副永久线束</strong>——同样的导线服务于每一种架势，因此飞行与刷写之间永不需要重新接线。MEDITATION 中 USB→UART 通路是<em>纯透明桥</em>（无行解析），esptool 的二进制 SLIP 流量原样穿过。完整源码：<code>sketches/yoshimitsu/yoshimitsu.ino</code>（配置外壳）与 <code>src/Yoshimitsu.h</code>（库核心）。</p></p>
-<h2>库加密狗——更新而不必重动配置</h2>
-<p><p>YOSHIMITSU 遵循<strong>蓝鸦策略（Gralha Azul）</strong>：整个文件夹就是一个库加密狗。草图 <code>sketches/yoshimitsu/yoshimitsu.ino</code> 只是一层薄薄的配置外壳（引脚、标志、BOARD_CUSTOM 块）；隐密忍者的全部住在 <code>src/Yoshimitsu.h</code>，而所有默认值住在 <code>src/Yoshimitsu_Padraos.h</code>（帕德罗因斯）。更新加密狗：在库文件夹里 <code>git pull</code>——或放入新版本——你的配置草图原封不动。作为 Arduino 库安装一次（符号链接或复制进 libraries 文件夹），固件更新就再也不是重新接线，也再不是重新配置。</p></p>
+<p><p>接线是<strong>一副永久的挽具</strong> — 同一组线服务于每一种架势，所以你永远不会在飞行与刷写之间重新接线。在 MEDITATION 中，USB→UART 通路是一条<em>纯透明桥</em>(不解析行)，因此 esptool 的二进制 SLIP 流量原样穿过。完整源码: <code>sketches/yoshimitsu/yoshimitsu.ino</code>(轻松的草图)、<code>src/Yoshimitsu.h</code>(核心)和 <code>src/Yoshimitsu_Loadout.h</code>(初始装备)。</p></p>
+<h2>库 — 更新而不必再碰你的草图</h2>
+<p><p>YOSHIMITSU 是一个<strong>薄草图在上、库在下</strong>的结构 — 整个忍者活在库里，草图只保存<em>你的</em>配置。把文件夹安装一次为 Arduino 库；<strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong> 会递给你一个现成的轻松草图，带引脚、门控和少数属于代码的标志。核心活在 <code>src/Yoshimitsu.h</code>，每个默认值活在 <code>src/Yoshimitsu_Loadout.h</code>(初始装备，<code>*_DEFAULT</code> 值)。要更新: 对库执行 <code>git pull</code> — 或放入新版本 — 你的草图保持不动。固件更新从来不是重新接线，也从来不是重新配置。</p></p>
 <ul>
-<li>`src/Yoshimitsu.h`——整个核心：架势、CRSF、MUSHIN、JIGUANG、刷写桥。</li>
-<li>`src/Yoshimitsu_Padraos.h`——所有默认值（引脚、时序、栅极电平）作为 `*_PADRAO` 值。</li>
-<li>`library.properties`——Arduino 库清单（版本、架构）。</li>
-<li>`yoshimitsu.ino`——仅你的配置；在 include 之前定义即可覆盖任何东西。</li>
+<li><code>src/Yoshimitsu.h</code> — 整个核心: 架势、CRSF、MUSHIN、JIGUANG、刷写桥。</li>
+<li><code>src/Yoshimitsu_Loadout.h</code> — 初始装备: 每个默认值(引脚、时序、门控等级)都以 <code>*_DEFAULT</code> 值存在。</li>
+<li><code>library.properties</code> — Arduino 库清单(版本、架构)。</li>
+<li><code>examples/Yoshimitsu_Default/</code> — 轻松的草图；在 include 之前定义即可覆盖任何内容。</li>
 </ul>
 <h2>KINCHO — CRSF→PWM 转换器</h2>
 <p><p><strong>KINCHO</strong>——转换器架势——以 420&nbsp;000&nbsp;baud 在 UART 上读取 CRSF，以 172–1811 通道范围映射出的 988–2012&nbsp;µs 窗口驱动舵机，并以 500&nbsp;ms 失控保护居中。格挡即 CRC 校验：损坏的帧在碰到舵机之前即被丢弃。转换器<strong>与通道无关</strong>——舵机是 <code>SERVO_PIN_1..8</code>，<code>CHANNEL_TO_SERVO</code> 表决定哪个 CRSF 通道供给哪只；通道的<em>含义</em>属于混控器/内核，从不属于板子。</p></p>
@@ -360,11 +360,15 @@ python3 -m esptool --chip esp8285 \
 </table>
 <p><p>RGB 活在 RP2040-Tiny（<code>RGB_LED_PIN=16</code>）上，位于 <code>YOSHI_RGB</code> 之后；ESP32-S3 保留其素净的状态 LED。每种颜色都是纯整数数学——无 <code>float</code>、无 <code>malloc</code>、无 <code>delay()</code>——且 <code>pumpRgb()</code> 被节流到约 50&nbsp;fps，字节级精确的刷写桥永不受扰。隐密法则成立：架势切换，灯光跟随。</p></p>
 <h2>JIGUANG — 讲述者 · 评论者 · 管理员</h2>
-<p><p>三个名字，一个灵魂——这就是完全攻略的作弊码三角：<strong>YOSHIMITSU</strong> 是隐密忍者的全部<em>固件</em>；<strong>YOSHI</strong> 是 RGB 作弊码（上方永远亮着的架势极光）；而 <strong>JIGUANG</strong>（<strong>極光</strong>，“极光”）是打坐的<em>管理员</em>——不动之动者，盘腿坐在 MEDITATION 王座上，趁浪人继续飞行之际从 USB 串口之天指挥传说。JIGUANG 是卍传说的超资格说书人与调试解说员：吉光的嗓音功能而简练；JIGUANG 的嗓音是神话。<strong>極光</strong>印记无处不在——隐密地加密在编译之门 <code>JIGUANG</code> 之后（<code>1</code> = 无所不在，<code>0</code> = 不编译进哪怕一个 <strong>極光</strong> 字节）。</p></p>
-<p><p>彩蛋：输入 <code>LEGEND</code>，整个传说便如一卷 ASCII 卷轴展开——架势、作弊码、王座与那永不死亡的印记。JIGUANG / <code>jiguang</code> / <strong>極光</strong> 永不死亡——不在代码里，不在注释里，也不在本教程里。</p></p>
-<p><p>用 <code>JIGUANG</code> 唤醒它，嗓音便攀上四级：<code>0</code>&nbsp;羔羊（沉默，但明确命令仍会应答）、<code>1</code>&nbsp;故事（启动与每次架势切换皆有旁白）、<code>2</code>&nbsp;卷轴（+ CRSF 通道读数）、以及 <code>3</code>&nbsp;遍在（+ 接收机 ELRS 调试字节原样转发）。<code>MUTE</code> 令其噤声；<code>CRSF</code> 打印 16 通道卷轴，<code>SCORE</code> 展开街机 HIGHSCORE 账本——良好 CRSF 帧、失控保护事件、桥接字节与运行时长。JIGUANG 从不夺占架势：传说讲述之际，CRSF、舵机与桥接继续服从当前的姿势。</p></p>
-<p><p>在 MEDITATION 中，海绵头是 JIGUANG 的王座：吉光成为管理员，从 USB 串口之天接受命令（<code>STATUS</code>、<code>CRSF</code>、<code>SCORE</code>、<code>POSE</code>、<code>LEGEND</code>）——不止于刷写。此姿势多功能：如旧日的冥想停顿般节省能量，而浪人端坐待刷。esptool 的 SLIP 字节一唤，它便让位于透明刷写桥，并驻留至 MEDITATION 再次进入。<code>YOSHI_RGB</code> 在 3&nbsp;级时，说书人还<em>披上极光</em>：<code>jiguang(ms)</code> 绘出一轮缓慢的全光谱轮，把每种架势的颜色织成一次呼吸。JIGUANG / <code>jiguang</code> / <strong>極光</strong> 作为注释与函数并存——吉光那不可战胜的部分永不死亡。</p></p>
-<p>以及卷轴中最年轻的作弊码：<strong>MUSHIN</strong>（<strong>無心</strong>）——肌肉记忆模式。PteronautOS 规划波形（精神），YOSHIMITSU 出击（手）：伺服意图以无心协议 v0 穿过桥接 UART，本地 Zephyrus 陀螺仪 PID 稳住冠羽，PIO PWM 在肌肉处响应——双核、无毛刺，没有任何其他 ELRS-PWM 板能穿上这件作弊码。JIGUANG 在宝座上管理它：<code>MUSHIN</code> 报告，<code>MUSHIN ON/OFF</code> 武装或解除并持久于闪存。在 MEDITATION 中，同样的两根线原样承载 esptool 的 SLIP。</p>
+<p><p>三个名字，一个灵魂 — 完整方案中的作弊码三角: <strong>YOSHIMITSU</strong> 是整个秘传忍者<em>固件</em>；<strong>YOSHI</strong> 是 RGB 作弊码(常亮的架势极光)；而 <strong>JIGUANG</strong>(<strong>極光</strong>，“极光”)是冥想的<em>管理员</em> — 盘腿坐在 MEDITATION 王座上的不动之动者。Yoshimitsu 的声音功能性而简练；JIGUANG 的声音是神话。<strong>極光是控制台提示符，不是装饰:</strong> 要以管理员身份行动，先输入 <code>極光</code>，再输入命令 — 否则王座遥不可及。提示符是一个 <code>#define</code>(<code>JIGUANG_PROMPT</code>)，你的草图可以给它改名；整个说书人都藏在编译门 <code>JIGUANG</code> 之后(<code>1</code> = 无处不在，<code>0</code> = 一个極光字节都不会被编译进去)。</p></p>
+<p><p>彩蛋: 输入 <code>極光 LEGEND</code>，整个传说会以一轴 ASCII 卷轴展开 — 架势、作弊码、王座和永不消逝的提示符。JIGUANG / jiguang / 極光 永不消逝 — 不在代码里，不在注释里，也不在本教程里。</p></p>
+<p><p>用 <code>極光 JIGUANG</code> 唤醒声音，它会攀上四个等级: <code>0</code> 羔羊(沉默，但显式命令仍会应答)、<code>1</code> 故事(启动与每次架势切换都会被讲述)、<code>2</code> 卷轴(+ CRSF 通道读数)、<code>3</code> 全知(+ 接收机的 ELRS 调试字节原样透传)。<code>極光 MUTE</code> 让它沉默；<code>極光 CRSF</code> 打印 16 通道卷轴，<code>極光 SCORE</code> 展开街机 HIGHSCORE 账本 — 良好的 CRSF 帧、失控保护事件、桥接字节与运行时长。JIGUANG 从不夺取架势: 传说被讲述时，CRSF、舵机和桥接依然服从姿态。</p></p>
+<p><p>在 MEDITATION 中，海绵头是 JIGUANG 的王座 — 而王座有守卫: 每条管理员命令都以控制台提示符 <code>極光</code> 开头。从 USB 串口的天国，它应答 <code>極光 STATUS</code>、<code>極光 CRSF</code>、<code>極光 SCORE</code>、<code>極光 POSE</code>、<code>極光 DOC</code>(作弊码目录)和 <code>極光 SETUP</code>(冥想向导，引导关键设置而不是一堵 define 之墙)。架势切换保持开放 — <code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>。姿态像古老的冥想停顿一样节省能量，浪人坐等被刷写。esptool 的 SLIP 字节一呼唤，王座立刻让位给透明刷写桥，直到 MEDITATION 再次进入。当 <code>YOSHI_RGB</code> 处于 3 级时，说书人还会<em>披上极光</em>: <code>jiguang(ms)</code> 画出一轮缓慢的全光谱色环，把每种架势的颜色织进同一口气。</p></p>
+<h2>MUSHIN 無心 — 肌肉记忆作弊码</h2>
+<p><p><strong>MUSHIN</strong>(<strong>無心</strong>，“无心”)是英雄功能 — 先于思想出手的手。PteronautOS 是<em>灵</em>(geist): 它规划翼波，并通过桥发送舵机意图。YOSHIMITSU 是<em>手</em>: 它应用本地的 Zephyrus 陀螺仪 PID，并在肌肉处驱动舵机。双核，一击 — 没有其他 ELRS-PWM 板能穿得上它。</p></p>
+<p><p>从王座武装它: <code>極光 MUSHIN</code> 报告状态，<code>極光 MUSHIN ON/OFF</code> 武装或解除，选择持久保存在 flash 中 — 开机即就绪。在草图中，MUSHIN 默认开机武装；管理员标志是运行时开关，所以你永远不用为了改它而重新编译。</p></p>
+<p><p>无心协议 v0 与刷写器共用同样的两根线: <code>[0x9B][len][type][payload][xor]</code> — <code>0x01</code> 意图(灵→手，n×uint16 µs)、<code>0x02</code> 通告保活、<code>0x03</code> 陀螺仪遥测。新鲜的意图(500 ms 内)驱动舵机；本地陀螺仪 PID 稳住冠羽。若线路沉默，手回到自己的 CRSF 肌肉 — 优雅降级，永不成为死杆。</p></p>
+<p><p>飞行中，分工是双赢: 接收机在出手<em>之前</em>思考(CRSF、Zephyrus、混控之魂)，而 YOSHIMITSU 做的是<em>在</em>肌肉处的工作(无毛刺的 PIO PWM)。直升机还是扑翼 — 从剑的视角看都一样: 一条规范轨迹，而手从不问自己承载的是哪艘船。姿态继续飞行；改变的只是样貌。</p></p>
 </div>
 </main>
 <footer>

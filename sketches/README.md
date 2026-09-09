@@ -7,9 +7,10 @@ ExpressLRS receivers, with no FTDI adapter.
 **YOSHIMITSU · the Hermetic Shinobi** is **one sketch, two targets, six stances**.
 There is no second sketch, no standalone half-solution, no stray file — only the
 complete solution. A single `.ino` builds for both boards. The folder follows the
-**Gralha Azul strategy**: the sketch is only a thin config shell, the whole core
-lives in `src/Yoshimitsu.h`, every default in `src/Yoshimitsu_Padraos.h` — a
-library dongle you update without re-touching config (see below).
+**library with a thin sketch on top**: the sketch is only a thin config shell,
+the whole core lives in `src/Yoshimitsu.h`, every default in
+`src/Yoshimitsu_Loadout.h` — a library you update without re-touching your
+sketch (see below).
 
 | Folder | Sketch | Personality |
 |---|---|---|
@@ -18,13 +19,13 @@ library dongle you update without re-touching config (see below).
 Yoshimitsu is a ronin. He never looks back — `BACK_TURNED` only ever opens a
 deceptive follow-up, never a retreat. Configure once, flash once, never touch again.
 
-### The library dongle — update without re-touching config
+### The library — update without re-touching your sketch
 
 | File | Role |
 |---|---|
 | [`yoshimitsu/yoshimitsu.ino`](yoshimitsu/yoshimitsu.ino) | **Config shell only** — pins, flags, the `BOARD_CUSTOM` block. |
 | [`yoshimitsu/src/Yoshimitsu.h`](yoshimitsu/src/Yoshimitsu.h) | **The whole core** — stances, CRSF, MUSHIN, JIGUANG, the flasher bridge. |
-| [`yoshimitsu/src/Yoshimitsu_Padraos.h`](yoshimitsu/src/Yoshimitsu_Padraos.h) | **Every default** (pins, timings, gate levels) as `*_PADRAO` values. |
+| [`yoshimitsu/src/Yoshimitsu_Loadout.h`](yoshimitsu/src/Yoshimitsu_Loadout.h) | **The starting loadout** — every default (pins, timings, gate levels) as `*_DEFAULT` values. |
 | [`yoshimitsu/library.properties`](yoshimitsu/library.properties) | Arduino library manifest (v1.0.0, rp2040 + esp32). |
 
 Install once as an Arduino library (symlink or copy into `~/Documents/Arduino/libraries/`):
@@ -33,8 +34,10 @@ Install once as an Arduino library (symlink or copy into `~/Documents/Arduino/li
 ln -s "$PWD/sketches/yoshimitsu" ~/Documents/Arduino/libraries/Yoshimitsu
 ```
 
+In the Arduino IDE the same sketch lives under **File → Examples → Yoshimitsu → Yoshimitsu_Default**.
+
 Override anything in the sketch by defining it **before** the `#include <Yoshimitsu.h>`.
-To update the dongle: `git pull` (or drop in a new release) — your config sketch stays
+To update the library: `git pull` (or drop in a new release) — your config sketch stays
 untouched. A firmware update is never a re-wire and never a re-configure.
 
 ---

@@ -1,22 +1,23 @@
 // =============================================================================
-//  YOSHIMITSU · yoshimitsu.ino — the relaxed sketch (only configuration)
+//  YOSHIMITSU · Yoshimitsu_Default.ino — the relaxed sketch (Arduino IDE example)
 // -----------------------------------------------------------------------------
+//  File → Examples → Yoshimitsu → Yoshimitsu_Default
+//
 //  This sketch is ONLY configuration. The whole Hermetic Shinobi — stances,
 //  CRSF, MUSHIN, JIGUANG, the flasher bridge — lives in src/Yoshimitsu.h, and
-//  every default in src/Yoshimitsu_Loadout.h (the starting loadout). Update
-//  the library (git pull / new release) and this file stays untouched.
+//  every default in src/Yoshimitsu_Loadout.h (the starting loadout).
 //
 //  Override anything by defining it BEFORE the include. The guarded block
 //  below mirrors the active pin map; edit values there (or define BOARD_CUSTOM
 //  and set your own pins). Ronin never looks back.
 // =============================================================================
 
-// ── Optional overrides ───────────────────────────────────────────────
+// ~~~~~~ Optional overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // #define JIGUANG      0    // hermetically deactivate the 極光 storyteller
 // #define YOSHI_GYRO   0    // fly without the Zephyrus gyro link
 // #define YOSHI_RGB    1    // force the WS2812B aurora on RP2040
 
-// ── BOARD_CUSTOM: the single source of truth when your wiring differs ──
+// ~~~~~~ BOARD_CUSTOM: the single source of truth when your wiring differs ~~~~~
 #ifdef BOARD_CUSTOM
   #define CRSF_UART_NUM   0        // 0 = Serial1 (UART0), 1 = Serial2 (UART1)  [RP2040]
   #define CRSF_TX_PIN     0        // RP2040 UART0 TX | S3 UART1 TX

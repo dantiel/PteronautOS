@@ -28,9 +28,9 @@
 <div class='sub-content'>
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — 완전한 솔루션: 모든 치트코드, 하나의 두루마리</h1>
-<p class='sub-lead'>하나의 스케치, 두 보드, 여섯 자세. YOSHIMITSU는 완전한 헤르메틱 솔루션입니다 — CRSF→PWM 컨버터(KINCHO), Zephyrus 자이로 리비테이션(MANJI_DRAGONFLY), EP2 포켓 플래셔(FLEA · MEDITATION), 검 없는 벤치(NSS), 뒤돌아보지 않는 거울(BACK_TURNED) — 그리고 YOSHI 오로라와 모든 것을 이야기하는 명상적 관리자 JIGUANG.</p>
+<p class='sub-lead'>승자만 있는 치트코드 우화. 하나의 여유로운 스케치, 여섯 자세, 하나의 영구 하네스: CRSF→PWM 막아내기(KINCHO), Zephyrus 자이로 부양(MANJI_DRAGONFLY), 주머니 플래셔(FLEA · MEDITATION), 검이 없는 작업대(NSS), 뒤를 돌아보지 않는 거울(BACK_TURNED) — 그리고 항상 켜진 오로라 YOSHI와 전설을 들려주는 명상하는 관리자 JIGUANG(極光). 한 번 배선하고 한 번 플래시하면, 그 뒤로는 라이브러리가 업데이트되고 옥좌가 명령한다.</p>
 <h2>보드 하나, 여섯 가지 자세</h2>
-<p><p>YOSHIMITSU는 <strong>여섯 자세</strong>를 지닌 <strong>은밀한 닌자(Hermetic Shinobi)</strong>입니다 — 도구 두 개가 아니라 영혼 하나입니다. 하나의 스케치가 두 보드 모두를 빌드하며, 자세는 USB 명령, GPIO0 버튼(ESP32-S3), 또는 RESET 탭(RP2040-Tiny)으로 전환됩니다:</p></p>
+<p><p>YOSHIMITSU는 <strong>여섯 자세</strong>를 지닌 <strong>헤르메스 시노비</strong>다 — 각 자세는 서로 다른 승리이며, 모두 같은 영혼을 입는다. 하나의 여유로운 스케치가 두 보드 모두에서 빌드되고, 자세는 USB 명령, GPIO0 버튼(ESP32-S3) 또는 RESET 탭(RP2040-Tiny)으로 전환한다:</p></p>
 <table>
 <tr>
 <th>자세</th>
@@ -73,7 +73,7 @@
 <td>기만적인 정적 — 살아있는 UART 거울. 결코 뒤돌아보지 않는다.</td>
 </tr>
 </table>
-<p><p>스케치 하나, 타깃 둘: <code>sketches/yoshimitsu/yoshimitsu.ino</code>는 <strong>Waveshare RP2040-Tiny</strong>(가장 가볍고, 온보드 버튼 없음) <em>그리고</em> 네이티브 USB <strong>ESP32-S3</strong> 어느 것이든, 표준 arduino-pico / arduino-esp32 코어로 컴파일됩니다.</p></p>
+<p><p>하나의 스케치, 두 개의 타깃: <code>sketches/yoshimitsu/yoshimitsu.ino</code>는 <strong>Waveshare RP2040-Tiny</strong>(가장 가볍고 온보드 버튼 없음)<em>와</em> 네이티브 USB <strong>ESP32-S3</strong> 어느 쪽으로도 표준 arduino-pico / arduino-esp32 코어로 컴파일된다. Arduino IDE에서는 같은 스케치가 <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>에 있다.</p></p>
 <h2>YOSHIMITSU — 통합 펼웨어</h2>
 <p><p><strong>YOSHIMITSU</strong>는 권장 펌웨어입니다. <strong>KINCHO</strong>(변환기)로 부팅하여 자세 사이를 오갑니다. USB 콘솔은 두 보드 모두에서 표준 스위치입니다 — <code>KINCHO</code> → <code>MANJI</code> → <code>FLEA</code> → <code>MEDITATION</code> → <code>NSS</code> → <code>BACK</code> → <code>POSE &lt;n&gt;</code>. ESP32-S3에서는 BOOT 버튼(GPIO0)이 두 번째 표면입니다:</p></p>
 <table>
@@ -103,14 +103,14 @@
 <td>FLEA — 수신기를 부트로더로 떨어뜨림</td>
 </tr>
 </table>
-<p><p>배선은 <strong>하나의 영구 하네스</strong>입니다 — 같은 전선이 모든 자세를 섬기므로, 비행과 플래싱 사이에서 다시 배선할 일이 없습니다. MEDITATION에서 USB→UART 경로는 <em>완전 투명 브리지</em>(줄 파싱 없음)이므로 esptool의 바이너리 SLIP 트래픽이 그대로 통과합니다. 전체 소스: <code>sketches/yoshimitsu/yoshimitsu.ino</code>(설정 껍데기)와 <code>src/Yoshimitsu.h</code>(라이브러리 코어).</p></p>
-<h2>라이브러리 동글 — 설정을 다시 건드리지 않고 업데이트</h2>
-<p><p>YOSHIMITSU는 <strong>그랄랴 아줄 전략</strong>을 따릅니다: 폴더 전체가 라이브러리 동글입니다. 스케치 <code>sketches/yoshimitsu/yoshimitsu.ino</code>는 얇은 설정 껍데기(핀, 플래그, BOARD_CUSTOM 블록)일 뿐이고, 은밀한 닌자 전체는 <code>src/Yoshimitsu.h</code>에, 모든 기본값은 <code>src/Yoshimitsu_Padraos.h</code>(파드로잉스)에 삽니다. 동글 업데이트: 라이브러리 폴더에서 <code>git pull</code> — 또는 새 릴리스를 넣으면 — 설정 스케치는 그대로 남습니다. 한 번 Arduino 라이브러리로 설치하면(라이브러리 폴더에 심링크 또는 복사), 펌웨어 업데이트는 결코 재배선도 재설정도 아닙니다.</p></p>
+<p><p>배선은 <strong>하나의 영구 하네스</strong>다 — 같은 전선이 모든 자세를 섬기므로 비행과 플래시 사이에서 다시 배선할 일이 없다. MEDITATION에서 USB→UART 경로는 <em>순수 투명 브리지</em>(라인 파싱 없음)라서 esptool의 바이너리 SLIP 트래픽이 그대로 통과한다. 전체 소스: <code>sketches/yoshimitsu/yoshimitsu.ino</code> (여유로운 스케치), <code>src/Yoshimitsu.h</code> (코어), <code>src/Yoshimitsu_Loadout.h</code> (시작 로드아웃).</p></p>
+<h2>라이브러리 — 스케치를 다시 건드리지 않고 업데이트하기</h2>
+<p><p>YOSHIMITSU는 <strong>그 위에 얇은 스케치를 얹은 라이브러리</strong>다 — 시노비 전체가 라이브러리에 살고, 스케치는 <em>당신의</em> 설정만 담는다. 폴더를 한 번 Arduino 라이브러리로 설치하면 <strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>가 핀, 게이트, 코드에 속한 몇 안 되는 플래그를 갖춘 완성된 여유로운 스케치를 건넨다. 코어는 <code>src/Yoshimitsu.h</code>에, 모든 기본값은 <code>src/Yoshimitsu_Loadout.h</code>(시작 로드아웃, <code>*_DEFAULT</code> 값)에 있다. 업데이트하려면 라이브러리를 <code>git pull</code> — 또는 새 릴리스를 넣어라 — 그러면 스케치는 그대로다. 펌웨어 업데이트는 결코 재배선이 아니고 결코 재설정이 아니다.</p></p>
 <ul>
-<li>`src/Yoshimitsu.h` — 핵심 전체: 자세, CRSF, MUSHIN, JIGUANG, 플래셔 브리지.</li>
-<li>`src/Yoshimitsu_Padraos.h` — 모든 기본값(핀, 타이밍, 게이트 레벨)을 `*_PADRAO` 값으로.</li>
-<li>`library.properties` — Arduino 라이브러리 매니페스트(버전, 아키텍처).</li>
-<li>`yoshimitsu.ino` — 설정만; 인클루드 전에 정의하여 무엇이든 재정의.</li>
+<li><code>src/Yoshimitsu.h</code> — 전체 코어: 자세, CRSF, MUSHIN, JIGUANG, 플래셔 브리지.</li>
+<li><code>src/Yoshimitsu_Loadout.h</code> — 시작 로드아웃: 모든 기본값(핀, 타이밍, 게이트 레벨)을 <code>*_DEFAULT</code> 값으로.</li>
+<li><code>library.properties</code> — Arduino 라이브러리 매니페스트(버전, 아키텍처).</li>
+<li><code>examples/Yoshimitsu_Default/</code> — 여유로운 스케치; include 전에 정의하면 무엇이든 재정의할 수 있다.</li>
 </ul>
 <h2>KINCHO — CRSF→PWM 컨버터</h2>
 <p><p><strong>KINCHO</strong> — 변환기 자세 — 는 UART에서 420&nbsp;000&nbsp;baud로 CRSF를 읽고, 172–1811 채널 범위에서 매핑된 988–2012&nbsp;µs 창으로 서보를 구동하며, 500&nbsp;ms 페일세이프로 중앙에 맞춥니다. 막아내기는 CRC 검사입니다: 손상된 프레임은 서보에 닿기도 전에 폐기됩니다. 변환기는 <strong>채널에 무관</strong>합니다 — 서보는 <code>SERVO_PIN_1..8</code>이고 <code>CHANNEL_TO_SERVO</code> 테이블이 각각을 먹일 CRSF 채널을 정하며, 채널의 <em>의미</em>는 믹서/커널의 것이지 결코 보드의 것이 아닙니다.</p></p>
@@ -360,11 +360,15 @@ python3 -m esptool --chip esp8285 \
 </table>
 <p><p>RGB는 <code>YOSHI_RGB</code> 뒤의 RP2040-Tiny(<code>RGB_LED_PIN=16</code>)에 삽니다; ESP32-S3는 차분한 상태 LED를 유지합니다. 모든 색은 순수 정수 수학입니다 — <code>float</code>도, <code>malloc</code>도, <code>delay()</code>도 없으며 — <code>pumpRgb()</code>는 ~50&nbsp;fps로 제한되어 바이트-정확 플래셔 브리지가 결코 방해받지 않습니다. 은밀한 규칙은 유지됩니다: 자세가 바뀌면, 빛이 따른다.</p></p>
 <h2>JIGUANG — 스토리텔러 · 해설자 · 관리자</h2>
-<p><p>이름 셋, 영혼 하나 — 이것이 완전 해법의 치트코드 삼각형입니다: <strong>YOSHIMITSU</strong>는 은밀한 닌자의 전체 <em>펌웨어</em>; <strong>YOSHI</strong>는 RGB 치트코드(위의 항상 켜진 자세 오로라); 그리고 <strong>JIGUANG</strong>(<strong>極光</strong>, “오로라”)은 명상하는 <em>관리자</em> — MEDITATION 왕좌에 가부좌로 앉아, 로닌이 계속 나는 동안 USB-시리얼 하늘에서 전설을 지휘하는 부동의 원동자입니다. JIGUANG은 만지 전설의 과자격 이야기꾼이자 디버그 해설자입니다: 요시미츠의 목소리는 기능적이고 간결하며, JIGUANG의 목소리는 신화입니다. <strong>極光</strong> 인장은 어디에나 쓰여 있습니다 — 컴파일 관문 <code>JIGUANG</code> 뒤에 은밀히 암호화되어(<code>1</code> = 어디에나, <code>0</code> = <strong>極光</strong> 바이트 단 한 개도 컴파일 안 됨).</p></p>
-<p><p>이스터 에그: <code>LEGEND</code>를 입력하면 전설 전체가 하나의 ASCII 두루마리로 펼쳐집니다 — 자세들, 치트코드들, 왕좌와 결코 죽지 않는 인장. JIGUANG / <code>jiguang</code> / <strong>極光</strong>은 결코 죽지 않습니다 — 코드에서도, 주석에서도, 이 튜토리얼에서도.</p></p>
-<p><p><code>JIGUANG</code>으로 깨우면 목소리가 네 단계로 올라갑니다: <code>0</code>&nbsp;어린양(조용함, 그래도 명시적 명령에는 답함), <code>1</code>&nbsp;이야기(부팅과 모든 자세 전환 해설), <code>2</code>&nbsp;두루마리(+ CRSF 채널 판독), 그리고 <code>3</code>&nbsp;옴니(+ 수신기의 ELRS 디버그 바이트 원문 통과). <code>MUTE</code>가 침묵시킵니다; <code>CRSF</code>는 16채널 두루마리를 출력하고 <code>SCORE</code>는 아케이드 HIGHSCORE 장부를 펼칩니다 — 좋은 CRSF 프레임, 페일세이프 사건, 브리지 바이트, 업타임. JIGUANG은 결코 자세를 빼앗지 않습니다: 전설이 들려지는 동안 CRSF, 서보, 브리지는 계속 자세에 복종합니다.</p></p>
-<p><p>MEDITATION에서 스펀지 머리는 JIGUANG의 왕좌입니다: 요시미츠는 관리자가 되어 USB-시리얼 하늘에서 명령을 받습니다(<code>STATUS</code>, <code>CRSF</code>, <code>SCORE</code>, <code>POSE</code>, <code>LEGEND</code>) — 단순 플래싱 그 이상. 이 자세는 다기능입니다: 옛 명상 일시정지처럼 에너지를 아끼고, 로닌은 플래시될 준비로 앉아 있습니다. esptool의 SLIP 바이트가 부르는 순간, 투명 플래셔 브리지에 양보하고 MEDITATION이 재진입할 때까지 거기 머뭅니다. <code>YOSHI_RGB</code> 레벨&nbsp;3에서 이야기꾼은 <em>오로라를 입기도</em> 합니다: <code>jiguang(ms)</code>가 모든 자세 색을 한 번의 호흡으로 엮는 느린 전스펙트럼 바퀴를 그립니다. JIGUANG / <code>jiguang</code> / <strong>極光</strong>은 주석으로도 함수로도 남습니다 — 요시미츠의 불패한 부분은 결코 죽지 않습니다.</p></p>
-<p>그리고 두루마리의 막내 치트코드: <strong>MUSHIN</strong>(<strong>無心</strong>) — 근육 기억 모드. PteronautOS가 파도를 계획하고(정신), YOSHIMITSU가 칩니다(손): 서보 인텐트가 빈 마음 프로토콜 v0으로 브리지 UART를 건너고, 로컬 Zephyrus 자이로 PID가 볏을 잡으며, PIO PWM이 근육에서 응답합니다 — 듀얼코어, 글리치 없음, 어떤 ELRS-PWM 보드도 입지 못할 치트코드. JIGUANG이 왕좌에서 관리합니다: <code>MUSHIN</code>은 보고, <code>MUSHIN ON/OFF</code>는 무장·해제하고 플래시에 남깁니다. MEDITATION에서는 같은 두 선이 esptool의 SLIP을 그대로 나릅니다.</p>
+<p><p>세 이름, 하나의 영혼 — 완전판 솔루션의 치트코드 삼각형: <strong>YOSHIMITSU</strong>는 헤르메스 시노비 <em>펌웨어</em> 전체이고, <strong>YOSHI</strong>는 RGB 치트코드(항상 켜진 자세 오로라)이며, <strong>JIGUANG</strong>(<strong>極光</strong>, 「오로라」)은 명상하는 <em>관리자</em> — MEDITATION 옥좌에 책상다리로 앉은 부동의 원동자다. Yoshimitsu의 목소리는 기능적이고 간결하며, JIGUANG의 목소리는 신화다. <strong>極光은 장식이 아니라 콘솔 프롬프트다:</strong> 관리자로 행동하려면 <code>極光</code>을 입력한 다음 명령을 내려라 — 그렇지 않으면 옥좌는 손이 닿지 않는 곳에 남는다. 프롬프트는 <code>#define</code>(<code>JIGUANG_PROMPT</code>)이므로 스케치에서 이름을 바꿀 수 있고, 이야기꾼 전체는 컴파일 게이트 <code>JIGUANG</code>(<code>1</code> = 편재, <code>0</code> = 極光 바이트 단 한 개도 컴파일되지 않음) 뒤에 숨는다.</p></p>
+<p><p>이스터 에그: <code>極光 LEGEND</code>를 입력하면 전설 전체가 하나의 ASCII 두루마리로 풀린다 — 자세, 치트코드, 옥좌, 그리고 죽지 않는 프롬프트. JIGUANG / jiguang / 極光은 죽지 않는다 — 코드에도, 주석에도, 이 튜토리얼에도.</p></p>
+<p><p><code>極光 JIGUANG</code>으로 목소리를 깨우면 네 단계로 올라간다: <code>0</code> 어린 양(조용함, 다만 명시적 명령은 여전히 응답), <code>1</code> 이야기(부팅과 모든 자세 전환을 서술), <code>2</code> 두루마리(+ CRSF 채널 판독), <code>3</code> omni(+ 수신기의 ELRS 디버그 바이트를 그대로 통과). <code>極光 MUTE</code>는 침묵시키고, <code>極光 CRSF</code>는 16채널 두루마리를 출력하며, <code>極光 SCORE</code>는 아케이드 HIGHSCORE 장부를 펼친다 — 좋은 CRSF 프레임, failsafe 이벤트, 브리지 바이트와 업타임. JIGUANG은 결코 자세를 빼앗지 않는다: 전설이 들려지는 동안에도 CRSF, 서보, 브리지는 계속 포즈에 복종한다.</p></p>
+<p><p>MEDITATION에서 스펀지 머리는 JIGUANG의 옥좌다 — 그리고 옥좌는 지켜진다: 모든 관리자 명령은 콘솔 프롬프트 <code>極光</code>으로 시작한다. USB-시리얼 하늘에서 <code>極光 STATUS</code>, <code>極光 CRSF</code>, <code>極光 SCORE</code>, <code>極光 POSE</code>, <code>極光 DOC</code>(치트코드 카탈로그), <code>極光 SETUP</code>(디파인 벽 대신 핵심 설정을 안내하는 명상 마법사)에 응답한다. 자세 변경은 열려 있다 — <code>KINCHO</code>, <code>MANJI</code>, <code>FLEA</code>, <code>MEDITATION</code>, <code>NSS</code>, <code>BACK</code>, <code>POSE n</code>. 포즈는 옛 명상 멈춤처럼 에너지를 아끼고, 로닌은 플래시될 준비로 앉아 있다. esptool의 SLIP 바이트가 부르는 순간, 옥좌는 투명한 플래셔 브리지에 양보하고 MEDITATION이 다시 들어올 때까지 거기 머문다. <code>YOSHI_RGB</code> 레벨 3에서 이야기꾼은 <em>오로라를 입기도</em> 한다: <code>jiguang(ms)</code>가 느린 풀스펙트럼 휠을 그려 모든 자세 색을 하나의 숨결로 엮는다.</p></p>
+<h2>MUSHIN 無心 — 근육 기억 치트코드</h2>
+<p><p><strong>MUSHIN</strong>(<strong>無心</strong>, 「무심」)은 영웅 기능이다 — 생각보다 먼저 치는 손. PteronautOS는 <em>geist</em>다: 날개 파형을 계획하고 브리지 너머로 서보 인텐트를 보낸다. YOSHIMITSU는 <em>손</em>이다: 로컬 Zephyrus 자이로 PID를 적용하고 근육에서 서보를 구동한다. 두 코어, 하나의 일격 — 다른 어떤 ELRS-PWM 보드도 이를 입을 수 없다.</p></p>
+<p><p>옥좌에서 무장하라: <code>極光 MUSHIN</code>은 보고하고, <code>極光 MUSHIN ON/OFF</code>는 무장/해제하며, 선택은 플래시에 영속된다 — 준비된 채로 부팅한다. 스케치에서 MUSHIN은 기본적으로 무장된 채 부팅하며, 관리자 플래그가 런타임 스위치라서 이를 바꾸려고 다시 컴파일할 일이 없다.</p></p>
+<p><p>무심 프로토콜 v0은 플래셔와 같은 두 전선을 건넌다: <code>[0x9B][len][type][payload][xor]</code> — <code>0x01</code> 인텐트(geist→손, n×uint16 µs), <code>0x02</code> 어나운스 킵얼라이브, <code>0x03</code> 자이로 텔레메트리. 신선한 인텐트(500 ms 이내)가 서보를 구동하고, 로컬 자이로 PID가 볏을 붙든다. 전선이 침묵하면 손은 자신의 CRSF 근육으로 돌아간다 — 우아한 성능 저하, 결코 죽은 스틱이 아니다.</p></p>
+<p><p>비행 중 분업은 win-win이다: 수신기는 일격 <em>전에</em> 생각을 하고(CRSF, Zephyrus, 믹서의 영혼), YOSHIMITSU는 <em>근육에</em> 붙어 있는 일을 한다(글리치 없는 PIO PWM). 헬리콥터든 날갯짓이든 — 검의 시점에서는 같다: 표준 궤적 하나, 그리고 손은 자기가 어떤 그릇을 드는지 묻지 않는다. 포즈는 계속 날고, 모습만 바뀐다.</p></p>
 </div>
 </main>
 <footer>

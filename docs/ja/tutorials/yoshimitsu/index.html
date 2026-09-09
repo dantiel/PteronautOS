@@ -28,9 +28,9 @@
 <div class='sub-content'>
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — 完全ソリューション：すべてのチートコード、ひとつの巻物</h1>
-<p class='sub-lead'>ひとつのスケッチ、ふたつのボード、六つの構え。YOSHIMITSUは完全なヘルメティック・ソリューション — CRSF→PWMコンバーター(KINCHO)、Zephyrusジャイロ浮揚(MANJI_DRAGONFLY)、EP2ポケットフラッシャー(FLEA · MEDITATION)、刀なしのベンチ(NSS)、振り返らない鏡(BACK_TURNED) — そしてYOSHIオーロラと、すべてを語る瞑想の管理者JIGUANG。</p>
+<p class='sub-lead'>勝者しかいないチートコード寓話。ひとつのゆるやかなスケッチ、六つの構え、ひとつの常設ハーネス: CRSF→PWMの受け流し(KINCHO)、Zephyrusジャイロの浮揚(MANJI_DRAGONFLY)、ポケット・フラッシャー(FLEA · MEDITATION)、剣なき作業台(NSS)、決して振り返らない鏡(BACK_TURNED) — さらに常時点灯のオーロラYOSHIと、伝説を語る瞑想する管理者JIGUANG(極光)。配線は一度、書き込みも一度。その後はライブラリが更新され、玉座が命じる。</p>
 <h2>1枚のボード、6つの構え</h2>
-<p><p>YOSHIMITSUは<strong>六つの構え</strong>を持つ<strong>隠密の忍（Hermetic Shinobi）</strong>——道具は二つではなく、魂は一つ。ひとつのスケッチが両ボードをビルドし、構えはUSBコマンド、GPIO0ボタン（ESP32-S3）、またはRESETタップ（RP2040-Tiny）で切り替わります：</p></p>
+<p><p>YOSHIMITSUは<strong>六つの構え</strong>を持つ<strong>隠秘の忍び</strong>だ — 構えごとに異なる勝利、すべて同じ魂をまとう。ひとつのゆるやかなスケッチが両ボードでビルドされ、構えはUSBコマンド、GPIO0ボタン(ESP32-S3)、またはRESETタップ(RP2040-Tiny)で切り替わる:</p></p>
 <table>
 <tr>
 <th>構え</th>
@@ -73,7 +73,7 @@
 <td>欺きの静寂——生きたUARTの鏡。決して振り返らない。</td>
 </tr>
 </table>
-<p><p>スケッチひとつ、対象ふたつ：<code>sketches/yoshimitsu/yoshimitsu.ino</code> は<strong>Waveshare RP2040-Tiny</strong>（最軽量、オンボードボタンなし）<em>および</em>ネイティブUSBの<strong>ESP32-S3</strong>向けに、標準のarduino-pico / arduino-esp32コアでコンパイルされます。</p></p>
+<p><p>ひとつのスケッチ、ふたつのターゲット: <code>sketches/yoshimitsu/yoshimitsu.ino</code>は<strong>Waveshare RP2040-Tiny</strong>(最軽量、オンボードボタンなし)<em>と</em>ネイティブUSBの任意の<strong>ESP32-S3</strong>向けに、標準のarduino-pico / arduino-esp32コアでコンパイルされる。Arduino IDEでは同じスケッチが<strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>にある。</p></p>
 <h2>YOSHIMITSU — 統合ファームウェア</h2>
 <p><p><strong>YOSHIMITSU</strong>は推奨ファームウェアです。<strong>KINCHO</strong>（コンバータ）で起動し、構えの間を移動します。USBコンソールは両ボードで正統のスイッチ——<code>KINCHO</code> → <code>MANJI</code> → <code>FLEA</code> → <code>MEDITATION</code> → <code>NSS</code> → <code>BACK</code> → <code>POSE &lt;n&gt;</code>。ESP32-S3ではBOOTボタン（GPIO0）が第二の表面です：</p></p>
 <table>
@@ -103,14 +103,14 @@
 <td>FLEA——受信機をブートローダーへ落とす</td>
 </tr>
 </table>
-<p><p>配線は<strong>ひとつの恒久ハーネス</strong>——同じ線がすべての構えに仕えるので、飛行と書き込みの間で配線し直すことは二度とありません。MEDITATIONではUSB→UART経路は<em>純粋な透過ブリッジ</em>（行解析なし）なので、esptoolのバイナリSLIP通信は無傷で通り抜けます。全ソース：<code>sketches/yoshimitsu/yoshimitsu.ino</code>（設定の殻）と<code>src/Yoshimitsu.h</code>（ライブラリの核）。</p></p>
-<h2>ライブラリ・ドングル — 設定に再び触れずに更新</h2>
-<p><p>YOSHIMITSUは<strong>グラリャ・アズール戦略</strong>に従います：フォルダ全体がライブラリ・ドングルです。スケッチ<code>sketches/yoshimitsu/yoshimitsu.ino</code>は薄い設定の殻（ピン、フラグ、BOARD_CUSTOMブロック）にすぎず、隠密の忍の全体は<code>src/Yoshimitsu.h</code>に、すべての既定は<code>src/Yoshimitsu_Padraos.h</code>（パドロインス）に生きています。ドングルの更新：ライブラリフォルダで<code>git pull</code>——または新しいリリースを置く——だけで、設定スケッチは無傷のままです。一度Arduinoライブラリとしてインストールすれば（librariesフォルダへシンボリックリンクかコピー）、ファームウェア更新は決して再配線でも再設定でもありません。</p></p>
+<p><p>配線は<strong>ひとつの常設ハーネス</strong>だ — 同じ配線がすべての構えに仕えるから、飛行と書き込みのあいだに配線し直すことはない。MEDITATIONではUSB→UART経路が<em>純粋な透過ブリッジ</em>(行のパースなし)なので、esptoolのバイナリSLIPトラフィックはそのまま素通りする。全ソース: <code>sketches/yoshimitsu/yoshimitsu.ino</code>(ゆるやかなスケッチ)、<code>src/Yoshimitsu.h</code>(コア)、<code>src/Yoshimitsu_Loadout.h</code>(初期ロードアウト)。</p></p>
+<h2>ライブラリ — スケッチに触れずに更新する</h2>
+<p><p>YOSHIMITSUは<strong>薄いスケッチを上に載せたライブラリ</strong>だ — 忍びの全体がライブラリに生き、スケッチは<em>あなたの</em>設定だけを保つ。フォルダを一度Arduinoライブラリとしてインストールすれば、<strong>File → Examples → Yoshimitsu → Yoshimitsu_Default</strong>がピン、ゲート、コードに属する数少ないフラグを備えた、すぐ使えるゆるやかなスケッチを差し出す。コアは<code>src/Yoshimitsu.h</code>に、すべてのデフォルトは<code>src/Yoshimitsu_Loadout.h</code>(初期ロードアウト、<code>*_DEFAULT</code>値)に生きる。更新するにはライブラリを<code>git pull</code> — または新しいリリースを置くだけ — スケッチはそのまま。ファームウェア更新は決して配線のやり直しではなく、決して設定のやり直しでもない。</p></p>
 <ul>
-<li>`src/Yoshimitsu.h` — 核の全体：構え、CRSF、MUSHIN、JIGUANG、フラッシャーブリッジ。</li>
-<li>`src/Yoshimitsu_Padraos.h` — すべての既定（ピン、タイミング、ゲートレベル）を`*_PADRAO`値として。</li>
-<li>`library.properties` — Arduinoライブラリのマニフェスト（バージョン、アーキテクチャ）。</li>
-<li>`yoshimitsu.ino` — 設定のみ；includeの前に定義して何でも上書き。</li>
+<li><code>src/Yoshimitsu.h</code> — コア全体: 構え、CRSF、MUSHIN、JIGUANG、フラッシャー・ブリッジ。</li>
+<li><code>src/Yoshimitsu_Loadout.h</code> — 初期ロードアウト: すべてのデフォルト(ピン、タイミング、ゲートレベル)を<code>*_DEFAULT</code>値として。</li>
+<li><code>library.properties</code> — Arduinoライブラリのマニフェスト(バージョン、アーキテクチャ)。</li>
+<li><code>examples/Yoshimitsu_Default/</code> — ゆるやかなスケッチ; includeの前に定義すれば何でも上書きできる。</li>
 </ul>
 <h2>KINCHO — CRSF→PWM 変換器</h2>
 <p><p><strong>KINCHO</strong>——コンバータの構え——はUARTでCRSFを420&nbsp;000&nbsp;baudで読み、172–1811のチャンネル範囲から写像した988–2012&nbsp;µsの窓でサーボを駆動し、500&nbsp;msのフェイルセーフで中央に揃えます。受け流しとはCRC検査のこと：壊れたフレームはサーボに届く前に捨てられます。コンバータは<strong>チャンネルに無頓着</strong>です——サーボは<code>SERVO_PIN_1..8</code>、<code>CHANNEL_TO_SERVO</code>表が各サーボへ供給するCRSFチャンネルを決め、チャンネルの<em>意味</em>はミキサー／カーネルのもので、ボードのものでは決してありません。</p></p>
@@ -360,11 +360,15 @@ python3 -m esptool --chip esp8285 \
 </table>
 <p><p>RGBはRP2040-Tiny（<code>RGB_LED_PIN=16</code>）に<code>YOSHI_RGB</code>の奥で生きています；ESP32-S3は質素な状態LEDを保ちます。すべての色は純粋な整数演算——<code>float</code>なし、<code>malloc</code>なし、<code>delay()</code>なし——そして<code>pumpRgb()</code>は約50&nbsp;fpsに絞られ、バイト厳密なフラッシャーブリッジが乱されることは決してありません。隠密の掟は保たれます：構えが変われば、光が従う。</p></p>
 <h2>JIGUANG — 語り部 · 解説者 · 管理者</h2>
-<p><p>三つの名、一つの魂——これが完全攻略のチートコード三角形です：<strong>YOSHIMITSU</strong>は隠密の忍の<em>ファームウェア</em>全体；<strong>YOSHI</strong>はRGBチートコード（上記の常時点灯の構えオーロラ）；そして<strong>JIGUANG</strong>（<strong>極光</strong>、「オーロラ」）は瞑想する<em>管理者</em>——MEDITATIONの玉座に胡坐をかき、浪人が飛び続けるあいだUSBシリアルの天から伝説を指揮する不動の動者です。JIGUANGは卍伝説の過剰資格の語り部でありデバッグ解説者：ヨシミツの声は機能的で簡潔、JIGUANGの声は神話です。<strong>極光</strong>の印はどこにでも書かれています——コンパイルの門<code>JIGUANG</code>の奥に隠密的に暗号化され（<code>1</code>＝遍在、<code>0</code>＝<strong>極光</strong>の1バイトすらコンパイルされない）。</p></p>
-<p><p>イースターエッグ：<code>LEGEND</code>と入力すれば、伝説全体がひとつのASCII巻物として展開します——構え、チートコード、玉座、そして決して死なない印。JIGUANG / <code>jiguang</code> / <strong>極光</strong>は決して死にません——コードでも、コメントでも、このチュートリアルでも。</p></p>
-<p><p><code>JIGUANG</code>で目覚めさせると、声は四段階を登ります：<code>0</code>&nbsp;子羊（沈黙、ただし明示コマンドには応答）、<code>1</code>&nbsp;物語（起動とすべての構え替えを語る）、<code>2</code>&nbsp;巻物（＋CRSFチャンネル読み出し）、そして<code>3</code>&nbsp;遍在（＋受信機のELRSデバッグバイトをそのまま通過）。<code>MUTE</code>が黙らせます；<code>CRSF</code>は16チャンネルの巻物を印字し、<code>SCORE</code>はアーケードのHIGHSCORE台帳を展開します——良好なCRSFフレーム、フェイルセーフ事象、ブリッジバイト、稼働時間。JIGUANGは決して構えを奪いません：伝説が語られる間も、CRSF、サーボ、ブリッジは姿勢に従い続けます。</p></p>
-<p><p>MEDITATIONでは海綿頭がJIGUANGの玉座です：ヨシミツは管理者となり、USBシリアルの天から命令を受けます（<code>STATUS</code>、<code>CRSF</code>、<code>SCORE</code>、<code>POSE</code>、<code>LEGEND</code>）——ただ書き込む以上の存在。この構えは多機能です：古い瞑想の一時停止のようにエネルギーを蓄え、浪人は書き込まれる用意をして座しています。esptoolのSLIPバイトが呼んだ瞬間、透過フラッシャーブリッジへ譲り、MEDITATIONが再び入るまでそこに留まります。<code>YOSHI_RGB</code>がレベル&nbsp;3なら語り部は<em>オーロラを纏いもします</em>：<code>jiguang(ms)</code>が、すべての構えの色をひとつの呼吸に織る、ゆっくりした全スペクトルの車輪を描きます。JIGUANG / <code>jiguang</code> / <strong>極光</strong>はコメントとしても関数としても残ります——ヨシミツの不敗の部分は決して死にません。</p></p>
-<p>そして巻物の最年少チートコード: <strong>MUSHIN</strong>(<strong>無心</strong>)——筋肉記憶モード。PteronautOS が波を計画し(精神)、YOSHIMITSU が打つ(手): サーボ・インテントが無心プロトコル v0 としてブリッジ UART を渡り、ローカルの Zephyrus ジャイロ PID が鶏冠を支え、PIO PWM が筋肉で応える——デュアルコア、グリッチなし、他のどの ELRS-PWM ボードも着られないチートコード。JIGUANG が玉座から管理する: <code>MUSHIN</code> は報告し、<code>MUSHIN ON/OFF</code> は武装・解除してフラッシュに残す。MEDITATION では同じ二本の線が esptool の SLIP をそのまま運ぶ。</p>
+<p><p>三つの名前、ひとつの魂 — 完全攻略のチートコード三角形: <strong>YOSHIMITSU</strong>は隠秘の忍び<em>ファームウェア</em>全体、<strong>YOSHI</strong>はRGBチートコード(常時点灯の構えオーロラ)、そして<strong>JIGUANG</strong>(<strong>極光</strong>、「オーロラ」)は瞑想する<em>管理者</em> — MEDITATIONの玉座に胡坐をかく不動の動者。Yoshimitsuの声は機能的で簡潔、JIGUANGの声は神話だ。<strong>極光は飾りではなくコンソールプロンプトだ:</strong> 管理者として振る舞うには<code>極光</code>と入力してからコマンドを打つ — さもなくば玉座は手の届かない場所に残る。プロンプトは<code>#define</code>(<code>JIGUANG_PROMPT</code>)なのでスケッチで改名でき、語り部全体はコンパイルゲート<code>JIGUANG</code>(<code>1</code>=遍在、<code>0</code>=極光のバイトはひとつもコンパイルされない)の陰に隠れる。</p></p>
+<p><p>イースターエッグ: <code>極光 LEGEND</code>と打てば、伝説のすべてが一本のASCIIスクロールとして繰り広がる — 構え、チートコード、玉座、そして死なないプロンプト。JIGUANG / jiguang / 極光は死なない — コードにも、コメントにも、このチュートリアルにも。</p></p>
+<p><p><code>極光 JIGUANG</code>で声を目覚めさせると四段階に登る: <code>0</code>子羊(沈黙、ただし明示的なコマンドには応答する)、<code>1</code>物語(起動と構えの変更をすべて語る)、<code>2</code>スクロール(+ CRSFチャンネルの読み出し)、<code>3</code>オムニ(+ 受信機のELRSデバッグバイトをそのまま素通し)。<code>極光 MUTE</code>が黙らせ、<code>極光 CRSF</code>が16チャンネルのスクロールを印字し、<code>極光 SCORE</code>がアーケードのHIGHSCORE台帳を繰り広げる — 良好なCRSFフレーム、フェイルセーフ事象、ブリッジバイト、アップタイム。JIGUANGは決して構えを奪わない: 伝説が語られているあいだも、CRSFもサーボもブリッジもポーズに従い続ける。</p></p>
+<p><p>MEDITATIONではスポンジ頭がJIGUANGの玉座だ — そして玉座は守られている: 管理者コマンドはすべてコンソールプロンプト<code>極光</code>で始まる。USBシリアルの天から<code>極光 STATUS</code>、<code>極光 CRSF</code>、<code>極光 SCORE</code>、<code>極光 POSE</code>、<code>極光 DOC</code>(チートコード目録)、<code>極光 SETUP</code>(ディファインの壁ではなく主要設定を案内する瞑想ウィザード)に応える。構えの変更は開かれたままだ — <code>KINCHO</code>、<code>MANJI</code>、<code>FLEA</code>、<code>MEDITATION</code>、<code>NSS</code>、<code>BACK</code>、<code>POSE n</code>。ポーズはかつての瞑想ポーズのようにエネルギーを節約し、浪人は書き込まれる準備をして座る。esptoolのSLIPバイトが呼んだ瞬間、玉座は透過フラッシャー・ブリッジに譲り、MEDITATIONが再び入るまでそこに留まる。<code>YOSHI_RGB</code>レベル3では語り部は<em>オーロラをまとう</em>こともある: <code>jiguang(ms)</code>が遅いフルスペクトルの車輪を描き、すべての構えの色をひとつの息に織り込む。</p></p>
+<h2>MUSHIN 無心 — 筋肉記憶のチートコード</h2>
+<p><p><strong>MUSHIN</strong>(<strong>無心</strong>、「無の心」)はヒーロー機能だ — 思考より先に打つ手。PteronautOSは<em>ガイスト</em>: 翼の波形を計画し、ブリッジ越しにサーボの意図を送る。YOSHIMITSUは<em>手</em>: ローカルのZephyrusジャイロPIDを適用し、筋肉のところでサーボを駆動する。二つのコア、一つの一撃 — 他のどのELRS-PWMボードもこれをまとえない。</p></p>
+<p><p>玉座から武装せよ: <code>極光 MUSHIN</code>が報告し、<code>極光 MUSHIN ON/OFF</code>が武装/解除し、その選択はフラッシュに永続する — 準備完了のまま起動する。スケッチではMUSHINはデフォルトで武装起動し、管理フラグがランタイムスイッチなので、変更のために再コンパイルすることはない。</p></p>
+<p><p>無心プロトコルv0はフラッシャーと同じ二本の線を渡る: <code>[0x9B][len][type][payload][xor]</code> — <code>0x01</code>インテント(ガイスト→手、n×uint16 µs)、<code>0x02</code>アナウンス・キープアライブ、<code>0x03</code>ジャイロ・テレメトリ。新鮮なインテント(500 ms以内)がサーボを駆動し、ローカルのジャイロPIDが鶏冠を保つ。線が黙れば、手は自身のCRSFの筋肉に戻る — 優雅な縮退、決して死んだスティックではない。</p></p>
+<p><p>飛行中、分業はウィンウィンだ: 受信機が一撃の<em>前</em>に思考を担い(CRSF、Zephyrus、ミキサーの魂)、YOSHIMITSUが<em>筋肉に</em>座る仕事を担う(グリッチのないPIO PWM)。ヘリコプターでも羽ばたきでも — 剣の視点では同じことだ: 正準の軌道ひとつ、そして手はどの器を運ぶのか決して尋ねない。ポーズは飛び続ける; 変わるのは見た目だけ。</p></p>
 </div>
 </main>
 <footer>
