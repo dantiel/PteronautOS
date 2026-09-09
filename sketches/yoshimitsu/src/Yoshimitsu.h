@@ -1768,7 +1768,7 @@ void loop() {
     pumpMirror();
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
     if (stance != STANCE_NSS) pumpCrsf();     // NSS drives servos manually, no CRSF
-  mushinPoll();                       // MUSHIN — the muscle-memory layer (no-op when off)
+    mushinPoll();                     // MUSHIN — the muscle-memory layer (no-op when off)
   }
 #if JIGUANG
   if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) {
