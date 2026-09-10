@@ -121,6 +121,14 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
 #define ORNI_FEROCITY_MIN       0.0f
 #define ORNI_FEROCITY_MAX       8.0f
 
+// ─── Waveform centre-skew ──────────────────────────────────────────
+// Shifts each half-stroke's wave centre toward its start (+) or end (−).
+// 0 = symmetric. Positive front-loads thrust (peak velocity earlier), negative
+// delays it (diminished thrust). Mirrored per half: strokeSkew / returnSkew.
+#define ORNI_SKEW_MIN         -100.0f
+#define ORNI_SKEW_MAX          100.0f
+#define ORNI_SKEW_DEFAULT      0.0f
+
 // ─── Steering ──────────────────────────────────────────────────────
 #define ORNI_DIFFERENTIAL_MIN  -4.0f
 #define ORNI_DIFFERENTIAL_MAX   4.0f
@@ -186,6 +194,8 @@ struct FlightProfileParams {
     float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
     float   throttleFrequencyMix; // 0–100, CH6→throttle frequency-command blend
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
+    float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
+    float   returnSkew;           // -100…+100, upstroke centre shift
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

@@ -779,6 +779,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     // Runtime waveform/mixer config fields
     orni["stroke_ferocity"]     = (int)ornithopter.strokeFerocity;
     orni["return_ferocity"]     = (int)ornithopter.returnFerocity;
+    orni["stroke_skew"]         = (int)ornithopter.strokeSkew;
+    orni["return_skew"]         = (int)ornithopter.returnSkew;
     orni["glide_angle_deg"]     = ornithopter.glideAngleDeg;
     orni["flapping_angle_deg"]  = (int)ornithopter.flappingAngleDeg;
     orni["aileron_scale"]       = (int)ornithopter.aileronScale;
@@ -823,6 +825,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         JsonObject p = fpArr.createNestedObject();
         p["stroke_ferocity"]       = (int)ornithopter.flightProfiles[i].strokeFerocity;
         p["return_ferocity"]       = (int)ornithopter.flightProfiles[i].returnFerocity;
+        p["stroke_skew"]           = (int)ornithopter.flightProfiles[i].strokeSkew;
+        p["return_skew"]           = (int)ornithopter.flightProfiles[i].returnSkew;
         p["glide_angle_deg"]       = ornithopter.flightProfiles[i].glideAngleDeg;
         p["flapping_angle_deg"]    = (int)ornithopter.flightProfiles[i].flappingAngleDeg;
         p["aileron_scale"]         = (int)ornithopter.flightProfiles[i].aileronScale;
@@ -900,6 +904,10 @@ static bool SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].strokeFerocity);
         f.print(",\"return_ferocity\":");
         f.print((int)ornithopter.flightProfiles[i].returnFerocity);
+        f.print(",\"stroke_skew\":");
+        f.print((int)ornithopter.flightProfiles[i].strokeSkew);
+        f.print(",\"return_skew\":");
+        f.print((int)ornithopter.flightProfiles[i].returnSkew);
         f.print(",\"glide_angle_deg\":");
         f.print((int)ornithopter.flightProfiles[i].glideAngleDeg);
         f.print(",\"flapping_angle_deg\":");
@@ -985,6 +993,18 @@ void LoadOrnithopterConfig()
             FlightProfileParams &dst = ornithopter.flightProfiles[i];
             if (p["stroke_ferocity"].is<int>())       dst.strokeFerocity      = p["stroke_ferocity"].as<int>();
             if (p["return_ferocity"].is<int>())       dst.returnFerocity      = p["return_ferocity"].as<int>();
+            if (p["stroke_skew"].is<int>()) {
+                int32_t sk = p["stroke_skew"].as<int>();
+                if (sk < -100) sk = -100;
+                if (sk >  100) sk =  100;
+                dst.strokeSkew = sk;
+            }
+            if (p["return_skew"].is<int>()) {
+                int32_t sk = p["return_skew"].as<int>();
+                if (sk < -100) sk = -100;
+                if (sk >  100) sk =  100;
+                dst.returnSkew = sk;
+            }
             if (p["glide_angle_deg"].is<int>())       dst.glideAngleDeg       = (int8_t)p["glide_angle_deg"].as<int>();
                         if (p["flapping_angle_deg"].is<int>()) {
                             int32_t fa = p["flapping_angle_deg"].as<int>();
@@ -1111,10 +1131,16 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     float   ferShapeMix = (float)_pteroParamInt(request, "ferocity_shape_mix", (int)defaults.ferocityShapeMix);
     if (ferShapeMix < 0.0f) ferShapeMix = 0.0f;
     if (ferShapeMix > 100.0f) ferShapeMix = 100.0f;
+    float   stSkew = (float)_pteroParamInt(request, "stroke_skew", (int)defaults.strokeSkew);
+    float   rtSkew = (float)_pteroParamInt(request, "return_skew", (int)defaults.returnSkew);
+    if (stSkew < ORNI_SKEW_MIN) stSkew = ORNI_SKEW_MIN;
+    if (stSkew > ORNI_SKEW_MAX) stSkew = ORNI_SKEW_MAX;
+    if (rtSkew < ORNI_SKEW_MIN) rtSkew = ORNI_SKEW_MIN;
+    if (rtSkew > ORNI_SKEW_MAX) rtSkew = ORNI_SKEW_MAX;
 
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
@@ -1129,7 +1155,9 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.throttleFerocityMix = thrFerMix;
         ornithopter.throttleFrequencyMix = thrFreqMix;
         ornithopter.ferocityShapeMix = ferShapeMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix);
+        ornithopter.strokeSkew       = stSkew;
+        ornithopter.returnSkew       = rtSkew;
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew);
     }
 
     // Global mixer params (not per-profile)

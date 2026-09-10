@@ -154,6 +154,24 @@
            %input{type: "range", min: "0", max: "100", .value: self.ferocityShapeMix, @input: self._onSlider('ferocityShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.ferocityShapeMix
            %
+       %tr
+         %td
+           %b= self._t('ornithopter.stroke_skew.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.stroke_skew.desc')
+         %td
+           %input{type: "range", min: "-100", max: "100", .value: self.strokeSkew, @input: self._onSlider('strokeSkew'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.strokeSkew
+           %small.label= self._strokeSkewLabel()
+       %tr
+         %td
+           %b= self._t('ornithopter.return_skew.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.return_skew.desc')
+         %td
+           %input{type: "range", min: "-100", max: "100", .value: self.returnSkew, @input: self._onSlider('returnSkew'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.returnSkew
+           %small.label= self._returnSkewLabel()
 
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
 .mui-panel

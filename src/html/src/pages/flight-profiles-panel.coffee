@@ -16,6 +16,8 @@ PROFILE_FIELDS =
   throttleFerocityMix: 'throttle_ferocity_mix'
   throttleFrequencyMix: 'throttle_frequency_mix'
   ferocityShapeMix: 'ferocity_shape_mix'
+  strokeSkew: 'stroke_skew'
+  returnSkew: 'return_skew'
 
 ###
 # Flight Profiles Panel — per-profile tuning + channel test.
@@ -61,6 +63,8 @@ class FlightProfilesPanel extends PteroElement
     throttleFerocityMix: {state: true}
     throttleFrequencyMix: {state: true}
     ferocityShapeMix:     {state: true}
+    strokeSkew:           {state: true}
+    returnSkew:           {state: true}
     # Virtual stick
     stickOverride:       {state: true}
     stickChannels:       {state: true}
@@ -84,9 +88,9 @@ class FlightProfilesPanel extends PteroElement
     @editProfile          = 1
     @activeFlightProfile  = 1
     @flightProfiles       = [
-      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
-      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
-      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0}
+      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0}
+      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0}
+      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0}
     ]
     @strokeFerocity       = 30
     @returnFerocity       = 50
@@ -100,6 +104,8 @@ class FlightProfilesPanel extends PteroElement
     @throttleFerocityMix  = 0
     @throttleFrequencyMix = 0
     @ferocityShapeMix      = 0
+    @strokeSkew            = 0
+    @returnSkew            = 0
     @stickOverride        = false
     @ratchetTimeoutMs     = 500
     # CRSF range (172–1811), neutral = 992. Throttle at glide (below flap
@@ -201,6 +207,8 @@ class FlightProfilesPanel extends PteroElement
         throttleFerocityMix: p.throttle_ferocity_mix ? 0
         throttleFrequencyMix: p.throttle_frequency_mix ? 0
         ferocityShapeMix: p.ferocity_shape_mix ? 0
+        strokeSkew:       p.stroke_skew ? 0
+        returnSkew:       p.return_skew ? 0
       @_loadEditProfile() unless @_fieldFocused
       @configLoaded = true
 
@@ -230,6 +238,8 @@ class FlightProfilesPanel extends PteroElement
     @throttleFerocityMix = p.throttleFerocityMix
     @throttleFrequencyMix = p.throttleFrequencyMix
     @ferocityShapeMix = p.ferocityShapeMix
+    @strokeSkew       = p.strokeSkew
+    @returnSkew       = p.returnSkew
 
   # ── Virtual Stick (channel test) ──────────────────────────────────
   _onStickToggle: =>
@@ -353,6 +363,8 @@ class FlightProfilesPanel extends PteroElement
     switch prop
       when 'glideAngleDeg'    then [-15, 15]
       when 'flappingAngleDeg' then [-15, 15]
+      when 'strokeSkew'       then [-100, 100]
+      when 'returnSkew'       then [-100, 100]
       else null
 
   _clamp: (prop, v) ->
@@ -369,6 +381,14 @@ class FlightProfilesPanel extends PteroElement
 
   _returnLabel: ->
     if @returnFerocity > 70 then self._t('ornithopter.waveform.return_fast') else if @returnFerocity < 30 then self._t('ornithopter.waveform.return_slow') else self._t('ornithopter.waveform.return_normal')
+
+  _strokeSkewLabel: ->
+    v = @strokeSkew
+    if v > 25 then self._t('ornithopter.skew.augment') else if v < -25 then self._t('ornithopter.skew.diminish') else self._t('ornithopter.skew.symmetric')
+
+  _returnSkewLabel: ->
+    v = @returnSkew
+    if v > 25 then self._t('ornithopter.skew.augment') else if v < -25 then self._t('ornithopter.skew.diminish') else self._t('ornithopter.skew.symmetric')
 
   _glideAngleLabel: ->
     v = @glideAngleDeg

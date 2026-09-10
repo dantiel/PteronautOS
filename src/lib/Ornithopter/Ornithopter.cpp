@@ -39,6 +39,8 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     throttleFerocityMix = p.throttleFerocityMix;
     throttleFrequencyMix = p.throttleFrequencyMix;
     ferocityShapeMix = p.ferocityShapeMix;
+    strokeSkew        = p.strokeSkew;
+    returnSkew        = p.returnSkew;
 }
 
 void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
@@ -46,7 +48,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          float ail, float elev, float rudRng,
                                          float rudAmpDiff, float elevFerMix,
                                          float thrFerMix, float thrFreqMix,
-                                         float ferShapeMix)
+                                         float ferShapeMix,
+                                         float strokeSkew, float returnSkew)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
     FlightProfileParams &p = flightProfiles[idx];
@@ -62,6 +65,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.throttleFerocityMix = thrFerMix;
     p.throttleFrequencyMix = thrFreqMix;
     p.ferocityShapeMix = ferShapeMix;
+    p.strokeSkew       = strokeSkew;
+    p.returnSkew       = returnSkew;
     if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
@@ -92,6 +97,8 @@ Ornithopter::Ornithopter()
   , throttleFerocityMix(0.0f)
   , throttleFrequencyMix(0.0f)
   , ferocityShapeMix(0.0f)
+  , strokeSkew(ORNI_SKEW_DEFAULT)
+  , returnSkew(ORNI_SKEW_DEFAULT)
   , elevonScale(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
@@ -382,9 +389,11 @@ void Ornithopter::_computeServoMixer() {
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
         float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
-                                                     limiarShared, ferocityShapeMix);
+                                                     limiarShared, ferocityShapeMix,
+                                                     strokeSkew, returnSkew);
         float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
-                                                     limiarShared, ferocityShapeMix);
+                                                     limiarShared, ferocityShapeMix,
+                                                     strokeSkew, returnSkew);
 
 #ifdef ZEPHYRUS_ENABLED
         // Resonance — phase-locked lock-in amplifier: accumulate

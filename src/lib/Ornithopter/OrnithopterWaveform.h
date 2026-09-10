@@ -22,8 +22,18 @@ public:
     // wings, so left/right reverse at the SAME phase even when their ferocities
     // differ (rudder differential). < 0 means "compute from this wing's own
     // ferocities" (legacy behaviour).
+    //
+    // strokeSkewPercent / returnSkewPercent (±100) shift the CENTRE of each
+    // half-stroke along its own [start…end] axis — the same per-half mirroring
+    // as stroke/return ferocity ("as above so below"). + shifts the centre
+    // toward the START of the half (augmented thrust: the wing reaches peak
+    // velocity sooner); − shifts it toward the END (diminished thrust: the
+    // stroke spends its motion late). 0 keeps the wave symmetric. The warp is
+    // monotonic and end-point-preserving, so it is exactly an ASYMMETRIC mix of
+    // the square (dwell) and triangular families — never a position jump.
     static float shapeWave(float theta, float strokeFerocity, float returnFerocity,
-                           float limiarShared = -1.0f, float shapeMixPercent = 0.0f);
+                           float limiarShared = -1.0f, float shapeMixPercent = 0.0f,
+                           float strokeSkewPercent = 0.0f, float returnSkewPercent = 0.0f);
     void decay(float dt);
     void reset();
 };
@@ -44,7 +54,8 @@ inline float FlappingOscillator::advance(float dt) {
 
 inline float FlappingOscillator::shapeWave(
     float theta, float strokeFerocity, float returnFerocity,
-    float limiarShared, float shapeMixPercent
+    float limiarShared, float shapeMixPercent,
+    float strokeSkewPercent, float returnSkewPercent
 ) {
     // The original GralhaAzul mode is a dwell/plateau plus a compressed cosine
     // ramp. shapeMixPercent continuously transmutes it into a rounded pyramidal
@@ -84,6 +95,20 @@ inline float FlappingOscillator::shapeWave(
     } else {
         t = (theta - limiar) / (kTwoPi - limiar);
         f = fS;
+    }
+
+    // Centre-skew: warp the normalized half-stroke phase t∈[0,1] monotonically
+    // so the wave's centre (peak velocity) moves toward the start (+) or the
+    // end (−) of the half. Endpoints stay pinned (0→0, 1→1), so reversal is
+    // continuous; the interior shifts by a quadratic-bias remap. This is the
+    // asymmetric square↔triangle mix expressed as a single signed parameter.
+    float skew01 = (descida ? strokeSkewPercent : returnSkewPercent) * 0.01f;
+    if (skew01 < -1.0f) skew01 = -1.0f;
+    else if (skew01 > 1.0f) skew01 = 1.0f;
+    if (skew01 != 0.0f) {
+        // quadratic bias: t' = t + s·t·(1−t). s>0 pushes the centre toward the
+        // start (front-load thrust), s<0 toward the end (late thrust).
+        t = t + skew01 * t * (1.0f - t);
     }
 
     float ferocity01 = f * 0.125f;

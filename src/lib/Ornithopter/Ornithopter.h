@@ -64,7 +64,8 @@ public:
                                 int8_t flapAng, float ail, float elev,
                                 float rudRng, float rudAmpDiff,
                                 float elevFerMix, float thrFerMix,
-                                float thrFreqMix, float ferShapeMix);
+                                float thrFreqMix, float ferShapeMix,
+                                float strokeSkew, float returnSkew);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
@@ -86,6 +87,8 @@ public:
     float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
     float   throttleFrequencyMix; // 0–100, throttle→frequency coupling
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
+    float   strokeSkew;           // -100…+100, downstroke wave-centre shift
+    float   returnSkew;           // -100…+100, upstroke wave-centre shift
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
