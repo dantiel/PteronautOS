@@ -31,29 +31,29 @@ class FerocityWaveformExplorer
     for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
-    @controls.down.addEventListener 'input', (event) =>
+    @controls.down?.addEventListener 'input', (event) =>
       @state.down = Number event.currentTarget.value
       @_applyLock 'down'
       @update()
 
-    @controls.up.addEventListener 'input', (event) =>
+    @controls.up?.addEventListener 'input', (event) =>
       @state.up = Number event.currentTarget.value
       @_applyLock 'up'
       @update()
 
-    @controls.mix.addEventListener 'input', (event) =>
+    @controls.mix?.addEventListener 'input', (event) =>
       @state.mix = Number event.currentTarget.value
       @update()
 
-    @controls.skewDown.addEventListener 'input', (event) =>
+    @controls.skewDown?.addEventListener 'input', (event) =>
       @state.skewDown = Number event.currentTarget.value
       @update()
 
-    @controls.skewUp.addEventListener 'input', (event) =>
+    @controls.skewUp?.addEventListener 'input', (event) =>
       @state.skewUp = Number event.currentTarget.value
       @update()
 
-    @controls.lock.addEventListener 'click', (event) =>
+    @controls.lock?.addEventListener 'click', (event) =>
       @_cycleLock()
       @update()
 
@@ -64,11 +64,11 @@ class FerocityWaveformExplorer
         skewDown ?= 0
         skewUp ?= 0
         @state = {down, up, mix, skewDown, skewUp, lockMode: @state.lockMode}
-        @controls.down.value = down
-        @controls.up.value = up
-        @controls.mix.value = mix
-        @controls.skewDown.value = skewDown
-        @controls.skewUp.value = skewUp
+        @controls.down?.value = down
+        @controls.up?.value = up
+        @controls.mix?.value = mix
+        @controls.skewDown?.value = skewDown
+        @controls.skewUp?.value = skewUp
         @update()
 
     @lastWidth = Math.round @root.getBoundingClientRect().width
@@ -88,12 +88,12 @@ class FerocityWaveformExplorer
       # Parallel: both same value
       other = if changedControl is 'down' then 'up' else 'down'
       @state[other] = @state[changedControl]
-      @controls[other].value = @state[other]
+      @controls[other]?.value = @state[other]
     else if @state.lockMode is 'oppose'
       # Opposing: down + up = 8
       other = if changedControl is 'down' then 'up' else 'down'
       @state[other] = 8 - @state[changedControl]
-      @controls[other].value = @state[other]
+      @controls[other]?.value = @state[other]
 
   _updateLockIcon: ->
     icon = @controls.lock.querySelector('.lock-icon')
@@ -272,11 +272,11 @@ class FerocityWaveformExplorer
     "#{sign}#{Math.round value}"
 
   update: ->
-    @root.querySelector("[data-value='down']").textContent = @state.down.toFixed 1
-    @root.querySelector("[data-value='up']").textContent = @state.up.toFixed 1
-    @root.querySelector("[data-value='mix']").textContent = "#{Math.round @state.mix}%"
-    @root.querySelector("[data-value='skewDown']").textContent = @_formatSkew @state.skewDown
-    @root.querySelector("[data-value='skewUp']").textContent = @_formatSkew @state.skewUp
+    @root.querySelector("[data-value='down']")?.textContent = @state.down.toFixed 1
+    @root.querySelector("[data-value='up']")?.textContent = @state.up.toFixed 1
+    @root.querySelector("[data-value='mix']")?.textContent = "#{Math.round @state.mix}%"
+    @root.querySelector("[data-value='skewDown']")?.textContent = @_formatSkew @state.skewDown
+    @root.querySelector("[data-value='skewUp']")?.textContent = @_formatSkew @state.skewUp
     downShare = @boundary() / TAU * 100
     upShare = 100 - downShare
     speedRatio = @peakSlope(true) / Math.max 0.000000001, @peakSlope(false)
