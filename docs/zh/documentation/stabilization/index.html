@@ -136,6 +136,7 @@
 <p>波形本身遵循 OrniFlight 冲程族：每半程使用各自的凶猛度，共享反转阈值保持左右机翼同相，而按配置文件的<em>形状混合</em>持续将平坦的停留/平台冲程转化为圆润的金字塔路径。下方的交互式探索器为任意下/上凶猛度对渲染指令几何——即混控器每个节拍所请求的同一条曲线。</p>
 <p>力度同时控制半行程的特性与时机。内部上，WebUI 的 0–100 设置映射到 0–8。下行程力度越高，下行程在周期中的占比越短；回程力度越高，回程占比越短。剩余时间转移到另一半 — 零点处没有停顿。</p>
 <p>每个配置文件的力度形状控件选择高力度特性。0% 时偏向有限平台/方形；100% 时偏向圆角金字塔路径。每一半仍使用自己的力度，因此低力度的一半保持拉长且正弦，而高力度的一半趋近于直接的对角线穿越。</p>
+<p>下行程与回程偏移（±100）沿各自起止轴移动每个半行程的中心——与力度相同的逐半镜像。正值为前移：机翼更早达到峰值速度，增强推力。负值为后移：行程在末端消耗运动，减弱推力。该变形单调且保持端点，因此恰为不对称的方波↔三角波混合，绝非位置跳变。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='扑翼周期相位' data-i18n-axis-half='局部半行程相位' data-i18n-axis-wing='机翼位置' data-i18n-lock-oppose='相反：滑块互补（合计=8）（点击切换）' data-i18n-lock-sync='同步：两个滑块一起移动（点击切换）' data-i18n-lock-unlocked='已解锁（点击切换）' data-i18n-metric='时间分配：下 {down}% · 上 {up}% · 峰值相位速度比 {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>下行程偏移</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>回程偏移</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='波形示例' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>极端 8 / 0</button>
-<button data-preset='7,1,100' type='button'>近极端 7 / 1</button>
-<button data-preset='8,6,100' type='button'>高基础 8 / 6</button>
-<button data-preset='8,6,50' type='button'>高基础，混合</button>
+<button data-preset='8,0,100,0,0' type='button'>极端 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>近极端 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>高基础 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>高基础，混合</button>
+<button data-preset='6,6,100,50,50' type='button'>前移 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>后移 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

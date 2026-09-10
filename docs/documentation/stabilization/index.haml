@@ -150,6 +150,7 @@
         %p!=st_shape
         %p!= doc_wave_p1
         %p!= doc_wave_p2
+        %p!= doc_skew_p
 
         .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
           .waveform-controls
@@ -172,11 +173,21 @@
               %span!= doc_wave_mix
               %output{"data-value": "mix", for: "st-wave-shape-mix"} 100%
               %input#st-wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
+            %label{for: "st-wave-down-skew"}
+              %span!= doc_wave_down_skew
+              %output{"data-value": "skewDown", for: "st-wave-down-skew"} 0
+              %input#st-wave-down-skew{"data-control": "skewDown", type: "range", min: "-100", max: "100", step: "1", value: "0"}
+            %label{for: "st-wave-up-skew"}
+              %span!= doc_wave_up_skew
+              %output{"data-value": "skewUp", for: "st-wave-up-skew"} 0
+              %input#st-wave-up-skew{"data-control": "skewUp", type: "range", min: "-100", max: "100", step: "1", value: "0"}
           .waveform-presets{"aria-label": doc_presets_label}
-            %button{type: "button", "data-preset": "8,0,100"}!= doc_preset_extreme
-            %button{type: "button", "data-preset": "7,1,100"}!= doc_preset_near
-            %button{type: "button", "data-preset": "8,6,100"}!= doc_preset_high
-            %button{type: "button", "data-preset": "8,6,50"}!= doc_preset_mixed
+            %button{type: "button", "data-preset": "8,0,100,0,0"}!= doc_preset_extreme
+            %button{type: "button", "data-preset": "7,1,100,0,0"}!= doc_preset_near
+            %button{type: "button", "data-preset": "8,6,100,0,0"}!= doc_preset_high
+            %button{type: "button", "data-preset": "8,6,50,0,0"}!= doc_preset_mixed
+            %button{type: "button", "data-preset": "6,6,100,50,50"}!= doc_preset_front
+            %button{type: "button", "data-preset": "6,6,100,-50,-50"}!= doc_preset_late
           %p.waveform-metric{"data-waveform-metric": true, "aria-live": "polite"}
           .waveform-chart
             %h3!= doc_chart_whole

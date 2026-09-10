@@ -136,6 +136,7 @@
 <p>Сама волна следует семейству взмахов OrniFlight: каждая половина использует свою свирепость, общий порог реверса держит левое/правое крыло в фазе, а <em>смесь формы</em> на профиль непрерывно превращает плоский взмах dwell/плато в округлый пирамидальный путь. Интерактивный исследователь ниже рендерит заданную геометрию для любой пары свирепости вниз/вверх — ту же кривую, что микшер запрашивает каждый тик.</p>
 <p>Свирепость управляет и характером, и таймингом полувзмаха. Внутренне настройка WebUI 0–100 соответствует 0–8. Более высокая свирепость опускания укорачивает долю цикла опускания; более высокая свирепость возврата укорачивает долю возврата. Оставшееся время передаётся противоположной половине — паузы на нуле нет.</p>
 <p>Настройка формы свирепости для профиля выбирает характер высокой свирепости. При 0 % предпочтительна конечная форма плато/квадрата. При 100 % — скруглённый пирамидальный путь. Каждая половина по-прежнему использует свою свирепость, поэтому половина с низкой свирепостью остаётся вытянутой и синусоидальной, а половина с высокой свирепостью приближается к прямому диагональному проходу.</p>
+<p>Перекос опускания и подъёма (±100) смещает центр каждого полувзмаха вдоль собственной оси «начало–конец» — то же полупериодное зеркалирование, что и у свирепости. Положительный загружает взмах спереди: крыло достигает пиковой скорости раньше, усиливая тягу. Отрицательный сдвигает его к концу: взмах расходует движение в конце, ослабляя тягу. Искажение монотонно и сохраняет крайние точки, поэтому это ровно асимметричная смесь квадрат↔треугольник, а не скачок положения.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Фаза цикла взмаха' data-i18n-axis-half='Локальная фаза полувзмаха' data-i18n-axis-wing='Положение крыла' data-i18n-lock-oppose='Противоположно: ползунки дополнительны (сумма=8) (щелчок для переключения)' data-i18n-lock-sync='Синхронно: оба ползунка движутся вместе (щелчок для переключения)' data-i18n-lock-unlocked='Разблокировано (щелчок для переключения)' data-i18n-metric='Распределение времени: вниз {down}% · вверх {up}% · пиковое отношение фазовой скорости {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>Перекос опускания</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>Перекос подъёма</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Примеры формы волны' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>Экстрим 8 / 0</button>
-<button data-preset='7,1,100' type='button'>Почти экстрим 7 / 1</button>
-<button data-preset='8,6,100' type='button'>Высокая база 8 / 6</button>
-<button data-preset='8,6,50' type='button'>Высокая база, смешанная</button>
+<button data-preset='8,0,100,0,0' type='button'>Экстрим 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>Почти экстрим 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>Высокая база 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>Высокая база, смешанная</button>
+<button data-preset='6,6,100,50,50' type='button'>Фронтальная 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>Поздний толчок 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

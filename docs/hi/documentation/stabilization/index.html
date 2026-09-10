@@ -136,6 +136,7 @@
 <p>वेवफ़ॉर्म स्वयं OrniFlight स्ट्रोक परिवार का अनुसरण करता है: प्रत्येक आधा अपनी उग्रता रखता है, साझा रिवर्सल सीमा बाएँ/दाएँ पंखों को सम-फ़ेज़ रखती है, और प्रति-प्रोफ़ाइल <em>आकार मिश्रण</em> एक सपाट ड्वेल/पठार स्ट्रोक को गोल पिरामिड पथ में निरंतर रूपांतरित करता है। नीचे का इंटरैक्टिव एक्सप्लोरर किसी भी डाउन/अप उग्रता जोड़े के लिए आदेशित ज्यामिति प्रस्तुत करता है — वही वक्र जो मिक्सर हर टिक माँगता है।</p>
 <p>फेरोसिटी आधे-स्ट्रोक के चरित्र और समय दोनों को नियंत्रित करती है। आंतरिक रूप से WebUI की 0–100 सेटिंग 0–8 पर मैप होती है। अधिक डाउनस्ट्रोक फेरोसिटी चक्र में डाउनस्ट्रोक का हिस्सा छोटा कर देती है; अधिक वापसी फेरोसिटी वापसी हिस्सा छोटा कर देती है। शेष समय विपरीत आधे में स्थानांतरित हो जाता है — शून्य पर कोई विराम नहीं होता।</p>
 <p>प्रति-प्रोफ़ाइल फेरोसिटी आकार नियंत्रण उच्च-फेरोसिटी चरित्र चुनता है। 0% पर यह सीमित पठार/वर्ग आकार को पसंद करता है। 100% पर यह गोल पिरामिडीय पथ को पसंद करता है। प्रत्येक आधा फिर भी अपनी फेरोसिटी का उपयोग करता है, इसलिए निम्न-फेरोसिटी आधा लंबा और साइनसॉइडल रहता है जबकि उच्च-फेरोसिटी आधा सीधे विकर्ण मार्ग के करीब पहुँचता है।</p>
+<p>डाउन व अप स्क्यू (±100) प्रत्येक आधे-स्ट्रोक के केंद्र को उसकी अपनी आरंभ–अंत अक्ष पर सरकाते हैं — फेरोसिटी की ही तरह प्रति-आधा दर्पण। धनात्मक स्ट्रोक को आगे भरता है: पंख शिखर वेग जल्दी पा लेता है, जिससे प्रणोद बढ़ता है। ऋणात्मक उसे अंत में सरकाता है: स्ट्रोक अपनी गति अंत में खर्च करता है, जिससे प्रणोद घटता है। विकृति एकदिष्ट है और सिरों को बचाती है, अतः यह ठीक-ठीक असममित वर्ग↔त्रिकोण मिश्रण है, कभी स्थिति-छलांग नहीं।</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='धड़कन-चक्र चरण' data-i18n-axis-half='स्थानीय आधा-स्ट्रोक चरण' data-i18n-axis-wing='पंख की स्थिति' data-i18n-lock-oppose='विरोध: स्लाइडर पूरक (योग=8) (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-sync='सिंक: दोनों स्लाइडर एक साथ चलते हैं (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-unlocked='अनलॉक (चक्रित करने हेतु क्लिक करें)' data-i18n-metric='समय आवंटन: डाउन {down}% · अप {up}% · शिखर चरण-गति अनुपात {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>डाउन स्क्यू</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>अप स्क्यू</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='तरंगरूप उदाहरण' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>चरम 8 / 0</button>
-<button data-preset='7,1,100' type='button'>लगभग-चरम 7 / 1</button>
-<button data-preset='8,6,100' type='button'>उच्च आधार 8 / 6</button>
-<button data-preset='8,6,50' type='button'>उच्च आधार, मिश्रित</button>
+<button data-preset='8,0,100,0,0' type='button'>चरम 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>लगभग-चरम 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>उच्च आधार 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>उच्च आधार, मिश्रित</button>
+<button data-preset='6,6,100,50,50' type='button'>फ्रंट-लोड 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>लेट-थ्रस्ट 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

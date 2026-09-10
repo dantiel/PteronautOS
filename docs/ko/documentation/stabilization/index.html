@@ -136,6 +136,7 @@
 <p>파형 자체는 OrniFlight 스트로크 패밀리를 따릅니다: 각 반쪽은 자신의 격렬도를 쓰고, 공유 반전 임계값이 좌우 날개를 동기화하며, 프로파일별 <em>형태 믹스</em>가 평평한 드웰/고원 스트로크를 둥근 피라미드 경로로 계속 변환합니다. 아래 인터랙티브 탐색기는 임의의 다운/업 격렬도 쌍에 대해 명령된 기하를 렌더링합니다 — 믹서가 매 틱 요청하는 바로 그 곡선입니다.</p>
 <p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
 <p>프로필별 퍼로시티 형태 컨트롤은 고퍼로시티 특성을 선택합니다. 0%에서는 유한한 플래토/사각 형태를, 100%에서는 둥근 피라미드 경로를 선호합니다. 각 절반은 여전히 자신의 퍼로시티를 사용하므로, 저퍼로시티 절반은 길쭉하고 사인파에 가깝게 유지되고, 고퍼로시티 절반은 직접적인 대각선 이동에 가까워집니다.</p>
+<p>다운·업 스큐(±100)는 각 반쪽 스트로크의 중심을 자신의 시작–끝 축을 따라 이동시킵니다 — 퍼로시티와 동일한 반쪽별 미러링입니다. 양수는 스트로크를 앞쪽으로 실어 날개가 최고 속도에 더 일찍 도달하게 하여 추력을 키웁니다. 음수는 뒤로 미뤄 스트로크가 운동을 끝에서 소비하게 하여 추력을 줄입니다. 왜곡은 단조이며 양 끝점을 보존하므로 정확히 비대칭 사각↔삼각 혼합이며, 위치 점프는 절대 없습니다.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>다운 스큐</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>업 스큐</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='파형 예시' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>익스트림 8 / 0</button>
-<button data-preset='7,1,100' type='button'>거의 극단 7 / 1</button>
-<button data-preset='8,6,100' type='button'>하이 베이스 8 / 6</button>
-<button data-preset='8,6,50' type='button'>하이 베이스, 혼합</button>
+<button data-preset='8,0,100,0,0' type='button'>익스트림 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>거의 극단 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>하이 베이스 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>하이 베이스, 혼합</button>
+<button data-preset='6,6,100,50,50' type='button'>프런트로드 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>레이트스러스트 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

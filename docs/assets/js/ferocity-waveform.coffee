@@ -18,7 +18,7 @@ appendText = (parent, value, attributes = {}) ->
 
 class FerocityWaveformExplorer
   constructor: (@root) ->
-    @state = down: 8, up: 0, mix: 100, lockMode: 'unlocked'  # 'unlocked', 'sync', 'oppose'
+    @state = down: 8, up: 0, mix: 100, skewDown: 0, skewUp: 0, lockMode: 'unlocked'  # 'unlocked', 'sync', 'oppose'
     @i18n =
       lockSync: @root.dataset.i18nLockSync ? 'Sync: Both sliders move together (click to cycle)'
       lockOppose: @root.dataset.i18nLockOppose ? 'Oppose: Sliders complementary (sum=8) (click to cycle)'
@@ -28,7 +28,7 @@ class FerocityWaveformExplorer
       axisHalf: @root.dataset.i18nAxisHalf ? 'Local half-stroke phase'
       metric: @root.dataset.i18nMetric ? 'Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'
     @controls = {}
-    for name in ['down', 'up', 'mix', 'lock']
+    for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
     @controls.down.addEventListener 'input', (event) =>
@@ -45,17 +45,30 @@ class FerocityWaveformExplorer
       @state.mix = Number event.currentTarget.value
       @update()
 
+    @controls.skewDown.addEventListener 'input', (event) =>
+      @state.skewDown = Number event.currentTarget.value
+      @update()
+
+    @controls.skewUp.addEventListener 'input', (event) =>
+      @state.skewUp = Number event.currentTarget.value
+      @update()
+
     @controls.lock.addEventListener 'click', (event) =>
       @_cycleLock()
       @update()
 
     for button in @root.querySelectorAll '[data-preset]'
       button.addEventListener 'click', (event) =>
-        [down, up, mix] = (Number value for value in event.currentTarget.dataset.preset.split ',' )
-        @state = {down, up, mix, lockMode: @state.lockMode}
+        values = (Number value for value in event.currentTarget.dataset.preset.split ',' )
+        [down, up, mix, skewDown, skewUp] = values
+        skewDown ?= 0
+        skewUp ?= 0
+        @state = {down, up, mix, skewDown, skewUp, lockMode: @state.lockMode}
         @controls.down.value = down
         @controls.up.value = up
         @controls.mix.value = mix
+        @controls.skewDown.value = skewDown
+        @controls.skewUp.value = skewUp
         @update()
 
     @lastWidth = Math.round @root.getBoundingClientRect().width
@@ -120,9 +133,14 @@ class FerocityWaveformExplorer
     @resizeObserver.observe @root
     @update()
 
-  localShape: (phase, ferocity) ->
+  localShape: (phase, ferocity, skewPercent = 0) ->
     boundedFerocity = clamp ferocity, 0, 8
     amount = boundedFerocity / 8
+
+    # Centre-skew: same quadratic-bias remap as firmware shapeWave. s>0 pushes
+    # the centre toward the start (front-load), s<0 toward the end (late thrust).
+    skew01 = clamp skewPercent / 100, -1, 1
+    phase = phase + skew01 * phase * (1 - phase) if skew01 isnt 0
 
     dwell = amount * 0.98
     halfDwell = dwell / 2
@@ -154,10 +172,10 @@ class FerocityWaveformExplorer
     downstroke = theta < boundary
     if downstroke
       localPhase = theta / boundary
-      position = @localShape localPhase, @state.down
+      position = @localShape localPhase, @state.down, @state.skewDown
     else
       localPhase = (theta - boundary) / (TAU - boundary)
-      position = -@localShape localPhase, @state.up
+      position = -@localShape localPhase, @state.up, @state.skewUp
     {position, boundary}
 
   directPosition: (theta, boundary) ->
@@ -238,8 +256,8 @@ class FerocityWaveformExplorer
       group.appendChild svgElement 'line', class: 'waveform-line boundary', x1: boundaryX, x2: boundaryX, y1: 0, y2: innerHeight
     else
       phases = (index / 600 for index in [0..600])
-      down = ({x: phase * 100, y: @localShape(phase, @state.down)} for phase in phases)
-      up = ({x: phase * 100, y: @localShape(phase, @state.up)} for phase in phases)
+      down = ({x: phase * 100, y: @localShape(phase, @state.down, @state.skewDown)} for phase in phases)
+      up = ({x: phase * 100, y: @localShape(phase, @state.up, @state.skewUp)} for phase in phases)
       direct = [{x: 0, y: 1}, {x: 100, y: -1}]
       group.appendChild svgElement 'path', class: 'waveform-line direct', d: @pathFor(direct, xScale, yScale)
       group.appendChild svgElement 'path', class: 'waveform-line down', d: @pathFor(down, xScale, yScale)
@@ -249,10 +267,16 @@ class FerocityWaveformExplorer
     @drawChart @root.querySelector("[data-chart='cycle']"), 'cycle'
     @drawChart @root.querySelector("[data-chart='halves']"), 'halves'
 
+  _formatSkew: (value) ->
+    sign = if value > 0 then '+' else ''
+    "#{sign}#{Math.round value}"
+
   update: ->
     @root.querySelector("[data-value='down']").textContent = @state.down.toFixed 1
     @root.querySelector("[data-value='up']").textContent = @state.up.toFixed 1
     @root.querySelector("[data-value='mix']").textContent = "#{Math.round @state.mix}%"
+    @root.querySelector("[data-value='skewDown']").textContent = @_formatSkew @state.skewDown
+    @root.querySelector("[data-value='skewUp']").textContent = @_formatSkew @state.skewUp
     downShare = @boundary() / TAU * 100
     upShare = 100 - downShare
     speedRatio = @peakSlope(true) / Math.max 0.000000001, @peakSlope(false)

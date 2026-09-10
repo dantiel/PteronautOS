@@ -136,6 +136,7 @@
 <p>La forme d'onde elle-même suit la famille de courses OrniFlight : chaque moitié utilise sa propre férocité, un seuil d'inversion partagé maintient les ailes gauche/droite en phase, et un <em>mélange de forme</em> par profil transmute continuellement une course plate de dwell/plateau en un chemin pyramidal arrondi. L'explorateur interactif ci-dessous rend la géométrie commandée pour toute paire de férocité bas/haut — la même courbe que le mixeur demande à chaque tick.</p>
 <p>La férocité contrôle à la fois le caractère et le timing d'une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n'y a pas de pause à zéro.</p>
 <p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.</p>
+<p>L'inclinaison de descente et de montée (±100) décale le centre de chaque demi-battement le long de son propre axe début–fin — le même miroir par demi-battement que la férocité. Une valeur positive charge le battement vers l'avant : l'aile atteint la vitesse maximale plus tôt, augmentant la poussée. Une valeur négative le décale vers la fin : le battement dépense son mouvement en fin de course, réduisant la poussée. La déformation est monotone et préserve les extrémités, donc exactement un mélange asymétrique carré↔triangle, jamais un saut de position.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>Inclinaison de descente</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>Inclinaison de montée</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Exemples de forme d&#39;onde' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>Extrême 8 / 0</button>
-<button data-preset='7,1,100' type='button'>Quasi extrême 7 / 1</button>
-<button data-preset='8,6,100' type='button'>Base haute 8 / 6</button>
-<button data-preset='8,6,50' type='button'>Base haute, mélangée</button>
+<button data-preset='8,0,100,0,0' type='button'>Extrême 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>Quasi extrême 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>Base haute 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>Base haute, mélangée</button>
+<button data-preset='6,6,100,50,50' type='button'>Charge avant 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>Poussée tardive 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

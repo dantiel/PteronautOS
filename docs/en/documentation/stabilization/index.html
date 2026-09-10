@@ -136,6 +136,7 @@
 <p>The waveform itself follows the OrniFlight stroke family: each half uses its own ferocity, a shared reversal threshold keeps left/right wings in phase, and a per-profile <em>shape mix</em> continuously transmutes a flat dwell/plateau stroke into a rounded pyramidal path. The interactive explorer below renders the commanded geometry for any down/up ferocity pair — the same curve the mixer requests each tick.</p>
 <p>Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.</p>
 <p>The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.</p>
+<p>Stroke and return skew (±100) shift the centre of each half-stroke along its own start-to-end axis — the same per-half mirroring as ferocity. Positive front-loads the stroke: the wing reaches peak velocity sooner, augmenting thrust. Negative shifts it late: the stroke spends its motion at the end, diminishing thrust. The warp is monotonic and end-point-preserving, so it is exactly an asymmetric square↔triangle mix, never a position jump.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Beat-cycle phase' data-i18n-axis-half='Local half-stroke phase' data-i18n-axis-wing='Wing position' data-i18n-lock-oppose='Oppose: Sliders complementary (sum=8) (click to cycle)' data-i18n-lock-sync='Sync: Both sliders move together (click to cycle)' data-i18n-lock-unlocked='Unlocked (click to cycle)' data-i18n-metric='Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>Down skew</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>Up skew</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Waveform examples' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>Extreme 8 / 0</button>
-<button data-preset='7,1,100' type='button'>Near-extreme 7 / 1</button>
-<button data-preset='8,6,100' type='button'>High base 8 / 6</button>
-<button data-preset='8,6,50' type='button'>High base, mixed</button>
+<button data-preset='8,0,100,0,0' type='button'>Extreme 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>Near-extreme 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>High base 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>High base, mixed</button>
+<button data-preset='6,6,100,50,50' type='button'>Front-load 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>Late-thrust 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

@@ -136,6 +136,7 @@
 <p>波形自体は OrniFlight ストローク族に従います:各半周期は独自の猛度を用い、共有の反転閾値が左右翼を同位相に保ち、プロファイル別の <em>形状ミックス</em>が平坦なドウェル/プラトーストロークを丸みのあるピラミッド経路へ連続変態させます。下のインタラクティブ・エクスプローラーは、任意のダウン/アップ猛度ペアに対する指令ジオメトリ — ミキサーが毎ティック要求するのと同じ曲線 — を描画します。</p>
 <p>強度は半ストロークの性格とタイミングの両方を制御します。内部的には WebUI の 0–100 設定が 0–8 にマッピングされます。ダウンストロークの強度が高いほど周期に占めるダウンストロークの割合が短くなり、復路の強度が高いほど復路の割合が短くなります。残りの時間は反対側の半周期へ移ります — ゼロでの停止はありません。</p>
 <p>プロファイルごとの強度シェイプコントロールは、高強度の性格を選択します。0% では有限のプラトー／矩形形状を、100% では丸みを帯びたピラミッド状の経路を好みます。各半周期は依然として独自の強度を使うため、低強度の半周期は伸長して正弦波的になり、高強度の半周期は直接的な対角線の走行に近づきます。</p>
+<p>ダウン・アップスキュー（±100）は、各ハーフストロークの中心をそれぞれ自身の開始→終了軸に沿ってずらします — 強度と同じ半周期ごとの鏡映です。正はストロークを前方に寄せ、翼がより早く最高速度に達して推力を高めます。負は後方へ寄せ、ストロークが運動を終端で消費して推力を弱めます。ワープは単調かつ端点を保存するため、まさに非対称な矩形↔三角の混合であり、位置の跳躍は決してありません。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='羽ばたき周期の位相' data-i18n-axis-half='ローカル半ストローク位相' data-i18n-axis-wing='翼位置' data-i18n-lock-oppose='反対：スライダーが相補的（合計=8）（クリックで切替）' data-i18n-lock-sync='同期：両スライダーが一緒に動く（クリックで切替）' data-i18n-lock-unlocked='ロック解除（クリックで切替）' data-i18n-metric='時間配分：ダウン {down}% ・アップ {up}% ・ピーク位相速度比 {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>ダウンスキュー</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>アップスキュー</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='波形の例' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>極端 8 / 0</button>
-<button data-preset='7,1,100' type='button'>ほぼ極端 7 / 1</button>
-<button data-preset='8,6,100' type='button'>高ベース 8 / 6</button>
-<button data-preset='8,6,50' type='button'>高ベース、混合</button>
+<button data-preset='8,0,100,0,0' type='button'>極端 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>ほぼ極端 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>高ベース 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>高ベース、混合</button>
+<button data-preset='6,6,100,50,50' type='button'>前方荷重 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>後方推力 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

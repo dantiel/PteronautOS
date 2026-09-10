@@ -136,6 +136,7 @@
 <p>Die Wellenform selbst folgt der OrniFlight-Schlagfamilie: Jede Hälfte nutzt ihre eigene Heftigkeit, eine geteilte Umkehrschwelle hält linke/rechte Flügel in Phase, und ein <em>Shape-Mix</em> pro Profil verwandelt kontinuierlich einen flachen Dwell/Plateau-Schlag in einen gerundeten Pyramidenpfad. Der interaktive Explorer unten rendert die befohlene Geometrie für jedes Ab-/Auf-Heftigkeitspaar — dieselbe Kurve, die der Mixer jeden Tick anfordert.</p>
 <p>Heftigkeit steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Heftigkeit verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Heftigkeit verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
 <p>Die profilbezogene Heftigkeitsform-Steuerung wählt den Hoch-Heftigkeits-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Heftigkeit, sodass eine Hälfte mit niedriger Heftigkeit gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Heftigkeit sich einer direkten diagonalen Traverse nähert.</p>
+<p>Abschlag- und Aufschlag-Skew (±100) verschieben das Zentrum jedes Halbschlags entlang seiner eigenen Start–Ende-Achse — dieselbe halbschlagweise Spiegelung wie bei der Heftigkeit. Positiv macht den Schlag frontlastig: Der Flügel erreicht die Spitzengeschwindigkeit früher und verstärkt den Schub. Negativ verlagert ihn ans Ende: Der Schlag verbraucht seine Bewegung spät und mindert den Schub. Die Verzerrung ist monoton und erhält die Endpunkte, also exakt eine asymmetrische Quadrat↔Dreieck-Mischung — niemals ein Positionssprung.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Schlagzyklus-Phase' data-i18n-axis-half='Lokale Halbschlag-Phase' data-i18n-axis-wing='Flügelposition' data-i18n-lock-oppose='Opposition: Regler komplementär (Summe=8) (klicken zum Wechseln)' data-i18n-lock-sync='Sync: Beide Regler bewegen sich gemeinsam (klicken zum Wechseln)' data-i18n-lock-unlocked='Entsperrt (klicken zum Wechseln)' data-i18n-metric='Zeitverteilung: Abschlag {down}% · Aufschlag {up}% · Spitzen-Phasengeschwindigkeits-Verhältnis {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>Abschlag-Skew</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>Aufschlag-Skew</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Wellenform-Beispiele' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>Extrem 8 / 0</button>
-<button data-preset='7,1,100' type='button'>Nahezu extrem 7 / 1</button>
-<button data-preset='8,6,100' type='button'>Hohe Basis 8 / 6</button>
-<button data-preset='8,6,50' type='button'>Hohe Basis, gemischt</button>
+<button data-preset='8,0,100,0,0' type='button'>Extrem 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>Nahezu extrem 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>Hohe Basis 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>Hohe Basis, gemischt</button>
+<button data-preset='6,6,100,50,50' type='button'>Frontlastig 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>Spätschub 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>

@@ -136,6 +136,7 @@
 <p>شكل الموجة نفسه يتبع عائلة ضربات OrniFlight: كل نصف يستخدم شراسته، وعتبة انعكاس مشتركة تُبقي الجناحين الأيسر/الأيمن في الطور، و<em>مزيج شكل</em> لكل ملف يحوّل باستمرار ضربة مكث/هضبة مسطحة إلى مسار هرمي مدوّر. المستكشف التفاعلي أدناه يعرض الهندسة المأمورة لأي زوج شراسة هبوط/صعود — المنحنى نفسه الذي يطلبه الخلّاط كل نبضة.</p>
 <p>تتحكم الشراسة في كل من طابع وتوقيت نصف الضربة. داخليًا، يتطابق إعداد WebUI من 0–100 مع 0–8. الشراسة الأعلى للهبوط تقصّر حصة الهبوط من الدورة؛ والشراسة الأعلى للعودة تقصّر حصة العودة. يُنقل الوقت المتبقي إلى النصف المقابل — لا يوجد توقف عند الصفر.</p>
 <p>يختار تحكم شكل الشراسة لكل ملف تعريف طابع الشراسة العالية. عند 0% يفضّل شكلًا نهائيًا مسطحًا/مربعًا. وعند 100% يفضّل مسارًا هرميًا مدوّرًا. لا يزال كل نصف يستخدم شراسته الخاصة، فيبقى النصف منخفض الشراسة ممدودًا وجيبيًا بينما يقترب النصف مرتفع الشراسة من عبور قطري مباشر.</p>
+<p>يُزيح انحراف الهبوط والصعود (±100) مركز كل نصف ضربة على طول محوره من البداية إلى النهاية — وهو نفس التماثل لكل نصف ضربة كما في الشراسة. القيمة الموجبة تُحمّل الضربة من الأمام: يبلغ الجناح ذروة السرعة أبكر فيزداد الدفع. السالبة تُؤخّرها: تنفق الضربة حركتها في النهاية فيقل الدفع. الالتواء رتيب ويحافظ على الطرفين، لذا فهو تمامًا مزيج غير متماثل مربع↔مثلث، وليس قفزة موضع أبدًا.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='طور دورة الخفق' data-i18n-axis-half='طور نصف الضربة المحلي' data-i18n-axis-wing='موضع الجناح' data-i18n-lock-oppose='تقابل: المنزلِقان متكاملان (المجموع=8) (انقر للتبديل)' data-i18n-lock-sync='مزامنة: يتحرك المنزلِقان معًا (انقر للتبديل)' data-i18n-lock-unlocked='غير مقفول (انقر للتبديل)' data-i18n-metric='توزيع الوقت: هبوط {down}% · صعود {up}% · نسبة سرعة الطور القصوى {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -163,12 +164,24 @@
 <output data-value='mix' for='st-wave-shape-mix'>100%</output>
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
+<label for='st-wave-down-skew'>
+<span>انحراف الهبوط</span>
+<output data-value='skewDown' for='st-wave-down-skew'>0</output>
+<input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-up-skew'>
+<span>انحراف الصعود</span>
+<output data-value='skewUp' for='st-wave-up-skew'>0</output>
+<input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='أمثلة شكل الموجة' class='waveform-presets'>
-<button data-preset='8,0,100' type='button'>أقصى 8 / 0</button>
-<button data-preset='7,1,100' type='button'>شبه أقصى 7 / 1</button>
-<button data-preset='8,6,100' type='button'>قاعدة عالية 8 / 6</button>
-<button data-preset='8,6,50' type='button'>قاعدة عالية، مختلطة</button>
+<button data-preset='8,0,100,0,0' type='button'>أقصى 8 / 0</button>
+<button data-preset='7,1,100,0,0' type='button'>شبه أقصى 7 / 1</button>
+<button data-preset='8,6,100,0,0' type='button'>قاعدة عالية 8 / 6</button>
+<button data-preset='8,6,50,0,0' type='button'>قاعدة عالية، مختلطة</button>
+<button data-preset='6,6,100,50,50' type='button'>تحميل أمامي 6 / 6</button>
+<button data-preset='6,6,100,-50,-50' type='button'>دفع متأخر 6 / 6</button>
 </div>
 <p aria-live='polite' class='waveform-metric' data-waveform-metric></p>
 <div class='waveform-chart'>
