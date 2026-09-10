@@ -17,7 +17,7 @@
 #include <soc/uart_pins.h>
 #else
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+#include "MiniMDNS.h"
 #include <user_interface.h>   // struct rst_info + REASON_* for the heap-safe crash endpoint
 #define wifi_mode_t WiFiMode_t
 #endif
@@ -95,6 +95,7 @@ static bool scanComplete = false;
 static AsyncWebServer server(80);
 static bool servicesStarted = false;
 #if defined(PLATFORM_ESP8266)
+static MiniMDNS *mdns = nullptr;
 static uint32_t heapBeforeWifi = 0;
 static uint32_t heapAfterServices = 0;
 #endif
@@ -2636,11 +2637,13 @@ static void startWiFi(unsigned long now)
 
 static void startMDNS()
 {
+  #if defined(PLATFORM_ESP32)
   if (!MDNS.begin(wifi_hostname))
   {
     DBGLN("Error starting mDNS");
     return;
   }
+  #endif
 
   String options = "-DAUTO_WIFI_ON_INTERVAL=" + (firmwareOptions.wifi_auto_on_interval == -1 ? "-1" : String(firmwareOptions.wifi_auto_on_interval / 1000));
 
@@ -2660,29 +2663,23 @@ static void startMDNS()
   options += " -DRCVR_UART_BAUD=" + String(firmwareOptions.uart_baud);
   #endif
 
-  String instance = String(wifi_hostname) + "_" + WiFi.macAddress();
-  instance.replace(":", "");
   #if defined(PLATFORM_ESP8266)
-    // We have to do it differently on ESP8266 as setInstanceName has the side-effect of chainging the hostname!
-    MDNS.setInstanceName(wifi_hostname);
-    MDNSResponder::hMDNSService service = MDNS.addService(instance.c_str(), "http", "tcp", 80);
-    MDNS.addServiceTxt(service, "vendor", "elrs");
-    MDNS.addServiceTxt(service, "target", (const char *)&target_name[4]);
-    MDNS.addServiceTxt(service, "device", (const char *)device_name);
-    MDNS.addServiceTxt(service, "product", (const char *)product_name);
-    MDNS.addServiceTxt(service, "version", VERSION);
-    MDNS.addServiceTxt(service, "options", options.c_str());
-    MDNS.addServiceTxt(service, "type", "rx");
-    // If the probe result fails because there is another device on the network with the same name
-    // use our unique instance name as the hostname. A better way to do this would be to use
-    // MDNSResponder::indexDomain and change wifi_hostname as well.
-    MDNS.setHostProbeResultCallback([instance](const char* p_pcDomainName, bool p_bProbeResult) {
-      if (!p_bProbeResult) {
-        WiFi.hostname(instance);
-        MDNS.setInstanceName(instance);
-      }
-    });
+    // The responder names the service instance <hostname>_<MAC> itself
+    mdns = new MiniMDNS(wifi_hostname, 80);
+    mdns->addTxt(PSTR("vendor"), PSTR("elrs"));
+    mdns->addTxt(PSTR("target"), (const char *)&target_name[4]);
+    mdns->addTxt(PSTR("device"), device_name);
+    mdns->addTxt(PSTR("product"), product_name);
+    mdns->addTxt(PSTR("version"), VERSION);
+    mdns->addTxt(PSTR("options"), mdns->store(options.c_str()));
+  #if defined(TARGET_TX)
+    mdns->addTxt(PSTR("type"), PSTR("tx"));
   #else
+    mdns->addTxt(PSTR("type"), PSTR("rx"));
+  #endif
+  #else
+    String instance = String(wifi_hostname) + "_" + WiFi.macAddress();
+    instance.replace(":", "");
     MDNS.setInstanceName(instance);
     MDNS.addService("http", "tcp", 80);
     MDNS.addServiceTxt("http", "tcp", "vendor", "elrs");
@@ -2747,6 +2744,11 @@ static void startServices()
     #if defined(PLATFORM_ESP32)
       MDNS.end();
       startMDNS();
+    #else
+      if (mdns == nullptr)
+      {
+        startMDNS();
+      }
     #endif
     return;
   }
@@ -2934,9 +2936,6 @@ static void HandleWebUpdate()
       default:
         break;
     }
-    #if defined(PLATFORM_ESP8266)
-      MDNS.notifyAPChange();
-    #endif
     changeMode = WIFI_OFF;
   }
 
@@ -2952,7 +2951,10 @@ static void HandleWebUpdate()
   {
     dnsServer.processNextRequest();
     #if defined(PLATFORM_ESP8266)
-      MDNS.update();
+      if (mdns)
+      {
+        mdns->update();
+      }
     #endif
 
     #if defined(TARGET_TX) && defined(PLATFORM_ESP32)
@@ -2986,6 +2988,10 @@ static int event()
   else if (wifiStarted)
   {
     wifiStarted = false;
+    #if defined(PLATFORM_ESP8266)
+    delete mdns;
+    mdns = nullptr;
+    #endif
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
     #if defined(PLATFORM_ESP8266)
