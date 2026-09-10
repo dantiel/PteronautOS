@@ -37,6 +37,21 @@ int main()
         previous = command;
     }
 
-    std::cout << "Throttle-frequency coupling control law passed\n";
+    // Throttle → skew coupling: asymmetric thrust-vector steering.
+    // Full throttle front-loads the downstroke (+), idle front-loads the
+    // upstroke (−). Zero at mid-throttle, ±100 at the extremes at full mix.
+    expectNear(orniThrottleSkewShift(1.0f, 100.0f), 100.0f);
+    expectNear(orniThrottleSkewShift(0.0f, 100.0f), -100.0f);
+    expectNear(orniThrottleSkewShift(0.5f, 100.0f), 0.0f);
+    // Coupling scales linearly; 0% never shifts.
+    expectNear(orniThrottleSkewShift(1.0f, 50.0f), 50.0f);
+    expectNear(orniThrottleSkewShift(0.0f, 50.0f), -50.0f);
+    expectNear(orniThrottleSkewShift(0.75f, 0.0f), 0.0f);
+    // Out-of-range inputs clamp without exceeding the skew envelope.
+    expectNear(orniThrottleSkewShift(2.0f, 100.0f), 100.0f);
+    expectNear(orniThrottleSkewShift(-1.0f, 100.0f), -100.0f);
+    expectNear(orniThrottleSkewShift(1.0f, 150.0f), 100.0f);
+
+    std::cout << "Throttle-frequency + throttle-skew coupling control laws passed\n";
     return 0;
 }

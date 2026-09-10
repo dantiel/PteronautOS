@@ -172,6 +172,15 @@
            %input{type: "range", min: "-100", max: "100", .value: self.returnSkew, @input: self._onSlider('returnSkew'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.returnSkew
            %small.label= self._returnSkewLabel()
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_skew_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_skew_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.throttleSkewMix, @input: self._onSlider('throttleSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleSkewMix
+           %small.label= self._throttleSkewMixLabel()
 
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
 .mui-panel

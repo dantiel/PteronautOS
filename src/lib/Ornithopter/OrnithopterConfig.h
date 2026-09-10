@@ -176,6 +176,19 @@ constexpr float orniThrottleFrequencyCommand(float independentFreq01,
     return independent + (throttle - independent) * mix;
 }
 
+// Throttle → skew coupling: asymmetric thrust-vector steering. Full throttle
+// front-loads the DOWNSTROKE (power stroke); idle front-loads the UPSTROKE
+// (recovery). Returns the signed skew shift (in the same ±100 units as
+// strokeSkew/returnSkew) to ADD to strokeSkew and SUBTRACT from returnSkew.
+// 0 at mid-throttle, ±coupling at the extremes — so moving the throttle in
+// either direction shifts the wave centre the same way (continuous, linear).
+constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
+    const float mix = orniClamp01(couplingPercent * 0.01f);
+    const float t = orniClamp01(throttle01);
+    const float signedThrottle = 2.0f * t - 1.0f;   // -1 (idle) … +1 (full)
+    return signedThrottle * mix * ORNI_SKEW_MAX;    // ±(0…100)
+}
+
 // ─── Flight Profiles (multi-position channel) ──────────────────────
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
 // Kernel (MixerProfile / servo geometry) is NOT per-profile — it stays fixed.
@@ -196,6 +209,7 @@ struct FlightProfileParams {
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
+    float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

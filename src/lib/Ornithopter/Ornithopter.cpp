@@ -41,6 +41,7 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     ferocityShapeMix = p.ferocityShapeMix;
     strokeSkew        = p.strokeSkew;
     returnSkew        = p.returnSkew;
+    throttleSkewMix   = p.throttleSkewMix;
 }
 
 void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
@@ -49,7 +50,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          float rudAmpDiff, float elevFerMix,
                                          float thrFerMix, float thrFreqMix,
                                          float ferShapeMix,
-                                         float strokeSkew, float returnSkew)
+                                         float strokeSkew, float returnSkew,
+                                         float thrSkewMix)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
     FlightProfileParams &p = flightProfiles[idx];
@@ -67,6 +69,7 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.ferocityShapeMix = ferShapeMix;
     p.strokeSkew       = strokeSkew;
     p.returnSkew       = returnSkew;
+    p.throttleSkewMix  = thrSkewMix;
     if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
@@ -99,6 +102,7 @@ Ornithopter::Ornithopter()
   , ferocityShapeMix(0.0f)
   , strokeSkew(ORNI_SKEW_DEFAULT)
   , returnSkew(ORNI_SKEW_DEFAULT)
+  , throttleSkewMix(0.0f)
   , elevonScale(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
@@ -388,12 +392,21 @@ void Ornithopter::_computeServoMixer() {
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
+        // Throttle → skew coupling (asymmetric steering): throttle steers the
+        // thrust vector between the two half-strokes. Full throttle front-loads
+        // the downstroke (power), idle front-loads the upstroke (recovery).
+        // The shift is added to strokeSkew and subtracted from returnSkew, so
+        // both wings diverge identically — pitch authority, not roll.
+        float throttleSkewShift = orniThrottleSkewShift(throttlePct, throttleSkewMix);
+        float strokeSkewEff = strokeSkew + throttleSkewShift;
+        float returnSkewEff = returnSkew - throttleSkewShift;
+
         float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkew, returnSkew);
+                                                     strokeSkewEff, returnSkewEff);
         float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkew, returnSkew);
+                                                     strokeSkewEff, returnSkewEff);
 
 #ifdef ZEPHYRUS_ENABLED
         // Resonance — phase-locked lock-in amplifier: accumulate
