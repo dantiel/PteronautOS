@@ -188,6 +188,35 @@ constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
     const float signedThrottle = 2.0f * t - 1.0f;   // -1 (idle) … +1 (full)
     return signedThrottle * mix * ORNI_SKEW_MAX;    // ±(0…100)
 }
+ 
+// Throttle-rate transient (anti-gravity): gain and LPF time constant for the
+// throttle slew → skew boost/brake. A full stick slam (≈5/s) at 100% mix
+// yields ±50 skew units; the LPF τ decays the kick once the stick rests.
+#define ORNI_SKEW_RATE_GAIN     10.0f   // skew units per 1/s throttle rate at 100% mix
+#define ORNI_SKEW_RATE_LPF_TAU  0.10f   // s — anti-gravity transient decay
+
+// Aileron → differential skew coupling (roll steering): aileron front-loads
+// one wing while it late-loads the other — roll torque on the skew axis,
+// mirror-image twin of the symmetric throttle/pitch skew. Returns the signed
+// shift (±ORNI_SKEW_MAX) to ADD to the LEFT wing and SUBTRACT from the RIGHT.
+// aileronNorm ∈ [-1, +1] (0 = centred stick).
+constexpr float orniAileronSkewShift(float aileronNorm, float couplingPercent) {
+    const float mix = orniClamp01(couplingPercent * 0.01f);
+    const float a = aileronNorm < -1.0f ? -1.0f : (aileronNorm > 1.0f ? 1.0f : aileronNorm);
+    return a * mix * ORNI_SKEW_MAX;
+}
+
+// Throttle-rate → transient skew boost/brake (anti-gravity): the caller feeds
+// the low-pass-filtered throttle slew (1/s). Positive slew (giving gas)
+// front-loads the downstroke (boost); negative slew (cutting gas) front-loads
+// the upstroke (brake). Hard-clamped to the skew envelope; off at 0% mix.
+constexpr float orniThrottleSkewRateShift(float throttleRatePerSec, float rateMixPercent) {
+    const float mix = orniClamp01(rateMixPercent * 0.01f);
+    float s = throttleRatePerSec * ORNI_SKEW_RATE_GAIN * mix;
+    if (s > ORNI_SKEW_MAX) s = ORNI_SKEW_MAX;
+    if (s < ORNI_SKEW_MIN) s = ORNI_SKEW_MIN;
+    return s;
+}
 
 // ─── Flight Profiles (multi-position channel) ──────────────────────
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
@@ -210,6 +239,9 @@ struct FlightProfileParams {
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
     float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
+ 
+    float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
+    float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (anti-gravity)
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

@@ -90,7 +90,9 @@ Zephyrus::Zephyrus()
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
     , _lastAhrsUs(0)
+    , _antiGravityLPF(0.0f)
     , boardRotation(ZEPHYR_BOARD_ROTATION)
+    , antiGravityGain(0.0f)
     , _calibrating(false)
     , _calibCount(0), _calibStable(0)
     , _accelRefRoll(0.0f), _accelRefPitch(0.0f)
@@ -264,6 +266,7 @@ void Zephyrus::begin() {
 //  Public: onLinkUp() — reset integrators when arming
 // ---------------------------------------------------------------------------
 void Zephyrus::onLinkUp() {
+    _antiGravityLPF = 0.0f;
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
     _pidReset(_pidPitch);
@@ -277,6 +280,7 @@ void Zephyrus::onLinkDown() {
     yawCorrection = 0.0f;
     pitchCorrection = 0.0f;
     rudderCorrection = 0.0f;
+    _antiGravityLPF = 0.0f;
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
     _pidReset(_pidPitch);
@@ -657,6 +661,7 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchITerm = 0.0f;
         pitchDTerm = 0.0f;
         pitchErrorRate = 0.0f;
+        _antiGravityLPF = 0.0f;
         return;
     }
 
@@ -755,6 +760,18 @@ void Zephyrus::update(uint32_t nowUs) {
     rudderCorrection = rollCorrection * ZEPHYR_RUDDER_ROLL_GAIN
                      + yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
 #endif
+
+    // Anti-gravity: transient rudder boost/brake on fast attitude change.
+    // Driven by the filtered roll-error rate (≈ negative roll angular rate):
+    // a gust or hard maneuver briefly adds correction authority; the LPF
+    // (τ = ZEPHYR_ANTIGRAVITY_LPF_TAU) decays the kick once motion settles.
+    // Gain 0 = off; the term is hard-clamped to its own envelope.
+    float agAlpha = dt / (ZEPHYR_ANTIGRAVITY_LPF_TAU + dt);
+    _antiGravityLPF += (_pidRoll.lastDerivative - _antiGravityLPF) * agAlpha;
+    float agBoost = _antiGravityLPF * antiGravityGain * 0.01f * ZEPHYR_ANTIGRAVITY_GAIN;
+    if (agBoost > ZEPHYR_ANTIGRAVITY_CLAMP_US) agBoost = ZEPHYR_ANTIGRAVITY_CLAMP_US;
+    if (agBoost < -ZEPHYR_ANTIGRAVITY_CLAMP_US) agBoost = -ZEPHYR_ANTIGRAVITY_CLAMP_US;
+    rudderCorrection += agBoost;
 
     // Clamp to ±200µs
     if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US)

@@ -42,6 +42,8 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     strokeSkew        = p.strokeSkew;
     returnSkew        = p.returnSkew;
     throttleSkewMix   = p.throttleSkewMix;
+    aileronSkewMix      = p.aileronSkewMix;
+    throttleSkewRateMix = p.throttleSkewRateMix;
 }
 
 void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
@@ -51,7 +53,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          float thrFerMix, float thrFreqMix,
                                          float ferShapeMix,
                                          float strokeSkew, float returnSkew,
-                                         float thrSkewMix)
+                                         float thrSkewMix, float ailSkewMix,
+                                         float thrSkewRateMix)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
     FlightProfileParams &p = flightProfiles[idx];
@@ -70,6 +73,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.strokeSkew       = strokeSkew;
     p.returnSkew       = returnSkew;
     p.throttleSkewMix  = thrSkewMix;
+    p.aileronSkewMix      = ailSkewMix;
+    p.throttleSkewRateMix = thrSkewRateMix;
     if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
@@ -103,6 +108,8 @@ Ornithopter::Ornithopter()
   , strokeSkew(ORNI_SKEW_DEFAULT)
   , returnSkew(ORNI_SKEW_DEFAULT)
   , throttleSkewMix(0.0f)
+  , aileronSkewMix(0.0f)
+  , throttleSkewRateMix(0.0f)
   , elevonScale(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
@@ -132,6 +139,8 @@ Ornithopter::Ornithopter()
   , _ssffFerocityUpBias(0.0f), _ssffFerocityDownBias(0.0f)
 #endif
   , _lastUpdateUs(0)
+  , _prevThrottlePct(-1.0f)
+  , _throttleRateLPF(0.0f)
 {
     modelName[0] = '\0';
     for (uint8_t i = 0; i < STK_COUNT; ++i) stickChannels[i] = 992; // center (CRSF neutral)
@@ -151,6 +160,8 @@ Ornithopter::Ornithopter()
 
 void Ornithopter::onLinkUp() {
     linkUp = true;
+    _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale anti-gravity kick
+    _throttleRateLPF = 0.0f;
 #ifdef ZEPHYRUS_ENABLED
     // Reset SSFF state on arm — fresh biases for each flight
     _prevFlappingSin = 0.0f;
@@ -398,15 +409,41 @@ void Ornithopter::_computeServoMixer() {
         // The shift is added to strokeSkew and subtracted from returnSkew, so
         // both wings diverge identically — pitch authority, not roll.
         float throttleSkewShift = orniThrottleSkewShift(throttlePct, throttleSkewMix);
-        float strokeSkewEff = strokeSkew + throttleSkewShift;
-        float returnSkewEff = returnSkew - throttleSkewShift;
+
+        // Throttle-RATE → transient boost/brake (anti-gravity): the low-passed
+        // throttle slew briefly shifts the wave centre the same way as the
+        // static coupling — giving gas front-loads the downstroke (boost),
+        // cutting gas front-loads the upstroke (brake). τ = ORNI_SKEW_RATE_LPF_TAU
+        // decays the kick once the stick rests; the sentinel seeds without kick.
+        float throttleRateBoost = 0.0f;
+        if (_prevThrottlePct < 0.0f) {
+            _prevThrottlePct = throttlePct;
+        } else if (dt > 0.0f) {
+            float throttleRate = (throttlePct - _prevThrottlePct) / dt;
+            _prevThrottlePct = throttlePct;
+            float alpha = dt / (ORNI_SKEW_RATE_LPF_TAU + dt);
+            _throttleRateLPF += (throttleRate - _throttleRateLPF) * alpha;
+            throttleRateBoost = orniThrottleSkewRateShift(_throttleRateLPF, throttleSkewRateMix);
+        }
+
+        float strokeSkewEff = strokeSkew + throttleSkewShift + throttleRateBoost;
+        float returnSkewEff = returnSkew - throttleSkewShift - throttleRateBoost;
+
+        // Aileron → differential skew coupling (roll steering): aileron
+        // front-loads one wing while it late-loads the other — roll torque on
+        // the skew axis, mirror-image twin of the symmetric pitch skew.
+        float aileronSkewShift = orniAileronSkewShift(aileronNorm, aileronSkewMix);
+        float strokeSkewL = strokeSkewEff + aileronSkewShift;
+        float strokeSkewR = strokeSkewEff - aileronSkewShift;
+        float returnSkewL = returnSkewEff + aileronSkewShift;
+        float returnSkewR = returnSkewEff - aileronSkewShift;
 
         float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkewEff, returnSkewEff);
+                                                     strokeSkewL, returnSkewL);
         float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkewEff, returnSkewEff);
+                                                     strokeSkewR, returnSkewR);
 
 #ifdef ZEPHYRUS_ENABLED
         // Resonance — phase-locked lock-in amplifier: accumulate
@@ -437,6 +474,8 @@ void Ornithopter::_computeServoMixer() {
     } else {
         _osc.decay(0.0f);
         _lastUpdateUs = 0;
+        _prevThrottlePct = -1.0f;   // glide: sentinel seeds the next flap tick without kick
+        _throttleRateLPF = 0.0f;
 #ifdef ZEPHYRUS_ENABLED
         // Glide pause: purge half-stroke accumulators so a fresh flap
         // burst starts clean (no stale SSFF biases / resonance charge).

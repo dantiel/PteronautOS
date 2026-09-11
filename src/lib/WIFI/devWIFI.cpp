@@ -726,6 +726,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["pitch_correction"]  = zephyrus.pitchCorrection;
     zeph["rudder_correction"] = zephyrus.rudderCorrection;
     zeph["board_rotation"]    = zephyrus.boardRotation;
+    zeph["anti_gravity_gain"] = (int)zephyrus.antiGravityGain;
 #else
     zeph["enabled"]           = false;
     zeph["calibrated"]        = false;
@@ -782,6 +783,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["stroke_skew"]         = (int)ornithopter.strokeSkew;
     orni["return_skew"]         = (int)ornithopter.returnSkew;
     orni["throttle_skew_mix"]   = (int)ornithopter.throttleSkewMix;
+    orni["aileron_skew_mix"]   = (int)ornithopter.aileronSkewMix;
+    orni["throttle_skew_rate_mix"] = (int)ornithopter.throttleSkewRateMix;
     orni["glide_angle_deg"]     = ornithopter.glideAngleDeg;
     orni["flapping_angle_deg"]  = (int)ornithopter.flappingAngleDeg;
     orni["aileron_scale"]       = (int)ornithopter.aileronScale;
@@ -829,6 +832,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["stroke_skew"]           = (int)ornithopter.flightProfiles[i].strokeSkew;
         p["return_skew"]           = (int)ornithopter.flightProfiles[i].returnSkew;
         p["throttle_skew_mix"]     = (int)ornithopter.flightProfiles[i].throttleSkewMix;
+        p["aileron_skew_mix"]     = (int)ornithopter.flightProfiles[i].aileronSkewMix;
+        p["throttle_skew_rate_mix"] = (int)ornithopter.flightProfiles[i].throttleSkewRateMix;
         p["glide_angle_deg"]       = ornithopter.flightProfiles[i].glideAngleDeg;
         p["flapping_angle_deg"]    = (int)ornithopter.flightProfiles[i].flappingAngleDeg;
         p["aileron_scale"]         = (int)ornithopter.flightProfiles[i].aileronScale;
@@ -912,6 +917,10 @@ static bool SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].returnSkew);
         f.print(",\"throttle_skew_mix\":");
         f.print((int)ornithopter.flightProfiles[i].throttleSkewMix);
+        f.print(",\"aileron_skew_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].aileronSkewMix);
+        f.print(",\"throttle_skew_rate_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].throttleSkewRateMix);
         f.print(",\"glide_angle_deg\":");
         f.print((int)ornithopter.flightProfiles[i].glideAngleDeg);
         f.print(",\"flapping_angle_deg\":");
@@ -1014,6 +1023,18 @@ void LoadOrnithopterConfig()
                 if (mix < 0) mix = 0;
                 if (mix > 100) mix = 100;
                 dst.throttleSkewMix = mix;
+            }
+            if (p["aileron_skew_mix"].is<int>()) {
+                int32_t mix = p["aileron_skew_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.aileronSkewMix = mix;
+            }
+            if (p["throttle_skew_rate_mix"].is<int>()) {
+                int32_t mix = p["throttle_skew_rate_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.throttleSkewRateMix = mix;
             }
             if (p["glide_angle_deg"].is<int>())       dst.glideAngleDeg       = (int8_t)p["glide_angle_deg"].as<int>();
                         if (p["flapping_angle_deg"].is<int>()) {
@@ -1119,6 +1140,10 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.aeroFlapCoeff   = (float)_pteroParamInt(request, "aero_flap_coeff",    (int)ornithopter.aeroFlapCoeff);
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
+    float agGain = (float)_pteroParamInt(request, "anti_gravity_gain", (int)zephyrus.antiGravityGain);
+    if (agGain < 0.0f) agGain = 0.0f;
+    if (agGain > 100.0f) agGain = 100.0f;
+    zephyrus.antiGravityGain = agGain;
 #endif
     // Missing fields in a partial profile save belong to the requested slot,
     // not whichever profile the transmitter happens to have active.
@@ -1150,10 +1175,16 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     float   thrSkewMix = (float)_pteroParamInt(request, "throttle_skew_mix", (int)defaults.throttleSkewMix);
     if (thrSkewMix < 0.0f) thrSkewMix = 0.0f;
     if (thrSkewMix > 100.0f) thrSkewMix = 100.0f;
+    float   ailSkewMix = (float)_pteroParamInt(request, "aileron_skew_mix", (int)defaults.aileronSkewMix);
+    if (ailSkewMix < 0.0f) ailSkewMix = 0.0f;
+    if (ailSkewMix > 100.0f) ailSkewMix = 100.0f;
+    float   thrSkewRateMix = (float)_pteroParamInt(request, "throttle_skew_rate_mix", (int)defaults.throttleSkewRateMix);
+    if (thrSkewRateMix < 0.0f) thrSkewRateMix = 0.0f;
+    if (thrSkewRateMix > 100.0f) thrSkewRateMix = 100.0f;
 
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew, thrSkewMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew, thrSkewMix, ailSkewMix, thrSkewRateMix);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
@@ -1171,7 +1202,9 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.strokeSkew       = stSkew;
         ornithopter.returnSkew       = rtSkew;
         ornithopter.throttleSkewMix  = thrSkewMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew, thrSkewMix);
+        ornithopter.aileronSkewMix      = ailSkewMix;
+        ornithopter.throttleSkewRateMix = thrSkewRateMix;
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrFerMix, thrFreqMix, ferShapeMix, stSkew, rtSkew, thrSkewMix, ailSkewMix, thrSkewRateMix);
     }
 
     // Global mixer params (not per-profile)

@@ -66,7 +66,8 @@ public:
                                 float elevFerMix, float thrFerMix,
                                 float thrFreqMix, float ferShapeMix,
                                 float strokeSkew, float returnSkew,
-                                float thrSkewMix);
+                                float thrSkewMix, float ailSkewMix,
+                                float thrSkewRateMix);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
@@ -91,6 +92,9 @@ public:
     float   strokeSkew;           // -100…+100, downstroke wave-centre shift
     float   returnSkew;           // -100…+100, upstroke wave-centre shift
     float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
+ 
+    float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
+    float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
@@ -148,6 +152,9 @@ public:
 private:
     FlappingOscillator _osc;
     uint32_t _lastUpdateUs;
+ 
+    float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
+    float _throttleRateLPF;   // low-passed throttle slew (1/s) — anti-gravity boost
     uint16_t _f[SF_COUNT];  // servo output indexed by ServoFunc
 
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);

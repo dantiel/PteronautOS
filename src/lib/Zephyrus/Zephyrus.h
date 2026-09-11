@@ -17,6 +17,8 @@ public:
     bool gyroEnabled;       // Runtime disable — when false, no I2C, no MPU, no PID
     bool calibrated;        // True after bias calibration succeeds
     uint8_t boardRotation;  // Runtime board orientation (0-6, see ZephyrusConfig.h)
+ 
+    float antiGravityGain;   // 0–100, 0=off — transient rudder boost on fast attitude change
 
     // AHRS outputs (updated each update() call)
     float rollDeg;          // Roll angle in degrees
@@ -70,6 +72,8 @@ private:
     float _q[4];            // Quaternion [w, x, y, z]
     float _integralFB[3];   // Integral feedback for gyro bias
     uint32_t _lastAhrsUs;   // Previous AHRS update timestamp
+ 
+    float   _antiGravityLPF; // filtered roll-error rate (°/s) for the anti-gravity boost
 
     void _mahonyUpdate(float gx, float gy, float gz,
                        float ax, float ay, float az,

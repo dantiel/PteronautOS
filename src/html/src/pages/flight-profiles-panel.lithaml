@@ -181,6 +181,25 @@
            %input{type: "range", min: "0", max: "100", .value: self.throttleSkewMix, @input: self._onSlider('throttleSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.throttleSkewMix
            %small.label= self._throttleSkewMixLabel()
+ 
+       %tr
+         %td
+           %b= self._t('ornithopter.aileron_skew_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.aileron_skew_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.aileronSkewMix, @input: self._onSlider('aileronSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.aileronSkewMix
+           %small.label= self._aileronSkewMixLabel()
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_skew_rate_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_skew_rate_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.throttleSkewRateMix, @input: self._onSlider('throttleSkewRateMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleSkewRateMix
+           %small.label= self._throttleSkewRateMixLabel()
 
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
 .mui-panel

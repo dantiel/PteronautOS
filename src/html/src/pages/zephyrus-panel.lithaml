@@ -40,6 +40,21 @@
           = opt.label
     %small{style: "color:#888; display:block; margin-top:6px;"}
       = self._t('zephyrus.orientation.hint')
+ 
+
+- if self.gyroEnabled
+  .mui-panel
+    .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.anti_gravity.title')
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('zephyrus.anti_gravity.gain')
+            %br
+            %small{style: "color:#888;"}= self._t('zephyrus.anti_gravity.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.antiGravityGain, @input: self._onAntiGravity, style: "width:200px;"}
+            %span.value= self.antiGravityGain
 
 - if self.gyroEnabled
   .mui-panel
