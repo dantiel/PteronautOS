@@ -154,7 +154,7 @@ private:
     uint32_t _lastUpdateUs;
  
     float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
-    float _throttleRateLPF;   // low-passed throttle slew (1/s) — anti-gravity boost
+    float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost
     uint16_t _f[SF_COUNT];  // servo output indexed by ServoFunc
 
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);

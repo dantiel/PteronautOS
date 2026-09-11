@@ -91,11 +91,11 @@
 #define ZEPHYR_CALIB_STABLE_COUNT 20    // Consecutive stable reads before accepting
 #define ZEPHYR_CALIB_MAX_SAMPLES  500   // Give up after this many samples (timeout safety)
 
-// --- Anti-Gravity: transient rudder boost on fast attitude change ---
-// The Betaflight anti-gravity idea, driven by the disturbance itself: a gust
+// --- Slew Boost: transient rudder boost on fast attitude change ---
+// The slew idea, driven by the disturbance itself: a gust
 // or hard maneuver slews the attitude error; the filtered roll-error rate
 // briefly boosts the rudder correction (boost on disturbance, brake on
 // recovery) and decays with the LPF τ once motion settles. Gain 0 = off.
-#define ZEPHYR_ANTIGRAVITY_GAIN     1.5f   // µs per °/s of filtered roll-error rate at 100%
-#define ZEPHYR_ANTIGRAVITY_CLAMP_US 80     // hard clamp on the boost term (±µs)
-#define ZEPHYR_ANTIGRAVITY_LPF_TAU  0.12f  // transient decay time constant (s)
+#define ZEPHYR_SLEW_GAIN     1.5f   // µs per °/s of filtered roll-error rate at 100%
+#define ZEPHYR_SLEW_CLAMP_US 80     // hard clamp on the boost term (±µs)
+#define ZEPHYR_SLEW_LPF_TAU  0.12f  // transient decay time constant (s)

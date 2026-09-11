@@ -22,7 +22,7 @@ class ZephyrusPanel extends PteroElement
     pitchCorrection:   {state: true}
     rudderCorrection:  {state: true}
     boardRotation:     {state: true}
-    antiGravityGain:   {state: true}
+    slewGain:   {state: true}
     uptimeMs:          {state: true}
     # Roll PID
     rollP:   {state: true}
@@ -55,7 +55,7 @@ class ZephyrusPanel extends PteroElement
   pitchCorrection   = 0
   rudderCorrection  = 0
   boardRotation     = 0
-  antiGravityGain   = 0
+  slewGain   = 0
   uptimeMs          = 0
   # Roll
   rollP   = 30; rollI   = 5; rollD   = 15; rollMax = 40; rollFF  = 70
@@ -81,7 +81,7 @@ class ZephyrusPanel extends PteroElement
     @pitchCorrection   = Fmt.f0 z.pitch_correction
     @rudderCorrection  = Fmt.f0 z.rudder_correction
     @boardRotation     = Fmt.f0 z.board_rotation
-    @antiGravityGain   = Fmt.f0 z.anti_gravity_gain
+    @slewGain   = Fmt.f0 z.slew_gain
     if z.pid?
       p = z.pid
       @rollP = p.roll_p; @rollI = p.roll_i; @rollD = p.roll_d; @rollMax = p.roll_max; @rollFF = p.roll_ff
@@ -104,11 +104,11 @@ class ZephyrusPanel extends PteroElement
     {ok} = await API.setOrientation rot
     @boardRotation = rot if ok
 
-  # Anti-gravity gain — sent live to /pteronautos/config on every input
-  _onAntiGravity: (evt) ->
+  # Slew gain — sent live to /pteronautos/config on every input
+  _onSlew: (evt) ->
     v = parseInt(evt.target.value) || 0
-    @antiGravityGain = v
-    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "anti_gravity_gain=#{v}"}
+    @slewGain = v
+    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "slew_gain=#{v}"}
 
   render: -> renderFn(this)
 

@@ -726,7 +726,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["pitch_correction"]  = zephyrus.pitchCorrection;
     zeph["rudder_correction"] = zephyrus.rudderCorrection;
     zeph["board_rotation"]    = zephyrus.boardRotation;
-    zeph["anti_gravity_gain"] = (int)zephyrus.antiGravityGain;
+    zeph["slew_gain"] = (int)zephyrus.slewGain;
 #else
     zeph["enabled"]           = false;
     zeph["calibrated"]        = false;
@@ -1140,10 +1140,10 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.aeroFlapCoeff   = (float)_pteroParamInt(request, "aero_flap_coeff",    (int)ornithopter.aeroFlapCoeff);
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
-    float agGain = (float)_pteroParamInt(request, "anti_gravity_gain", (int)zephyrus.antiGravityGain);
-    if (agGain < 0.0f) agGain = 0.0f;
-    if (agGain > 100.0f) agGain = 100.0f;
-    zephyrus.antiGravityGain = agGain;
+    float slewGain = (float)_pteroParamInt(request, "slew_gain", (int)zephyrus.slewGain);
+    if (slewGain < 0.0f) slewGain = 0.0f;
+    if (slewGain > 100.0f) slewGain = 100.0f;
+    zephyrus.slewGain = slewGain;
 #endif
     // Missing fields in a partial profile save belong to the requested slot,
     // not whichever profile the transmitter happens to have active.

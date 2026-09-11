@@ -65,7 +65,7 @@ int main()
     expectNear(orniAileronSkewShift(2.0f, 100.0f), 100.0f);
     expectNear(orniAileronSkewShift(-2.0f, 100.0f), -100.0f);
 
-    // Throttle-rate → transient skew boost/brake (anti-gravity): positive
+    // Throttle-rate → transient skew boost/brake (slew): positive
     // throttle slew front-loads the downstroke (boost), negative slew
     // front-loads the upstroke (brake). A full stick slam (~5/s) at 100%
     // mix hits ±50; the term clamps to the skew envelope and is off at 0%.

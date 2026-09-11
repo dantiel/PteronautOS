@@ -160,7 +160,7 @@ Ornithopter::Ornithopter()
 
 void Ornithopter::onLinkUp() {
     linkUp = true;
-    _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale anti-gravity kick
+    _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale slew kick
     _throttleRateLPF = 0.0f;
 #ifdef ZEPHYRUS_ENABLED
     // Reset SSFF state on arm — fresh biases for each flight
@@ -410,7 +410,7 @@ void Ornithopter::_computeServoMixer() {
         // both wings diverge identically — pitch authority, not roll.
         float throttleSkewShift = orniThrottleSkewShift(throttlePct, throttleSkewMix);
 
-        // Throttle-RATE → transient boost/brake (anti-gravity): the low-passed
+        // Throttle-RATE → transient boost/brake (slew): the low-passed
         // throttle slew briefly shifts the wave centre the same way as the
         // static coupling — giving gas front-loads the downstroke (boost),
         // cutting gas front-loads the upstroke (brake). τ = ORNI_SKEW_RATE_LPF_TAU

@@ -189,11 +189,11 @@ constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
     return signedThrottle * mix * ORNI_SKEW_MAX;    // ±(0…100)
 }
  
-// Throttle-rate transient (anti-gravity): gain and LPF time constant for the
+// Throttle-rate transient (slew): gain and LPF time constant for the
 // throttle slew → skew boost/brake. A full stick slam (≈5/s) at 100% mix
 // yields ±50 skew units; the LPF τ decays the kick once the stick rests.
 #define ORNI_SKEW_RATE_GAIN     10.0f   // skew units per 1/s throttle rate at 100% mix
-#define ORNI_SKEW_RATE_LPF_TAU  0.10f   // s — anti-gravity transient decay
+#define ORNI_SKEW_RATE_LPF_TAU  0.10f   // s — slew transient decay
 
 // Aileron → differential skew coupling (roll steering): aileron front-loads
 // one wing while it late-loads the other — roll torque on the skew axis,
@@ -206,7 +206,7 @@ constexpr float orniAileronSkewShift(float aileronNorm, float couplingPercent) {
     return a * mix * ORNI_SKEW_MAX;
 }
 
-// Throttle-rate → transient skew boost/brake (anti-gravity): the caller feeds
+// Throttle-rate → transient skew boost/brake (slew): the caller feeds
 // the low-pass-filtered throttle slew (1/s). Positive slew (giving gas)
 // front-loads the downstroke (boost); negative slew (cutting gas) front-loads
 // the upstroke (brake). Hard-clamped to the skew envelope; off at 0% mix.
@@ -241,7 +241,7 @@ struct FlightProfileParams {
     float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
-    float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (anti-gravity)
+    float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────
