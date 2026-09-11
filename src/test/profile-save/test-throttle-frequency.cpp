@@ -77,6 +77,13 @@ int main()
     expectNear(orniThrottleSkewRateShift(50.0f, 100.0f), 100.0f);
     expectNear(orniThrottleSkewRateShift(-50.0f, 100.0f), -100.0f);
     expectNear(orniThrottleSkewRateShift(5.0f, 150.0f), 50.0f);
+    expectNear(orniAileronSkewRateShift(5.0f, 100.0f), 50.0f);
+    expectNear(orniAileronSkewRateShift(-5.0f, 100.0f), -50.0f);
+    expectNear(orniAileronSkewRateShift(0.0f, 100.0f), 0.0f);
+    expectNear(orniAileronSkewRateShift(5.0f, 50.0f), 25.0f);
+    expectNear(orniAileronSkewRateShift(5.0f, 0.0f), 0.0f);
+    expectNear(orniAileronSkewRateShift(50.0f, 100.0f), 100.0f);
+    expectNear(orniAileronSkewRateShift(-50.0f, 100.0f), -100.0f);
 
     // Mirror-image aileron skew makes the two wings diverge mid-downstroke:
     // the LEFT wing (skew +50) and RIGHT wing (skew −50) must not produce
@@ -88,6 +95,6 @@ int main()
         assert(std::fabs(pulseL - pulseR) > 0.0001f);
     }
 
-    std::cout << "Waveform coupling control laws passed (frequency, skew, aileron-skew, skew-rate)\n";
+    std::cout << "Waveform coupling control laws passed (frequency, skew, aileron-skew, skew-rate, aileron-skew-rate)\n";
     return 0;
 }

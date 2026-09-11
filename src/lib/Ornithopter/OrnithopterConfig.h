@@ -218,6 +218,19 @@ constexpr float orniThrottleSkewRateShift(float throttleRatePerSec, float rateMi
     return s;
 }
 
+// Aileron-rate → transient differential skew boost/brake (slew): the
+// low-passed aileron slew (1/s) briefly front-loads one wing / late-loads
+// the other — a roll-torque kick on stick movement. Positive rate (rolling
+// right) boosts the same direction as the static aileron skew. Hard-clamped
+// to the skew envelope; off at 0% mix.
+constexpr float orniAileronSkewRateShift(float aileronRatePerSec, float rateMixPercent) {
+    const float mix = orniClamp01(rateMixPercent * 0.01f);
+    float s = aileronRatePerSec * ORNI_SKEW_RATE_GAIN * mix;
+    if (s > ORNI_SKEW_MAX) s = ORNI_SKEW_MAX;
+    if (s < ORNI_SKEW_MIN) s = ORNI_SKEW_MIN;
+    return s;
+}
+
 // ─── Flight Profiles (multi-position channel) ──────────────────────
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
 // Kernel (MixerProfile / servo geometry) is NOT per-profile — it stays fixed.
@@ -242,6 +255,7 @@ struct FlightProfileParams {
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)
+    float   aileronSkewRateMix; // 0–100, aileron-rate → transient differential skew boost/brake (slew)
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────
