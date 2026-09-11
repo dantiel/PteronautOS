@@ -883,5 +883,17 @@
   "yo_title": "YOSHIMITSU — Référence de l'API",
   "yo_trouble_li1_markdown": "`YOSHIMITSU targets ESP32-S3 or RP2040 only` — votre carte n'est ni l'une ni l'autre ; vérifiez **Outils → Type de carte** ou définissez `BOARD_CUSTOM`.",
   "yo_trouble_li2_markdown": "Une commande répond *« le trône est gardé »* — c'est une commande d'administration ; tapez d'abord `極光`.",
-  "yo_trouble_li3_markdown": "esptool expire en MEDITATION — confirmez que les broches UART du pont (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) correspondent à votre câblage."
+  "yo_trouble_li3_markdown": "esptool expire en MEDITATION — confirmez que les broches UART du pont (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) correspondent à votre câblage.",
+  "doc_throttle_skew_p": "Le couplage throttle→skew oriente le vecteur de poussée entre les demi-battements. Pleins gaz front-loadent la descente (puissance), ralenti front-loade la montée (récupération). Le décalage s'ajoute au skew de descente et se soustrait du skew de montée — les deux ailes divergent à l'identique : autorité de tangage, pas de roulis. Zéro à mi-gaz, ±mix aux extrêmes ; le centre se décale pareil dans chaque sens du manche.",
+  "doc_aileron_skew_p": "Le couplage aileron→skew front-loade une aile tout en retardant l'autre — couple de roulis sur l'axe du skew, jumeau miroir du skew de throttle. Manche à gauche ajoute du skew à l'aile gauche et l'ôte à droite ; manche à droite fait l'inverse. À utiliser avec, ou à la place du, différentiel d'amplitude du gouvernail.",
+  "doc_slew_p": "Le slew est un boost ou frein transitoire sur la vitesse de variation d'un manche. Donner des gaz front-loade brièvement la descente, couper les gaz front-loade brièvement la montée ; la vitesse filtrée passe-bas (τ = 0,10 s) injecte l'impulsion, qui retombe une fois le manche stabilisé. Deux couplages miroirs : slew de throttle-rate (symétrique, tangage) et slew d'aileron-rate (différentiel, roulis).",
+  "doc_zephyr_slew_p": "Le slew gain du Zephyrus applique la même idée transitoire au gouvernail : un changement rapide d'assiette amplifie brièvement la correction du gouvernail (µs), filtrée passe-bas (τ = 0,12 s) et bornée à ±80 µs. Il aiguise la réponse aux changements rapides d'assiette sans hausser le gain statique.",
+  "doc_steering_label": "Pilotage & slew",
+  "doc_wave_throttle": "Gaz",
+  "doc_wave_aileron": "Aileron",
+  "doc_wave_throttle_skew_mix": "Mix throttle→skew",
+  "doc_wave_aileron_skew_mix": "Mix aileron→skew",
+  "doc_wave_slew": "Slew (vitesse)",
+  "doc_legend_wing_l": "Aile gauche",
+  "doc_legend_wing_r": "Aile droite"
 }

@@ -883,5 +883,17 @@
   "yo_title": "YOSHIMITSU — API-Referenz",
   "yo_trouble_li1_markdown": "`YOSHIMITSU targets ESP32-S3 or RP2040 only` — dein Board ist keines von beiden; prüfe **Werkzeuge → Board** oder definiere `BOARD_CUSTOM`.",
   "yo_trouble_li2_markdown": "Ein Befehl antwortet *„der Thron ist bewacht“* — das ist ein Administratorbefehl; tippe zuerst `極光`.",
-  "yo_trouble_li3_markdown": "esptool läuft in MEDITATION in einen Timeout — prüfe, ob die Bridge-UART-Pins (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) zu deiner Verdrahtung passen."
+  "yo_trouble_li3_markdown": "esptool läuft in MEDITATION in einen Timeout — prüfe, ob die Bridge-UART-Pins (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) zu deiner Verdrahtung passen.",
+  "doc_throttle_skew_p": "Die Throttle→Skew-Kopplung lenkt den Schubvektor zwischen den Halbschlägen. Vollgas frontloadet den Abschlag (Kraft), Leerlauf den Aufschlag (Erholung). Der Shift addiert sich zum Abschlag-Skew und subtrahiert sich vom Aufschlag-Skew — beide Flügel divergieren identisch: Pitch-Autorität, kein Roll. Null bei Mittelgas, ±Mix an den Extremen; das Zentrum verschiebt sich in jede Stick-Richtung gleich.",
+  "doc_aileron_skew_p": "Die Aileron→Skew-Kopplung frontloadet den einen Flügel, während sie den anderen spät belastet — Roll-Drehmoment auf der Skew-Achse, der Spiegelzwilling des Throttle-Skew. Stick links addiert Skew am linken Flügel und entfernt ihn rechts; Stick rechts umgekehrt. Nutzbar neben oder statt des Ruder-Amplituden-Differentials.",
+  "doc_slew_p": "Slew ist ein transienter Boost oder Bremse auf die Änderungsrate eines Sticks. Gas geben frontloadet kurz den Abschlag, Gas wegnehmen kurz den Aufschlag; die tiefpassgefilterte Rate (τ = 0,10 s) setzt den Kick, der abklingt, sobald der Stick ruht. Zwei Spiegelkopplungen: Throttle-Rate-Slew (symmetrisch, Pitch) und Aileron-Rate-Slew (differentiell, Roll).",
+  "doc_zephyr_slew_p": "Der Zephyrus-Slew-Gain überträgt dasselbe transiente Prinzip aufs Ruder: Eine schnelle Lageänderung verstärkt kurz die Ruderkorrektur (µs), tiefpassgefiltert (τ = 0,12 s) und hart auf ±80 µs begrenzt. Er schärft die Antwort auf schnelle Lageänderungen ohne statischen Gain zu erhöhen.",
+  "doc_steering_label": "Fluglenkung & Slew",
+  "doc_wave_throttle": "Throttle",
+  "doc_wave_aileron": "Aileron",
+  "doc_wave_throttle_skew_mix": "Throttle→Skew-Mix",
+  "doc_wave_aileron_skew_mix": "Aileron→Skew-Mix",
+  "doc_wave_slew": "Slew (Rate)",
+  "doc_legend_wing_l": "Linker Flügel",
+  "doc_legend_wing_r": "Rechter Flügel"
 }

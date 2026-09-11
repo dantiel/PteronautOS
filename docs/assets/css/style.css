@@ -58,6 +58,7 @@ html {
   --wave-up: #b8dd8a;
   --wave-direct: #dfa776;
   --wave-grid: rgba(255, 255, 255, 0.16);
+  --wave-wing-r: #f0a0c8;
 }
 
 @media (prefers-color-scheme: light) {
@@ -78,6 +79,7 @@ html {
     --wave-up: #497c18;
     --wave-direct: #a45116;
     --wave-grid: rgba(0, 0, 0, 0.18);
+    --wave-wing-r: #a04068;
   }
 }
 * {
@@ -1343,6 +1345,16 @@ footer .lang-switch {
   transform: translateY(1px) scaleY(0.9);
 }
 
+.waveform-controls .waveform-subgroup {
+  flex-basis: 100%;
+  margin: 0.5rem 0 0;
+  color: var(--mut);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
 .waveform-presets {
   font-family: "Turret Road Mono", monospace;
   display: flex;
@@ -1419,6 +1431,9 @@ footer .lang-switch {
 .waveform-legend i.direct {
   background: var(--wave-direct);
 }
+.waveform-legend i.wing-right {
+  background: var(--wave-wing-r);
+}
 .waveform-legend i.boundary {
   height: 1px;
   border-top: 1px dashed var(--text);
@@ -1463,6 +1478,11 @@ footer .lang-switch {
   stroke-width: 1;
   stroke-dasharray: 3 4;
   opacity: 0.65;
+}
+.waveform-line.wing-right {
+  stroke: var(--wave-wing-r);
+  stroke-width: 1.8;
+  stroke-dasharray: 7 4;
 }
 
 .waveform-caution {

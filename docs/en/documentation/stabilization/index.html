@@ -137,6 +137,10 @@
 <p>Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.</p>
 <p>The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.</p>
 <p>Stroke and return skew (±100) shift the centre of each half-stroke along its own start-to-end axis — the same per-half mirroring as ferocity. Positive front-loads the stroke: the wing reaches peak velocity sooner, augmenting thrust. Negative shifts it late: the stroke spends its motion at the end, diminishing thrust. The warp is monotonic and end-point-preserving, so it is exactly an asymmetric square↔triangle mix, never a position jump.</p>
+<p>The throttle→skew coupling steers the thrust vector between the half-strokes. Full throttle front-loads the downstroke (power), idle front-loads the upstroke (recovery). The shift adds to the stroke skew and subtracts from the return skew, so both wings diverge identically — pitch authority, not roll. Zero at mid-throttle, ±mix at the extremes; the centre shifts the same way whichever direction the stick moves.</p>
+<p>The aileron→skew coupling front-loads one wing while late-loading the other — roll torque on the skew axis, the mirror twin of the throttle skew. Stick left adds skew to the left wing and removes it from the right; stick right does the opposite. Use it alongside, or instead of, rudder amplitude differential.</p>
+<p>Slew is a transient boost or brake on the rate of a stick. Giving gas briefly front-loads the downstroke, cutting gas briefly front-loads the upstroke; the low-passed rate (τ = 0.10 s) injects the kick, which then decays once the stick rests. Two mirror couplings: throttle-rate slew (symmetric, pitch) and aileron-rate slew (differential, roll).</p>
+<p>Zephyrus slew gain applies the same transient idea to the rudder: a fast attitude change briefly boosts the rudder correction (µs), low-passed (τ = 0.12 s) and hard-clamped to ±80 µs. It sharpens the response to quick attitude changes without raising static gain.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Beat-cycle phase' data-i18n-axis-half='Local half-stroke phase' data-i18n-axis-wing='Wing position' data-i18n-lock-oppose='Oppose: Sliders complementary (sum=8) (click to cycle)' data-i18n-lock-sync='Sync: Both sliders move together (click to cycle)' data-i18n-lock-unlocked='Unlocked (click to cycle)' data-i18n-metric='Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -174,6 +178,32 @@
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
+<h4 class='waveform-subgroup'>Flight steering &amp; slew</h4>
+<label for='st-wave-throttle'>
+<span>Throttle</span>
+<output data-value='throttle' for='st-wave-throttle'>100%</output>
+<input data-control='throttle' id='st-wave-throttle' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<label for='st-wave-aileron'>
+<span>Aileron</span>
+<output data-value='aileron' for='st-wave-aileron'>0</output>
+<input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-throttle-skew-mix'>
+<span>Throttle→skew mix</span>
+<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
+<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-aileron-skew-mix'>
+<span>Aileron→skew mix</span>
+<output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
+<input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-slew'>
+<span>Slew (rate)</span>
+<output data-value='slew' for='st-wave-slew'>0</output>
+<input data-control='slew' id='st-wave-slew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Waveform examples' class='waveform-presets'>
 <button data-preset='8,0,100,0,0' type='button'>Extreme 8 / 0</button>
@@ -199,6 +229,14 @@ Exact direct reference
 <i class='boundary'></i>
 Reversal
 </span>
+<span>
+<i class='wing-left'></i>
+Left wing
+</span>
+<span>
+<i class='wing-right'></i>
+Right wing
+</span>
 </div>
 <svg aria-label='Wing position over the complete beat cycle' data-chart='cycle' role='img'></svg>
 </div>
@@ -216,6 +254,14 @@ Up half, direction aligned
 <span>
 <i class='direct'></i>
 Exact diagonal
+</span>
+<span>
+<i class='wing-left'></i>
+Left wing
+</span>
+<span>
+<i class='wing-right'></i>
+Right wing
 </span>
 </div>
 <svg aria-label='Normalized downstroke and upstroke shapes' data-chart='halves' role='img'></svg>

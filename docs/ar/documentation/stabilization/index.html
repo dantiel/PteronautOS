@@ -137,6 +137,10 @@
 <p>تتحكم الشراسة في كل من طابع وتوقيت نصف الضربة. داخليًا، يتطابق إعداد WebUI من 0–100 مع 0–8. الشراسة الأعلى للهبوط تقصّر حصة الهبوط من الدورة؛ والشراسة الأعلى للعودة تقصّر حصة العودة. يُنقل الوقت المتبقي إلى النصف المقابل — لا يوجد توقف عند الصفر.</p>
 <p>يختار تحكم شكل الشراسة لكل ملف تعريف طابع الشراسة العالية. عند 0% يفضّل شكلًا نهائيًا مسطحًا/مربعًا. وعند 100% يفضّل مسارًا هرميًا مدوّرًا. لا يزال كل نصف يستخدم شراسته الخاصة، فيبقى النصف منخفض الشراسة ممدودًا وجيبيًا بينما يقترب النصف مرتفع الشراسة من عبور قطري مباشر.</p>
 <p>يُزيح انحراف الهبوط والصعود (±100) مركز كل نصف ضربة على طول محوره من البداية إلى النهاية — وهو نفس التماثل لكل نصف ضربة كما في الشراسة. القيمة الموجبة تُحمّل الضربة من الأمام: يبلغ الجناح ذروة السرعة أبكر فيزداد الدفع. السالبة تُؤخّرها: تنفق الضربة حركتها في النهاية فيقل الدفع. الالتواء رتيب ويحافظ على الطرفين، لذا فهو تمامًا مزيج غير متماثل مربع↔مثلث، وليس قفزة موضع أبدًا.</p>
+<p>اقتران الخانق→skew يوجّه متجه الدفع بين نصفي الضربة. الخانق الكامل يقدّم ضربة الهبوط (قوة)، والتباطؤ يقدّم ضربة الصعود (استرجاع). يُضاف الإزاحة إلى skew الهبوط ويُطرح من skew الصعود — الجناحان يتباعدان بشكل متطابق: تحكم بالانحدار لا بالدوران. صفر عند منتصف الخانق، ±mix عند الطرفين؛ ينزاح المركز بالطريقة نفسها مهما كان اتجاه العصا.</p>
+<p>اقتران الجنيح→skew يقدّم أحد الجناحين ويؤخّر الآخر — عزم دوران على محور skew، التوأم المرآتي لـ skew الخانق. العصا يساراً تضيف skew للجناح الأيسر وتزيله من الأيمن؛ ويميناً العكس. يُستخدم مع أو بدل تفاضل سعة الدفة.</p>
+<p>Slew هو دفع أو كبح عابر لمعدل تغيّر العصا. زيادة الغاز تقدّم ضربة الهبوط وجيزاً، وخفضه يقدّم ضربة الصعود وجيزاً؛ المعدل المفلتر تمريراً منخفضاً (τ = 0.10 ث) يحقن النبضة التي تتلاشى عند استقرار العصا. اقترانان مرآتيان: slew معدل الخانق (متماثل، انحدار) و slew معدل الجنيح (تفاضلي، دوران).</p>
+<p>يطبّق slew gain في Zephyrus الفكرة العابرة نفسها على الدفة: تغيّر سريع في الوضع يعزّز تصحيح الدفة وجيزاً (µs)، بفلترة تمرير منخفض (τ = 0.12 ث) وتقييد صارم عند ±80 µs. يشحذ الاستجابة لتغيّرات الوضع السريعة دون رفع الكسب الثابت.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='طور دورة الخفق' data-i18n-axis-half='طور نصف الضربة المحلي' data-i18n-axis-wing='موضع الجناح' data-i18n-lock-oppose='تقابل: المنزلِقان متكاملان (المجموع=8) (انقر للتبديل)' data-i18n-lock-sync='مزامنة: يتحرك المنزلِقان معًا (انقر للتبديل)' data-i18n-lock-unlocked='غير مقفول (انقر للتبديل)' data-i18n-metric='توزيع الوقت: هبوط {down}% · صعود {up}% · نسبة سرعة الطور القصوى {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -174,6 +178,32 @@
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
+<h4 class='waveform-subgroup'>توجيه الطيران و slew</h4>
+<label for='st-wave-throttle'>
+<span>الخانق</span>
+<output data-value='throttle' for='st-wave-throttle'>100%</output>
+<input data-control='throttle' id='st-wave-throttle' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<label for='st-wave-aileron'>
+<span>الجنيح</span>
+<output data-value='aileron' for='st-wave-aileron'>0</output>
+<input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-throttle-skew-mix'>
+<span>مزج الخانق→skew</span>
+<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
+<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-aileron-skew-mix'>
+<span>مزج الجنيح→skew</span>
+<output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
+<input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-slew'>
+<span>Slew (المعدل)</span>
+<output data-value='slew' for='st-wave-slew'>0</output>
+<input data-control='slew' id='st-wave-slew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='أمثلة شكل الموجة' class='waveform-presets'>
 <button data-preset='8,0,100,0,0' type='button'>أقصى 8 / 0</button>
@@ -199,6 +229,14 @@
 <i class='boundary'></i>
 الانعكاس
 </span>
+<span>
+<i class='wing-left'></i>
+الجناح الأيسر
+</span>
+<span>
+<i class='wing-right'></i>
+الجناح الأيمن
+</span>
 </div>
 <svg aria-label='موضع الجناح عبر دورة الخفق الكاملة' data-chart='cycle' role='img'></svg>
 </div>
@@ -216,6 +254,14 @@
 <span>
 <i class='direct'></i>
 القطر الدقيق
+</span>
+<span>
+<i class='wing-left'></i>
+الجناح الأيسر
+</span>
+<span>
+<i class='wing-right'></i>
+الجناح الأيمن
 </span>
 </div>
 <svg aria-label='أشكال الهبوط والصعود المُطبَّعة' data-chart='halves' role='img'></svg>

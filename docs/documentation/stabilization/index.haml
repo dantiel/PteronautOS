@@ -151,6 +151,10 @@
         %p!= doc_wave_p1
         %p!= doc_wave_p2
         %p!= doc_skew_p
+        %p!= doc_throttle_skew_p
+        %p!= doc_aileron_skew_p
+        %p!= doc_slew_p
+        %p!= doc_zephyr_slew_p
 
         .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
           .waveform-controls
@@ -181,6 +185,27 @@
               %span!= doc_wave_up_skew
               %output{"data-value": "skewUp", for: "st-wave-up-skew"} 0
               %input#st-wave-up-skew{"data-control": "skewUp", type: "range", min: "-100", max: "100", step: "1", value: "0"}
+            %h4.waveform-subgroup!= doc_steering_label
+            %label{for: "st-wave-throttle"}
+              %span!= doc_wave_throttle
+              %output{"data-value": "throttle", for: "st-wave-throttle"} 100%
+              %input#st-wave-throttle{"data-control": "throttle", type: "range", min: "0", max: "100", step: "1", value: "100"}
+            %label{for: "st-wave-aileron"}
+              %span!= doc_wave_aileron
+              %output{"data-value": "aileron", for: "st-wave-aileron"} 0
+              %input#st-wave-aileron{"data-control": "aileron", type: "range", min: "-100", max: "100", step: "1", value: "0"}
+            %label{for: "st-wave-throttle-skew-mix"}
+              %span!= doc_wave_throttle_skew_mix
+              %output{"data-value": "throttleSkewMix", for: "st-wave-throttle-skew-mix"} 0%
+              %input#st-wave-throttle-skew-mix{"data-control": "throttleSkewMix", type: "range", min: "0", max: "100", step: "1", value: "0"}
+            %label{for: "st-wave-aileron-skew-mix"}
+              %span!= doc_wave_aileron_skew_mix
+              %output{"data-value": "aileronSkewMix", for: "st-wave-aileron-skew-mix"} 0%
+              %input#st-wave-aileron-skew-mix{"data-control": "aileronSkewMix", type: "range", min: "0", max: "100", step: "1", value: "0"}
+            %label{for: "st-wave-slew"}
+              %span!= doc_wave_slew
+              %output{"data-value": "slew", for: "st-wave-slew"} 0
+              %input#st-wave-slew{"data-control": "slew", type: "range", min: "-100", max: "100", step: "1", value: "0"}
           .waveform-presets{"aria-label": doc_presets_label}
             %button{type: "button", "data-preset": "8,0,100,0,0"}!= doc_preset_extreme
             %button{type: "button", "data-preset": "7,1,100,0,0"}!= doc_preset_near
@@ -201,6 +226,12 @@
               %span
                 %i.boundary
                 != doc_legend_reversal
+              %span
+                %i.wing-left
+                != doc_legend_wing_l
+              %span
+                %i.wing-right
+                != doc_legend_wing_r
             %svg{"data-chart": "cycle", role: "img", "aria-label": doc_chart_aria_cycle}
           .waveform-chart
             %h3!= doc_chart_halves
@@ -214,6 +245,12 @@
               %span
                 %i.direct
                 != doc_legend_diagonal
+              %span
+                %i.wing-left
+                != doc_legend_wing_l
+              %span
+                %i.wing-right
+                != doc_legend_wing_r
             %svg{"data-chart": "halves", role: "img", "aria-label": doc_chart_aria_halves}
         %aside.waveform-caution
           %strong!= doc_caution_title

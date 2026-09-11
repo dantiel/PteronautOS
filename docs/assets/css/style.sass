@@ -41,6 +41,7 @@ html
   --wave-up: #b8dd8a
   --wave-direct: #dfa776
   --wave-grid: rgba(255, 255, 255, 0.16)
+  --wave-wing-r: #f0a0c8
 
 // ── Light theme ───────────────────────────────────────────────
 @media (prefers-color-scheme: light)
@@ -61,6 +62,7 @@ html
     --wave-up: #497c18
     --wave-direct: #a45116
     --wave-grid: rgba(0, 0, 0, 0.18)
+    --wave-wing-r: #a04068
 
 // ── Base ──────────────────────────────────────────────────────
 *
@@ -1299,6 +1301,15 @@ footer .lang-switch
       &.active svg.lock-icon .shackle
         transform: translateY(1px) scaleY(0.9)
 
+.waveform-controls .waveform-subgroup
+  flex-basis: 100%
+  margin: .5rem 0 0
+  color: var(--mut)
+  font-size: .7rem
+  letter-spacing: .16em
+  text-transform: uppercase
+  font-weight: 500
+
 .waveform-presets
   font-family: $turret-mono
   display: flex
@@ -1373,6 +1384,9 @@ footer .lang-switch
     &.direct
       background: var(--wave-direct)
 
+    &.wing-right
+      background: var(--wave-wing-r)
+
     &.boundary
       height: 1px
       border-top: 1px dashed var(--text)
@@ -1415,6 +1429,11 @@ footer .lang-switch
     stroke-width: 1
     stroke-dasharray: 3 4
     opacity: .65
+
+  &.wing-right
+    stroke: var(--wave-wing-r)
+    stroke-width: 1.8
+    stroke-dasharray: 7 4
 
 .waveform-caution
   margin: 1.5rem 0 2rem

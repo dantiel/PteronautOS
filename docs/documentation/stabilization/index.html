@@ -137,6 +137,10 @@
 <p>A ferocidade controla tanto o carácter como o tempo de meio-batimento. Internamente, o valor 0–100 da WebUI mapeia para 0–8. Maior ferocidade de descida encurta a fracção do ciclo da descida; maior ferocidade de retorno encurta a fracção do retorno. O tempo restante é transferido para a metade oposta — não há pausa em zero.</p>
 <p>O controlo Forma da Ferocidade por perfil selecciona o carácter de alta ferocidade. A 0% favorece uma forma finita de patamar/quadrada. A 100% favorece um percurso piramidal arredondado. Cada metade continua a usar a sua própria ferocidade, pelo que uma metade de baixa ferocidade permanece alongada e sinusoidal, enquanto uma metade de alta ferocidade se aproxima de uma travessia diagonal directa.</p>
 <p>A inclinação de descida e de subida (±100) desloca o centro de cada meio-batimento ao longo do seu próprio eixo início–fim — o mesmo espelhamento por meio-batimento da ferocidade. Positivo antecipa o batimento: a asa atinge a velocidade máxima mais cedo, aumentando o impulso. Negativo desloca-o para o fim: o batimento gasta o seu movimento no final, diminuindo o impulso. A deformação é monótona e preserva os extremos, sendo exatamente uma mistura assimétrica quadrado↔triângulo, nunca um salto de posição.</p>
+<p>O acoplamento throttle→skew direciona o vetor de empuxo entre os meios-batimentos. Aceleração total front-loada a descida (potência), marcha lenta front-loada a subida (recuperação). O deslocamento soma-se ao skew da descida e subtrai-se do skew da subida — ambas as asas divergem de forma idêntica: autoridade de pitch, não de roll. Zero a meio-acelerador, ±mix nos extremos; o centro desloca-se da mesma forma em qualquer direção do stick.</p>
+<p>O acoplamento aileron→skew front-loada uma asa enquanto atrasa a outra — torque de roll no eixo do skew, o gémeo espelho do skew de throttle. Stick à esquerda soma skew na asa esquerda e remove-o na direita; stick à direita faz o oposto. Usar junto ou em vez do diferencial de amplitude do leme.</p>
+<p>Slew é um boost ou travão transitório sobre a taxa de variação de um stick. Acelerar front-loada brevemente a descida, cortar gás front-loada brevemente a subida; a taxa passa-baixo (τ = 0,10 s) injeta o impulso, que depois decai quando o stick assenta. Dois acoplamentos espelho: slew de throttle-rate (simétrico, pitch) e slew de aileron-rate (diferencial, roll).</p>
+<p>O slew gain do Zephyrus aplica a mesma ideia transitória ao leme: uma mudança rápida de atitude amplia brevemente a correção do leme (µs), passa-baixo (τ = 0,12 s) e limitada a ±80 µs. Aguça a resposta a mudanças rápidas de atitude sem aumentar o ganho estático.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Fase do ciclo de batimento' data-i18n-axis-half='Fase local de meio-batimento' data-i18n-axis-wing='Posição da asa' data-i18n-lock-oppose='Opor: sliders complementares (soma=8) (clique para alternar)' data-i18n-lock-sync='Sincronizar: ambos os sliders movem-se juntos (clique para alternar)' data-i18n-lock-unlocked='Desbloqueado (clique para alternar)' data-i18n-metric='Alocação de tempo: descida {down}% · subida {up}% · razão de velocidade de fase de pico {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -174,6 +178,32 @@
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
+<h4 class='waveform-subgroup'>Direção de voo &amp; slew</h4>
+<label for='st-wave-throttle'>
+<span>Acelerador</span>
+<output data-value='throttle' for='st-wave-throttle'>100%</output>
+<input data-control='throttle' id='st-wave-throttle' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<label for='st-wave-aileron'>
+<span>Aileron</span>
+<output data-value='aileron' for='st-wave-aileron'>0</output>
+<input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-throttle-skew-mix'>
+<span>Mistura throttle→skew</span>
+<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
+<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-aileron-skew-mix'>
+<span>Mistura aileron→skew</span>
+<output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
+<input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-slew'>
+<span>Slew (taxa)</span>
+<output data-value='slew' for='st-wave-slew'>0</output>
+<input data-control='slew' id='st-wave-slew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='Exemplos de forma de onda' class='waveform-presets'>
 <button data-preset='8,0,100,0,0' type='button'>Extremo 8 / 0</button>
@@ -199,6 +229,14 @@ Referência directa exacta
 <i class='boundary'></i>
 Inversão
 </span>
+<span>
+<i class='wing-left'></i>
+Asa esquerda
+</span>
+<span>
+<i class='wing-right'></i>
+Asa direita
+</span>
 </div>
 <svg aria-label='Posição da asa ao longo do ciclo de batimento completo' data-chart='cycle' role='img'></svg>
 </div>
@@ -216,6 +254,14 @@ Metade de subida, direcção alinhada
 <span>
 <i class='direct'></i>
 Diagonal exacta
+</span>
+<span>
+<i class='wing-left'></i>
+Asa esquerda
+</span>
+<span>
+<i class='wing-right'></i>
+Asa direita
 </span>
 </div>
 <svg aria-label='Formas normalizadas de descida e subida' data-chart='halves' role='img'></svg>

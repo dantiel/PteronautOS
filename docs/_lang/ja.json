@@ -883,5 +883,17 @@
   "yo_title": "YOSHIMITSU — API リファレンス",
   "yo_trouble_li1_markdown": "`YOSHIMITSU targets ESP32-S3 or RP2040 only` — ボードがどちらでもありません。**ツール → ボード**を確認するか、`BOARD_CUSTOM` を定義してください。",
   "yo_trouble_li2_markdown": "コマンドが *「王座は守られている」* と答えるなら — それは管理者コマンドです。まず `極光` を打ってください。",
-  "yo_trouble_li3_markdown": "MEDITATION で esptool がタイムアウトします — ブリッジ UART ピン(`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`)が配線と一致するか確認してください。"
+  "yo_trouble_li3_markdown": "MEDITATION で esptool がタイムアウトします — ブリッジ UART ピン(`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`)が配線と一致するか確認してください。",
+  "doc_throttle_skew_p": "スロットル→skew カップリングは半拍の間で推力ベクトルを操る。全開は下げ打ちをフロントロード（パワー）し、アイドルは上げ打ちをフロントロード（回復）する。シフトは下げ skew に加算され、上げ skew から減算される——両翼は同一に発散する：ピッチ権限でありロールではない。中間スロットルでゼロ、両端で ±mix。スティックをどちらに動かしても中心は同じ方向へずれる。",
+  "doc_aileron_skew_p": "エルロン→skew カップリングは片翼をフロントロードし、他翼を遅らせる——skew 軸上のロールトルクであり、スロットル skew の鏡像の双子。左打ちは左翼に skew を加え右翼から減じ、右打ちは逆。ラダー振幅差動と併用または代替できる。",
+  "doc_slew_p": "Slew はスティックの変化率に対する過渡的なブースト／ブレーキ。給油は一時的に下げ打ちをフロントロードし、減油は一時的に上げ打ちをフロントロードする。ローパス済みレート（τ = 0.10 s）がキックを注入し、スティックが静止すると減衰する。鏡像の 2 カップリング：スロットルレート slew（対称・ピッチ）とエルロンレート slew（差動・ロール）。",
+  "doc_zephyr_slew_p": "Zephyrus の slew gain は同じ過渡思想をラダーに適用する：姿勢の急変時にラダー補正（µs）を一時的に増幅し、ローパス（τ = 0.12 s）して ±80 µs にハードクランプする。静的ゲインを上げずに急な姿勢変化への応答を鋭くする。",
+  "doc_steering_label": "飛行操舵と slew",
+  "doc_wave_throttle": "スロットル",
+  "doc_wave_aileron": "エルロン",
+  "doc_wave_throttle_skew_mix": "スロットル→skew ミックス",
+  "doc_wave_aileron_skew_mix": "エルロン→skew ミックス",
+  "doc_wave_slew": "Slew（レート）",
+  "doc_legend_wing_l": "左翼",
+  "doc_legend_wing_r": "右翼"
 }

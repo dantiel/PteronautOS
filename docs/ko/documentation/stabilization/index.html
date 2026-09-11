@@ -137,6 +137,10 @@
 <p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
 <p>프로필별 퍼로시티 형태 컨트롤은 고퍼로시티 특성을 선택합니다. 0%에서는 유한한 플래토/사각 형태를, 100%에서는 둥근 피라미드 경로를 선호합니다. 각 절반은 여전히 자신의 퍼로시티를 사용하므로, 저퍼로시티 절반은 길쭉하고 사인파에 가깝게 유지되고, 고퍼로시티 절반은 직접적인 대각선 이동에 가까워집니다.</p>
 <p>다운·업 스큐(±100)는 각 반쪽 스트로크의 중심을 자신의 시작–끝 축을 따라 이동시킵니다 — 퍼로시티와 동일한 반쪽별 미러링입니다. 양수는 스트로크를 앞쪽으로 실어 날개가 최고 속도에 더 일찍 도달하게 하여 추력을 키웁니다. 음수는 뒤로 미뤄 스트로크가 운동을 끝에서 소비하게 하여 추력을 줄입니다. 왜곡은 단조이며 양 끝점을 보존하므로 정확히 비대칭 사각↔삼각 혼합이며, 위치 점프는 절대 없습니다.</p>
+<p>스로틀→skew 커플링은 반 박자 사이에서 추력 벡터를 조향한다. 풀 스로틀은 하강 박자를 프런트로드(동력), 아이들은 상승 박자를 프런트로드(회복)한다. 시프트는 하강 skew에 더해지고 상승 skew에서 빼진다 — 양 날개가 동일하게 갈라진다: 피치 권한이지 롤이 아니다. 중간 스로틀에서 0, 양 끝에서 ±mix; 스틱을 어느 쪽으로 움직여도 중심은 같은 방향으로 이동한다.</p>
+<p>에일러론→skew 커플링은 한쪽 날개를 프런트로드하고 다른 쪽을 늦춘다 — skew 축 위의 롤 토크로, 스로틀 skew의 거울 쌍둥이다. 왼쪽 스틱은 왼쪽 날개에 skew를 더하고 오른쪽에서 빼며, 오른쪽은 반대다. 러더 진폭 차동과 함께 또는 대신 사용한다.</p>
+<p>Slew는 스틱 변화율에 대한 과도 부스트/브레이크다. 가속은 잠시 하강 박자를 프런트로드하고, 감속은 잠시 상승 박자를 프런트로드한다. 저역 통과된 레이트(τ = 0.10 s)가 킥을 주입하며, 스틱이 멈추면 감쇠한다. 두 거울 커플링: 스로틀 레이트 slew(대칭, 피치)와 에일러론 레이트 slew(차동, 롤).</p>
+<p>Zephyrus slew gain은 같은 과도 원리를 러더에 적용한다: 자세의 급격한 변화가 러더 보정(µs)을 잠시 증폭하고, 저역 통과(τ = 0.12 s) 후 ±80 µs로 하드 클램프한다. 정적 게인을 올리지 않고 급격한 자세 변화에 대한 응답을 날카롭게 한다.</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -174,6 +178,32 @@
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
+<h4 class='waveform-subgroup'>비행 조향 및 slew</h4>
+<label for='st-wave-throttle'>
+<span>스로틀</span>
+<output data-value='throttle' for='st-wave-throttle'>100%</output>
+<input data-control='throttle' id='st-wave-throttle' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<label for='st-wave-aileron'>
+<span>에일러론</span>
+<output data-value='aileron' for='st-wave-aileron'>0</output>
+<input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-throttle-skew-mix'>
+<span>스로틀→skew 믹스</span>
+<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
+<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-aileron-skew-mix'>
+<span>에일러론→skew 믹스</span>
+<output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
+<input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-slew'>
+<span>Slew(레이트)</span>
+<output data-value='slew' for='st-wave-slew'>0</output>
+<input data-control='slew' id='st-wave-slew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='파형 예시' class='waveform-presets'>
 <button data-preset='8,0,100,0,0' type='button'>익스트림 8 / 0</button>
@@ -199,6 +229,14 @@
 <i class='boundary'></i>
 반전
 </span>
+<span>
+<i class='wing-left'></i>
+왼쪽 날개
+</span>
+<span>
+<i class='wing-right'></i>
+오른쪽 날개
+</span>
 </div>
 <svg aria-label='전체 날갯짓 주기에 걸친 날개 위치' data-chart='cycle' role='img'></svg>
 </div>
@@ -216,6 +254,14 @@
 <span>
 <i class='direct'></i>
 정확한 대각선
+</span>
+<span>
+<i class='wing-left'></i>
+왼쪽 날개
+</span>
+<span>
+<i class='wing-right'></i>
+오른쪽 날개
 </span>
 </div>
 <svg aria-label='정규화된 다운/업 스트로크 형태' data-chart='halves' role='img'></svg>

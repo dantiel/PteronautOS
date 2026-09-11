@@ -137,6 +137,10 @@
 <p>力度同时控制半行程的特性与时机。内部上，WebUI 的 0–100 设置映射到 0–8。下行程力度越高，下行程在周期中的占比越短；回程力度越高，回程占比越短。剩余时间转移到另一半 — 零点处没有停顿。</p>
 <p>每个配置文件的力度形状控件选择高力度特性。0% 时偏向有限平台/方形；100% 时偏向圆角金字塔路径。每一半仍使用自己的力度，因此低力度的一半保持拉长且正弦，而高力度的一半趋近于直接的对角线穿越。</p>
 <p>下行程与回程偏移（±100）沿各自起止轴移动每个半行程的中心——与力度相同的逐半镜像。正值为前移：机翼更早达到峰值速度，增强推力。负值为后移：行程在末端消耗运动，减弱推力。该变形单调且保持端点，因此恰为不对称的方波↔三角波混合，绝非位置跳变。</p>
+<p>油门→skew 耦合在半个拍之间引导推力矢量。满油门使下行拍前载（动力），怠速使上行拍前载（恢复）。偏移加到下行 skew 并从上行 skew 中减去——两翼同向发散：这是俯仰控制，不是滚转。中油门为零，两端为 ±mix；无论向哪边推杆，中心偏移方向一致。</p>
+<p>副翼→skew 耦合前载一翼而延迟另一翼——在 skew 轴上的滚转力矩，是油门 skew 的镜像孪生。杆向左给左翼加 skew 并从右翼减去；向右则相反。可与方向舵幅度差动并用或替代之。</p>
+<p>Slew 是对摇杆变化率的瞬态助推或制动。给油短暂前载下行拍，收油短暂前载上行拍；低通后的速率（τ = 0.10 s）注入该脉冲，杆稳定后即衰减。两个镜像耦合：油门速率 slew（对称，俯仰）与副翼速率 slew（差动，滚转）。</p>
+<p>Zephyrus 的 slew gain 将同样的瞬态思想用于方向舵：姿态快速变化时短暂增强方向舵修正（µs），低通滤波（τ = 0.12 s）并硬限幅 ±80 µs。它在不提高静态增益的情况下锐化对快速姿态变化的响应。</p>
 <div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='扑翼周期相位' data-i18n-axis-half='局部半行程相位' data-i18n-axis-wing='机翼位置' data-i18n-lock-oppose='相反：滑块互补（合计=8）（点击切换）' data-i18n-lock-sync='同步：两个滑块一起移动（点击切换）' data-i18n-lock-unlocked='已解锁（点击切换）' data-i18n-metric='时间分配：下 {down}% · 上 {up}% · 峰值相位速度比 {ratio}×'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
@@ -174,6 +178,32 @@
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
+<h4 class='waveform-subgroup'>飞行操纵与 slew</h4>
+<label for='st-wave-throttle'>
+<span>油门</span>
+<output data-value='throttle' for='st-wave-throttle'>100%</output>
+<input data-control='throttle' id='st-wave-throttle' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<label for='st-wave-aileron'>
+<span>副翼</span>
+<output data-value='aileron' for='st-wave-aileron'>0</output>
+<input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-throttle-skew-mix'>
+<span>油门→skew 混合</span>
+<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
+<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-aileron-skew-mix'>
+<span>副翼→skew 混合</span>
+<output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
+<input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+</label>
+<label for='st-wave-slew'>
+<span>Slew（速率）</span>
+<output data-value='slew' for='st-wave-slew'>0</output>
+<input data-control='slew' id='st-wave-slew' max='100' min='-100' step='1' type='range' value='0'>
+</label>
 </div>
 <div aria-label='波形示例' class='waveform-presets'>
 <button data-preset='8,0,100,0,0' type='button'>极端 8 / 0</button>
@@ -199,6 +229,14 @@
 <i class='boundary'></i>
 反转
 </span>
+<span>
+<i class='wing-left'></i>
+左翼
+</span>
+<span>
+<i class='wing-right'></i>
+右翼
+</span>
 </div>
 <svg aria-label='完整扑翼周期中的机翼位置' data-chart='cycle' role='img'></svg>
 </div>
@@ -216,6 +254,14 @@
 <span>
 <i class='direct'></i>
 精确对角线
+</span>
+<span>
+<i class='wing-left'></i>
+左翼
+</span>
+<span>
+<i class='wing-right'></i>
+右翼
 </span>
 </div>
 <svg aria-label='归一化的下行程与回程形状' data-chart='halves' role='img'></svg>

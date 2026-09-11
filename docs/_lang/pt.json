@@ -883,5 +883,17 @@
   "yo_title": "YOSHIMITSU — Referência da API",
   "yo_trouble_li1_markdown": "`YOSHIMITSU targets ESP32-S3 or RP2040 only` — a sua placa não é nenhuma delas; verifique **Ferramentas → Placa** ou defina `BOARD_CUSTOM`.",
   "yo_trouble_li2_markdown": "Um comando responde *\"o trono está guardado\"* — é um comando de administrador; escreva primeiro `極光`.",
-  "yo_trouble_li3_markdown": "O esptool expira em MEDITATION — confirme que os pinos UART da ponte (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) correspondem à sua cablagem."
+  "yo_trouble_li3_markdown": "O esptool expira em MEDITATION — confirme que os pinos UART da ponte (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) correspondem à sua cablagem.",
+  "doc_throttle_skew_p": "O acoplamento throttle→skew direciona o vetor de empuxo entre os meios-batimentos. Aceleração total front-loada a descida (potência), marcha lenta front-loada a subida (recuperação). O deslocamento soma-se ao skew da descida e subtrai-se do skew da subida — ambas as asas divergem de forma idêntica: autoridade de pitch, não de roll. Zero a meio-acelerador, ±mix nos extremos; o centro desloca-se da mesma forma em qualquer direção do stick.",
+  "doc_aileron_skew_p": "O acoplamento aileron→skew front-loada uma asa enquanto atrasa a outra — torque de roll no eixo do skew, o gémeo espelho do skew de throttle. Stick à esquerda soma skew na asa esquerda e remove-o na direita; stick à direita faz o oposto. Usar junto ou em vez do diferencial de amplitude do leme.",
+  "doc_slew_p": "Slew é um boost ou travão transitório sobre a taxa de variação de um stick. Acelerar front-loada brevemente a descida, cortar gás front-loada brevemente a subida; a taxa passa-baixo (τ = 0,10 s) injeta o impulso, que depois decai quando o stick assenta. Dois acoplamentos espelho: slew de throttle-rate (simétrico, pitch) e slew de aileron-rate (diferencial, roll).",
+  "doc_zephyr_slew_p": "O slew gain do Zephyrus aplica a mesma ideia transitória ao leme: uma mudança rápida de atitude amplia brevemente a correção do leme (µs), passa-baixo (τ = 0,12 s) e limitada a ±80 µs. Aguça a resposta a mudanças rápidas de atitude sem aumentar o ganho estático.",
+  "doc_steering_label": "Direção de voo & slew",
+  "doc_wave_throttle": "Acelerador",
+  "doc_wave_aileron": "Aileron",
+  "doc_wave_throttle_skew_mix": "Mistura throttle→skew",
+  "doc_wave_aileron_skew_mix": "Mistura aileron→skew",
+  "doc_wave_slew": "Slew (taxa)",
+  "doc_legend_wing_l": "Asa esquerda",
+  "doc_legend_wing_r": "Asa direita"
 }

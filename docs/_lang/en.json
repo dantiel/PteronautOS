@@ -883,5 +883,17 @@
   "yo_title": "YOSHIMITSU — API Reference",
   "yo_trouble_li1_markdown": "`YOSHIMITSU targets ESP32-S3 or RP2040 only` — your board is neither; check **Tools → Board** or define `BOARD_CUSTOM`.",
   "yo_trouble_li2_markdown": "A command answers *\"the throne is guarded\"* — it is an administrator command; type `極光` first.",
-  "yo_trouble_li3_markdown": "esptool times out in MEDITATION — confirm the bridge UART pins (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) match your wiring."
+  "yo_trouble_li3_markdown": "esptool times out in MEDITATION — confirm the bridge UART pins (`BRIDGE_RX_PIN`/`BRIDGE_TX_PIN`) match your wiring.",
+  "doc_throttle_skew_p": "The throttle→skew coupling steers the thrust vector between the half-strokes. Full throttle front-loads the downstroke (power), idle front-loads the upstroke (recovery). The shift adds to the stroke skew and subtracts from the return skew, so both wings diverge identically — pitch authority, not roll. Zero at mid-throttle, ±mix at the extremes; the centre shifts the same way whichever direction the stick moves.",
+  "doc_aileron_skew_p": "The aileron→skew coupling front-loads one wing while late-loading the other — roll torque on the skew axis, the mirror twin of the throttle skew. Stick left adds skew to the left wing and removes it from the right; stick right does the opposite. Use it alongside, or instead of, rudder amplitude differential.",
+  "doc_slew_p": "Slew is a transient boost or brake on the rate of a stick. Giving gas briefly front-loads the downstroke, cutting gas briefly front-loads the upstroke; the low-passed rate (τ = 0.10 s) injects the kick, which then decays once the stick rests. Two mirror couplings: throttle-rate slew (symmetric, pitch) and aileron-rate slew (differential, roll).",
+  "doc_zephyr_slew_p": "Zephyrus slew gain applies the same transient idea to the rudder: a fast attitude change briefly boosts the rudder correction (µs), low-passed (τ = 0.12 s) and hard-clamped to ±80 µs. It sharpens the response to quick attitude changes without raising static gain.",
+  "doc_steering_label": "Flight steering & slew",
+  "doc_wave_throttle": "Throttle",
+  "doc_wave_aileron": "Aileron",
+  "doc_wave_throttle_skew_mix": "Throttle→skew mix",
+  "doc_wave_aileron_skew_mix": "Aileron→skew mix",
+  "doc_wave_slew": "Slew (rate)",
+  "doc_legend_wing_l": "Left wing",
+  "doc_legend_wing_r": "Right wing"
 }
