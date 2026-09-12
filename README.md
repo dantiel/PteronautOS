@@ -59,6 +59,10 @@ Radio Packet → ChannelData[16] → servosUpdate() (≈kHz tick)
                    PWM Output (GPIOs)
 ```
 
+> **MUSHIN bridge** — when `MUSHIN_ENABLED=1` and a YOSHIMITSU muscle is linked, the
+> spirit streams wave *parameters* instead of finished µs; the RP2040 reconstructs
+> phase + waveform locally. See [docs/MUSHIN.md](docs/MUSHIN.md).
+
 ### Ornithopter Module (`src/lib/Ornithopter/`)
 
 | File | Lines | Purpose |
