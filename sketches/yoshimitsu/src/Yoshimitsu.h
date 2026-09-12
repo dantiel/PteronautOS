@@ -1040,13 +1040,16 @@ static const int16_t mushinCosLut[MUSHIN_COS_LUT_SIZE] = {
     16069, 16143, 16207, 16261, 16305, 16340, 16364, 16379,
 };
 
-// cos(phaseQ16) in Q14: 8-bit LUT index, 2-bit linear interpolation.
+// cos(phaseQ16) in Q14: 8-bit LUT index, 8-bit linear interpolation. Full
+// circle = 65536 (16-bit phase), 256-entry LUT ⇒ each entry spans 256 units;
+// the full low byte is the inter-entry fraction (a 2-bit fraction would quantize
+// the cosine's steepest slope to ~0.6%, audible as a staircase on the wings).
 static int16_t mushinCosQ14(uint32_t phaseQ16) {
-  uint32_t i = (phaseQ16 >> 8) & (MUSHIN_COS_LUT_SIZE - 1);   // 16 − 8 bits index
-  uint8_t  f = (uint8_t)((phaseQ16 >> 6) & 0x3);              // 2-bit fraction
+  uint32_t i = (phaseQ16 >> 8) & (MUSHIN_COS_LUT_SIZE - 1);   // 8-bit index
+  uint8_t  f = (uint8_t)(phaseQ16 & 0xFF);                    // 8-bit fraction
   int32_t  a = mushinCosLut[i];
   int32_t  b = mushinCosLut[(i + 1) & (MUSHIN_COS_LUT_SIZE - 1)];
-  return (int16_t)((a * (4 - f) + b * f) >> 2);
+  return (int16_t)((a * (256 - f) + b * f) >> 8);
 }
 
 // Advance the muscle's phase. Unity-gain damping k=10 mirrors the spirit's
@@ -1055,6 +1058,7 @@ static int16_t mushinCosQ14(uint32_t phaseQ16) {
 static void mushinWaveTick(uint32_t nowUs) {
   if (mushinParamDirty) {                 // first v1 frame after (re)link: seed
     mwLastUs = nowUs;                     // the clock — no dt jump
+    mwClampUs = nowUs;                    // and the velocity-clamp clock — no link kick
     mwPhaseAcc = 0;
     mwCadence = 0;
     mwEasing = 0;
