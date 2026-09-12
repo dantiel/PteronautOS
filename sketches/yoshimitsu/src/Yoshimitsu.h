@@ -848,7 +848,7 @@ static void detachServos() {
 #define MUSHIN_ANNOUNCE  0x02        // muscle → spirit: version + posture
 #define MUSHIN_TELEMETRY 0x03        // muscle → spirit: gyro rate + correction
 #define MUSHIN_MAX_PAY   16          // 8 servos × 2 bytes
-#define MUSHIN_LINK_MS   500         // intents stale after this → CRSF path resumes
+#define MUSHIN_INTENT_STALE_MS   500         // intents stale after this → CRSF path resumes
 
 enum : uint8_t { MS_IDLE, MS_LEN, MS_TYPE, MS_PAY, MS_XOR };
 static uint8_t msState = MS_IDLE, msLen = 0, msType = 0, msIdx = 0, msXor = 0;
@@ -942,7 +942,7 @@ static void mushinAnnounce() {
 // wire falls quiet, YOSHIMITSU returns to its own CRSF muscle — grace in
 // degradation, never a dead wing.
 static void mushinApply() {
-  if (!mushinLinked || millis() - mushinLastIntentMs > MUSHIN_LINK_MS) {
+  if (!mushinLinked || millis() - mushinLastIntentMs > MUSHIN_INTENT_STALE_MS) {
     if (mushinLinked) {
       mushinLinked = false;
       mushinTale("MUSHIN link quiet — YOSHIMITSU returns to its own CRSF muscle.");

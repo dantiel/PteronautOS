@@ -9,6 +9,9 @@
 #include "rxtx_intf.h"
 #include "../Ornithopter/OrnithopterFilter.h"
 #include "../Zephyrus/ZephyrusFilter.h"
+#if defined(MUSHIN_ENABLED)
+#include "../Mushin/MushinNoShin.h"
+#endif
 
 #if defined(PLATFORM_ESP32)
 #include <driver/periph_ctrl.h>
@@ -153,6 +156,24 @@ static void servoWrite(uint8_t ch, uint16_t us)
     servoWriteRaw(ch, orniFilterChannel(ch, us));
 }
 
+#if defined(MUSHIN_ENABLED)
+// Stream the unified waveform+gyro result (_f[]) as MUSHIN intents, in the
+// profile's servo order (funcMap). The RP2040 muscle applies them 1:1; it
+// truncates to its own servoCount if the spirit carries more servos.
+static void mushinEmitServoIntents()
+{
+    uint16_t us[MUSHIN_MAX_PAY / 2];
+    uint8_t  n = 0;
+    for (uint8_t ch = 0; ch < 7 && n < (MUSHIN_MAX_PAY / 2); ++ch)
+    {
+        uint8_t func = PROFILE.funcMap[ch];
+        if (func != SF_NONE)
+            us[n++] = ornithopter.funcValue(func);
+    }
+    mushinEmitIntents(us, n);
+}
+#endif
+
 static void servosFailsafe()
 {
     for (int ch = 0 ; ch < GPIO_PIN_PWM_OUTPUTS_COUNT ; ++ch)
@@ -276,7 +297,22 @@ static void servosUpdate(unsigned long now)
     // Advance mixer and write servo outputs on every tick (even disconnected — for PWM test)
     ornithopter.benchMode = (connectionState == wifiUpdate);
     ornithopterUpdate();
+#if defined(MUSHIN_ENABLED)
+    mushinUpdate(millis());
+    if (mushinIsLinked())
+    {
+        // The muscle (RP2040) owns the servos: stream the unified
+        // waveform+gyro result as intents and suppress local PWM. On heartbeat
+        // loss the local write path below reasserts — grace in degradation.
+        mushinEmitServoIntents();
+    }
+    else
+    {
+        orniInitWrite(&servoWrite);
+    }
+#else
     orniInitWrite(&servoWrite);
+#endif
     if (ornithopter.stickOverride)
     {
         // Virtual stick mode: hold mixer output, skip CRSF + failsafe path.
@@ -295,7 +331,12 @@ static void servosUpdate(unsigned long now)
     {
         newChannelsAvailable = false;
         lastUpdate = now;
+#if !defined(MUSHIN_ENABLED)
         servoCalcAllChannels(&servoWrite);
+#else
+        if (!mushinIsLinked())
+            servoCalcAllChannels(&servoWrite);
+#endif
     }     /* if newChannelsAvailable */
 
     // LQ goes to 0 (100 packets missed in a row)
@@ -394,6 +435,9 @@ static bool initialize()
             pwmChannels[ch] = PWM.allocate(servoPins[ch], frequency);
         }
     }
+#if defined(MUSHIN_ENABLED)
+    mushinInit();
+#endif
     return true;
 }
 
