@@ -38,6 +38,9 @@
 #ifdef ZEPHYRUS_ENABLED
 #include "../Zephyrus/ZephyrusFilter.h"
 #endif
+#ifdef MUSHIN_ENABLED
+#include "../Mushin/MushinNoShin.h"
+#endif
 #include "RXEndpoint.h"
 #include "RXOTAConnector.h"
 #include "rx-serial/devSerialIO.h"
@@ -2166,6 +2169,33 @@ void loop()
                                              sizeof(crsf_sensor_attitude_t) + 1);
             DataDlSender.SetDataToTransmit((uint8_t *)&attitudeFrame, sizeof(attitudeFrame));
             lastAttitudeTlm = now;
+        }
+    }
+#endif
+
+#ifdef MUSHIN_ENABLED
+    // Forward the muscle's (RP2040) gyro telemetry up to the TX. In shared-compute
+    // mode the local Zephyrus is silent (the gyro lives on the muscle), so this keeps
+    // the pilot's yaw telemetry alive: CRSF_FRAMETYPE_ATTITUDE with yaw only (the
+    // MANJI levitation spin), ~10 Hz, mirroring the Zephyrus block above.
+    {
+        static uint32_t lastMushinTlm = 0;
+        static GENERIC_CRC8 crsfCrc(CRSF_CRC_POLY);
+        if (!DataDlSender.IsActive() && connectionState == connected
+            && mushinIsLinked() && mushinTelemetryFresh(now)
+            && (now - lastMushinTlm > 100000)) // every 100ms
+        {
+            CRSF_MK_FRAME_T(crsf_sensor_attitude_t) attitudeFrame;
+            attitudeFrame.h.sync_byte = CRSF_SYNC_BYTE;
+            attitudeFrame.h.frame_size = CRSF_FRAME_SIZE(sizeof(crsf_sensor_attitude_t));
+            attitudeFrame.h.type = CRSF_FRAMETYPE_ATTITUDE;
+            attitudeFrame.p.pitch = 0;
+            attitudeFrame.p.roll  = 0;
+            attitudeFrame.p.yaw   = (int16_t)(mushinTelemetry().gyroDps() * 0.0174533f * 10000.0f);
+            attitudeFrame.crc = crsfCrc.calc((const uint8_t *)&attitudeFrame.h.type,
+                                             sizeof(crsf_sensor_attitude_t) + 1);
+            DataDlSender.SetDataToTransmit((uint8_t *)&attitudeFrame, sizeof(attitudeFrame));
+            lastMushinTlm = now;
         }
     }
 #endif

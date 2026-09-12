@@ -64,6 +64,16 @@ void mushinEmitIntents(const uint16_t *us, uint8_t count)
     mushin.emitIntents(us, count);
 }
 
+const MushinTelemetry &mushinTelemetry()
+{
+    return mushin.telemetry();
+}
+
+bool mushinTelemetryFresh(uint32_t nowMs)
+{
+    return mushin.telemetryFresh(nowMs);
+}
+
 // ── Class implementation ─────────────────────────────────────────────
 void MushinNoShin::begin(Stream &serial)
 {
@@ -108,6 +118,15 @@ void MushinNoShin::update(uint32_t nowMs)
                 _announcedServos = _buf[1];
                 _linked = true;
                 _lastAnnounceMs = nowMs;
+            }
+            else if (_type == MUSHIN_TELEMETRY && _len >= 6)
+            {
+                _tele.gyroRate   = (int16_t)(_buf[0] | (_buf[1] << 8));
+                _tele.correction = (int16_t)(_buf[2] | (_buf[3] << 8));
+                _tele.linked     = _buf[4];
+                _tele.version    = _buf[5];
+                _tele.fresh      = true;
+                _lastTelemetryMs = nowMs;
             }
             break;
         }

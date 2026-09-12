@@ -33,6 +33,28 @@
   #define MUSHIN_ANNOUNCE_STALE_MS 1500   // announce is 1 Hz; 1.5× grace before unlink
 #endif
 
+#ifndef MUSHIN_TELEMETRY_STALE_MS
+  #define MUSHIN_TELEMETRY_STALE_MS 1500  // telemetry is 1 Hz; same grace before stale
+#endif
+
+#ifndef MUSHIN_GYRO_SCALE_LSB
+  #define MUSHIN_GYRO_SCALE_LSB 131       // mirrors Yoshimitsu_Loadout.h GYRO_SCALE_LSB_DEFAULT (±250 dps)
+#endif
+
+// The muscle's return channel — parsed from MUSHIN_TELEMETRY frames. Sent at
+// 1 Hz (same cadence as ANNOUNCE): raw gyro rate (LSB), the µs correction the
+// muscle's PID applied, and the muscle's own view of the link.
+struct MushinTelemetry
+{
+    int16_t gyroRate = 0;   // raw yaw-rate LSB (±250 dps full-scale on the muscle)
+    int16_t correction = 0; // µs added to the crest servo by the muscle's PID
+    uint8_t linked = 0;     // the muscle's own view of the link (1 = linked)
+    uint8_t version = 0;    // muscle protocol version
+    bool    fresh = false;  // set on every parsed TELEMETRY frame
+
+    float gyroDps() const { return (float)gyroRate / MUSHIN_GYRO_SCALE_LSB; }
+};
+
 class Stream;
 
 class MushinNoShin
@@ -43,6 +65,11 @@ public:
     bool isLinked() const;
     void emitIntents(const uint16_t *us, uint8_t count);
     uint8_t announcedServoCount() const { return _announcedServos; }
+    const MushinTelemetry &telemetry() const { return _tele; }
+    bool telemetryFresh(uint32_t nowMs) const
+    {
+        return _tele.fresh && (nowMs - _lastTelemetryMs <= MUSHIN_TELEMETRY_STALE_MS);
+    }
 
 private:
     enum : uint8_t { MS_IDLE, MS_LEN, MS_TYPE, MS_PAY, MS_XOR };
@@ -54,6 +81,8 @@ private:
     uint32_t _lastAnnounceMs = 0;
     uint8_t  _announcedServos = 0;
     bool     _linked = false;
+    MushinTelemetry _tele;
+    uint32_t _lastTelemetryMs = 0;
 };
 
 #if defined(MUSHIN_ENABLED)
@@ -62,4 +91,6 @@ void mushinInit();
 void mushinUpdate(uint32_t nowMs);
 bool mushinIsLinked();
 void mushinEmitIntents(const uint16_t *us, uint8_t count);
+const MushinTelemetry &mushinTelemetry();
+bool mushinTelemetryFresh(uint32_t nowMs);
 #endif
