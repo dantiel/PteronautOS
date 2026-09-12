@@ -459,8 +459,79 @@ static void test_failsafe_edge() {
   feed_v1(1000, 50, 100, 0, 30, 0, 0, 0);   // fresh frame cancels the ease
   CHECK_EQ(mwEasing, 0);
   CHECK(mushinLinked == true);
-  mushinApply();   // now = 1000, lastIntentMs = 1000 → fresh, flaps
+  mushinApply();   // now = 1000, lastIntentMs = 1000 — fresh, flaps
   CHECK_EQ(mwEasing, 0);
+
+  // full unlink → re-link with v1: the v1 latch drops on unlink, so the
+  // re-link frame re-seeds both clocks — no velocity-clamp kick (regression:
+  // without the latch reset the first post-relink tick could move the wing
+  // up to 33300/slew µs on the stale clamp clock).
+  reset_all();
+  feed_v1(1000, 50, 100, 0, 30, 0, 0, 0);
+  mushinLinked = true; mushinV1 = 1; mushinParamDirty = 0;
+  mwWingL = 2000; mwWingR = 1000;
+  mushinLastIntentMs = 0;
+  g_ms = 1000; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  for (int i = 0; i < 40; i++) { g_ms += 10; g_us += 10000; mushinApply(); }  // ease + release
+  CHECK(mushinLinked == false);
+  CHECK_EQ(mushinV1, 0);                     // unlink drops the v1 latch
+  g_ms += 100;                               // the link was down a while
+  feed_v1(1000, 50, 100, 0, 30, 0, 0, 0);    // re-link, first v1 frame
+  CHECK_EQ(mushinV1, 1);
+  CHECK_EQ(mushinParamDirty, 1);             // re-link requests a wave-core seed
+  g_us += 500000;                            // gap >> 1 kHz gate
+  mushinApply();                             // seeds both clocks; wing target 2000
+  CHECK_NEAR(mwWingL, 1500, 2);              // no re-link clamp kick (was up to 1110 µs)
+  uint16_t prev = mwWingL;
+  g_us += 1000;
+  mushinApply();
+  int32_t delta = (int32_t)mwWingL - (int32_t)prev;
+  CHECK(delta >= 1 && delta <= 12);          // gentle first step after re-link (~11 µs)
+
+  // 1 kHz rate gate: back-to-back applies at the same µs are no-ops, the
+  // wave core runs again only after a full millisecond.
+  reset_all();
+  feed_v1(1000, 50, 100, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 2000000; mwClampUs = 2000000; mwLastUs = 2000000;
+  mushinApply();
+  CHECK(servos[0].write_count > 0);
+  uint16_t wc = servos[0].write_count;
+  mushinApply();                             // same µs → gated
+  CHECK_EQ(servos[0].write_count, wc);
+  g_us += 999;                               // 999 µs later → still gated
+  mushinApply();
+  CHECK_EQ(servos[0].write_count, wc);
+  g_us += 1;                                 // exactly 1 ms → runs again
+  mushinApply();
+  CHECK(servos[0].write_count > wc);
+}
+
+static void test_forged_params() {
+  printf("\n[14] forged v1 params (throttle 65535, setpoints +-32767) clamped at parse\n");
+  reset_all();
+
+  // slew 0, forged throttle: the spec envelope [1000,2000] must still hold,
+  // the full +-500 us amplitude must be reached (clamped to 1000), and the
+  // easing anchors must never leave the envelope (a forged throttle would
+  // overshoot them into uint16 wrap and pin a wing at the rail).
+  feed_v1(65535, 50, 100, 0, 0, STANCE_KINCHO, 32767, -32767);
+  CHECK_EQ(mushinParam.throttle, 1000);
+  CHECK_EQ(mushinParam.setRoll, 250);
+  CHECK_EQ(mushinParam.setPitch, -250);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  int Lmin = 9999, Lmax = 0, Rmin = 9999, Rmax = 0;
+  for (int i = 0; i < 100; i++) {
+    g_us += 1000;
+    mushinWaveApply(g_us);
+    int L = servos[0].last_us, R = servos[1].last_us;
+    if (L < Lmin) Lmin = L; if (L > Lmax) Lmax = L;
+    if (R < Rmin) Rmin = R; if (R > Rmax) Rmax = R;
+  }
+  CHECK(Lmin >= 1000 && Lmax <= 2000);
+  CHECK(Rmin >= 1000 && Rmax <= 2000);
+  CHECK(Lmax >= 1900 && Rmin <= 1100);
+  CHECK(mwWingL >= 1000 && mwWingL <= 2000);
+  CHECK(mwWingR >= 1000 && mwWingR <= 2000);
 }
 
 int main() {
@@ -479,6 +550,7 @@ int main() {
   test_boundary_values();
   test_pid_bounds();
   test_failsafe_edge();
+  test_forged_params();
   printf("\n%d checks, %d failures\n", g_checks, g_fails);
   return g_fails ? 1 : 0;
 }

@@ -861,6 +861,8 @@ static void detachServos() {
 #define MUSHIN_COS_ONE_Q14      16384       // 1.0 in Q14
 #define MUSHIN_TOTBAND_THROTTLE 20          // throttle‰ ≤ this parks the wings at centre
 #define MUSHIN_FAILSAFE_EASE_MS 250         // damped unlink: ease to centre, then release
+#define MUSHIN_THROTTLE_MAX     1000        // throttle ceiling - mirrors the spirit's emit clamp
+#define MUSHIN_SETPOINT_MAX     250         // dps ceiling for the v1 rate setpoints
 #ifndef MUSHIN_PID_I_GAIN
   #define MUSHIN_PID_I_GAIN     4           // Q8 I-term gain for the muscle's crest PID
 #endif
@@ -884,6 +886,8 @@ static uint8_t mushinParamDirty = 0;   // first v1 frame after (re)link → seed
 
 // Wave-core state (muscle-local phase accumulator, Q16 rad·µs world):
 static uint32_t mwLastUs   = 0;        // last tick timestamp (µs)
+static uint32_t mwLastApplyUs = 0;     // 1 kHz rate gate — the free-spinning loop must
+                                       // not churn the division-heavy core per iteration
 static uint32_t mwClampUs  = 0;        // last velocity-clamp timestamp (µs)
 static int32_t  mwCadence  = 0;        // Q16 rad/s approach value (unity-gain damped)
 static int64_t  mwPhaseAcc = 0;        // 64-bit phase accumulator, Q16 rad·µs
@@ -926,14 +930,21 @@ static void mushinParse(uint8_t b) {
       if (msType == MUSHIN_INTENT) {
         if (msLen == MUSHIN_INTENT_V1_LEN) {
           // v1 parameter frame — the muscle computes phase + shapeWave locally
-          mushinParam.throttle = (uint16_t)(msBuf[0] | (msBuf[1] << 8));
+          // Clamp to the spec envelope - the wire field is a u16, not a
+          // guarantee: a forged throttle overshoots the easing anchor into
+          // uint16 wrap (never trust a broken intent).
+          uint16_t th = (uint16_t)(msBuf[0] | (msBuf[1] << 8));
+          mushinParam.throttle = (th > MUSHIN_THROTTLE_MAX) ? MUSHIN_THROTTLE_MAX : th;
           mushinParam.flapFreq = msBuf[2];
           mushinParam.ferocity = msBuf[3];
           mushinParam.skew     = (int8_t)msBuf[4];
           mushinParam.slew     = msBuf[5];
-          mushinParam.stance   = msBuf[6];
-          mushinParam.setRoll  = (int16_t)(msBuf[7] | (msBuf[8] << 8));
-          mushinParam.setPitch = (int16_t)(msBuf[9] | (msBuf[10] << 8));
+          mushinParam.stance   = msBuf[6];  // parsed for the record ??? the muscle&#39;s own
+                                            // CRSF stance stays authoritative (announce p[3])
+          int16_t sr = (int16_t)(msBuf[7] | (msBuf[8] << 8));
+          int16_t sp = (int16_t)(msBuf[9] | (msBuf[10] << 8));
+          mushinParam.setRoll  = (sr > MUSHIN_SETPOINT_MAX) ? MUSHIN_SETPOINT_MAX : (sr < -MUSHIN_SETPOINT_MAX) ? -MUSHIN_SETPOINT_MAX : sr;
+          mushinParam.setPitch = (sp > MUSHIN_SETPOINT_MAX) ? MUSHIN_SETPOINT_MAX : (sp < -MUSHIN_SETPOINT_MAX) ? -MUSHIN_SETPOINT_MAX : sp;
           if (!mushinV1) mushinParamDirty = 1;   // (re)link → seed the wave core
           mushinV1 = 1;
           mwEasing = 0;                          // fresh intent cancels the ease
@@ -1181,6 +1192,13 @@ static void mushinWaveApply(uint32_t nowUs) {
 // wire falls quiet, YOSHIMITSU returns to its own CRSF muscle — grace in
 // degradation, never a dead wing.
 static void mushinApply() {
+  // Rate gate: the wave core runs at ≤1 kHz. The phase accumulator is µs-exact
+  // (64-bit Q16 rad·µs), so slower ticks lose nothing; without the gate a
+  // free-spinning loop would burn most of core 0 on software divisions.
+  uint32_t us = micros();
+  if (us - mwLastApplyUs < 1000UL) return;
+  mwLastApplyUs = us;
+
   uint32_t now = millis();
   if (!mushinLinked || now - mushinLastIntentMs > MUSHIN_INTENT_STALE_MS) {
     if (mushinLinked && mushinV1) {
@@ -1194,6 +1212,8 @@ static void mushinApply() {
     }
     if (mushinLinked) {
       mushinLinked = false;
+      mushinV1 = 0;      // drop the v1 latch so the next link re-seeds the wave core
+                         // (fresh clocks → no velocity-clamp kick at re-link)
       mushinTale("MUSHIN link quiet — YOSHIMITSU returns to its own CRSF muscle.");
     }
     return;

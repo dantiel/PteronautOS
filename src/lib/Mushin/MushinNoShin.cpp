@@ -37,10 +37,10 @@
   #endif
 #endif
 
-// v1 parameter-intent cadence divider: 11 bytes @ 57600 ≈ 2.3 ms bit-banged
-// per frame → ~55 Hz. Plenty — the muscle reconstructs phase locally, so the
-// bridge is latency-tolerant by design. The v0 µs divider above stays
-// untouched for the fallback path.
+// v1 parameter-intent cadence divider: the full frame is 15 bytes
+// (3 header + 11 payload + 1 xor) = 150 bits @ 57600 ≈ 2.6 ms bit-banged.
+// The muscle reconstructs phase locally, so the bridge is latency-tolerant
+// by design. The v0 µs divider above stays untouched for the fallback path.
 #ifndef MUSHIN_PARAM_DIVIDER
   #if defined(PLATFORM_ESP8266)
     #define MUSHIN_PARAM_DIVIDER 6
