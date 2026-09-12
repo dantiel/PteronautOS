@@ -132,6 +132,72 @@ int main() {
     mushin.update(2000);   // > 1500 ms stale
     CHECK(!mushin.isLinked());
 
+    // ── [7] emitIntents clamps count > 8 → 8 (len 16 = MUSHIN_MAX_PAY) ──
+    tx_reset();
+    {
+        uint16_t big[10] = {1000,1100,1200,1300,1400,1500,1600,1700,1800,1900};
+        mushin.emitIntents(big, 10);
+        T = SerialType::tx;
+        CHECK_EQ(T[0], 0x9B);
+        CHECK_EQ(T[1], 16);          // clamped payload length (8 servos × 2)
+        CHECK_EQ(T[2], 0x01);
+        CHECK_EQ(T[3], 1000 & 0xFF); // first intent still intact
+        CHECK_EQ(SerialType::txlen, 20);   // 3 hdr + 16 payload + 1 xor
+    }
+
+    // ── [8] ANNOUNCE len < 6 ignored; corrupt xor ignored ──
+    mushin = MushinNoShin(); mushin.begin(Serial1);
+    SerialType::rxlen = 0; SerialType::rxpos = 0;
+    {
+        uint8_t a[7] = {0x9B, 5, 0x02, 1, 3, 1, 0};   // len 5 < 6 → not enough for announce
+        a[6] = 5 ^ 0x02;
+        for (int i = 3; i < 6; i++) a[6] ^= a[i];
+        feed_bytes(a, 7);
+        mushin.update(0);
+        CHECK(!mushin.isLinked());
+    }
+    SerialType::rxlen = 0; SerialType::rxpos = 0;
+    {
+        uint8_t a[10] = {0x9B, 6, 0x02, 1, 3, 1, 0, 1, 1, 0x00};  // wrong xor
+        feed_bytes(a, 10);
+        mushin.update(0);
+        CHECK(!mushin.isLinked());
+    }
+
+    // ── [9] TELEMETRY len < 6 ignored ──
+    SerialType::rxlen = 0; SerialType::rxpos = 0;
+    {
+        uint8_t t[7] = {0x9B, 5, 0x03, 0, 0, 0, 0};
+        t[6] = 5 ^ 0x03;
+        for (int i = 3; i < 6; i++) t[6] ^= t[i];
+        feed_bytes(t, 7);
+        mushin.update(0);
+        CHECK(!mushin.telemetryFresh(0));
+    }
+
+    // ── [10] emitIntentV1 extreme values (sign extension, no truncation) ──
+    tx_reset();
+    {
+        MushinIntentV1 q;
+        q.throttle = 1000; q.flapFreq = 200; q.ferocity = 100; q.skew = -128;
+        q.slew = 255; q.stance = 5; q.setpointRoll = -250; q.setpointPitch = 250;
+        mushin.emitIntentV1(q);
+        T = SerialType::tx;
+        CHECK_EQ(T[1], 11);
+        CHECK_EQ(T[3], 1000 & 0xFF);
+        CHECK_EQ(T[4], (1000 >> 8) & 0xFF);
+        CHECK_EQ(T[5], 200);
+        CHECK_EQ(T[6], 100);
+        CHECK_EQ(T[7], (uint8_t)-128);                          // skew i8 sign-extends
+        CHECK_EQ(T[8], 255);
+        CHECK_EQ(T[9], 5);
+        CHECK_EQ(T[10], (uint8_t)((uint16_t)-250 & 0xFF));      // roll i16 sign-extends
+        CHECK_EQ(T[11], (uint8_t)(((uint16_t)-250 >> 8) & 0xFF));
+        CHECK_EQ(T[12], (uint8_t)((uint16_t)250 & 0xFF));
+        CHECK_EQ(T[13], (uint8_t)(((uint16_t)250 >> 8) & 0xFF));
+        CHECK_EQ(SerialType::txlen, 15);
+    }
+
     printf("\n%d checks, %d failures\n", g_checks, g_fails);
     return g_fails ? 1 : 0;
 }

@@ -295,6 +295,174 @@ static void test_full_flap() {
   CHECK_NEAR(minL + maxR, 3000, 3);
 }
 
+static void test_parser_robustness() {
+  printf("\n[10] parser robustness (oversized len, zero-len, sync-in-payload, odd v0)\n");
+  // Oversized length (17 > MUSHIN_MAX_PAY) is rejected; the parser recovers.
+  reset_all();
+  mushinParse(0x9B); mushinParse(17);
+  feed_v1(500, 50, 50, 0, 0, 0, 0, 0);
+  CHECK(mushinLinked == true);
+  CHECK_EQ(mushinParam.throttle, 500);
+  CHECK_EQ(mushinV1, 1);
+
+  // Zero-length INTENT frame links but writes nothing (n = 0, no crash).
+  reset_all();
+  mushinParse(0x9B); mushinParse(0); mushinParse(0x01); mushinParse(0x01);   // xor = 0^1
+  CHECK(mushinLinked == true);
+  CHECK_EQ(mushinV1, 0);
+
+  // A 0x9B inside the payload is data, not a new sync.
+  reset_all();
+  feed_v1(0x019B, 50, 50, 0, 0, 0, 0, 0);   // throttle low byte = 0x9B
+  CHECK_EQ(mushinParam.throttle, 0x019B);
+
+  // Odd non-11 length with valid xor → v0 path, n = floor(len/2), clamped to
+  // servoCount, never overreads the 16-byte buffer.
+  reset_all();
+  {
+    uint8_t len = 13;
+    uint8_t x = len ^ 0x01;
+    mushinParse(0x9B); mushinParse(len); mushinParse(0x01);
+    for (int i = 0; i < 13; i++) { uint8_t b = (uint8_t)(i + 1); mushinParse(b); x ^= b; }
+    mushinParse(x);
+    CHECK(mushinLinked == true);
+    CHECK_EQ(mushinV1, 0);
+    CHECK_EQ(mushinIntent[0], (uint16_t)(1 | (2 << 8)));   // bytes 1,2
+    CHECK_EQ(mushinIntent[2], (uint16_t)(5 | (6 << 8)));   // bytes 5,6
+    CHECK_EQ(mushinIntent[3], 1500);                        // clamped at servoCount=3
+  }
+}
+
+static void test_boundary_values() {
+  printf("\n[11] boundary values (throttle 0/1000/deadband, flapFreq 0/200, slew 0/255, skew ±127)\n");
+  // throttle 1000 + ferocity 100 plateau → wing hits 2000 (slew 0 = unlimited)
+  reset_all();
+  feed_v1(1000, 50, 100, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_NEAR(mwWingL, 2000, 2);   // amp 500 at phase 0 (plateau top)
+
+  // throttle 0 → parked at centre (deadband)
+  reset_all();
+  feed_v1(0, 50, 100, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_EQ(mwWingL, 1500);
+
+  // deadband boundary: 20 parks, 21 flaps (tiny amplitude)
+  reset_all();
+  feed_v1(20, 50, 100, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_EQ(mwWingL, 1500);
+  reset_all();
+  feed_v1(21, 50, 100, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK(mwWingL > 1500);   // amp 10 → 1510
+
+  // flapFreq 0 → glide: cadence decays toward zero, phase halts
+  reset_all();
+  feed_v1(500, 50, 50, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  for (int i = 0; i < 200; i++) { g_us += 1000; mushinWaveTick(g_us); }
+  CHECK(mwCadence > 0);
+  mushinParam.flapFreq = 0;
+  for (int i = 0; i < 1000; i++) { g_us += 1000; mushinWaveTick(g_us); }
+  CHECK(mwCadence >= 0);
+  CHECK(mwCadence < 1000);   // ~e^-10 of ~2.06e6
+
+  // flapFreq 200 → target 8.2e6 fits int32, unity-gain never overshoots
+  reset_all();
+  feed_v1(500, 200, 50, 0, 0, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  for (int i = 0; i < 500; i++) { g_us += 1000; mushinWaveTick(g_us); }
+  CHECK(mwCadence > 0);
+  CHECK(mwCadence <= (int32_t)(200 * 41177));
+
+  // slew 0 → unlimited (wing jumps straight to target)
+  reset_all();
+  feed_v1(1000, 50, 0, 0, 0, 0, 0, 0);   // ferocity 0 → pure cosine, phase 0 = +16384
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_NEAR(mwWingL, 2000, 2);
+
+  // slew 255 → slowest clamp (~1 µs per 1 kHz tick)
+  reset_all();
+  feed_v1(1000, 50, 100, 0, 255, 0, 0, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);   // seed
+  CHECK_NEAR(mwWingL, 1500, 1);
+  g_us += 1000; mushinWaveApply(g_us);
+  CHECK(mwWingL <= 1502);
+
+  // skew extremes (±127) keep endpoints pinned, no fixed-point overflow
+  reset_all();
+  mushinParam.ferocity = 0; mushinParam.skew = 127;
+  CHECK_EQ(mushinShapeWave(0), 16384);
+  CHECK_NEAR(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 2), -16384, 3);
+  mushinParam.skew = -128;
+  CHECK_EQ(mushinShapeWave(0), 16384);
+  CHECK_NEAR(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 2), -16384, 3);
+}
+
+static void test_pid_bounds() {
+  printf("\n[12] crest PID bounds (setpoint ±250 → rudder ±200 µs, I-term clamp)\n");
+  // KINCHO: direct rate→µs mapping, ±250 dps → ±200 µs
+  reset_all();
+  stance = STANCE_KINCHO;
+  feed_v1(1000, 50, 100, 0, 0, 0, 250, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_EQ(servos[GYRO_CORRECTION_SERVO].last_us, 1700);
+  reset_all();
+  stance = STANCE_KINCHO;
+  feed_v1(1000, 50, 100, 0, 0, 0, -250, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinWaveApply(g_us);
+  CHECK_EQ(servos[GYRO_CORRECTION_SERVO].last_us, 1300);
+
+  // MANJI + gyro: I-term saturates at MUSHIN_PID_I_MAX (4000), never unbounded
+  reset_all();
+  stance = STANCE_MANJI_DRAGONFLY;
+#if YOSHI_GYRO
+  gyroConnected = true;
+#endif
+  TwoWire::rate = 0;
+  feed_v1(1000, 50, 100, 0, 0, 1, 10, 0);
+  mushinParamDirty = 1; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  for (int i = 0; i < 20; i++) { g_us += 1000; mushinWaveApply(g_us); }
+  CHECK_EQ(mwIterm, MUSHIN_PID_I_MAX);
+}
+
+static void test_failsafe_edge() {
+  printf("\n[13] failsafe edge cases (v0 immediate unlink, re-link cancels easing)\n");
+  // v0 link loss → immediate unlink (the µs path has no local wave to ease)
+  reset_all();
+  uint16_t us[3] = {1400, 1500, 1600};
+  feed_v0(us, 3);
+  CHECK_EQ(mushinV1, 0);
+  mushinLastIntentMs = 0;
+  g_ms = 1000;
+  mushinApply();
+  CHECK(mushinLinked == false);
+
+  // re-link during a v1 ease cancels it and resumes flapping
+  reset_all();
+  feed_v1(1000, 50, 100, 0, 30, 0, 0, 0);
+  mushinLinked = true; mushinV1 = 1; mushinParamDirty = 0;
+  mwWingL = 2000; mwWingR = 1000;
+  mushinLastIntentMs = 0;
+  g_ms = 1000; g_us = 1000000; mwClampUs = 1000000; mwLastUs = 1000000;
+  mushinApply();
+  CHECK_EQ(mwEasing, 1);
+  feed_v1(1000, 50, 100, 0, 30, 0, 0, 0);   // fresh frame cancels the ease
+  CHECK_EQ(mwEasing, 0);
+  CHECK(mushinLinked == true);
+  mushinApply();   // now = 1000, lastIntentMs = 1000 → fresh, flaps
+  CHECK_EQ(mwEasing, 0);
+}
+
 int main() {
   Serial.id = 0; Serial1.id = 1; Serial2.id = 2;
   printf("=== MUSHIN v1 muscle wave-core functional test ===\n");
@@ -307,6 +475,10 @@ int main() {
   test_manji_pid();
   test_handshake();
   test_full_flap();
+  test_parser_robustness();
+  test_boundary_values();
+  test_pid_bounds();
+  test_failsafe_edge();
   printf("\n%d checks, %d failures\n", g_checks, g_fails);
   return g_fails ? 1 : 0;
 }
