@@ -89,6 +89,13 @@ Ornithopter::Ornithopter()
   , voiceArm(172)
   , voiceFreq(992), voiceProfile(992)
   , activeFlightProfile(1)
+  , lastThrottlePct(0.0f)
+  , lastFlapHz(0.0f)
+  , lastStrokeFer(0.0f)
+  , lastReturnFer(0.0f)
+  , lastStrokeSkew(0.0f)
+  , lastReturnSkew(0.0f)
+  , lastFlapping(false)
   , strokeFerocity(50.0f)
   , returnFerocity(50.0f)
   , glideAngleDeg(ORNI_GLIDE_ANGLE_DEG_DEFAULT)
@@ -468,6 +475,18 @@ void Ornithopter::_computeServoMixer() {
                                                      limiarShared, ferocityShapeMix,
                                                      strokeSkewR, returnSkewR);
 
+        // ── MUSHIN v1 parameter cache ────────────────────────────────
+        // The spirit streams wave parameters, not servo µs: the muscle
+        // reconstructs phase + shapeWave locally per tick. Values are
+        // post-mix (L wing) and symmetric (skew before aileron differential).
+        lastThrottlePct = throttlePct;
+        lastFlapHz = freqHz;
+        lastStrokeFer = strokeFerL;
+        lastReturnFer = returnFerL;
+        lastStrokeSkew = strokeSkewEff;
+        lastReturnSkew = returnSkewEff;
+        lastFlapping = true;
+
 #ifdef ZEPHYRUS_ENABLED
         // Resonance — phase-locked lock-in amplifier: accumulate
         // errorRate × sin(phase), leaky τ = 0.15 s, clamped to ±2.0.
@@ -498,6 +517,9 @@ void Ornithopter::_computeServoMixer() {
         _osc.decay(0.0f);
         _lastUpdateUs = 0;
         _prevThrottlePct = -1.0f;   // glide: sentinel seeds the next flap tick without kick
+        lastFlapping = false;       // MUSHIN v1: glide → cadence decay on the muscle
+        lastThrottlePct = 0.0f;
+        lastFlapHz = 0.0f;
         _throttleRateLPF = 0.0f;
         _prevAileronNorm = -2.0f;   // glide: sentinel seeds without roll slew kick
         _aileronRateLPF = 0.0f;

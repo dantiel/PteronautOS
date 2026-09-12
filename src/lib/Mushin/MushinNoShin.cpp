@@ -37,8 +37,21 @@
   #endif
 #endif
 
+// v1 parameter-intent cadence divider: 11 bytes @ 57600 ≈ 2.3 ms bit-banged
+// per frame → ~55 Hz. Plenty — the muscle reconstructs phase locally, so the
+// bridge is latency-tolerant by design. The v0 µs divider above stays
+// untouched for the fallback path.
+#ifndef MUSHIN_PARAM_DIVIDER
+  #if defined(PLATFORM_ESP8266)
+    #define MUSHIN_PARAM_DIVIDER 6
+  #else
+    #define MUSHIN_PARAM_DIVIDER 1
+  #endif
+#endif
+
 static MushinNoShin mushin;
 static uint8_t  mushinDivider = 0;
+static uint8_t  mushinParamDivider = 0;
 
 void mushinInit()
 {
@@ -62,6 +75,19 @@ void mushinEmitIntents(const uint16_t *us, uint8_t count)
         return;
     mushinDivider = 0;
     mushin.emitIntents(us, count);
+}
+
+void mushinEmitIntentV1(const MushinIntentV1 &p)
+{
+    if (++mushinParamDivider < MUSHIN_PARAM_DIVIDER)
+        return;
+    mushinParamDivider = 0;
+    mushin.emitIntentV1(p);
+}
+
+uint8_t mushinMuscleVersion()
+{
+    return mushin.muscleVersion();
 }
 
 const MushinTelemetry &mushinTelemetry()
@@ -115,6 +141,7 @@ void MushinNoShin::update(uint32_t nowMs)
                 break;
             if (_type == MUSHIN_ANNOUNCE && _len >= 6)
             {
+                _announcedVersion = _buf[0];
                 _announcedServos = _buf[1];
                 _linked = true;
                 _lastAnnounceMs = nowMs;
@@ -140,6 +167,31 @@ void MushinNoShin::update(uint32_t nowMs)
 bool MushinNoShin::isLinked() const
 {
     return _linked;
+}
+
+void MushinNoShin::emitIntentV1(const MushinIntentV1 &p)
+{
+    if (!_serial)
+        return;
+
+    uint8_t hdr[3] = { MUSHIN_SYNC, MUSHIN_INTENT_V1_LEN, MUSHIN_INTENT };
+    uint8_t x = (uint8_t)(MUSHIN_INTENT_V1_LEN ^ MUSHIN_INTENT);
+    _serial->write(hdr, 3);
+
+    uint8_t b[MUSHIN_INTENT_V1_LEN];
+    b[0] = (uint8_t)(p.throttle & 0xFF);
+    b[1] = (uint8_t)((p.throttle >> 8) & 0xFF);
+    b[2] = p.flapFreq;
+    b[3] = p.ferocity;
+    b[4] = (uint8_t)p.skew;
+    b[5] = p.slew;
+    b[6] = p.stance;
+    b[7] = (uint8_t)((uint16_t)p.setpointRoll & 0xFF);
+    b[8] = (uint8_t)(((uint16_t)p.setpointRoll >> 8) & 0xFF);
+    b[9]  = (uint8_t)((uint16_t)p.setpointPitch & 0xFF);
+    b[10] = (uint8_t)(((uint16_t)p.setpointPitch >> 8) & 0xFF);
+    for (uint8_t i = 0; i < MUSHIN_INTENT_V1_LEN; i++) { _serial->write(b[i]); x ^= b[i]; }
+    _serial->write(x);
 }
 
 void MushinNoShin::emitIntents(const uint16_t *us, uint8_t count)

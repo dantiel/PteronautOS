@@ -59,6 +59,15 @@ public:
     // ── Flight profiles (multi-position channel) ─────────────────────
     FlightProfileParams flightProfiles[FLIGHT_PROFILE_COUNT];
     uint8_t activeFlightProfile;   // 0..2 (selected by STK_PROFILE channel)
+
+    // ── MUSHIN v1 parameter cache (post-mix, written by the mixer kernel) ──
+    float   lastThrottlePct;       // 0..1, post-mix throttle (0 in glide)
+    float   lastFlapHz;            // actual flap frequency (0 in glide)
+    float   lastStrokeFer;         // 0..8 post-mix downstroke ferocity (left wing)
+    float   lastReturnFer;         // 0..8 post-mix upstroke ferocity (left wing)
+    float   lastStrokeSkew;        // ±100 post-mix symmetric stroke skew
+    float   lastReturnSkew;        // ±100 post-mix symmetric return skew
+    bool    lastFlapping;          // true = flapping branch ran this tick
     void applyFlightProfile(uint8_t idx);
     void setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide,
                                 int8_t flapAng, float ail, float elev,

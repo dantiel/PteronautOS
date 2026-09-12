@@ -832,27 +832,66 @@ static void detachServos() {
 }
 
 // =============================================================================
-//  MUSHIN (無心) — the muscle-memory mode · protocol v0 skeleton
+//  MUSHIN (無心) — the muscle-memory mode · protocol v1 — the local wave core
 // -----------------------------------------------------------------------------
 //  Frame on the bridge UART: [0x9B][len][type][payload…][xor] with xor over
-//  len+type+payload. 0x01 = spirit→muscle servo intents (n × uint16 µs),
-//  0x02 = muscle→spirit announce (version, servo count, gyro), 0x03 = muscle→spirit
+//  len+type+payload. 0x01 = spirit→muscle intent: v1 = 11-byte wave
+//  parameters (throttle, flapFreq, ferocity, skew, slew, stance, rate
+//  setpoints — the muscle computes phase + shapeWave locally per tick, so the
+//  bit-banged bridge no longer limits flapping resolution); v0 = n × uint16 µs
+//  (length-based fallback: len==11 → v1, else even → v0). 0x02 = muscle→spirit
+//  announce (version byte 0 = MUSHIN_VER, servo count, gyro), 0x03 = muscle→spirit
 //  gyro telemetry. The bridge is the same two wires as the flasher — in the
 //  converter stances they speak MUSHIN, in MEDITATION they carry esptool's
 //  SLIP untouched. No dynamic memory, no delay(), never blocking.
 // =============================================================================
 
 #define MUSHIN_SYNC      0x9B        // 無心 — the no-mind sync
-#define MUSHIN_VER       0
-#define MUSHIN_INTENT    0x01        // spirit → muscle: servo intents
+#define MUSHIN_VER       1           // protocol version — 1 = parameter intents
+#define MUSHIN_INTENT    0x01        // spirit → muscle: wave params / servo µs
 #define MUSHIN_ANNOUNCE  0x02        // muscle → spirit: version + posture
 #define MUSHIN_TELEMETRY 0x03        // muscle → spirit: gyro rate + correction
 #define MUSHIN_MAX_PAY   16          // 8 servos × 2 bytes
 #define MUSHIN_INTENT_STALE_MS   500         // intents stale after this → CRSF path resumes
+#define MUSHIN_INTENT_V1_LEN    11          // v1 parameter intent payload length
+#define MUSHIN_TWO_PI_Q16       411775UL    // 2π·65536 — phase wrap in Q16 rad
+#define MUSHIN_OMEGA_DHZ_Q16    41177       // 0.1 Hz·2π·65536 — ω per deci-Hz, Q16 rad/s
+#define MUSHIN_COS_LUT_BITS     8           // 256-entry cosine LUT over [0, 2π)
+#define MUSHIN_COS_LUT_SIZE     (1 << MUSHIN_COS_LUT_BITS)
+#define MUSHIN_COS_ONE_Q14      16384       // 1.0 in Q14
+#define MUSHIN_TOTBAND_THROTTLE 20          // throttle‰ ≤ this parks the wings at centre
+#define MUSHIN_FAILSAFE_EASE_MS 250         // damped unlink: ease to centre, then release
+#ifndef MUSHIN_PID_I_GAIN
+  #define MUSHIN_PID_I_GAIN     4           // Q8 I-term gain for the muscle's crest PID
+#endif
+#define MUSHIN_PID_I_MAX        4000        // I-accumulator clamp (LSB·tick)
 
 enum : uint8_t { MS_IDLE, MS_LEN, MS_TYPE, MS_PAY, MS_XOR };
 static uint8_t msState = MS_IDLE, msLen = 0, msType = 0, msIdx = 0, msXor = 0;
 static uint8_t msBuf[MUSHIN_MAX_PAY];
+
+// v1 parameter intent as parsed from the wire (layout mirrors the spirit's
+// MushinIntentV1: u16 throttle, u8 flapFreq/ferocity/slew/stance, i8 skew,
+// i16 setRoll/setPitch). mushinIntent[] below remains the v0 µs fallback.
+static struct {
+  uint16_t throttle;
+  uint8_t  flapFreq, ferocity, slew, stance;
+  int8_t   skew;
+  int16_t  setRoll, setPitch;
+} mushinParam;
+static uint8_t mushinV1         = 0;   // 1 = the last intent was a v1 parameter frame
+static uint8_t mushinParamDirty = 0;   // first v1 frame after (re)link → seed the wave core
+
+// Wave-core state (muscle-local phase accumulator, Q16 rad·µs world):
+static uint32_t mwLastUs   = 0;        // last tick timestamp (µs)
+static uint32_t mwClampUs  = 0;        // last velocity-clamp timestamp (µs)
+static int32_t  mwCadence  = 0;        // Q16 rad/s approach value (unity-gain damped)
+static int64_t  mwPhaseAcc = 0;        // 64-bit phase accumulator, Q16 rad·µs
+static int32_t  mwIterm    = 0;        // crest PID I accumulator (LSB·tick)
+static uint16_t mwWingL    = 1500;     // last left-wing µs (velocity-clamp anchor)
+static uint16_t mwWingR    = 1500;     // last right-wing µs
+static uint8_t  mwEasing   = 0;        // damped failsafe in progress
+static uint32_t mwUnlinkMs = 0;        // easing start (ms)
 
 // The dual tongue: JIGUANG narrates the MUSHIN link when awake; without the
 // storyteller compiled in, the muscle works in silence (as it should).
@@ -885,10 +924,27 @@ static void mushinParse(uint8_t b) {
       msState = MS_IDLE;
       if (b != msXor) return;
       if (msType == MUSHIN_INTENT) {
-        uint8_t n = (uint8_t)(msLen / 2);
-        if (n > servoCount) n = servoCount;
-        for (uint8_t i = 0; i < n; i++)
-          mushinIntent[i] = (uint16_t)(msBuf[2 * i] | (msBuf[2 * i + 1] << 8));
+        if (msLen == MUSHIN_INTENT_V1_LEN) {
+          // v1 parameter frame — the muscle computes phase + shapeWave locally
+          mushinParam.throttle = (uint16_t)(msBuf[0] | (msBuf[1] << 8));
+          mushinParam.flapFreq = msBuf[2];
+          mushinParam.ferocity = msBuf[3];
+          mushinParam.skew     = (int8_t)msBuf[4];
+          mushinParam.slew     = msBuf[5];
+          mushinParam.stance   = msBuf[6];
+          mushinParam.setRoll  = (int16_t)(msBuf[7] | (msBuf[8] << 8));
+          mushinParam.setPitch = (int16_t)(msBuf[9] | (msBuf[10] << 8));
+          if (!mushinV1) mushinParamDirty = 1;   // (re)link → seed the wave core
+          mushinV1 = 1;
+          mwEasing = 0;                          // fresh intent cancels the ease
+        } else {
+          // v0 µs intents — the old path, kept for a v0 spirit
+          uint8_t n = (uint8_t)(msLen / 2);
+          if (n > servoCount) n = servoCount;
+          for (uint8_t i = 0; i < n; i++)
+            mushinIntent[i] = (uint16_t)(msBuf[2 * i] | (msBuf[2 * i + 1] << 8));
+          mushinV1 = 0;
+        }
         if (!mushinLinked) mushinTale("MUSHIN linked — the spirit's intent arrives; the muscle strikes before the thought.");
         mushinLinked = true;
         mushinLastIntentMs = millis();
@@ -937,16 +993,209 @@ static void mushinAnnounce() {
   mushinSend(MUSHIN_TELEMETRY, t, 6);
 }
 
+// =============================================================================
+//  MUSHIN v1 wave core — the muscle's own phase + shapeWave, per tick
+// -----------------------------------------------------------------------------
+//  The spirit streams parameters; the muscle strikes. Phase advances on a
+//  64-bit accumulator (acc += cadence[Q16]·dt[µs], wrap at 2π·1e6), the
+//  waveform comes from a 256-entry Q14 cosine LUT — no float, no malloc, no
+//  delay(). KINCHO laws without gyro: throttle deadband parks the wings,
+//  slew becomes a velocity clamp, link loss eases to centre before release.
+// =============================================================================
+
+// cos(2π·i/256) in Q14 (16384 = 1.0), generated once — no PROGMEM needed on
+// RP2040/ESP32, the table lives in flash as ordinary const.
+static const int16_t mushinCosLut[MUSHIN_COS_LUT_SIZE] = {
+    16384, 16379, 16364, 16340, 16305, 16261, 16207, 16143,
+    16069, 15986, 15893, 15791, 15679, 15557, 15426, 15286,
+    15137, 14978, 14811, 14635, 14449, 14256, 14053, 13842,
+    13623, 13395, 13160, 12916, 12665, 12406, 12140, 11866,
+    11585, 11297, 11003, 10702, 10394, 10080, 9760, 9434,
+    9102, 8765, 8423, 8076, 7723, 7366, 7005, 6639,
+    6270, 5897, 5520, 5139, 4756, 4370, 3981, 3590,
+    3196, 2801, 2404, 2006, 1606, 1205, 804, 402,
+    0, -402, -804, -1205, -1606, -2006, -2404, -2801,
+    -3196, -3590, -3981, -4370, -4756, -5139, -5520, -5897,
+    -6270, -6639, -7005, -7366, -7723, -8076, -8423, -8765,
+    -9102, -9434, -9760, -10080, -10394, -10702, -11003, -11297,
+    -11585, -11866, -12140, -12406, -12665, -12916, -13160, -13395,
+    -13623, -13842, -14053, -14256, -14449, -14635, -14811, -14978,
+    -15137, -15286, -15426, -15557, -15679, -15791, -15893, -15986,
+    -16069, -16143, -16207, -16261, -16305, -16340, -16364, -16379,
+    -16384, -16379, -16364, -16340, -16305, -16261, -16207, -16143,
+    -16069, -15986, -15893, -15791, -15679, -15557, -15426, -15286,
+    -15137, -14978, -14811, -14635, -14449, -14256, -14053, -13842,
+    -13623, -13395, -13160, -12916, -12665, -12406, -12140, -11866,
+    -11585, -11297, -11003, -10702, -10394, -10080, -9760, -9434,
+    -9102, -8765, -8423, -8076, -7723, -7366, -7005, -6639,
+    -6270, -5897, -5520, -5139, -4756, -4370, -3981, -3590,
+    -3196, -2801, -2404, -2006, -1606, -1205, -804, -402,
+    0, 402, 804, 1205, 1606, 2006, 2404, 2801,
+    3196, 3590, 3981, 4370, 4756, 5139, 5520, 5897,
+    6270, 6639, 7005, 7366, 7723, 8076, 8423, 8765,
+    9102, 9434, 9760, 10080, 10394, 10702, 11003, 11297,
+    11585, 11866, 12140, 12406, 12665, 12916, 13160, 13395,
+    13623, 13842, 14053, 14256, 14449, 14635, 14811, 14978,
+    15137, 15286, 15426, 15557, 15679, 15791, 15893, 15986,
+    16069, 16143, 16207, 16261, 16305, 16340, 16364, 16379,
+};
+
+// cos(phaseQ16) in Q14: 8-bit LUT index, 2-bit linear interpolation.
+static int16_t mushinCosQ14(uint32_t phaseQ16) {
+  uint32_t i = (phaseQ16 >> 8) & (MUSHIN_COS_LUT_SIZE - 1);   // 16 − 8 bits index
+  uint8_t  f = (uint8_t)((phaseQ16 >> 6) & 0x3);              // 2-bit fraction
+  int32_t  a = mushinCosLut[i];
+  int32_t  b = mushinCosLut[(i + 1) & (MUSHIN_COS_LUT_SIZE - 1)];
+  return (int16_t)((a * (4 - f) + b * f) >> 2);
+}
+
+// Advance the muscle's phase. Unity-gain damping k=10 mirrors the spirit's
+// FlappingOscillator (10·dt ≤ 1e6 ⇒ never overshoots). During damped
+// failsafe the target is zero and the cadence decays ×0.9 per tick.
+static void mushinWaveTick(uint32_t nowUs) {
+  if (mushinParamDirty) {                 // first v1 frame after (re)link: seed
+    mwLastUs = nowUs;                     // the clock — no dt jump
+    mwPhaseAcc = 0;
+    mwCadence = 0;
+    mwEasing = 0;
+    mushinParamDirty = 0;
+  }
+  uint32_t dtUs = nowUs - mwLastUs;
+  mwLastUs = nowUs;
+  if (dtUs > 100000UL) dtUs = 100000UL;
+  if (dtUs == 0) dtUs = 1;
+
+  int32_t targetQ16 = mwEasing ? 0 : (int32_t)mushinParam.flapFreq * MUSHIN_OMEGA_DHZ_Q16;
+  mwCadence += (int32_t)(((int64_t)10 * (int64_t)(targetQ16 - mwCadence) * (int64_t)dtUs) / 1000000);
+  if (mwEasing) mwCadence = mwCadence * 9 / 10;
+  mwPhaseAcc += (int64_t)mwCadence * (int64_t)dtUs;
+  const int64_t wrap = (int64_t)MUSHIN_TWO_PI_Q16 * 1000000LL;   // 2π in Q16·µs
+  while (mwPhaseAcc >= wrap) mwPhaseAcc -= wrap;
+  while (mwPhaseAcc < 0) mwPhaseAcc += wrap;
+}
+
+// Fixed-point mirror of the spirit's shapeWave with shapeMix=0 (plateau+cos,
+// the classic GralhaAzul family). Q14 in, Q14 out; one ferocity byte drives
+// both half-strokes symmetrically; skew warps the downstroke +s and the
+// upstroke −s (endpoints stay pinned). No float anywhere.
+static int16_t mushinShapeWave(uint32_t phaseQ16) {
+  int32_t f8 = ((int32_t)mushinParam.ferocity * 8 + 50) / 100;   // 0..8
+  if (f8 > 8) f8 = 8;
+  int32_t wD = 8 - f8; if (wD < 1) wD = 1;
+  int32_t wS = 8 - f8; if (wS < 1) wS = 1;
+  uint32_t limiarQ16 = (uint32_t)((MUSHIN_TWO_PI_Q16 * (uint64_t)wD) / (uint64_t)(wD + wS));
+
+  bool descida = phaseQ16 < limiarQ16;
+  uint32_t t;                              // normalised half-stroke position, Q14
+  if (descida) t = (uint32_t)(((uint64_t)phaseQ16 * 16384) / limiarQ16);
+  else         t = (uint32_t)(((uint64_t)(phaseQ16 - limiarQ16) * 16384) / (MUSHIN_TWO_PI_Q16 - limiarQ16));
+  if (t > 16384) t = 16384;
+
+  // skew warp: t' = t + s·t·(1−t), s = skew% in Q14, mirrored on the upstroke
+  int32_t s = ((int32_t)mushinParam.skew * 16384) / 100;
+  if (!descida) s = -s;
+  int32_t tw = (int32_t)t + ((s * (int32_t)t >> 14) * (16384 - (int32_t)t) >> 14);
+  if (tw < 0) tw = 0;
+  if (tw > 16384) tw = 16384;
+
+  // dwell plateau: d = (f8/8)·0.98 in Q14 (8·2007 = 16056 ≈ 0.98·16384)
+  int32_t d  = f8 * 2007;
+  int32_t dh = d / 2;
+
+  int32_t wave;
+  if (tw < dh) wave = MUSHIN_COS_ONE_Q14;
+  else if (tw > 16384 - dh) wave = -MUSHIN_COS_ONE_Q14;
+  else {
+    // cos(π·x), x∈[0,1]: LUT index = x·128 → phaseQ16 = x·32768
+    uint32_t thetaQ16 = (uint32_t)(((int64_t)(tw - dh) * 32768) / (16384 - d));
+    wave = mushinCosQ14(thetaQ16);
+  }
+  return descida ? (int16_t)wave : (int16_t)-wave;
+}
+
+// Move a servo value toward its target by at most maxDelta µs per tick.
+static uint16_t mushinEaseTo(uint16_t cur, int32_t target, int32_t maxDelta) {
+  int32_t d = target - (int32_t)cur;
+  if (d > maxDelta) d = maxDelta;
+  else if (d < -maxDelta) d = -maxDelta;
+  return (uint16_t)((int32_t)cur + d);
+}
+
+// Apply the v1 parameter frame: wings from the local wave core (L = +wave,
+// R = −wave — code common = physical differential), crest from the rate
+// setpoint. KINCHO maps the stick directly; MANJI with gyro runs a true PID
+// attitude-hold (P on rate error, I on accumulated LSB, all integer).
+static void mushinWaveApply(uint32_t nowUs) {
+  mushinWaveTick(nowUs);
+  int16_t wave = mushinShapeWave((uint32_t)(mwPhaseAcc / 1000000));
+
+  // amplitude: throttle‰ → µs (1000 → ±500 µs, inside the 988..2012 window)
+  int32_t amp  = (int32_t)mushinParam.throttle / 2;
+  int32_t wing = 1500 + (amp * (int32_t)wave) / 16384;
+  if (mushinParam.throttle <= MUSHIN_TOTBAND_THROTTLE || mwEasing) wing = 1500;
+
+  // velocity clamp from slew (ms/60° → µs/ms ≈ 333/slew); 0 = unlimited
+  int32_t maxDelta = 0x7FFFFFFF;
+  if (mushinParam.slew > 0) {
+    uint32_t dtUs = nowUs - mwClampUs;
+    mwClampUs = nowUs;
+    if (dtUs > 100000UL) dtUs = 100000UL;
+    maxDelta = (int32_t)((333UL * dtUs) / ((uint32_t)mushinParam.slew * 1000UL));
+    if (maxDelta < 1) maxDelta = 1;
+  }
+  if (servoCount >= 1) {
+    mwWingL = mushinEaseTo(mwWingL, wing, maxDelta);
+    servos[0].writeMicroseconds((int)constrain((int32_t)mwWingL, (int32_t)PWM_MIN, (int32_t)PWM_MAX));
+  }
+  if (servoCount >= 2) {
+    mwWingR = mushinEaseTo(mwWingR, 3000 - wing, maxDelta);
+    servos[1].writeMicroseconds((int)constrain((int32_t)mwWingR, (int32_t)PWM_MIN, (int32_t)PWM_MAX));
+  }
+
+  // crest/rudder on the correction servo index (default 2): rate setpoint
+  // mapped straight to µs (±250 dps → ±200 µs), unless MANJI+gyro runs the PID.
+  if (servoCount > GYRO_CORRECTION_SERVO) {
+    int32_t rudUs = 1500 + (int32_t)mushinParam.setRoll * 200 / 250;
+#if YOSHI_GYRO
+    if (stance == STANCE_MANJI_DRAGONFLY && gyroConnected) {
+      int32_t errLsb = (int32_t)mushinParam.setRoll * GYRO_SCALE_LSB - gyroZRate();
+      mwIterm += errLsb;
+      if (mwIterm > MUSHIN_PID_I_MAX) mwIterm = MUSHIN_PID_I_MAX;
+      else if (mwIterm < -MUSHIN_PID_I_MAX) mwIterm = -MUSHIN_PID_I_MAX;
+      int32_t corrUs = errLsb * GYRO_GAIN / GYRO_SCALE_LSB + mwIterm * MUSHIN_PID_I_GAIN / 256;
+      if (corrUs > 200) corrUs = 200;
+      else if (corrUs < -200) corrUs = -200;
+      rudUs = 1500 + corrUs;
+    }
+#endif
+    servos[GYRO_CORRECTION_SERVO].writeMicroseconds((int)constrain(rudUs, (int32_t)PWM_MIN, (int32_t)PWM_MAX));
+  }
+}
+
 // The muscle layer: intents from the spirit override the local CRSF path while
 // the link is fresh; the local gyro PID holds the crest (MANJI only). If the
 // wire falls quiet, YOSHIMITSU returns to its own CRSF muscle — grace in
 // degradation, never a dead wing.
 static void mushinApply() {
-  if (!mushinLinked || millis() - mushinLastIntentMs > MUSHIN_INTENT_STALE_MS) {
+  uint32_t now = millis();
+  if (!mushinLinked || now - mushinLastIntentMs > MUSHIN_INTENT_STALE_MS) {
+    if (mushinLinked && mushinV1) {
+      // Damped failsafe: ease the wings to centre with the velocity clamp,
+      // decay the cadence, then release the link — never a hard tear.
+      if (!mwEasing) { mwEasing = 1; mwUnlinkMs = now; }
+      if (now - mwUnlinkMs < MUSHIN_FAILSAFE_EASE_MS) {
+        mushinWaveApply(micros());
+        return;
+      }
+    }
     if (mushinLinked) {
       mushinLinked = false;
       mushinTale("MUSHIN link quiet — YOSHIMITSU returns to its own CRSF muscle.");
     }
+    return;
+  }
+  if (mushinV1) {
+    mushinWaveApply(micros());
     return;
   }
 #if YOSHI_GYRO

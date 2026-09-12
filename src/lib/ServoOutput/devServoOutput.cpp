@@ -157,20 +157,51 @@ static void servoWrite(uint8_t ch, uint16_t us)
 }
 
 #if defined(MUSHIN_ENABLED)
-// Stream the unified waveform+gyro result (_f[]) as MUSHIN intents, in the
-// profile's servo order (funcMap). The RP2040 muscle applies them 1:1; it
-// truncates to its own servoCount if the spirit carries more servos.
+// MUSHIN v1: the muscle (RP2040) owns phase + shapeWave; the spirit streams
+// the post-mix wave parameters every tick (throttled by MUSHIN_PARAM_DIVIDER
+// inside the bridge). A v0 muscle — announced version 0 — still gets the old
+// µs intents 1:1, so a mixed-generation link degrades gracefully.
 static void mushinEmitServoIntents()
 {
-    uint16_t us[MUSHIN_MAX_PAY / 2];
-    uint8_t  n = 0;
-    for (uint8_t ch = 0; ch < 7 && n < (MUSHIN_MAX_PAY / 2); ++ch)
+    if (mushinMuscleVersion() == 0)
     {
-        uint8_t func = PROFILE.funcMap[ch];
-        if (func != SF_NONE)
-            us[n++] = ornithopter.funcValue(func);
+        // v0 fallback: unified waveform+gyro result (_f[]) in profile servo
+        // order (funcMap); the muscle truncates to its own servoCount.
+        uint16_t us[MUSHIN_MAX_PAY / 2];
+        uint8_t  n = 0;
+        for (uint8_t ch = 0; ch < 7 && n < (MUSHIN_MAX_PAY / 2); ++ch)
+        {
+            uint8_t func = PROFILE.funcMap[ch];
+            if (func != SF_NONE)
+                us[n++] = ornithopter.funcValue(func);
+        }
+        mushinEmitIntents(us, n);
+        return;
     }
-    mushinEmitIntents(us, n);
+
+    MushinIntentV1 p;
+    p.throttle = (uint16_t)constrain((int32_t)(ornithopter.lastThrottlePct * 1000.0f + 0.5f), 0, 1000);
+    p.flapFreq = ornithopter.lastFlapping
+               ? (uint8_t)constrain((int32_t)(ornithopter.lastFlapHz * 10.0f + 0.5f), 10, 200)
+               : 0;   // glide: the muscle decays its local cadence
+    p.ferocity = (uint8_t)constrain((int32_t)(ornithopter.lastStrokeFer * 12.5f + 0.5f), 0, 100);
+    p.skew     = (int8_t)constrain((int32_t)ornithopter.lastStrokeSkew, -100, 100);
+    p.slew     = (uint8_t)constrain((int32_t)ornithopter.servoSpeed, 0, 255);
+    p.stance   = (uint8_t)constrain((int32_t)ornithopter.activeFlightProfile, 0, 5);
+
+    // Stick → rate setpoint (±250 dps), same normalisation the mixer uses
+    // ((raw−172)/819.5−1); deadband so a centred stick commands hold, not
+    // drift (CRSF neutral 992 sits inside the band).
+    float rollNorm  = (float)(ornithopter.voiceAileron  - 172) / 819.5f - 1.0f;
+    float pitchNorm = (float)(ornithopter.voiceElevator - 172) / 819.5f - 1.0f;
+    if (rollNorm > -0.02f && rollNorm < 0.02f) rollNorm = 0.0f;
+    if (pitchNorm > -0.02f && pitchNorm < 0.02f) pitchNorm = 0.0f;
+    if (rollNorm > 1.0f) rollNorm = 1.0f; else if (rollNorm < -1.0f) rollNorm = -1.0f;
+    if (pitchNorm > 1.0f) pitchNorm = 1.0f; else if (pitchNorm < -1.0f) pitchNorm = -1.0f;
+    p.setpointRoll  = (int16_t)(rollNorm * 250.0f);
+    p.setpointPitch = (int16_t)(pitchNorm * 250.0f);
+
+    mushinEmitIntentV1(p);
 }
 #endif
 
