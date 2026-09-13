@@ -141,6 +141,30 @@
 <p>Le couplage aileron→skew front-loade une aile tout en retardant l'autre — couple de roulis sur l'axe du skew, jumeau miroir du skew de throttle. Manche à gauche ajoute du skew à l'aile gauche et l'ôte à droite ; manche à droite fait l'inverse. À utiliser avec, ou à la place du, différentiel d'amplitude du gouvernail.</p>
 <p>Le slew est un boost ou frein transitoire sur la vitesse d’un stick. Donner des gaz front-load brièvement les DEUX demi-battements, couper les gaz late-load brièvement les DEUX ; la vitesse filtrée passe-bas (τ = 0,10 s) injecte l’à-coup, qui décroît ensuite dès que le stick est au repos. Deux couplages : slew de vitesse de throttle (symétrique, poussée) et slew de vitesse d’aileron (différentiel, roulis).</p>
 <p>Le slew gain du Zephyrus applique la même idée transitoire au gouvernail : un changement rapide d'assiette amplifie brièvement la correction du gouvernail (µs), filtrée passe-bas (τ = 0,12 s) et bornée à ±80 µs. Il aiguise la réponse aux changements rapides d'assiette sans hausser le gain statique.</p>
+<h3>Matrice des axes de commande</h3>
+<p>Le manche de direction n'a aucune autorité en lacet dans le mélangeur d'ailes : ses boutons différentiels (amplitude et férocité) construisent la même asymétrie gauche/droite que l'inclinaison d'aileron — et cette asymétrie est du roulis. Le vrai lacet n'existe que dans le gouvernail de crête autonome (Zephyrus, gyroscope uniquement).</p>
+<table>
+<tr>
+<th>Entrée de commande</th>
+<th>Paramètre d'onde</th>
+<th>Effet de vol</th>
+</tr>
+<tr>
+<td>Manche d'aileron</td>
+<td>Inclinaison (<code>skew</code>) — différentielle, gauche/droite</td>
+<td>Roulis</td>
+</tr>
+<tr>
+<td>Manche de direction</td>
+<td><code>amplitude</code> + <code>férocité</code> — différentielle, gauche/droite</td>
+<td>Roulis</td>
+</tr>
+<tr>
+<td>Lacet — gyroscope Zephyrus</td>
+<td>Gouvernail de crête</td>
+<td>Lacet (autonome)</td>
+</tr>
+</table>
 <div class='waveform-explorer waveform-detailed' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×' id='waveform-explorer'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>

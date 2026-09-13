@@ -141,6 +141,30 @@
 <p>エルロン→skew カップリングは片翼をフロントロードし、他翼を遅らせる——skew 軸上のロールトルクであり、スロットル skew の鏡像の双子。左打ちは左翼に skew を加え右翼から減じ、右打ちは逆。ラダー振幅差動と併用または代替できる。</p>
 <p>スルーはスティックのレートに対する過渡的なブーストまたはブレーキです。ガスを入れると両方の半ストロークを短時間 front-load し、ガスを抜くと両方を短時間 late-load します。ローパスされたレート（τ = 0.10 s）がキックを注入し、スティックが静止すると減衰します。2つの結合があります: スロットルレートスルー（対称、推力）とエルロンレートスルー（差動、ロール）。</p>
 <p>Zephyrus の slew gain は同じ過渡思想をラダーに適用する：姿勢の急変時にラダー補正（µs）を一時的に増幅し、ローパス（τ = 0.12 s）して ±80 µs にハードクランプする。静的ゲインを上げずに急な姿勢変化への応答を鋭くする。</p>
+<h3>制御軸マトリックス</h3>
+<p>ラダースティックは翼ミキサーにヨー権限を持たない。差動ノブ（振幅と猛度）はエルロンのスキューと同じ左右非対称を作り、その非対称はロールである。真のヨーは自律型頭蓋冠ラダー（Zephyrus、ジャイロのみ）にのみ存在する。</p>
+<table>
+<tr>
+<th>制御入力</th>
+<th>波形パラメータ</th>
+<th>飛行効果</th>
+</tr>
+<tr>
+<td>エルロンスティック</td>
+<td>スキュー (<code>skew</code>) — 差動、左右</td>
+<td>ロール</td>
+</tr>
+<tr>
+<td>ラダースティック</td>
+<td><code>振幅</code> + <code>猛度</code> — 差動、左右</td>
+<td>ロール</td>
+</tr>
+<tr>
+<td>ヨー — Zephyrus ジャイロ</td>
+<td>頭蓋冠ラダー</td>
+<td>ヨー（自律）</td>
+</tr>
+</table>
 <div class='waveform-explorer waveform-detailed' data-ferocity-explorer data-i18n-axis-cycle='羽ばたき周期の位相' data-i18n-axis-half='ローカル半ストローク位相' data-i18n-axis-wing='翼位置' data-i18n-lock-oppose='反対：スライダーが相補的（合計=8）（クリックで切替）' data-i18n-lock-sync='同期：両スライダーが一緒に動く（クリックで切替）' data-i18n-lock-unlocked='ロック解除（クリックで切替）' data-i18n-metric='時間配分：ダウン {down}% ・アップ {up}% ・ピーク位相速度比 {ratio}×' id='waveform-explorer'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>

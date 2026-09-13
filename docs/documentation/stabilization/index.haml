@@ -156,6 +156,26 @@
         %p!= doc_slew_p
         %p!= doc_zephyr_slew_p
 
+        %h3!= doc_matrix_title
+        %p!= doc_matrix_p
+        %table
+          %tr
+            %th!= doc_matrix_h_stick
+            %th!= doc_matrix_h_wave
+            %th!= doc_matrix_h_effect
+          %tr
+            %td!= doc_matrix_ail_c1
+            %td!= doc_matrix_ail_c2
+            %td!= doc_matrix_ail_c3
+          %tr
+            %td!= doc_matrix_rud_c1
+            %td!= doc_matrix_rud_c2
+            %td!= doc_matrix_rud_c3
+          %tr
+            %td!= doc_matrix_yaw_c1
+            %td!= doc_matrix_yaw_c2
+            %td!= doc_matrix_yaw_c3
+
         #waveform-explorer.waveform-explorer.waveform-detailed{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
           .waveform-controls
             %label{for: "st-wave-down-ferocity"}

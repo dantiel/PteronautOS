@@ -141,6 +141,30 @@
 <p>副翼→skew 耦合前载一翼而延迟另一翼——在 skew 轴上的滚转力矩，是油门 skew 的镜像孪生。杆向左给左翼加 skew 并从右翼减去；向右则相反。可与方向舵幅度差动并用或替代之。</p>
 <p>Slew 是对摇杆速率的瞬时加速或制动。给油会短暂 front-load 两个半冲程，收油会短暂 late-load 两个半冲程；低通滤波后的速率（τ = 0.10 s）注入冲击，摇杆回中后衰减。两种耦合：油门速率 slew（对称、推力）与副翼速率 slew（差动、横滚）。</p>
 <p>Zephyrus 的 slew gain 将同样的瞬态思想用于方向舵：姿态快速变化时短暂增强方向舵修正（µs），低通滤波（τ = 0.12 s）并硬限幅 ±80 µs。它在不提高静态增益的情况下锐化对快速姿态变化的响应。</p>
+<h3>控制轴矩阵</h3>
+<p>方向舵摇杆在机翼混合器中没有任何偏航权限：其差动旋钮（振幅与凶猛度）产生与副翼偏移相同的左/右不对称——而这种不对称就是滚转。真正的偏航只存在于自主头冠舵（Zephyrus，仅陀螺仪）中。</p>
+<table>
+<tr>
+<th>控制输入</th>
+<th>波形参数</th>
+<th>飞行效果</th>
+</tr>
+<tr>
+<td>副翼摇杆</td>
+<td>偏移 (<code>skew</code>) — 差动，左/右</td>
+<td>滚转</td>
+</tr>
+<tr>
+<td>方向舵摇杆</td>
+<td><code>振幅</code> + <code>凶猛度</code> — 差动，左/右</td>
+<td>滚转</td>
+</tr>
+<tr>
+<td>偏航 — Zephyrus 陀螺仪</td>
+<td>头冠舵</td>
+<td>偏航（自主）</td>
+</tr>
+</table>
 <div class='waveform-explorer waveform-detailed' data-ferocity-explorer data-i18n-axis-cycle='扑翼周期相位' data-i18n-axis-half='局部半行程相位' data-i18n-axis-wing='机翼位置' data-i18n-lock-oppose='相反：滑块互补（合计=8）（点击切换）' data-i18n-lock-sync='同步：两个滑块一起移动（点击切换）' data-i18n-lock-unlocked='已解锁（点击切换）' data-i18n-metric='时间分配：下 {down}% · 上 {up}% · 峰值相位速度比 {ratio}×' id='waveform-explorer'>
 <div class='waveform-controls'>
 <label for='st-wave-down-ferocity'>
