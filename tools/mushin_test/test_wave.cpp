@@ -153,6 +153,12 @@ static void test_shapewave() {
   mushinParam.skew = 90;
   CHECK_EQ(mushinShapeWave(0), 16384);
   CHECK_NEAR(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 2), -16384, 3);
+  // skew also redistributes the plateau: +s front-loads (mid downstroke stays
+  // in the +1 plateau), −s late-loads (mid downstroke is already the −1 plateau)
+  CHECK_EQ(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4), 16384);
+  mushinParam.skew = -90;
+  CHECK_EQ(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4), -16384);
+  mushinParam.skew = 0;
 }
 
 static void test_protocol_roundtrip() {

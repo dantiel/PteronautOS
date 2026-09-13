@@ -78,6 +78,19 @@ int main()
     assert(upFront > 0.5f);
     assert(upBack < -0.5f);
 
-    std::cout << "Ferocity plateau-to-pyramidal mixing + centre-skew passed\n";
+    // Skew also redistributes the square-wave plateau: at full ferocity and
+    // shapeMix=0 (pure square family) the symmetric half's ramp is centred on
+    // t=0.5 (value ≈ 0). +100 front-loads so the leading plateau still covers
+    // mid-stroke (+1); −100 late-loads so mid-stroke is already the trailing
+    // plateau (−1).
+    const float downMidFer = 0.5f * kPi;
+    expectNear(FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+               0.0f, 0.05f);
+    const float frontPlateau = FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, 100.0f, 0.0f);
+    const float backPlateau = FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, -100.0f, 0.0f);
+    assert(frontPlateau > 0.99f);
+    assert(backPlateau < -0.99f);
+
+    std::cout << "Ferocity plateau-to-pyramidal mixing + centre-skew + plateau-skew passed\n";
     return 0;
 }

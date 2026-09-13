@@ -1116,13 +1116,17 @@ static int16_t mushinShapeWave(uint32_t phaseQ16) {
   // dwell plateau: d = (f8/8)·0.98 in Q14 (8·2007 = 16056 ≈ 0.98·16384)
   int32_t d  = f8 * 2007;
   int32_t dh = d / 2;
+  // skew also redistributes the plateau: +s holds the start longer (front-load),
+  // −s the end (late thrust); front+back still sum to d so the ramp keeps width.
+  int32_t frontDwell = dh + ((s * dh) >> 14);
+  int32_t backDwell  = dh - ((s * dh) >> 14);
 
   int32_t wave;
-  if (tw < dh) wave = MUSHIN_COS_ONE_Q14;
-  else if (tw > 16384 - dh) wave = -MUSHIN_COS_ONE_Q14;
+  if (tw < frontDwell) wave = MUSHIN_COS_ONE_Q14;
+  else if (tw > 16384 - backDwell) wave = -MUSHIN_COS_ONE_Q14;
   else {
     // cos(π·x), x∈[0,1]: LUT index = x·128 → phaseQ16 = x·32768
-    uint32_t thetaQ16 = (uint32_t)(((int64_t)(tw - dh) * 32768) / (16384 - d));
+    uint32_t thetaQ16 = (uint32_t)(((int64_t)(tw - frontDwell) * 32768) / (16384 - d));
     wave = mushinCosQ14(thetaQ16);
   }
   return descida ? (int16_t)wave : (int16_t)-wave;

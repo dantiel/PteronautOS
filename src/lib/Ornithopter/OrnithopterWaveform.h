@@ -27,10 +27,11 @@ public:
     // half-stroke along its own [start…end] axis — the same per-half mirroring
     // as stroke/return ferocity ("as above so below"). + shifts the centre
     // toward the START of the half (augmented thrust: the wing reaches peak
-    // velocity sooner); − shifts it toward the END (diminished thrust: the
-    // stroke spends its motion late). 0 keeps the wave symmetric. The warp is
-    // monotonic and end-point-preserving, so it is exactly an ASYMMETRIC mix of
-    // the square (dwell) and triangular families — never a position jump.
+    // velocity sooner) AND lengthens the leading plateau of the square family;
+    // − shifts both toward the END (diminished/late thrust, longer trailing
+    // plateau). 0 keeps the wave symmetric. The warp is monotonic and
+    // end-point-preserving — exactly an asymmetric mix of the square (dwell)
+    // and triangular families, never a position jump.
     static float shapeWave(float theta, float strokeFerocity, float returnFerocity,
                            float limiarShared = -1.0f, float shapeMixPercent = 0.0f,
                            float strokeSkewPercent = 0.0f, float returnSkewPercent = 0.0f);
@@ -113,12 +114,20 @@ inline float FlappingOscillator::shapeWave(
 
     float ferocity01 = f * 0.125f;
     float d = ferocity01 * kMaxDwell;
-    float dh = d * 0.5f;    // half-dwell per extreme
+
+    // Skew also redistributes the square-wave plateau: the dwell is no longer
+    // split 50/50. +s holds the START of the half longer (front-load — the
+    // wing dwells at full extension before the ramp), −s holds the END longer
+    // (late thrust). front + back still sum to d, so the ramp keeps its width
+    // and only its position within the half moves — monotonic, no jump.
+    float dh = d * 0.5f;
+    float frontDwell = dh * (1.0f + skew01);
+    float backDwell  = dh * (1.0f - skew01);
 
     float plateau;
-    if (t < dh) plateau = 1.0f;
-    else if (t > 1.0f - dh) plateau = -1.0f;
-    else plateau = cosf(kPi * (t - dh) / (1.0f - d));
+    if (t < frontDwell) plateau = 1.0f;
+    else if (t > 1.0f - backDwell) plateau = -1.0f;
+    else plateau = cosf(kPi * (t - frontDwell) / (1.0f - d));
 
     // Coupling pointedness to this half's ferocity makes a strong half-stroke
     // direct and pyramidal while a weaker, elongated half remains sinusoidal.

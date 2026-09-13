@@ -183,12 +183,16 @@ class FerocityWaveformExplorer
 
     dwell = amount * 0.98
     halfDwell = dwell / 2
-    plateau = if phase < halfDwell
+    # Skew redistributes the square-wave plateau: +s holds the start longer,
+    # −s the end. Front + back still sum to dwell, so the ramp width is fixed.
+    frontDwell = halfDwell * (1 + skew01)
+    backDwell = halfDwell * (1 - skew01)
+    plateau = if phase < frontDwell
       1
-    else if phase > 1 - halfDwell
+    else if phase > 1 - backDwell
       -1
     else
-      Math.cos PI * (phase - halfDwell) / (1 - dwell)
+      Math.cos PI * (phase - frontDwell) / (1 - dwell)
 
     point = 0.98 * (2 * amount - amount * amount)
     pointed = if point < 0.0001
