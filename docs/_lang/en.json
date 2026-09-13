@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "Open the full steering & slew explorer →",
   "doc_wave_aileron": "Aileron",
   "doc_wave_throttle_skew_mix": "Thrust-shape mix",
+  "doc_wave_thrust_expo": "Throttle → thrust expo",
   "doc_wave_aileron_skew_mix": "Aileron→skew mix",
   "doc_wave_slew": "Slew (rate)",
   "doc_legend_wing_l": "Left wing",

@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "Открыть полный обозреватель руления & slew →",
   "doc_wave_aileron": "Элерон",
   "doc_wave_throttle_skew_mix": "Микс формы тяги",
+  "doc_wave_thrust_expo": "Экспо тяги",
   "doc_wave_aileron_skew_mix": "Смесь aileron→skew",
   "doc_wave_slew": "Slew (скорость)",
   "doc_legend_wing_l": "Левое крыло",

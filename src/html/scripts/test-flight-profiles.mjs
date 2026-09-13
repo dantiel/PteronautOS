@@ -9,14 +9,22 @@ const source = readFileSync(new URL('../src/pages/flight-profiles-panel.coffee',
     .replace(/^import .*$/gm, '')
     .replace('export default FlightProfilesPanel', 'globalThis.Panel = FlightProfilesPanel');
 const compiled = CoffeeScript.compile(source, {bare: true});
+// Mirrors PROFILE_FIELDS in flight-profiles-panel.coffee — every slider the
+// panel saves must appear here, or the panel rightly reports an invalid value.
 const fields = {
     strokeFerocity: 'stroke_ferocity', returnFerocity: 'return_ferocity',
     glideAngleDeg: 'glide_angle_deg', flappingAngleDeg: 'flapping_angle_deg',
     aileronScale: 'aileron_scale', elevatorScale: 'elevator_scale',
     rudderFerocityRange: 'rudder_ferocity_range',
     rudderAmplitudeDifferential: 'rudder_amplitude_differential',
-    elevatorFerocityMix: 'elevator_ferocity_mix', throttleFerocityMix: 'throttle_ferocity_mix',
-    throttleFrequencyMix: 'throttle_frequency_mix', ferocityShapeMix: 'ferocity_shape_mix'
+    elevatorFerocityMix: 'elevator_ferocity_mix',
+    throttleThrustShapeMix: 'throttle_thrust_shape_mix',
+    throttleThrustExpo: 'throttle_thrust_expo',
+    throttleFrequencyMix: 'throttle_frequency_mix', ferocityShapeMix: 'ferocity_shape_mix',
+    strokeSkew: 'stroke_skew', returnSkew: 'return_skew',
+    aileronSkewMix: 'aileron_skew_mix',
+    throttleSkewRateMix: 'throttle_skew_rate_mix',
+    aileronSkewRateMix: 'aileron_skew_rate_mix'
 };
 function setup() {
     const requests = [];

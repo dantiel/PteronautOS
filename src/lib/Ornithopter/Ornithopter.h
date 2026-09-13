@@ -72,10 +72,10 @@ public:
     void setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide,
                                 int8_t flapAng, float ail, float elev,
                                 float rudRng, float rudAmpDiff,
-                                float elevFerMix, float thrFerMix,
+                                float elevFerMix, float thrExpo, float thrFerMix,
                                 float thrFreqMix, float ferShapeMix,
                                 float strokeSkew, float returnSkew,
-                                float thrSkewMix, float ailSkewMix,
+                                float ailSkewMix,
                                 float thrSkewRateMix, float ailSkewRateMix);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
@@ -100,6 +100,7 @@ public:
     float   strokeSkew;           // -100…+100, downstroke wave-centre shift
     float   returnSkew;           // -100…+100, upstroke wave-centre shift
     float   throttleThrustShapeMix; // 0–100, throttle→thrust-shape coupling (blended dwell + centre)
+    float   throttleThrustExpo;     // -100…+100, curve of the thrust aggression (soft ↔ direct)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake

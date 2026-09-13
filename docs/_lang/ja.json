@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "フル操舵＆スルー探索を開く →",
   "doc_wave_aileron": "エルロン",
   "doc_wave_throttle_skew_mix": "推力形状ミックス",
+  "doc_wave_thrust_expo": "推力エクスポ",
   "doc_wave_aileron_skew_mix": "エルロン→skew ミックス",
   "doc_wave_slew": "Slew（レート）",
   "doc_legend_wing_l": "左翼",

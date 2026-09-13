@@ -15,6 +15,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   src/test/profile-save/test-ferocity-shape.cpp \
   -o /tmp/ptero-test-ferocity-shape
 /tmp/ptero-test-ferocity-shape
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  src/test/profile-save/test-thrust-expo.cpp \
+  -o /tmp/ptero-test-thrust-expo
+/tmp/ptero-test-thrust-expo
 ```
 
 The JS tests compile and execute the actual CoffeeScript panel with mocked
@@ -48,3 +52,6 @@ The throttle-frequency test verifies the new per-profile coupling endpoints,
 continuous interpolation, input clamps, and monotonic full-coupling response.
 The ferocity-shape test verifies the cosine-compatible zero, continuous
 plateau-to-pyramidal mixing, rounded reversal, and asymmetric anticipation.
+The thrust-expo test verifies the linear-at-zero identity, pinned endpoints,
+the soft/direct branches, monotonicity, expo clamping, and that dwell and
+centre stay proportional projections of the same aggression scalar.

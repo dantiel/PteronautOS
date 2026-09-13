@@ -41,6 +41,7 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     strokeSkew        = p.strokeSkew;
     returnSkew        = p.returnSkew;
     throttleThrustShapeMix = p.throttleThrustShapeMix;
+    throttleThrustExpo    = p.throttleThrustExpo;
     aileronSkewMix      = p.aileronSkewMix;
     throttleSkewRateMix = p.throttleSkewRateMix;
     aileronSkewRateMix = p.aileronSkewRateMix;
@@ -50,7 +51,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          int8_t glide, int8_t flapAng,
                                          float ail, float elev, float rudRng,
                                          float rudAmpDiff, float elevFerMix,
-                                         float thrThrustShape, float thrFreqMix,
+                                         float thrThrustExpo, float thrThrustShape,
+                                         float thrFreqMix,
                                          float ferShapeMix,
                                          float strokeSkew, float returnSkew,
                                          float ailSkewMix,
@@ -68,6 +70,7 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.rudderAmplitudeDifferential = rudAmpDiff;
     p.elevatorFerocityMix = elevFerMix;
     p.throttleThrustShapeMix = thrThrustShape;
+    p.throttleThrustExpo  = thrThrustExpo;
     p.throttleFrequencyMix = thrFreqMix;
     p.ferocityShapeMix = ferShapeMix;
     p.strokeSkew       = strokeSkew;
@@ -114,6 +117,7 @@ Ornithopter::Ornithopter()
   , strokeSkew(ORNI_SKEW_DEFAULT)
   , returnSkew(ORNI_SKEW_DEFAULT)
   , throttleThrustShapeMix(0.0f)
+  , throttleThrustExpo(0.0f)
   , aileronSkewMix(0.0f)
   , throttleSkewRateMix(0.0f)
   , aileronSkewRateMix(0.0f)
@@ -360,11 +364,13 @@ void Ornithopter::_computeServoMixer() {
         float elevDownBoost = fmaxf(-elevatorNorm, 0.0f) * elevFerScale;   // dive  → upstroke
 
         // Throttle → thrust-shape coupling (per-profile, 0–100). One blended
-        // knob: thrust aggression α = throttle·mix drives dwell (square) AND
-        // centre (front-load) together — the defined overlap of ferocity and
-        // skew along the thrust axis. 0 = throttle drives amplitude only; 100 =
-        // full dwell + full front-load at full gas.
-        OrniThrustShape thrust = orniThrottleThrustShape(throttlePct, throttleThrustShapeMix);
+        // knob: thrust aggression α = expo(throttle)·mix drives dwell (square)
+        // AND centre (front-load) together — the defined overlap of ferocity
+        // and skew along the thrust axis. 0 = throttle drives amplitude only;
+        // 100 = full dwell + full front-load at full gas. The per-profile expo
+        // curves where along the stick that aggression arrives.
+        OrniThrustShape thrust = orniThrottleThrustShape(throttlePct, throttleThrustShapeMix,
+                                                         throttleThrustExpo);
 
         // Ferocity (dwell/shape) = per-profile stroke/return sliders
         // + elevator mix + throttle mix (+ gyro).

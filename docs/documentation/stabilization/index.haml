@@ -198,6 +198,10 @@
               %span!= doc_wave_throttle_skew_mix
               %output{"data-value": "throttleThrustShapeMix", for: "st-wave-thrust-shape-mix"} 0%
               %input#st-wave-thrust-shape-mix{"data-control": "throttleThrustShapeMix", type: "range", min: "0", max: "100", step: "1", value: "0"}
+            %label{for: "st-wave-thrust-expo"}
+              %span!= doc_wave_thrust_expo
+              %output{"data-value": "throttleExpo", for: "st-wave-thrust-expo"} 0
+              %input#st-wave-thrust-expo{"data-control": "throttleExpo", type: "range", min: "-100", max: "100", step: "1", value: "0"}
             %label{for: "st-wave-aileron-skew-mix"}
               %span!= doc_wave_aileron_skew_mix
               %output{"data-value": "aileronSkewMix", for: "st-wave-aileron-skew-mix"} 0%

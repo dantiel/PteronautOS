@@ -176,27 +176,47 @@ constexpr float orniThrottleFrequencyCommand(float independentFreq01,
     return independent + (throttle - independent) * mix;
 }
 
+// Throttle → thrust-shape expo (−100…+100): the CURVE of the overlap law.
+// Shapes WHERE along the stick the aggression α arrives without moving the
+// endpoints. Positive = soft — aggression late; the lower half stays gentle
+// (fine control, low gearbox load) and the top quarter packs the punch.
+// Negative = direct — aggression early (takeoff punch, wind penetration).
+// x=0 → 0 and x=1 → 1 stay pinned, so throttleThrustShapeMix still sets the
+// authority ceiling and expo 0 is exactly the previous linear blend. Cheap: a
+// blend of the identity with x² (soft) / 2x−x² (direct), both monotone on [0,1].
+#define ORNI_THRUST_EXPO_MIN  -100.0f
+#define ORNI_THRUST_EXPO_MAX   100.0f
+
+constexpr float orniThrottleThrustExpo(float throttle01, float expoPercent) {
+    const float x = orniClamp01(throttle01);
+    float e = expoPercent * 0.01f;
+    if (e >  1.0f) e =  1.0f;
+    if (e < -1.0f) e = -1.0f;
+    if (e >= 0.0f) return (1.0f - e) * x + e * (x * x);   // soft: aggression late
+    return (1.0f + e) * x - e * ((2.0f - x) * x);          // direct: aggression early
+}
+
 // Throttle → thrust-shape coupling (single blended knob, 0–100).
 // ONE knob replaces the old throttle→ferocity (dwell) and throttle→skew
-// (centre) couplings. Thrust aggression α = throttle·mix drives dwell (square
-// the stroke) AND centre (front-load the peak) in lockstep — this DEFINES
-// their overlap: the thrust axis advances both projections together, so dwell
-// and centre never double-count. Monotonic: idle = neutral (no thrust), full =
-// max dwell + max front-load. Returns ferocity-units dwellBoost and
-// skew-units centreShift to ADD to BOTH half-strokes symmetrically.
+// (centre) couplings. Thrust aggression α = expo(throttle)·mix drives dwell
+// (square the stroke) AND centre (front-load the peak) in lockstep — this
+// DEFINES their overlap: the thrust axis advances both projections together, so
+// dwell and centre never double-count. Monotonic: idle = neutral (no thrust),
+// full = max dwell + max front-load. The per-profile expo curves the approach
+// along that axis. Returns ferocity-units dwellBoost and skew-units
+// centreShift to ADD to BOTH half-strokes symmetrically.
 struct OrniThrustShape {
     float dwellBoost;   // ferocity units (0…ORNI_FEROCITY_MAX−MIN)
     float centreShift;  // skew units (0…ORNI_SKEW_MAX)
 };
 
-constexpr OrniThrustShape orniThrottleThrustShape(float throttle01, float mixPercent) {
+constexpr OrniThrustShape orniThrottleThrustShape(float throttle01, float mixPercent,
+                                                  float expoPercent = 0.0f) {
     const float mix = orniClamp01(mixPercent * 0.01f);
-    const float t = orniClamp01(throttle01);
-    const float alpha = t * mix;   // 0 (idle) … mix (full)
-    OrniThrustShape s;
-    s.dwellBoost  = alpha * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN);
-    s.centreShift = alpha * ORNI_SKEW_MAX;
-    return s;
+    const float shaped = orniThrottleThrustExpo(throttle01, expoPercent);
+    const float alpha = shaped * mix;   // 0 (idle) … mix (full)
+    return OrniThrustShape{alpha * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN),
+                           alpha * ORNI_SKEW_MAX};
 }
  
 // Throttle-rate transient (slew): gain and LPF time constant for the
@@ -262,6 +282,7 @@ struct FlightProfileParams {
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
     float   throttleThrustShapeMix; // 0–100, throttle→thrust-shape coupling (blended dwell + centre)
+    float   throttleThrustExpo;     // -100…+100, curve of the thrust aggression (soft ↔ direct)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)

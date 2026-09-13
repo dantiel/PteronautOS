@@ -28,6 +28,7 @@ class FerocityWaveformExplorer
       throttle: 100
       aileron: 0
       throttleThrustShapeMix: 0
+      throttleExpo: 0
       aileronSkewMix: 0
       slew: 0
     @i18n =
@@ -39,7 +40,7 @@ class FerocityWaveformExplorer
       axisHalf: @root.dataset.i18nAxisHalf ? 'Local half-stroke phase'
       metric: @root.dataset.i18nMetric ? 'Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'
     @controls = {}
-    for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock', 'throttle', 'aileron', 'throttleThrustShapeMix', 'aileronSkewMix', 'slew']
+    for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock', 'throttle', 'aileron', 'throttleThrustShapeMix', 'throttleExpo', 'aileronSkewMix', 'slew']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
     if @root.dataset.throttleCoupling?
@@ -77,6 +78,10 @@ class FerocityWaveformExplorer
 
     @controls.throttleThrustShapeMix?.addEventListener 'input', (event) =>
       @state.throttleThrustShapeMix = Number event.currentTarget.value
+      @update()
+
+    @controls.throttleExpo?.addEventListener 'input', (event) =>
+      @state.throttleExpo = Number event.currentTarget.value
       @update()
 
     @controls.aileronSkewMix?.addEventListener 'input', (event) =>
@@ -194,10 +199,18 @@ class FerocityWaveformExplorer
     shapeMix = clamp @state.mix / 100, 0, 1
     plateau + (pointed - plateau) * shapeMix
 
+  # Firmware-identical throttle expo (orniThrottleThrustExpo): blends the
+  # identity with x² (soft, +) or 2x−x² (direct, −). Endpoints stay pinned, so
+  # the coupling still sets the ceiling; expo 0 is exactly linear.
+  thrustThrottle01: ->
+    x = clamp @state.throttle / 100, 0, 1
+    e = clamp @state.throttleExpo / 100, -1, 1
+    if e >= 0 then (1 - e) * x + e * x * x else (1 + e) * x - e * (2 - x) * x
+
   # Effective per-half ferocities: throttle thrust-shape adds a symmetric
   # dwell boost (0..8) atop the base sliders; clamped inside localShape.
   effectiveFerocities: ->
-    throttle01 = clamp @state.throttle / 100, 0, 1
+    throttle01 = @thrustThrottle01()
     dwellBoost = throttle01 * @state.throttleThrustShapeMix * 0.08
     down: @state.down + dwellBoost
     up: @state.up + dwellBoost
@@ -213,8 +226,7 @@ class FerocityWaveformExplorer
   # thrust-shape front-loads both half-strokes monotonically (idle
   # neutral, full = max), slew adds the same symmetric transient,
   effectiveSkews: ->
-    throttle01 = clamp @state.throttle / 100, 0, 1
-    centreShift = throttle01 * @state.throttleThrustShapeMix
+    centreShift = @thrustThrottle01() * @state.throttleThrustShapeMix
     slew = clamp @state.slew, -100, 100
     strokeSym = @state.skewDown + centreShift + slew
     returnSym = @state.skewUp + centreShift + slew
@@ -350,6 +362,7 @@ class FerocityWaveformExplorer
     @root.querySelector("[data-value='throttle']")?.textContent = "#{Math.round @state.throttle}%"
     @root.querySelector("[data-value='aileron']")?.textContent = @_formatSkew @state.aileron
     @root.querySelector("[data-value='throttleThrustShapeMix']")?.textContent = "#{Math.round @state.throttleThrustShapeMix}%"
+    @root.querySelector("[data-value='throttleExpo']")?.textContent = @_formatSkew @state.throttleExpo
     @root.querySelector("[data-value='aileronSkewMix']")?.textContent = "#{Math.round @state.aileronSkewMix}%"
     @root.querySelector("[data-value='slew']")?.textContent = @_formatSkew @state.slew
     downShare = @boundary() / TAU * 100

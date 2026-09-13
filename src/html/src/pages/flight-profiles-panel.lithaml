@@ -171,6 +171,15 @@
          %td
            %input{type: "range", min: "0", max: "100", .value: self.throttleThrustShapeMix, @input: self._onSlider('throttleThrustShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.throttleThrustShapeMix
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_thrust_expo.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_thrust_expo.desc')
+         %td
+           %input{type: "range", min: "-100", max: "100", .value: self.throttleThrustExpo, @input: self._onSlider('throttleThrustExpo'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleThrustExpo
+           %small.label= self._thrustExpoLabel()
  
        %tr
          %td

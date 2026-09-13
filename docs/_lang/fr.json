@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "Ouvrir l'explorateur complet pilotage & slew →",
   "doc_wave_aileron": "Aileron",
   "doc_wave_throttle_skew_mix": "Mix de forme de poussée",
+  "doc_wave_thrust_expo": "Expo de poussée",
   "doc_wave_aileron_skew_mix": "Mix aileron→skew",
   "doc_wave_slew": "Slew (vitesse)",
   "doc_legend_wing_l": "Aile gauche",

@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "打开完整的转向 & slew 浏览器 →",
   "doc_wave_aileron": "副翼",
   "doc_wave_throttle_skew_mix": "推力形态混合",
+  "doc_wave_thrust_expo": "推力指数",
   "doc_wave_aileron_skew_mix": "副翼→skew 混合",
   "doc_wave_slew": "Slew（速率）",
   "doc_legend_wing_l": "左翼",

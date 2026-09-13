@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "Abrir el explorador completo de dirección & slew →",
   "doc_wave_aileron": "Alerón",
   "doc_wave_throttle_skew_mix": "Mezcla de forma de empuje",
+  "doc_wave_thrust_expo": "Expo de empuje",
   "doc_wave_aileron_skew_mix": "Mezcla aileron→skew",
   "doc_wave_slew": "Slew (velocidad)",
   "doc_legend_wing_l": "Ala izquierda",

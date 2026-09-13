@@ -894,6 +894,7 @@
   "doc_wave_explore_full": "전체 조향 & slew 탐색기 열기 →",
   "doc_wave_aileron": "에일러론",
   "doc_wave_throttle_skew_mix": "추력 형태 믹스",
+  "doc_wave_thrust_expo": "추력 앵스포",
   "doc_wave_aileron_skew_mix": "에일러론→skew 믹스",
   "doc_wave_slew": "Slew(레이트)",
   "doc_legend_wing_l": "왼쪽 날개",
