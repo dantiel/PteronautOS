@@ -136,9 +136,9 @@
 <p>Die Wellenform selbst folgt der OrniFlight-Schlagfamilie: Jede Hälfte nutzt ihre eigene Heftigkeit, eine geteilte Umkehrschwelle hält linke/rechte Flügel in Phase, und ein <em>Shape-Mix</em> pro Profil verwandelt kontinuierlich einen flachen Dwell/Plateau-Schlag in einen gerundeten Pyramidenpfad. Der interaktive Explorer unten rendert die befohlene Geometrie für jedes Ab-/Auf-Heftigkeitspaar — dieselbe Kurve, die der Mixer jeden Tick anfordert.</p>
 <p>Heftigkeit steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Heftigkeit verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Heftigkeit verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
 <p>Die profilbezogene Heftigkeitsform-Steuerung wählt den Hoch-Heftigkeits-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Heftigkeit, sodass eine Hälfte mit niedriger Heftigkeit gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Heftigkeit sich einer direkten diagonalen Traverse nähert.</p>
-<p>Abschlag- und Aufschlag-Skew (±100) verschieben das Zentrum jedes Halbschlags entlang seiner eigenen Start–Ende-Achse — dieselbe halbschlagweise Spiegelung wie bei der Heftigkeit. Positiv macht den Schlag frontlastig: Der Flügel erreicht die Spitzengeschwindigkeit früher und verstärkt den Schub. Negativ verlagert ihn ans Ende: Der Schlag verbraucht seine Bewegung spät und mindert den Schub. Die Verzerrung ist monoton und erhält die Endpunkte, also exakt eine asymmetrische Quadrat↔Dreieck-Mischung — niemals ein Positionssprung.</p>
-<p>Die Throttle→Skew-Kopplung formt die Schubgröße, nicht die Neigung. Vollgas front-loadet BEIDE Halbschläge (verstärkter Schub — Spitzengeschwindigkeit früher im Abschlag UND im Aufschlag); Leerlauf late-loadet BEIDE (verminderter Schub). Derselbe Shift addiert sich zum Abschlag-Skew UND zum Aufschlag-Skew, sodass beide Flügel und beide Halbschläge gemeinsam wandern — Schub-Autorität, kein Roll oder Pitch. Null bei Mittelgas, ±Mix an den Extremen.</p>
-<p>Die Aileron→Skew-Kopplung frontloadet den einen Flügel, während sie den anderen spät belastet — Roll-Drehmoment auf der Skew-Achse, der Spiegelzwilling des Throttle-Skew. Stick links addiert Skew am linken Flügel und entfernt ihn rechts; Stick rechts umgekehrt. Nutzbar neben oder statt des Ruder-Amplituden-Differentials.</p>
+<p>Vorkrümmung und Rückkrümmung (±100) verschieben das Zentrum jedes Halbschlags entlang seiner eigenen Start–Ende-Achse — dieselbe halbschlagweise Spiegelung wie bei der Heftigkeit. Positiv krümmt den Schlag nach vorn: Der Flügel erreicht die Spitzengeschwindigkeit früher und verstärkt den Schub. Negativ krümmt ihn nach hinten: Der Schlag verbraucht seine Bewegung spät und mindert den Schub. Die Verzerrung ist monoton und erhält die Endpunkte, also exakt eine asymmetrische Quadrat↔Dreieck-Mischung — niemals ein Positionssprung.</p>
+<p>Die Throttle→Krümmungs-Kopplung formt die Schubgröße, nicht die Neigung. Vollgas krümmt BEIDE Halbschläge nach vorn (verstärkter Schub — Spitzengeschwindigkeit früher im Abschlag UND im Aufschlag); Leerlauf krümmt BEIDE nach hinten (verminderter Schub). Dieselbe Verschiebung addiert sich zur Vorkrümmung UND zur Rückkrümmung, sodass beide Flügel und beide Halbschläge gemeinsam wandern — Schub-Autorität, kein Roll oder Pitch. Null bei Mittelgas, ±Mix an den Extremen.</p>
+<p>Die Aileron→Krümmungs-Kopplung krümmt den einen Flügel nach vorn, während sie den anderen nach hinten krümmt — Roll-Drehmoment auf der Krümmungs-Achse, der Spiegelzwilling der Throttle-Krümmung. Stick links addiert Krümmung am linken Flügel und entfernt sie rechts; Stick rechts umgekehrt. Nutzbar neben oder statt des Ruder-Amplituden-Differentials.</p>
 <p>Slew ist ein transienter Boost oder eine Bremse auf die Rate eines Sticks. Gasgeben front-loadet kurz BEIDE Halbschläge, Gaswegnehmen late-loadet kurz BEIDE; die tiefpassgefilterte Rate (τ = 0,10 s) injiziert den Kick, der dann abklingt, sobald der Stick ruht. Zwei Kopplungen: Throttle-Rate-Slew (symmetrisch, Schub) und Aileron-Rate-Slew (differentiell, Roll).</p>
 <p>Der Zephyrus-Slew-Gain überträgt dasselbe transiente Prinzip aufs Ruder: Eine schnelle Lageänderung verstärkt kurz die Ruderkorrektur (µs), tiefpassgefiltert (τ = 0,12 s) und hart auf ±80 µs begrenzt. Er schärft die Antwort auf schnelle Lageänderungen ohne statischen Gain zu erhöhen.</p>
 <div class='waveform-explorer waveform-detailed' data-ferocity-explorer data-i18n-axis-cycle='Schlagzyklus-Phase' data-i18n-axis-half='Lokale Halbschlag-Phase' data-i18n-axis-wing='Flügelposition' data-i18n-lock-oppose='Opposition: Regler komplementär (Summe=8) (klicken zum Wechseln)' data-i18n-lock-sync='Sync: Beide Regler bewegen sich gemeinsam (klicken zum Wechseln)' data-i18n-lock-unlocked='Entsperrt (klicken zum Wechseln)' data-i18n-metric='Zeitverteilung: Abschlag {down}% · Aufschlag {up}% · Spitzen-Phasengeschwindigkeits-Verhältnis {ratio}×' id='waveform-explorer'>
@@ -169,12 +169,12 @@
 <input data-control='mix' id='st-wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
 </label>
 <label for='st-wave-down-skew'>
-<span>Abschlag-Skew</span>
+<span>Vorkrümmung</span>
 <output data-value='skewDown' for='st-wave-down-skew'>0</output>
 <input data-control='skewDown' id='st-wave-down-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
 <label for='st-wave-up-skew'>
-<span>Aufschlag-Skew</span>
+<span>Rückkrümmung</span>
 <output data-value='skewUp' for='st-wave-up-skew'>0</output>
 <input data-control='skewUp' id='st-wave-up-skew' max='100' min='-100' step='1' type='range' value='0'>
 </label>
@@ -190,12 +190,12 @@
 <input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
 </label>
 <label for='st-wave-throttle-skew-mix'>
-<span>Throttle→Skew-Mix</span>
+<span>Throttle→Krümmungs-Mix</span>
 <output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
 <input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
 </label>
 <label for='st-wave-aileron-skew-mix'>
-<span>Aileron→Skew-Mix</span>
+<span>Aileron→Krümmungs-Mix</span>
 <output data-value='aileronSkewMix' for='st-wave-aileron-skew-mix'>0%</output>
 <input data-control='aileronSkewMix' id='st-wave-aileron-skew-mix' max='100' min='0' step='1' type='range' value='0'>
 </label>
