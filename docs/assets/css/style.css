@@ -1263,6 +1263,7 @@ footer .lang-switch {
   padding: 1.5rem 0 1.75rem;
   border-top: 1px solid var(--dim);
   border-bottom: 1px solid var(--dim);
+  scroll-margin-top: 7rem;
 }
 
 .waveform-controls {
@@ -1353,6 +1354,26 @@ footer .lang-switch {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 500;
+}
+
+.waveform-explorer.waveform-detailed .waveform-controls label {
+  font-size: 0.58rem;
+}
+
+.waveform-link {
+  font-family: "Turret Road Mono", monospace;
+  margin-top: 1.25rem;
+}
+.waveform-link a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--dim);
+}
+.waveform-link a:hover, .waveform-link a:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .waveform-presets {

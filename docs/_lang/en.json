@@ -890,6 +890,8 @@
   "doc_zephyr_slew_p": "Zephyrus slew gain applies the same transient idea to the rudder: a fast attitude change briefly boosts the rudder correction (µs), low-passed (τ = 0.12 s) and hard-clamped to ±80 µs. It sharpens the response to quick attitude changes without raising static gain.",
   "doc_steering_label": "Flight steering & slew",
   "doc_wave_throttle": "Throttle",
+  "doc_wave_throttle_bound": "Throttle — coupled to skew",
+  "doc_wave_explore_full": "Open the full steering & slew explorer →",
   "doc_wave_aileron": "Aileron",
   "doc_wave_throttle_skew_mix": "Throttle→skew mix",
   "doc_wave_aileron_skew_mix": "Aileron→skew mix",

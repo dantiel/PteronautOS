@@ -79,7 +79,7 @@
 <h2>फेरोसिटी तरंगरूप ज्यामिति</h2>
 <p>फेरोसिटी आधे-स्ट्रोक के चरित्र और समय दोनों को नियंत्रित करती है। आंतरिक रूप से WebUI की 0–100 सेटिंग 0–8 पर मैप होती है। अधिक डाउनस्ट्रोक फेरोसिटी चक्र में डाउनस्ट्रोक का हिस्सा छोटा कर देती है; अधिक वापसी फेरोसिटी वापसी हिस्सा छोटा कर देती है। शेष समय विपरीत आधे में स्थानांतरित हो जाता है — शून्य पर कोई विराम नहीं होता।</p>
 <p>प्रति-प्रोफ़ाइल फेरोसिटी आकार नियंत्रण उच्च-फेरोसिटी चरित्र चुनता है। 0% पर यह सीमित पठार/वर्ग आकार को पसंद करता है। 100% पर यह गोल पिरामिडीय पथ को पसंद करता है। प्रत्येक आधा फिर भी अपनी फेरोसिटी का उपयोग करता है, इसलिए निम्न-फेरोसिटी आधा लंबा और साइनसॉइडल रहता है जबकि उच्च-फेरोसिटी आधा सीधे विकर्ण मार्ग के करीब पहुँचता है।</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='धड़कन-चक्र चरण' data-i18n-axis-half='स्थानीय आधा-स्ट्रोक चरण' data-i18n-axis-wing='पंख की स्थिति' data-i18n-lock-oppose='विरोध: स्लाइडर पूरक (योग=8) (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-sync='सिंक: दोनों स्लाइडर एक साथ चलते हैं (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-unlocked='अनलॉक (चक्रित करने हेतु क्लिक करें)' data-i18n-metric='समय आवंटन: डाउन {down}% · अप {up}% · शिखर चरण-गति अनुपात {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='धड़कन-चक्र चरण' data-i18n-axis-half='स्थानीय आधा-स्ट्रोक चरण' data-i18n-axis-wing='पंख की स्थिति' data-i18n-lock-oppose='विरोध: स्लाइडर पूरक (योग=8) (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-sync='सिंक: दोनों स्लाइडर एक साथ चलते हैं (चक्रित करने हेतु क्लिक करें)' data-i18n-lock-unlocked='अनलॉक (चक्रित करने हेतु क्लिक करें)' data-i18n-metric='समय आवंटन: डाउन {down}% · अप {up}% · शिखर चरण-गति अनुपात {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>डाउन फेरोसिटी</span>
@@ -105,6 +105,12 @@
 <span>शेप मिक्स</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>थ्रॉटल — skew से युग्मित</h4>
+<label for='wave-throttle'>
+<span>थ्रॉटल</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='तरंगरूप उदाहरण' class='waveform-presets'>
@@ -150,6 +156,9 @@
 </div>
 <svg aria-label='सामान्यीकृत डाउनस्ट्रोक और अपस्ट्रोक आकार' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../hi/documentation/stabilization/#waveform-explorer'>पूर्ण स्टीयरिंग &amp; slew एक्सप्लोरर खोलें →</a>
+</p>
 </div>
 <h3>चरम संयोजन पढ़ना</h3>
 <p>7 / 1 संयोजन स्पष्ट रूप से एक छोटा नुकीला डाउनस्ट्रोक और लंबा साइनसॉइडल रिटर्न उत्पन्न करता है। सटीक और लगभग-अधिकतम मानों में सावधानी चाहिए: वर्तमान अवधि नियम फेरोसिटी 8 से नीचे शेष राशि का उपयोग करता है। फलस्वरूप 8 / 0 डाउनस्ट्रोक को चक्र का केवल लगभग 0.125% आवंटित करता है, जबकि 8 / 6 भी लगभग 0.5% आवंटित करता है। स्थिति निरंतर रहती है, परंतु माँगी गई गति और त्वरण भौतिक रूप से अप्राप्य हो सकते हैं।</p>

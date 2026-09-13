@@ -42,6 +42,9 @@ class FerocityWaveformExplorer
     for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock', 'throttle', 'aileron', 'throttleSkewMix', 'aileronSkewMix', 'slew']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
+    if @root.dataset.throttleCoupling?
+      @state.throttleSkewMix = Number @root.dataset.throttleCoupling
+
     @controls.down?.addEventListener 'input', (event) =>
       @state.down = Number event.currentTarget.value
       @_applyLock 'down'
@@ -103,6 +106,18 @@ class FerocityWaveformExplorer
         @update()
 
     @lastWidth = Math.round @root.getBoundingClientRect().width
+    @resizePending = false
+    @resizeObserver = new ResizeObserver (entries) =>
+      width = Math.round entries[0].contentRect.width
+      return if width is @lastWidth
+      @lastWidth = width
+      return if @resizePending
+      @resizePending = true
+      requestAnimationFrame =>
+        @resizePending = false
+        @draw()
+    @resizeObserver.observe @root
+    @update()
 
   # Cycle: unlocked → sync → oppose → unlocked
   _cycleLock: ->
@@ -151,18 +166,6 @@ class FerocityWaveformExplorer
         <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       """
       @controls.lock.setAttribute 'title', @i18n.lockUnlocked
-    @resizePending = false
-    @resizeObserver = new ResizeObserver (entries) =>
-      width = Math.round entries[0].contentRect.width
-      return if width is @lastWidth
-      @lastWidth = width
-      return if @resizePending
-      @resizePending = true
-      requestAnimationFrame =>
-        @resizePending = false
-        @draw()
-    @resizeObserver.observe @root
-    @update()
 
   localShape: (phase, ferocity, skewPercent = 0) ->
     boundedFerocity = clamp ferocity, 0, 8

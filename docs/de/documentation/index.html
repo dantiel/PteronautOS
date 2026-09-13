@@ -79,7 +79,7 @@
 <h2>Geometrie der Heftigkeits-Wellenform</h2>
 <p>Heftigkeit steuert sowohl den Charakter als auch das Timing eines Halbschlags. Intern wird die 0–100-Einstellung der WebUI auf 0–8 abgebildet. Höhere Abschlag-Heftigkeit verkürzt den Abschlagsanteil des Zyklus; höhere Rücklauf-Heftigkeit verkürzt den Rücklaufanteil. Die verbleibende Zeit wird auf die gegenüberliegende Hälfte übertragen — es gibt keine Pause bei null.</p>
 <p>Die profilbezogene Heftigkeitsform-Steuerung wählt den Hoch-Heftigkeits-Charakter. Bei 0 % bevorzugt sie eine endliche Plateau-/Rechteckform. Bei 100 % bevorzugt sie einen abgerundeten pyramidalen Verlauf. Jede Hälfte nutzt weiterhin ihre eigene Heftigkeit, sodass eine Hälfte mit niedriger Heftigkeit gestreckt und sinusförmig bleibt, während eine Hälfte mit hoher Heftigkeit sich einer direkten diagonalen Traverse nähert.</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Schlagzyklus-Phase' data-i18n-axis-half='Lokale Halbschlag-Phase' data-i18n-axis-wing='Flügelposition' data-i18n-lock-oppose='Opposition: Regler komplementär (Summe=8) (klicken zum Wechseln)' data-i18n-lock-sync='Sync: Beide Regler bewegen sich gemeinsam (klicken zum Wechseln)' data-i18n-lock-unlocked='Entsperrt (klicken zum Wechseln)' data-i18n-metric='Zeitverteilung: Abschlag {down}% · Aufschlag {up}% · Spitzen-Phasengeschwindigkeits-Verhältnis {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='Schlagzyklus-Phase' data-i18n-axis-half='Lokale Halbschlag-Phase' data-i18n-axis-wing='Flügelposition' data-i18n-lock-oppose='Opposition: Regler komplementär (Summe=8) (klicken zum Wechseln)' data-i18n-lock-sync='Sync: Beide Regler bewegen sich gemeinsam (klicken zum Wechseln)' data-i18n-lock-unlocked='Entsperrt (klicken zum Wechseln)' data-i18n-metric='Zeitverteilung: Abschlag {down}% · Aufschlag {up}% · Spitzen-Phasengeschwindigkeits-Verhältnis {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>Abschlag-Heftigkeit</span>
@@ -105,6 +105,12 @@
 <span>Form-Mix</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>Throttle — an Skew gekoppelt</h4>
+<label for='wave-throttle'>
+<span>Throttle</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='Wellenform-Beispiele' class='waveform-presets'>
@@ -150,6 +156,9 @@ Exakte Diagonale
 </div>
 <svg aria-label='Normierte Abschlag- und Aufschlag-Formen' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../de/documentation/stabilization/#waveform-explorer'>Vollständigen Lenkungs- &amp; Slew-Explorer öffnen →</a>
+</p>
 </div>
 <h3>Extreme Kombinationen lesen</h3>
 <p>Eine 7 / 1-Kombination erzeugt klar einen kurzen, spitzen Abschlag und einen langen sinusförmigen Rücklauf. Exakte und nahezu maximale Werte erfordern Sorgfalt: Das aktuelle Dauergesetz nutzt den unter Heftigkeit 8 verbleibenden Betrag. Folglich weist 8 / 0 dem Abschlag nur etwa 0,125 % des Zyklus zu, während selbst 8 / 6 etwa 0,5 % zuweist. Die Position bleibt kontinuierlich, aber die angeforderte Geschwindigkeit und Beschleunigung können physikalisch unerreichbar werden.</p>

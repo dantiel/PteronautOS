@@ -71,7 +71,7 @@
           %p!= doc_wave_p1
           %p!= doc_wave_p2
 
-          .waveform-explorer{"data-ferocity-explorer": true, "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
+          .waveform-explorer.waveform-simple{"data-ferocity-explorer": true, "data-throttle-coupling": "60", "data-i18n-lock-sync": doc_lock_sync, "data-i18n-lock-oppose": doc_lock_oppose, "data-i18n-lock-unlocked": doc_lock_unlocked, "data-i18n-axis-wing": doc_axis_wing, "data-i18n-axis-cycle": doc_axis_cycle, "data-i18n-axis-half": doc_axis_half, "data-i18n-metric": doc_metric}
             .waveform-controls
               %label{for: "wave-down-ferocity"}
                 %span!= doc_wave_down
@@ -92,6 +92,11 @@
                 %span!= doc_wave_mix
                 %output{"data-value": "mix", for: "wave-shape-mix"} 100%
                 %input#wave-shape-mix{"data-control": "mix", type: "range", min: "0", max: "100", step: "1", value: "100"}
+              %h4.waveform-subgroup!= doc_wave_throttle_bound
+              %label{for: "wave-throttle"}
+                %span!= doc_wave_throttle
+                %output{"data-value": "throttle", for: "wave-throttle"} 100%
+                %input#wave-throttle{"data-control": "throttle", type: "range", min: "0", max: "100", step: "1", value: "100"}
 
             .waveform-presets{"aria-label": doc_presets_label}
               %button{type: "button", "data-preset": "8,0,100"}!= doc_preset_extreme
@@ -128,6 +133,9 @@
                   %i.direct
                   != doc_legend_diagonal
               %svg{"data-chart": "halves", role: "img", "aria-label": doc_chart_aria_halves}
+
+            %p.waveform-link
+              %a{href: "#{asset_prefix}#{lang_dir}documentation/stabilization/#waveform-explorer"}!= doc_wave_explore_full
 
           %h3!= doc_read_h3
           %p!= doc_read_p

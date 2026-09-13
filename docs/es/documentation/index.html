@@ -79,7 +79,7 @@
 <h2>Geometría de la forma de onda de ferocidad</h2>
 <p>La ferocidad controla tanto el carácter como el tiempo de medio golpe. Internamente, el ajuste 0–100 de la WebUI se mapea a 0–8. Una mayor ferocidad de descenso acorta la parte del ciclo del descenso; una mayor ferocidad de retorno acorta la parte del retorno. El tiempo restante se transfiere a la mitad opuesta: no hay pausa en cero.</p>
 <p>El control Forma de Ferocidad por perfil selecciona el carácter de alta ferocidad. Al 0% favorece una forma finita de meseta/cuadrada. Al 100% favorece una trayectoria piramidal redondeada. Cada mitad sigue usando su propia ferocidad, de modo que una mitad de baja ferocidad permanece alargada y sinusoidal, mientras que una de alta ferocidad se aproxima a un recorrido diagonal directo.</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Fase del ciclo de aleteo' data-i18n-axis-half='Fase local de medio golpe' data-i18n-axis-wing='Posición del ala' data-i18n-lock-oppose='Oponer: deslizadores complementarios (suma=8) (clic para alternar)' data-i18n-lock-sync='Sincronizar: ambos deslizadores se mueven juntos (clic para alternar)' data-i18n-lock-unlocked='Desbloqueado (clic para alternar)' data-i18n-metric='Asignación de tiempo: descenso {down}% · ascenso {up}% · relación de velocidad de fase pico {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='Fase del ciclo de aleteo' data-i18n-axis-half='Fase local de medio golpe' data-i18n-axis-wing='Posición del ala' data-i18n-lock-oppose='Oponer: deslizadores complementarios (suma=8) (clic para alternar)' data-i18n-lock-sync='Sincronizar: ambos deslizadores se mueven juntos (clic para alternar)' data-i18n-lock-unlocked='Desbloqueado (clic para alternar)' data-i18n-metric='Asignación de tiempo: descenso {down}% · ascenso {up}% · relación de velocidad de fase pico {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>Ferocidad de descenso</span>
@@ -105,6 +105,12 @@
 <span>Mezcla de forma</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>Acelerador — acoplado al skew</h4>
+<label for='wave-throttle'>
+<span>Acelerador</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='Ejemplos de forma de onda' class='waveform-presets'>
@@ -150,6 +156,9 @@ Diagonal exacta
 </div>
 <svg aria-label='Formas normalizadas de descenso y ascenso' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../es/documentation/stabilization/#waveform-explorer'>Abrir el explorador completo de dirección &amp; slew →</a>
+</p>
 </div>
 <h3>Leer combinaciones extremas</h3>
 <p>Una combinación 7 / 1 produce claramente un descenso corto y puntiagudo y un retorno sinusoidal largo. Los valores exactos y casi máximos requieren cuidado: la ley de duración actual usa la cantidad restante por debajo de ferocidad 8. En consecuencia, 8 / 0 asigna solo un 0,125% del ciclo al descenso, mientras que incluso 8 / 6 asigna alrededor del 0,5%. La posición sigue siendo continua, pero la velocidad y la aceleración solicitadas pueden volverse físicamente inalcanzables.</p>

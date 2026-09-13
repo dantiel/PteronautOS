@@ -79,7 +79,7 @@
 <h2>Géométrie de la forme d'onde de férocité</h2>
 <p>La férocité contrôle à la fois le caractère et le timing d'une demi-course. En interne, le réglage 0–100 de la WebUI correspond à 0–8. Une férocité de descente plus élevée raccourcit la part du cycle de la descente ; une férocité de retour plus élevée raccourcit la part du retour. Le temps restant est transféré à la moitié opposée — il n'y a pas de pause à zéro.</p>
 <p>Le réglage Forme de Férocité par profil sélectionne le caractère à haute férocité. À 0 %, il favorise une forme finie en plateau/carrée. À 100 %, il favorise un trajet pyramidal arrondi. Chaque moitié utilise toujours sa propre férocité, si bien qu'une moitié à faible férocité reste allongée et sinusoïdale, tandis qu'une moitié à forte férocité s'approche d'un parcours diagonal direct.</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='Phase du cycle de battement' data-i18n-axis-half='Phase locale de demi-course' data-i18n-axis-wing='Position de l&#39;aile' data-i18n-lock-oppose='Opposer : curseurs complémentaires (somme=8) (cliquer pour changer)' data-i18n-lock-sync='Synchroniser : les deux curseurs bougent ensemble (cliquer pour changer)' data-i18n-lock-unlocked='Déverrouillé (cliquer pour changer)' data-i18n-metric='Répartition du temps : descente {down}% · montée {up}% · rapport de vitesse de phase de crête {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>Férocité de descente</span>
@@ -105,6 +105,12 @@
 <span>Mélange de forme</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>Gaz — couplé au skew</h4>
+<label for='wave-throttle'>
+<span>Gaz</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='Exemples de forme d&#39;onde' class='waveform-presets'>
@@ -150,6 +156,9 @@ Diagonale exacte
 </div>
 <svg aria-label='Formes normalisées de descente et de montée' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../fr/documentation/stabilization/#waveform-explorer'>Ouvrir l'explorateur complet pilotage &amp; slew →</a>
+</p>
 </div>
 <h3>Lire les combinaisons extrêmes</h3>
 <p>Une combinaison 7 / 1 produit clairement une descente courte et pointue et un retour sinusoïdal long. Les valeurs exactes et quasi maximales demandent du soin : la loi de durée actuelle utilise la quantité restante en dessous de férocité 8. Par conséquent, 8 / 0 n'alloue qu'environ 0,125 % du cycle à la descente, tandis que même 8 / 6 alloue environ 0,5 %. La position reste continue, mais la vitesse et l'accélération demandées peuvent devenir physiquement inatteignables.</p>

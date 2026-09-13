@@ -79,7 +79,7 @@
 <h2>Ferocity waveform geometry</h2>
 <p>Ferocity controls both the character and the timing of a half-stroke. Internally, the WebUI’s 0–100 setting maps to 0–8. Higher downstroke ferocity shortens the downstroke’s share of the cycle; higher return ferocity shortens the return share. The remaining time is transferred to the opposite half—there is no pause at zero.</p>
 <p>The per-profile Ferocity Shape control selects the high-ferocity character. At 0% it favours a finite plateau/square shape. At 100% it favours a rounded pyramidal path. Each half still uses its own ferocity, so a low-ferocity half remains elongated and sinusoidal while a high-ferocity half approaches a direct diagonal traversal.</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='Beat-cycle phase' data-i18n-axis-half='Local half-stroke phase' data-i18n-axis-wing='Wing position' data-i18n-lock-oppose='Oppose: Sliders complementary (sum=8) (click to cycle)' data-i18n-lock-sync='Sync: Both sliders move together (click to cycle)' data-i18n-lock-unlocked='Unlocked (click to cycle)' data-i18n-metric='Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='Beat-cycle phase' data-i18n-axis-half='Local half-stroke phase' data-i18n-axis-wing='Wing position' data-i18n-lock-oppose='Oppose: Sliders complementary (sum=8) (click to cycle)' data-i18n-lock-sync='Sync: Both sliders move together (click to cycle)' data-i18n-lock-unlocked='Unlocked (click to cycle)' data-i18n-metric='Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>Down ferocity</span>
@@ -105,6 +105,12 @@
 <span>Shape mix</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>Throttle — coupled to skew</h4>
+<label for='wave-throttle'>
+<span>Throttle</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='Waveform examples' class='waveform-presets'>
@@ -150,6 +156,9 @@ Exact diagonal
 </div>
 <svg aria-label='Normalized downstroke and upstroke shapes' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../en/documentation/stabilization/#waveform-explorer'>Open the full steering &amp; slew explorer →</a>
+</p>
 </div>
 <h3>Reading extreme combinations</h3>
 <p>A 7 / 1 combination clearly produces a short pointed downstroke and a long sinusoidal return. Exact and near-maximum values require care: the current duration law uses the amount remaining below ferocity 8. Consequently, 8 / 0 allocates only about 0.125% of the cycle to the downstroke, while even 8 / 6 allocates about 0.5%. Position remains continuous, but the requested speed and acceleration can become physically unreachable.</p>

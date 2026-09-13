@@ -1220,6 +1220,7 @@ footer .lang-switch
   padding: 1.5rem 0 1.75rem
   border-top: 1px solid var(--dim)
   border-bottom: 1px solid var(--dim)
+  scroll-margin-top: 7rem
 
 .waveform-controls
   font-family: $turret-mono
@@ -1309,6 +1310,27 @@ footer .lang-switch
   letter-spacing: .16em
   text-transform: uppercase
   font-weight: 500
+
+// Detailed (full steering & slew) explorer — slider labels 0.2em tighter
+.waveform-explorer.waveform-detailed .waveform-controls label
+  font-size: .58rem
+
+// Simplified explorer — link to the detailed widget
+.waveform-link
+  font-family: $turret-mono
+  margin-top: 1.25rem
+
+  a
+    color: var(--accent)
+    text-decoration: none
+    font-size: .78rem
+    letter-spacing: .08em
+    border-bottom: 1px solid var(--dim)
+
+    &:hover,
+    &:focus-visible
+      color: var(--text)
+      border-color: var(--accent)
 
 .waveform-presets
   font-family: $turret-mono

@@ -79,7 +79,7 @@
 <h2>퍼로시티 파형 기하학</h2>
 <p>퍼로시티는 반 스트로크의 성격과 타이밍을 모두 제어합니다. 내부적으로 WebUI의 0–100 설정은 0–8에 매핑됩니다. 다운스트로크 퍼로시티가 높을수록 주기에서 다운스트로크의 비중이 짧아지고, 복귀 퍼로시티가 높을수록 복귀 비중이 짧아집니다. 남은 시간은 반대쪽 절반으로 이전됩니다 — 0에서 멈춤이 없습니다.</p>
 <p>프로필별 퍼로시티 형태 컨트롤은 고퍼로시티 특성을 선택합니다. 0%에서는 유한한 플래토/사각 형태를, 100%에서는 둥근 피라미드 경로를 선호합니다. 각 절반은 여전히 자신의 퍼로시티를 사용하므로, 저퍼로시티 절반은 길쭉하고 사인파에 가깝게 유지되고, 고퍼로시티 절반은 직접적인 대각선 이동에 가까워집니다.</p>
-<div class='waveform-explorer' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×'>
+<div class='waveform-explorer waveform-simple' data-ferocity-explorer data-i18n-axis-cycle='날갯짓 주기 위상' data-i18n-axis-half='로컬 반 스트로크 위상' data-i18n-axis-wing='날개 위치' data-i18n-lock-oppose='반대: 슬라이더가 상보적 (합=8) (클릭하여 순환)' data-i18n-lock-sync='동기화: 두 슬라이더가 함께 움직임 (클릭하여 순환)' data-i18n-lock-unlocked='잠금 해제 (클릭하여 순환)' data-i18n-metric='시간 배분: 다운 {down}% · 업 {up}% · 피크 위상속도 비율 {ratio}×' data-throttle-coupling='60'>
 <div class='waveform-controls'>
 <label for='wave-down-ferocity'>
 <span>다운 퍼로시티</span>
@@ -105,6 +105,12 @@
 <span>셰이프 믹스</span>
 <output data-value='mix' for='wave-shape-mix'>100%</output>
 <input data-control='mix' id='wave-shape-mix' max='100' min='0' step='1' type='range' value='100'>
+</label>
+<h4 class='waveform-subgroup'>스로틀 — skew 결합</h4>
+<label for='wave-throttle'>
+<span>스로틀</span>
+<output data-value='throttle' for='wave-throttle'>100%</output>
+<input data-control='throttle' id='wave-throttle' max='100' min='0' step='1' type='range' value='100'>
 </label>
 </div>
 <div aria-label='파형 예시' class='waveform-presets'>
@@ -150,6 +156,9 @@
 </div>
 <svg aria-label='정규화된 다운/업 스트로크 형태' data-chart='halves' role='img'></svg>
 </div>
+<p class='waveform-link'>
+<a href='../../ko/documentation/stabilization/#waveform-explorer'>전체 조향 &amp; slew 탐색기 열기 →</a>
+</p>
 </div>
 <h3>극단 조합 읽기</h3>
 <p>7 / 1 조합은 분명히 짧고 뾰족한 다운스트로크와 긴 사인파 복귀를 만듭니다. 정확하거나 최대에 가까운 값은 주의가 필요합니다. 현재 지속시간 법칙은 퍼로시티 8 아래 남은 양을 사용합니다. 따라서 8 / 0은 주기의 약 0.125%만 다운스트로크에 할당하고, 8 / 6조차 약 0.5%를 할당합니다. 위치는 연속적이지만, 요청된 속도와 가속도는 물리적으로 도달 불가능해질 수 있습니다.</p>
