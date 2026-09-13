@@ -95,12 +95,11 @@ public:
     float   rudderFerocityRange;  // 0–100, amplitude of rudder-ferocity channel
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection
-    float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
     float   throttleFrequencyMix; // 0–100, throttle→frequency coupling
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke wave-centre shift
     float   returnSkew;           // -100…+100, upstroke wave-centre shift
-    float   throttleSkewMix;      // 0–100, throttle→skew coupling (symmetric thrust shaping)
+    float   throttleThrustShapeMix; // 0–100, throttle→thrust-shape coupling (blended dwell + centre)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake

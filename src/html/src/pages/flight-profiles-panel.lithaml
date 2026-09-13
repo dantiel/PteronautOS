@@ -129,15 +129,6 @@
             %
        %tr
          %td
-           %b= self._t('ornithopter.throttle_ferocity_mix.title')
-           %br
-           %small{style: "color:#888;"}= self._t('ornithopter.throttle_ferocity_mix.desc')
-         %td
-           %input{type: "range", min: "0", max: "100", .value: self.throttleFerocityMix, @input: self._onSlider('throttleFerocityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.throttleFerocityMix
-           %
-       %tr
-         %td
            %b= self._t('ornithopter.throttle_frequency_mix.title')
            %br
            %small{style: "color:#888;"}= self._t('ornithopter.throttle_frequency_mix.desc')
@@ -174,13 +165,12 @@
            %small.label= self._returnSkewLabel()
        %tr
          %td
-           %b= self._t('ornithopter.throttle_skew_mix.title')
+           %b= self._t('ornithopter.throttle_thrust_shape_mix.title')
            %br
-           %small{style: "color:#888;"}= self._t('ornithopter.throttle_skew_mix.desc')
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_thrust_shape_mix.desc')
          %td
-           %input{type: "range", min: "0", max: "100", .value: self.throttleSkewMix, @input: self._onSlider('throttleSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.throttleSkewMix
-           %small.label= self._throttleSkewMixLabel()
+           %input{type: "range", min: "0", max: "100", .value: self.throttleThrustShapeMix, @input: self._onSlider('throttleThrustShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleThrustShapeMix
  
        %tr
          %td

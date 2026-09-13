@@ -36,12 +36,11 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     rudderFerocityRange = p.rudderFerocityRange;
     rudderAmplitudeDifferential = p.rudderAmplitudeDifferential;
     elevatorFerocityMix = p.elevatorFerocityMix;
-    throttleFerocityMix = p.throttleFerocityMix;
     throttleFrequencyMix = p.throttleFrequencyMix;
     ferocityShapeMix = p.ferocityShapeMix;
     strokeSkew        = p.strokeSkew;
     returnSkew        = p.returnSkew;
-    throttleSkewMix   = p.throttleSkewMix;
+    throttleThrustShapeMix = p.throttleThrustShapeMix;
     aileronSkewMix      = p.aileronSkewMix;
     throttleSkewRateMix = p.throttleSkewRateMix;
     aileronSkewRateMix = p.aileronSkewRateMix;
@@ -51,10 +50,10 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          int8_t glide, int8_t flapAng,
                                          float ail, float elev, float rudRng,
                                          float rudAmpDiff, float elevFerMix,
-                                         float thrFerMix, float thrFreqMix,
+                                         float thrThrustShape, float thrFreqMix,
                                          float ferShapeMix,
                                          float strokeSkew, float returnSkew,
-                                         float thrSkewMix, float ailSkewMix,
+                                         float ailSkewMix,
                                          float thrSkewRateMix, float ailSkewRateMix)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
@@ -68,12 +67,11 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.rudderFerocityRange = rudRng;
     p.rudderAmplitudeDifferential = rudAmpDiff;
     p.elevatorFerocityMix = elevFerMix;
-    p.throttleFerocityMix = thrFerMix;
+    p.throttleThrustShapeMix = thrThrustShape;
     p.throttleFrequencyMix = thrFreqMix;
     p.ferocityShapeMix = ferShapeMix;
     p.strokeSkew       = strokeSkew;
     p.returnSkew       = returnSkew;
-    p.throttleSkewMix  = thrSkewMix;
     p.aileronSkewMix      = ailSkewMix;
     p.throttleSkewRateMix = thrSkewRateMix;
     p.aileronSkewRateMix = ailSkewRateMix;
@@ -111,12 +109,11 @@ Ornithopter::Ornithopter()
   , rudderFerocityRange(50.0f)
   , rudderAmplitudeDifferential(0.0f)
   , elevatorFerocityMix(0.0f)
-  , throttleFerocityMix(0.0f)
   , throttleFrequencyMix(0.0f)
   , ferocityShapeMix(0.0f)
   , strokeSkew(ORNI_SKEW_DEFAULT)
   , returnSkew(ORNI_SKEW_DEFAULT)
-  , throttleSkewMix(0.0f)
+  , throttleThrustShapeMix(0.0f)
   , aileronSkewMix(0.0f)
   , throttleSkewRateMix(0.0f)
   , aileronSkewRateMix(0.0f)
@@ -362,10 +359,12 @@ void Ornithopter::_computeServoMixer() {
         float elevUpBoost   = fmaxf( elevatorNorm, 0.0f) * elevFerScale;   // climb → downstroke
         float elevDownBoost = fmaxf(-elevatorNorm, 0.0f) * elevFerScale;   // dive  → upstroke
 
-        // Throttle → ferocity mix (per-profile, 0–100). Adds dwell/aggression
-        // proportional to throttle %. 0 = throttle drives amplitude only (pure
-        // sine at 0/0 ferocity); 100 = full coupling up to square at full gas.
-        float throttleFerBoost = throttlePct * throttleFerocityMix * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN);
+        // Throttle → thrust-shape coupling (per-profile, 0–100). One blended
+        // knob: thrust aggression α = throttle·mix drives dwell (square) AND
+        // centre (front-load) together — the defined overlap of ferocity and
+        // skew along the thrust axis. 0 = throttle drives amplitude only; 100 =
+        // full dwell + full front-load at full gas.
+        OrniThrustShape thrust = orniThrottleThrustShape(throttlePct, throttleThrustShapeMix);
 
         // Ferocity (dwell/shape) = per-profile stroke/return sliders
         // + elevator mix + throttle mix (+ gyro).
@@ -385,12 +384,12 @@ void Ornithopter::_computeServoMixer() {
         float resonanceBias = _resonanceAccum;
 
         float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + throttleFerBoost;
+                          + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + thrust.dwellBoost;
         float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal - iBias + _ssffFerocityDownBias + resonanceBias + elevDownBoost + throttleFerBoost;
+                          + ferocitySignal - iBias + _ssffFerocityDownBias + resonanceBias + elevDownBoost + thrust.dwellBoost;
 #else
-        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + throttleFerBoost;
-        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + throttleFerBoost;
+        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + thrust.dwellBoost;
+        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + thrust.dwellBoost;
 #endif
         // Yaw stick → L/R wing differential, scaled by rudder_ferocity_range (0–100)
         float rudderFer = _crsfToNorm(voiceRudder) * rudderFerocityRange * 0.01f * ORNI_DIFFERENTIAL_MAX;
@@ -417,13 +416,9 @@ void Ornithopter::_computeServoMixer() {
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
-        // Throttle → skew coupling (symmetric thrust shaping): throttle shapes
-        // thrust magnitude, not pitch. Full throttle front-loads BOTH half-strokes
-        // (augmented thrust — peak velocity sooner in downstroke AND upstroke);
-        // idle late-loads BOTH (diminished thrust). The SAME shift is added to
-        // strokeSkew and returnSkew, so both wings and both half-strokes move
-        // together — thrust authority, not roll or pitch.
-        float throttleSkewShift = orniThrottleSkewShift(throttlePct, throttleSkewMix);
+        // Thrust-shape centre (dwell + centre blended above) shifts both
+        // half-stroke centres symmetrically; the throttle-rate slew adds
+        // its transient on top.
 
         // Throttle-RATE → transient boost/brake (slew): the low-passed
         // throttle slew briefly shifts BOTH wave centres the same way as the
@@ -441,8 +436,8 @@ void Ornithopter::_computeServoMixer() {
             throttleRateBoost = orniThrottleSkewRateShift(_throttleRateLPF, throttleSkewRateMix);
         }
 
-        float strokeSkewEff = strokeSkew + throttleSkewShift + throttleRateBoost;
-        float returnSkewEff = returnSkew + throttleSkewShift + throttleRateBoost;
+        float strokeSkewEff = strokeSkew + thrust.centreShift + throttleRateBoost;
+        float returnSkewEff = returnSkew + thrust.centreShift + throttleRateBoost;
 
         // Aileron → differential skew coupling (roll steering): aileron
         // front-loads one wing while it late-loads the other — roll torque on

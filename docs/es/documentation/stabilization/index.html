@@ -137,7 +137,7 @@
 <p>La ferocidad controla tanto el carácter como el tiempo de medio golpe. Internamente, el ajuste 0–100 de la WebUI se mapea a 0–8. Una mayor ferocidad de descenso acorta la parte del ciclo del descenso; una mayor ferocidad de retorno acorta la parte del retorno. El tiempo restante se transfiere a la mitad opuesta: no hay pausa en cero.</p>
 <p>El control Forma de Ferocidad por perfil selecciona el carácter de alta ferocidad. Al 0% favorece una forma finita de meseta/cuadrada. Al 100% favorece una trayectoria piramidal redondeada. Cada mitad sigue usando su propia ferocidad, de modo que una mitad de baja ferocidad permanece alargada y sinusoidal, mientras que una de alta ferocidad se aproxima a un recorrido diagonal directo.</p>
 <p>El sesgo de descenso y de ascenso (±100) desplaza el centro de cada medio batido a lo largo de su propio eje inicio–fin — el mismo espejado por medio batido que la ferocidad. Positivo adelanta el batido: el ala alcanza la velocidad máxima antes, aumentando el empuje. Negativo lo retrasa: el batido gasta su movimiento al final, reduciendo el empuje. La deformación es monótona y preserva los extremos, de modo que es exactamente una mezcla asimétrica cuadrado↔triángulo, nunca un salto de posición.</p>
-<p>El acoplamiento throttle→skew moldea la magnitud del empuje, no el cabeceo. Aceleración total front-loada AMBOS semiciclos (empuje aumentado — velocidad pico antes en la bajada Y en la subida); ralentí late-loada AMBOS (empuje reducido). El mismo desplazamiento se suma al skew de bajada Y al skew de subida, de modo que ambas alas y ambos semiciclos se mueven juntos — autoridad de empuje, no de roll ni cabeceo. Cero a medio acelerador, ±mix en los extremos.</p>
+<p>El acoplamiento de forma de empuje del throttle combina permanencia y centro delantero-trasero en un mando. A fondo cuadra el golpe Y adelanta ambos medios golpes — la velocidad pico llega antes tanto en el descenso como en el ascenso; en ralentí ambos quedan neutros. El único escalar de agresión empuja permanencia y centro juntos, de modo que ambas alas y ambos medios golpes se mueven al unísono — autoridad de empuje, no de alabeo ni cabeceo.</p>
 <p>El acoplamiento aileron→skew front-loada un ala mientras retrasa la otra — par de alabeo sobre el eje del skew, gemelo espejo del skew de throttle. Stick a la izquierda suma skew al ala izquierda y lo resta de la derecha; a la derecha hace lo contrario. Úsalo junto con, o en lugar de, el diferencial de amplitud del timón.</p>
 <p>Slew es un impulso o freno transitorio sobre la tasa de un stick. Dar gas front-loada brevemente AMBOS semiciclos, cortar gas late-loada brevemente AMBOS; la tasa filtrada por paso-bajo (τ = 0,10 s) inyecta la sacudida, que luego decae al reposar el stick. Dos acoplamientos: slew de tasa de throttle (simétrico, empuje) y slew de tasa de alerón (diferencial, roll).</p>
 <p>El slew gain del Zephyrus aplica la misma idea transitoria al timón: un cambio rápido de actitud amplía brevemente la corrección del timón (µs), filtrada paso-bajo (τ = 0,12 s) y limitada a ±80 µs. Agudiza la respuesta a cambios rápidos de actitud sin elevar la ganancia estática.</p>
@@ -189,10 +189,10 @@
 <output data-value='aileron' for='st-wave-aileron'>0</output>
 <input data-control='aileron' id='st-wave-aileron' max='100' min='-100' step='1' type='range' value='0'>
 </label>
-<label for='st-wave-throttle-skew-mix'>
-<span>Mezcla throttle→skew</span>
-<output data-value='throttleSkewMix' for='st-wave-throttle-skew-mix'>0%</output>
-<input data-control='throttleSkewMix' id='st-wave-throttle-skew-mix' max='100' min='0' step='1' type='range' value='0'>
+<label for='st-wave-thrust-shape-mix'>
+<span>Mezcla de forma de empuje</span>
+<output data-value='throttleThrustShapeMix' for='st-wave-thrust-shape-mix'>0%</output>
+<input data-control='throttleThrustShapeMix' id='st-wave-thrust-shape-mix' max='100' min='0' step='1' type='range' value='0'>
 </label>
 <label for='st-wave-aileron-skew-mix'>
 <span>Mezcla aileron→skew</span>

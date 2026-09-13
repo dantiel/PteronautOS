@@ -27,7 +27,7 @@ class FerocityWaveformExplorer
       lockMode: 'unlocked'  # 'unlocked', 'sync', 'oppose'
       throttle: 100
       aileron: 0
-      throttleSkewMix: 0
+      throttleThrustShapeMix: 0
       aileronSkewMix: 0
       slew: 0
     @i18n =
@@ -39,11 +39,11 @@ class FerocityWaveformExplorer
       axisHalf: @root.dataset.i18nAxisHalf ? 'Local half-stroke phase'
       metric: @root.dataset.i18nMetric ? 'Time allocation: down {down}% · up {up}% · peak phase-speed ratio {ratio}×'
     @controls = {}
-    for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock', 'throttle', 'aileron', 'throttleSkewMix', 'aileronSkewMix', 'slew']
+    for name in ['down', 'up', 'mix', 'skewDown', 'skewUp', 'lock', 'throttle', 'aileron', 'throttleThrustShapeMix', 'aileronSkewMix', 'slew']
       @controls[name] = @root.querySelector "[data-control='#{name}']"
 
     if @root.dataset.throttleCoupling?
-      @state.throttleSkewMix = Number @root.dataset.throttleCoupling
+      @state.throttleThrustShapeMix = Number @root.dataset.throttleCoupling
 
     @controls.down?.addEventListener 'input', (event) =>
       @state.down = Number event.currentTarget.value
@@ -75,8 +75,8 @@ class FerocityWaveformExplorer
       @state.aileron = Number event.currentTarget.value
       @update()
 
-    @controls.throttleSkewMix?.addEventListener 'input', (event) =>
-      @state.throttleSkewMix = Number event.currentTarget.value
+    @controls.throttleThrustShapeMix?.addEventListener 'input', (event) =>
+      @state.throttleThrustShapeMix = Number event.currentTarget.value
       @update()
 
     @controls.aileronSkewMix?.addEventListener 'input', (event) =>
@@ -194,21 +194,30 @@ class FerocityWaveformExplorer
     shapeMix = clamp @state.mix / 100, 0, 1
     plateau + (pointed - plateau) * shapeMix
 
+  # Effective per-half ferocities: throttle thrust-shape adds a symmetric
+  # dwell boost (0..8) atop the base sliders; clamped inside localShape.
+  effectiveFerocities: ->
+    throttle01 = clamp @state.throttle / 100, 0, 1
+    dwellBoost = throttle01 * @state.throttleThrustShapeMix * 0.08
+    down: @state.down + dwellBoost
+    up: @state.up + dwellBoost
+
   boundary: ->
-    downWeight = Math.max 0.01, 8 - clamp(@state.down, 0, 8)
-    upWeight = Math.max 0.01, 8 - clamp(@state.up, 0, 8)
+    down = clamp @effectiveFerocities().down, 0, 8
+    up = clamp @effectiveFerocities().up, 0, 8
+    downWeight = Math.max 0.01, 8 - down
+    upWeight = Math.max 0.01, 8 - up
     TAU * downWeight / (downWeight + upWeight)
 
-  # Effective per-wing skews: mirrors the firmware mixer. Throttle → symmetric
-  # thrust shaping (both half-strokes front-load for thrust, late-load for
-  # reduced thrust), slew → same symmetric transient, aileron → differential.
+  # Effective per-wing skews: mirrors the firmware mixer. Throttle
+  # thrust-shape front-loads both half-strokes monotonically (idle
+  # neutral, full = max), slew adds the same symmetric transient,
   effectiveSkews: ->
     throttle01 = clamp @state.throttle / 100, 0, 1
-    signedThrottle = 2 * throttle01 - 1
-    throttleShift = signedThrottle * @state.throttleSkewMix
+    centreShift = throttle01 * @state.throttleThrustShapeMix
     slew = clamp @state.slew, -100, 100
-    strokeSym = @state.skewDown + throttleShift + slew
-    returnSym = @state.skewUp + throttleShift + slew
+    strokeSym = @state.skewDown + centreShift + slew
+    returnSym = @state.skewUp + centreShift + slew
     aileronNorm = clamp @state.aileron / 100, -1, 1
     ailShift = aileronNorm * @state.aileronSkewMix
     strokeL: strokeSym + ailShift
@@ -220,13 +229,14 @@ class FerocityWaveformExplorer
     theta = theta % TAU
     theta += TAU if theta < 0
     boundary = @boundary()
+    ferocities = @effectiveFerocities()
     downstroke = theta < boundary
     if downstroke
       localPhase = theta / boundary
-      position = @localShape localPhase, @state.down, strokeSkew
+      position = @localShape localPhase, ferocities.down, strokeSkew
     else
       localPhase = (theta - boundary) / (TAU - boundary)
-      position = -@localShape localPhase, @state.up, returnSkew
+      position = -@localShape localPhase, ferocities.up, returnSkew
     {position, boundary}
 
   directPosition: (theta, boundary) ->
@@ -339,7 +349,7 @@ class FerocityWaveformExplorer
     @root.querySelector("[data-value='skewUp']")?.textContent = @_formatSkew @state.skewUp
     @root.querySelector("[data-value='throttle']")?.textContent = "#{Math.round @state.throttle}%"
     @root.querySelector("[data-value='aileron']")?.textContent = @_formatSkew @state.aileron
-    @root.querySelector("[data-value='throttleSkewMix']")?.textContent = "#{Math.round @state.throttleSkewMix}%"
+    @root.querySelector("[data-value='throttleThrustShapeMix']")?.textContent = "#{Math.round @state.throttleThrustShapeMix}%"
     @root.querySelector("[data-value='aileronSkewMix']")?.textContent = "#{Math.round @state.aileronSkewMix}%"
     @root.querySelector("[data-value='slew']")?.textContent = @_formatSkew @state.slew
     downShare = @boundary() / TAU * 100

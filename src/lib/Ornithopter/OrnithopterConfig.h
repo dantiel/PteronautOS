@@ -176,17 +176,27 @@ constexpr float orniThrottleFrequencyCommand(float independentFreq01,
     return independent + (throttle - independent) * mix;
 }
 
-// Throttle → skew coupling: symmetric thrust shaping. Full throttle front-loads
-// BOTH half-strokes (augmented thrust — peak velocity sooner in downstroke AND
-// upstroke); idle late-loads BOTH (diminished thrust). Returns the signed skew
-// shift (in the same ±100 units as strokeSkew/returnSkew) to ADD to BOTH
-// strokeSkew and returnSkew symmetrically. 0 at mid-throttle, ±coupling at the
-// extremes (continuous, linear).
-constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
-    const float mix = orniClamp01(couplingPercent * 0.01f);
+// Throttle → thrust-shape coupling (single blended knob, 0–100).
+// ONE knob replaces the old throttle→ferocity (dwell) and throttle→skew
+// (centre) couplings. Thrust aggression α = throttle·mix drives dwell (square
+// the stroke) AND centre (front-load the peak) in lockstep — this DEFINES
+// their overlap: the thrust axis advances both projections together, so dwell
+// and centre never double-count. Monotonic: idle = neutral (no thrust), full =
+// max dwell + max front-load. Returns ferocity-units dwellBoost and
+// skew-units centreShift to ADD to BOTH half-strokes symmetrically.
+struct OrniThrustShape {
+    float dwellBoost;   // ferocity units (0…ORNI_FEROCITY_MAX−MIN)
+    float centreShift;  // skew units (0…ORNI_SKEW_MAX)
+};
+
+constexpr OrniThrustShape orniThrottleThrustShape(float throttle01, float mixPercent) {
+    const float mix = orniClamp01(mixPercent * 0.01f);
     const float t = orniClamp01(throttle01);
-    const float signedThrottle = 2.0f * t - 1.0f;   // -1 (idle) … +1 (full)
-    return signedThrottle * mix * ORNI_SKEW_MAX;    // ±(0…100)
+    const float alpha = t * mix;   // 0 (idle) … mix (full)
+    OrniThrustShape s;
+    s.dwellBoost  = alpha * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN);
+    s.centreShift = alpha * ORNI_SKEW_MAX;
+    return s;
 }
  
 // Throttle-rate transient (slew): gain and LPF time constant for the
@@ -247,12 +257,11 @@ struct FlightProfileParams {
     float   rudderFerocityRange;  // 0–100
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection
-    float   throttleFerocityMix;  // 0–100, throttle→ferocity coupling (dwell)
     float   throttleFrequencyMix; // 0–100, CH6→throttle frequency-command blend
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
-    float   throttleSkewMix;      // 0–100, throttle→skew coupling (symmetric thrust shaping)
+    float   throttleThrustShapeMix; // 0–100, throttle→thrust-shape coupling (blended dwell + centre)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)
