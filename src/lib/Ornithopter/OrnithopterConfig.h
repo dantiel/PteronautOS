@@ -176,12 +176,12 @@ constexpr float orniThrottleFrequencyCommand(float independentFreq01,
     return independent + (throttle - independent) * mix;
 }
 
-// Throttle → skew coupling: asymmetric thrust-vector steering. Full throttle
-// front-loads the DOWNSTROKE (power stroke); idle front-loads the UPSTROKE
-// (recovery). Returns the signed skew shift (in the same ±100 units as
-// strokeSkew/returnSkew) to ADD to strokeSkew and SUBTRACT from returnSkew.
-// 0 at mid-throttle, ±coupling at the extremes — so moving the throttle in
-// either direction shifts the wave centre the same way (continuous, linear).
+// Throttle → skew coupling: symmetric thrust shaping. Full throttle front-loads
+// BOTH half-strokes (augmented thrust — peak velocity sooner in downstroke AND
+// upstroke); idle late-loads BOTH (diminished thrust). Returns the signed skew
+// shift (in the same ±100 units as strokeSkew/returnSkew) to ADD to BOTH
+// strokeSkew and returnSkew symmetrically. 0 at mid-throttle, ±coupling at the
+// extremes (continuous, linear).
 constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
     const float mix = orniClamp01(couplingPercent * 0.01f);
     const float t = orniClamp01(throttle01);
@@ -197,7 +197,7 @@ constexpr float orniThrottleSkewShift(float throttle01, float couplingPercent) {
 
 // Aileron → differential skew coupling (roll steering): aileron front-loads
 // one wing while it late-loads the other — roll torque on the skew axis,
-// mirror-image twin of the symmetric throttle/pitch skew. Returns the signed
+// mirror-image twin of the symmetric throttle skew. Returns the signed
 // shift (±ORNI_SKEW_MAX) to ADD to the LEFT wing and SUBTRACT from the RIGHT.
 // aileronNorm ∈ [-1, +1] (0 = centred stick).
 constexpr float orniAileronSkewShift(float aileronNorm, float couplingPercent) {
@@ -208,8 +208,9 @@ constexpr float orniAileronSkewShift(float aileronNorm, float couplingPercent) {
 
 // Throttle-rate → transient skew boost/brake (slew): the caller feeds
 // the low-pass-filtered throttle slew (1/s). Positive slew (giving gas)
-// front-loads the downstroke (boost); negative slew (cutting gas) front-loads
-// the upstroke (brake). Hard-clamped to the skew envelope; off at 0% mix.
+// front-loads BOTH half-strokes (boost); negative slew (cutting gas)
+// late-loads BOTH (brake) — symmetric thrust shaping, same axis as the
+// static throttle coupling. Hard-clamped to the skew envelope; off at 0% mix.
 constexpr float orniThrottleSkewRateShift(float throttleRatePerSec, float rateMixPercent) {
     const float mix = orniClamp01(rateMixPercent * 0.01f);
     float s = throttleRatePerSec * ORNI_SKEW_RATE_GAIN * mix;
@@ -251,7 +252,7 @@ struct FlightProfileParams {
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
-    float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
+    float   throttleSkewMix;      // 0–100, throttle→skew coupling (symmetric thrust shaping)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)

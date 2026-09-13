@@ -197,14 +197,15 @@ class FerocityWaveformExplorer
     TAU * downWeight / (downWeight + upWeight)
 
   # Effective per-wing skews: mirrors the firmware mixer. Throttle → symmetric
-  # pitch shift, slew → symmetric transient, aileron → differential roll shift.
+  # thrust shaping (both half-strokes front-load for thrust, late-load for
+  # reduced thrust), slew → same symmetric transient, aileron → differential.
   effectiveSkews: ->
     throttle01 = clamp @state.throttle / 100, 0, 1
     signedThrottle = 2 * throttle01 - 1
     throttleShift = signedThrottle * @state.throttleSkewMix
     slew = clamp @state.slew, -100, 100
     strokeSym = @state.skewDown + throttleShift + slew
-    returnSym = @state.skewUp - throttleShift - slew
+    returnSym = @state.skewUp + throttleShift + slew
     aileronNorm = clamp @state.aileron / 100, -1, 1
     ailShift = aileronNorm * @state.aileronSkewMix
     strokeL: strokeSym + ailShift

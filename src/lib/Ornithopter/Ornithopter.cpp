@@ -417,17 +417,18 @@ void Ornithopter::_computeServoMixer() {
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
-        // Throttle → skew coupling (asymmetric steering): throttle steers the
-        // thrust vector between the two half-strokes. Full throttle front-loads
-        // the downstroke (power), idle front-loads the upstroke (recovery).
-        // The shift is added to strokeSkew and subtracted from returnSkew, so
-        // both wings diverge identically — pitch authority, not roll.
+        // Throttle → skew coupling (symmetric thrust shaping): throttle shapes
+        // thrust magnitude, not pitch. Full throttle front-loads BOTH half-strokes
+        // (augmented thrust — peak velocity sooner in downstroke AND upstroke);
+        // idle late-loads BOTH (diminished thrust). The SAME shift is added to
+        // strokeSkew and returnSkew, so both wings and both half-strokes move
+        // together — thrust authority, not roll or pitch.
         float throttleSkewShift = orniThrottleSkewShift(throttlePct, throttleSkewMix);
 
         // Throttle-RATE → transient boost/brake (slew): the low-passed
-        // throttle slew briefly shifts the wave centre the same way as the
-        // static coupling — giving gas front-loads the downstroke (boost),
-        // cutting gas front-loads the upstroke (brake). τ = ORNI_SKEW_RATE_LPF_TAU
+        // throttle slew briefly shifts BOTH wave centres the same way as the
+        // static coupling — giving gas front-loads both half-strokes (boost),
+        // cutting gas late-loads both (brake). τ = ORNI_SKEW_RATE_LPF_TAU
         // decays the kick once the stick rests; the sentinel seeds without kick.
         float throttleRateBoost = 0.0f;
         if (_prevThrottlePct < 0.0f) {
@@ -441,11 +442,11 @@ void Ornithopter::_computeServoMixer() {
         }
 
         float strokeSkewEff = strokeSkew + throttleSkewShift + throttleRateBoost;
-        float returnSkewEff = returnSkew - throttleSkewShift - throttleRateBoost;
+        float returnSkewEff = returnSkew + throttleSkewShift + throttleRateBoost;
 
         // Aileron → differential skew coupling (roll steering): aileron
         // front-loads one wing while it late-loads the other — roll torque on
-        // the skew axis, mirror-image twin of the symmetric pitch skew.
+        // the skew axis, mirror-image twin of the symmetric throttle skew.
         float aileronSkewShift = orniAileronSkewShift(aileronNorm, aileronSkewMix);
 
         // Aileron-RATE → transient differential skew boost/brake (slew):

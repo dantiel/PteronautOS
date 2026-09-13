@@ -100,7 +100,7 @@ public:
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke wave-centre shift
     float   returnSkew;           // -100…+100, upstroke wave-centre shift
-    float   throttleSkewMix;      // 0–100, throttle→skew coupling (asymmetric steering)
+    float   throttleSkewMix;      // 0–100, throttle→skew coupling (symmetric thrust shaping)
  
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake
