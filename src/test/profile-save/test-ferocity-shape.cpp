@@ -56,7 +56,6 @@ int main()
     // mid-stroke (wave zero-crossing) BEFORE the symmetric t=0.5; −100 delays
     // it past t=0.5. At zero ferocity the half is a pure cosine, whose centre
     // is exactly the sign change.
-    const float downStart = 0.0f;   // theta=0 → downstroke start
     const float downMid  = 0.5f * kPi;  // theta=π/2 → symmetric centre (cos=0)
     // Symmetric: value at downMid is ~0 (cosine zero-crossing).
     expectNear(FlappingOscillator::shapeWave(downMid, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f), 0.0f, 0.02f);

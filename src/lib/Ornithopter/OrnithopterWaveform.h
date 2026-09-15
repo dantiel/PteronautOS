@@ -9,13 +9,18 @@
 
 class FlappingOscillator {
 public:
-    float phase;
-    float cadence;
-    float cadenceTarget;
-    float kGainMod;   // Phase advance multiplier (1.0=nominal, 0.5-2.0 from Cadence P→Phase)
-    float anchorGain; // k₂ damping delta (0=k₂=10 tight, 100=k₂=20)
+    float phase;         // actual flap phase [rad], kept in [0, 2π)
+    float cadence;       // instantaneous flap rate [rad/s] (base + debt momentum)
+    float cadenceTarget; // commanded base flap rate [rad/s] — the beat grid
+    float kGainMod;      // ONDAS phase-advance demand: 1.0=nominal, >1 = brief faster flap
+    float anchorGain;    // beat-locking stiffness delta (0=ω₀=10 soft, 100=ω₀=110 stiff)
+    float basePhase;     // virtual beat grid [rad] — always advances at cadenceTarget
+    float phaseOffset;   // debt to the grid [rad] — settles on whole strokes (2π·k)
+    float debtVel;       // debt momentum [rad/s] — the pendulum's extra flap rate
 
-    FlappingOscillator() : phase(0), cadence(0), cadenceTarget(0), kGainMod(1.0f), anchorGain(0.0f) {}
+    FlappingOscillator()
+        : phase(0), cadence(0), cadenceTarget(0), kGainMod(1.0f), anchorGain(0.0f),
+          basePhase(0), phaseOffset(0), debtVel(0) {}
 
     float advance(float dt);
     // limiarShared (optional): shared reversal threshold [rad] between the two
@@ -40,14 +45,38 @@ public:
 };
 
 inline float FlappingOscillator::advance(float dt) {
-    constexpr float kBaseDamp = 10.0f;
-    constexpr float kGain = kBaseDamp;  // unity steady-state: cadence == cadenceTarget (bird-like FREQ mode)
-    constexpr float kTwoPi = 6.283185307f;
-    float kDamp = kBaseDamp + anchorGain;  // anchorGain=0→k₂=10 (tight), anchorGain=100→k₂=110
-    float error = kGain * kGainMod * cadenceTarget - kDamp * cadence;
-    cadence += error * dt;
-    phase += cadence * dt;
-    // Return the raw phase angle (radians) for wave shaping, kept in [0, 2π).
+    constexpr float kBaseDamp = 10.0f;  // beat-locking natural frequency [rad/s] at anchorGain=0
+    constexpr float kZeta     = 0.7f;   // underdamped → the debt RINGS and decays (inertia)
+    constexpr float kTwoPi    = 6.283185307f;
+    float omega0 = kBaseDamp + anchorGain;  // anchorGain=0→10 (soft catch), 100→110 (stiff catch)
+
+    // The base beat grid always advances at the commanded flap frequency, so
+    // "on beat" is a whole number of strokes (2π) ahead or behind it.
+    basePhase += cadenceTarget * dt;
+    basePhase = fmodf(basePhase, kTwoPi);
+    if (basePhase < 0.0f) basePhase += kTwoPi;
+
+    // ONDAS phase-advance demand: kGainMod > 1 asks to flap faster briefly.
+    // This is a *rate* target for the debt (extra frequency), not a bare force.
+    float extraTarget = (kGainMod - 1.0f) * cadenceTarget;
+
+    // Josephson washboard — phase-quantized harmonization. The debt φ_offset
+    // is attracted to whole strokes (multiples of 2π) by −ω₀²·sin(φ_offset).
+    // Weak demand only nudges the phase and rings back to the SAME beat; a
+    // strong demand (extraTarget > ω₀/(2ζ)) whips the debt over the π barrier —
+    // a *quantized* phase slip of exactly one whole stroke — so the flap always
+    // lands on a beat, never between beats. ζ<1 keeps the return inertial
+    // (pendulum momentum):
+    //   φ_offset'' = −ω₀²·sin(φ_offset) − 2ζω₀·(φ_offset' − extraTarget)
+    debtVel += (-omega0 * omega0 * sinf(phaseOffset)
+                - 2.0f * kZeta * omega0 * (debtVel - extraTarget)) * dt;
+    phaseOffset += debtVel * dt;
+
+    // Actual flap phase = base grid + debt; instantaneous rate = base + debt velocity.
+    cadence = cadenceTarget + debtVel;
+    phase = basePhase + phaseOffset;
+
+    // Keep the returned phase in [0, 2π) for wave shaping.
     phase = fmodf(phase, kTwoPi);
     if (phase < 0.0f) phase += kTwoPi;
     return phase;
@@ -147,6 +176,11 @@ inline void FlappingOscillator::decay(float /*dt*/) {
     cadence *= 0.90f;
     if (fabsf(cadence) < 0.001f) cadence = 0;
     cadenceTarget = 0;
+    basePhase = 0;
+    phaseOffset *= 0.90f;   // the debt pendulum rings down with the flap
+    if (fabsf(phaseOffset) < 0.001f) phaseOffset = 0;
+    debtVel *= 0.90f;
+    if (fabsf(debtVel) < 0.001f) debtVel = 0;
 }
 
 inline void FlappingOscillator::reset() {
@@ -155,4 +189,7 @@ inline void FlappingOscillator::reset() {
     cadenceTarget = 0;
     kGainMod = 1.0f;
     anchorGain = 0.0f;
+    basePhase = 0;
+    phaseOffset = 0;
+    debtVel = 0;
 }

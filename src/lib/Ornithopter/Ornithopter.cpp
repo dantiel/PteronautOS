@@ -148,7 +148,8 @@ Ornithopter::Ornithopter()
   , _prevFlappingSin(0.0f), _ssffAccumError(0.0f)
   , _ssffAccumCount(0)
   , _ssffFerocityUpBias(0.0f), _ssffFerocityDownBias(0.0f)
-#endif
+  , _ferHold(0.0f), _ferHoldVel(0.0f)
+ #endif
   , _lastUpdateUs(0)
   , _prevThrottlePct(-1.0f)
   , _throttleRateLPF(0.0f)
@@ -184,6 +185,8 @@ void Ornithopter::onLinkUp() {
     _ssffAccumCount = 0;
     _ssffFerocityUpBias = 0.0f;
     _ssffFerocityDownBias = 0.0f;
+    _ferHold = 0.0f;
+    _ferHoldVel = 0.0f;
 #endif
 }
 
@@ -202,6 +205,8 @@ void Ornithopter::enterFailsafe() {
     _ssffAccumCount = 0;
     _ssffFerocityUpBias = 0.0f;
     _ssffFerocityDownBias = 0.0f;
+    _ferHold = 0.0f;
+    _ferHoldVel = 0.0f;
 #endif
 }
 
@@ -308,8 +313,11 @@ void Ornithopter::_computeServoMixer() {
         // Zephyrus bridges the raw pitch PID terms at 250 Hz
         // (ZephyrusFilter.h) and NaN-guards them upstream (Validatio),
         // so the values consumed here are live and bounded.
-        // Cadence P → Phase Advance: nose-up advances the stroke phase,
-        // nose-down retards it (clamped to [0.5, 2.0]).
+        // Cadence P → Phase Advance: nose-up asks for a brief faster flap,
+        // nose-down a brief slower one (clamped to [0.5, 2.0]). The demand
+        // feeds the phase-quantized Josephson washboard in advance(): a weak
+        // demand bends the phase and rings back to the same beat, a strong one
+        // slips a WHOLE stroke — the flap always lands on a beat, never between.
         _osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;
         if (_osc.kGainMod < 0.5f) _osc.kGainMod = 0.5f;
         if (_osc.kGainMod > 2.0f) _osc.kGainMod = 2.0f;
@@ -381,6 +389,19 @@ void Ornithopter::_computeServoMixer() {
                               + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
         if (ferocitySignal > 0.5f) ferocitySignal = 0.5f;
         if (ferocitySignal < -0.5f) ferocitySignal = -0.5f;
+        // Inertial harmonizer: the held dwell bias is a damped pendulum
+        // (ω₀=10, ζ=0.7) tracking the live PD blend. It catches the demanded
+        // ferocity with pendulum momentum and decays back inertially, so the
+        // dwell change lands in step with the phase-quantized cadence above
+        // rather than snapping the reversal boundary mid-stroke.
+        {
+            constexpr float fOmega = 10.0f;
+            constexpr float fZeta  = 0.7f;
+            _ferHoldVel += (-fOmega * fOmega * (_ferHold - ferocitySignal)
+                            - 2.0f * fZeta * fOmega * _ferHoldVel) * dt;
+            _ferHold += _ferHoldVel * dt;
+        }
+        ferocitySignal = _ferHold;
         // Balance I → asymmetry: accumulated pitch error shifts the
         // stroke centre (clamped to ±3.0 ferocity units).
         float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;
@@ -534,6 +555,8 @@ void Ornithopter::_computeServoMixer() {
         _ssffFerocityDownBias = 0.0f;
         _resonanceAccum = 0.0f;
         _prevFlappingSin = 0.0f;
+        _ferHold = 0.0f;
+        _ferHoldVel = 0.0f;
 #endif
         angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd) * ORNI_ANGULAR_MULTIPLIER);
         angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd) * ORNI_ANGULAR_MULTIPLIER);

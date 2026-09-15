@@ -151,6 +151,12 @@ public:
     int   _ssffAccumCount;
     float _ssffFerocityUpBias;
     float _ssffFerocityDownBias;
+
+    // Ferocity harmonizer — inertial pendulum (ω₀=10, ζ=0.7) tracking the live
+    // PD dwell blend, so ferocity changes carry momentum and decay like the
+    // flap pendulum instead of snapping mid-stroke (phase-quantized catch).
+    float _ferHold;     // held dwell bias applied to both half-strokes
+    float _ferHoldVel;  // pendulum momentum toward the live blend
 #endif
 
     Ornithopter();

@@ -19,6 +19,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   src/test/profile-save/test-thrust-expo.cpp \
   -o /tmp/ptero-test-thrust-expo
 /tmp/ptero-test-thrust-expo
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  src/test/profile-save/test-phase-harmonizer.cpp \
+  -o /tmp/ptero-test-phase-harmonizer
+/tmp/ptero-test-phase-harmonizer
 ```
 
 The JS tests compile and execute the actual CoffeeScript panel with mocked
@@ -55,3 +59,7 @@ plateau-to-pyramidal mixing, rounded reversal, and asymmetric anticipation.
 The thrust-expo test verifies the linear-at-zero identity, pinned endpoints,
 the soft/direct branches, monotonicity, expo clamping, and that dwell and
 centre stay proportional projections of the same aggression scalar.
+
+The phase-harmonizer test verifies the phase-quantized ONDAS harmonizer: the
+steady-state on-beat lock, the underdamped (inertial) ring of a weak demand
+back to the same beat, and the whole-stroke phase slip of a strong demand.
