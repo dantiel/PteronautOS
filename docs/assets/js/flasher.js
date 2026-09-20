@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, FIELD_IDS, LOCALES, apiFetch, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, setStatus, sleep, startBuild, terminal,
+var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, setStatus, sleep, startBuild, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -32,7 +32,12 @@ firmwareBytes = null;
 
 // The worker is reached same-origin when this page is served by the worker, or
 // via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
-API_BASE = (new URLSearchParams(location.search).get("api") || "").replace(/\/$/, "");
+// DEFAULT_API_BASE is baked in at deploy time so the GitHub Pages copy "just
+// works" for every visitor — nobody ever sees or types the worker URL. Leave ""
+// and the page falls back to same-origin (worker-hosted) or ?api= override.
+DEFAULT_API_BASE = "";
+
+API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE || "").replace(/\/$/, "");
 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";

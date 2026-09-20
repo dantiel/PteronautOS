@@ -22,7 +22,12 @@ firmwareBytes = null
 
 # The worker is reached same-origin when this page is served by the worker, or
 # via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
-API_BASE = (new URLSearchParams(location.search).get("api") or "").replace /\/$/, ""
+# DEFAULT_API_BASE is baked in at deploy time so the GitHub Pages copy "just
+# works" for every visitor — nobody ever sees or types the worker URL. Leave ""
+# and the page falls back to same-origin (worker-hosted) or ?api= override.
+DEFAULT_API_BASE = ""
+
+API_BASE = (new URLSearchParams(location.search).get("api") or DEFAULT_API_BASE or "").replace /\/$/, ""
 
 # Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config"
