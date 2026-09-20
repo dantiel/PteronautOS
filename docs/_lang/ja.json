@@ -948,5 +948,6 @@
   "flasher_home_wifi_ssid": "自宅WiFi SSID",
   "flasher_home_wifi_password": "自宅WiFiパスワード",
   "flasher_locales_hint": "WebUI に含める言語を選択 — 未選択は全 11 言語を含む。",
-  "flash_online_cta": "オンラインで書き込む"
+  "flash_online_cta": "オンラインで書き込む",
+  "flash_online_cta_desc": "ブラウザから直接ファームウェアをビルド＆書き込み — ツールチェーンもドライバも不要。Chrome と Edge は USB で書き込み、他のブラウザは .bin をダウンロードします。"
 }

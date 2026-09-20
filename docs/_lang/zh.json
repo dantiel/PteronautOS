@@ -948,5 +948,6 @@
   "flasher_home_wifi_ssid": "家庭 WiFi SSID",
   "flasher_home_wifi_password": "家庭 WiFi 密码",
   "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。",
-  "flash_online_cta": "在线刷写"
+  "flash_online_cta": "在线刷写",
+  "flash_online_cta_desc": "直接在浏览器中编译并烧录固件——无需工具链，无需驱动。Chrome 和 Edge 通过 USB 烧录；其他浏览器下载 .bin。"
 }

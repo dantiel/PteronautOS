@@ -948,5 +948,6 @@
   "flasher_home_wifi_ssid": "Heim-WLAN-SSID",
   "flasher_home_wifi_password": "Heim-WLAN-Passwort",
   "flasher_locales_hint": "Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein.",
-  "flash_online_cta": "Online flashen"
+  "flash_online_cta": "Online flashen",
+  "flash_online_cta_desc": "Firmware direkt im Browser bauen und flashen — ohne Toolchain, ohne Treiber. Chrome und Edge flashen per USB; andere Browser laden die .bin herunter."
 }

@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, terminal,
+var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, busy, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -32,7 +32,16 @@ currentRunId = null;
 
 firmwareBytes = null;
 
+busy = false;
+
 serialSupported = "serial" in navigator;
+
+window.addEventListener("beforeunload", function(e) {
+  if (busy) {
+    e.preventDefault();
+    return e.returnValue = "";
+  }
+});
 
 // The worker is reached same-origin when this page is served by the worker, or
 // via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
@@ -174,6 +183,7 @@ startBuild = async function() {
   setStatus("Dispatching build…", "busy");
   els.runLink.classList.add("hidden");
   els.progressWrap.classList.add("hidden");
+  busy = true;
   try {
     data = (await apiFetch("/api/build", {
       method: "POST",
@@ -193,7 +203,8 @@ startBuild = async function() {
   } catch (error) {
     err = error;
     setStatus("Build failed: " + err.message, "fail");
-    return els.buildBtn.disabled = false;
+    els.buildBtn.disabled = false;
+    return busy = false;
   }
 };
 
@@ -212,6 +223,7 @@ poll = async function() {
     if (data.conclusion !== "success") {
       setStatus("Build " + data.conclusion + " — check the GitHub run.", "fail");
       els.buildBtn.disabled = false;
+      busy = false;
       return;
     }
     els.downloadBtn.disabled = false;
@@ -221,11 +233,13 @@ poll = async function() {
     } else {
       setStatus("Build complete — ready to download.", "done");
     }
-    return els.buildBtn.disabled = false;
+    els.buildBtn.disabled = false;
+    return busy = false;
   } catch (error) {
     err = error;
     setStatus("Polling error: " + err.message, "fail");
-    return els.buildBtn.disabled = false;
+    els.buildBtn.disabled = false;
+    return busy = false;
   }
 };
 
@@ -244,6 +258,7 @@ downloadFirmware = async function() {
 saveFirmware = async function() {
   var a, blob, err, url;
   els.downloadBtn.disabled = true;
+  busy = true;
   try {
     if (firmwareBytes == null) {
       await downloadFirmware();
@@ -265,6 +280,7 @@ saveFirmware = async function() {
     return setStatus("Download failed: " + err.message, "fail");
   } finally {
     els.downloadBtn.disabled = false;
+    busy = false;
   }
 };
 
@@ -291,15 +307,13 @@ flash = async function() {
   els.flashBtn.disabled = true;
   els.progressWrap.classList.remove("hidden");
   els.progressBar.style.width = "0%";
+  busy = true;
   try {
     if (firmwareBytes == null) {
       await downloadFirmware();
     }
     setStatus("Connecting to device…", "busy");
     port = (await navigator.serial.requestPort());
-    await port.open({
-      baudRate: 115200
-    });
     transport = new Transport(port, true);
     esploader = new ESPLoader({
       transport: transport,
@@ -333,13 +347,18 @@ flash = async function() {
     await esploader.after("hard_reset");
     setStatus("Flashed successfully.", "done");
     els.progressBar.style.width = "100%";
-    return (await port.close());
+    try {
+      return (await transport.disconnect());
+    } catch (error) {
+      return log("Note: serial port already released.");
+    }
   } catch (error) {
     err = error;
     setStatus("Flash failed: " + err.message, "fail");
     return log(err.stack || err.message);
   } finally {
     els.flashBtn.disabled = false;
+    busy = false;
   }
 };
 

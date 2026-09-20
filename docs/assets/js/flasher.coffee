@@ -21,7 +21,13 @@ els =
 
 currentRunId = null
 firmwareBytes = null
+busy = false
 serialSupported = "serial" of navigator
+
+window.addEventListener "beforeunload", (e) ->
+  if busy
+    e.preventDefault()
+    e.returnValue = ""
 
 # The worker is reached same-origin when this page is served by the worker, or
 # via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
@@ -127,6 +133,7 @@ startBuild = ->
   setStatus "Dispatching build…", "busy"
   els.runLink.classList.add "hidden"
   els.progressWrap.classList.add "hidden"
+  busy = true
 
   try
     data = await apiFetch "/api/build",
@@ -143,6 +150,7 @@ startBuild = ->
   catch err
     setStatus "Build failed: " + err.message, "fail"
     els.buildBtn.disabled = false
+    busy = false
 
 poll = ->
   return unless currentRunId
@@ -155,6 +163,7 @@ poll = ->
     unless data.conclusion is "success"
       setStatus "Build " + data.conclusion + " — check the GitHub run.", "fail"
       els.buildBtn.disabled = false
+      busy = false
       return
     els.downloadBtn.disabled = false
     if serialSupported
@@ -163,9 +172,11 @@ poll = ->
     else
       setStatus "Build complete — ready to download.", "done"
     els.buildBtn.disabled = false
+    busy = false
   catch err
     setStatus "Polling error: " + err.message, "fail"
     els.buildBtn.disabled = false
+    busy = false
 
 downloadFirmware = ->
   setStatus "Downloading firmware…", "busy"
@@ -178,6 +189,7 @@ downloadFirmware = ->
 
 saveFirmware = ->
   els.downloadBtn.disabled = true
+  busy = true
   try
     unless firmwareBytes?
       await downloadFirmware()
@@ -195,6 +207,7 @@ saveFirmware = ->
     setStatus "Download failed: " + err.message, "fail"
   finally
     els.downloadBtn.disabled = false
+    busy = false
 
 terminal = ->
   clean: ->
@@ -212,6 +225,7 @@ flash = ->
   els.flashBtn.disabled = true
   els.progressWrap.classList.remove "hidden"
   els.progressBar.style.width = "0%"
+  busy = true
 
   try
     unless firmwareBytes?
@@ -219,7 +233,6 @@ flash = ->
 
     setStatus "Connecting to device…", "busy"
     port = await navigator.serial.requestPort()
-    await port.open baudRate: 115200
 
     transport = new Transport port, true
     esploader = new ESPLoader
@@ -249,12 +262,16 @@ flash = ->
 
     setStatus "Flashed successfully.", "done"
     els.progressBar.style.width = "100%"
-    await port.close()
+    try
+      await transport.disconnect()
+    catch
+      log "Note: serial port already released."
   catch err
     setStatus "Flash failed: " + err.message, "fail"
     log err.stack or err.message
   finally
     els.flashBtn.disabled = false
+    busy = false
 
 restoreConfig()
 

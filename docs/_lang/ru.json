@@ -948,5 +948,6 @@
   "flasher_home_wifi_ssid": "SSID домашнего Wi-Fi",
   "flasher_home_wifi_password": "Пароль домашнего Wi-Fi",
   "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11.",
-  "flash_online_cta": "Прошить онлайн"
+  "flash_online_cta": "Прошить онлайн",
+  "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome и Edge прошивают по USB; остальные браузеры скачивают .bin."
 }

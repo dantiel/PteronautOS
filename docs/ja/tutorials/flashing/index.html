@@ -23,16 +23,18 @@
 <a class='active' href='../../../ja/tutorials/'>チュートリアル</a>
 <a href='../../../ja/hardware/'>ハードウェア</a>
 <a href='../../../ja/documentation/'>ドキュメント</a>
-<a href='../../../ja/flasher/'>フラッシャー</a>
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
 <p class='tutorial-number'>チュートリアル 01</p>
 <h1>PteronautOS の書き込み</h1>
 <p class='sub-lead'>CYCLONE ELRS 2.4GHz 7CH PWM RX レシーバーを例に、ハーメティック・ファームウェアをビルドして書き込みます。</p>
+<aside class='flasher-callout'>
+<p class='flasher-callout-text'>ブラウザから直接ファームウェアをビルド＆書き込み — ツールチェーンもドライバも不要。Chrome と Edge は USB で書き込み、他のブラウザは .bin をダウンロードします。</p>
 <p class='flasher-cta'>
 <a href='../../../ja/flasher/'>オンラインで書き込む</a>
 </p>
+</aside>
 <p>PteronautOS は他の受信機ボードもサポートします。ESP8285 を共有していても配線が同一とは限りません: 露出した GPIO、チャンネル割り当て、書き込み用接続、PCB リビジョンは異なる場合があります。以下の電源と CH2/CH3 の配線はこの CYCLONE の例に適用されます。別の受信機を接続する前に、ボードのピン配置とサポートされるハードウェア構成を確認してください。</p>
 <p>電源を接続する前に、翼機構から推進負荷を取り除き、どのサーボも硬いストッパーに当たらないことを確認してください。書き込みは電気的な作業です。手順の間、機体は機械的に安全な状態を保つ必要があります。</p>
 <div class='video-embed'>
@@ -108,7 +110,7 @@ BOOT を押さずに受信機の電源を入れ直します。WiFi アクセス�
 <a class='' href='../../../hi/tutorials/flashing/'>हिन्दी</a>
 </div>
 <p class='footer-links'>
-<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+<a class='ext-link' href='https://github.com/dantiel/PteronautOS' rel='noopener' target='_blank'>GitHub</a>
 <span class='sep'>·</span>
 <a href='../../../ja/documentation/'>ドキュメント</a>
 <span class='sep'>·</span>

@@ -948,5 +948,6 @@
   "flasher_home_wifi_ssid": "SSID do WiFi de casa",
   "flasher_home_wifi_password": "Senha do WiFi de casa",
   "flasher_locales_hint": "Selecione os idiomas a incluir na WebUI — nenhum selecionado inclui todos os 11.",
-  "flash_online_cta": "Flashear online"
+  "flash_online_cta": "Flashear online",
+  "flash_online_cta_desc": "Compile e grave o firmware direto do navegador — sem toolchain, sem drivers. Chrome e Edge gravam por USB; os outros navegadores baixam o .bin."
 }

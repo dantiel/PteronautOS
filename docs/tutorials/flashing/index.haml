@@ -22,15 +22,16 @@
       %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
       %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
       %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
-      %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= nav_flasher
     %main.sub-main
       .sub-content
         %p.tutorial-number!= flash_number
         %h1!= flash_h1
         %p.sub-lead!= flash_lead
 
-        %p.flasher-cta
-          %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= flash_online_cta
+        %aside.flasher-callout
+          %p.flasher-callout-text!= flash_online_cta_desc
+          %p.flasher-cta
+            %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= flash_online_cta
 
         %p!= flash_p1
         %p!= flash_p2
@@ -110,7 +111,7 @@
         %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
         %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
       %p.footer-links
-        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+        %a.ext-link{href: "https://github.com/dantiel/PteronautOS", target: "_blank", rel: "noopener"}!= footer_github
         %span.sep ·
         %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
         %span.sep ·
