@@ -28,21 +28,6 @@
 <section class='flasher-card'>
 <h2>构建配置</h2>
 <label class='flasher-field'>
-<span>GitHub 令牌</span>
-<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
-</label>
-<p class='flasher-hint'>为此仓库创建一个具有 Actions 读写权限的 fine-grained 令牌。仅保存在此浏览器中。</p>
-<div class='flasher-grid'>
-<label class='flasher-field'>
-<span>仓库</span>
-<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
-</label>
-<label class='flasher-field'>
-<span>分支</span>
-<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
-</label>
-</div>
-<label class='flasher-field'>
 <span>混控配置文件</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -140,7 +125,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' selected='selected' type='checkbox'>
+<input checked='checked' id='locale-en' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -201,7 +186,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>Web Serial 需要 Chrome / Edge。GitHub 令牌仅保存在此浏览器中。</p>
+<p class='flasher-foot'>Web Serial 需要 Chrome / Edge。</p>
 </div>
 </main>
 <footer>

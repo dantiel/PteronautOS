@@ -28,21 +28,6 @@
 <section class='flasher-card'>
 <h2>Build configuration</h2>
 <label class='flasher-field'>
-<span>GitHub token</span>
-<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
-</label>
-<p class='flasher-hint'>Create a fine-grained token for this repo with Actions read/write. Stored only in this browser.</p>
-<div class='flasher-grid'>
-<label class='flasher-field'>
-<span>Repository</span>
-<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
-</label>
-<label class='flasher-field'>
-<span>Branch</span>
-<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
-</label>
-</div>
-<label class='flasher-field'>
 <span>Mixer profile</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -140,7 +125,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' selected='selected' type='checkbox'>
+<input checked='checked' id='locale-en' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -201,7 +186,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>Requires Chrome / Edge for Web Serial. Your GitHub token is stored only in this browser.</p>
+<p class='flasher-foot'>Requires Chrome / Edge for Web Serial.</p>
 </div>
 </main>
 <footer>

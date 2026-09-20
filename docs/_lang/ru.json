@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Прошить через Web Serial",
   "flasher_build_hint": "Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).",
   "flasher_heading_progress": "Прогресс сборки",
-  "flasher_foot_note": "Требуется Chrome / Edge для Web Serial. Токен GitHub хранится только в этом браузере.",
+  "flasher_foot_note": "Требуется Chrome / Edge для Web Serial.",
   "nav_flasher": "Прошивка",
   "flasher_heading_system": "Система и WebUI",
   "flasher_device_name": "Имя устройства (hostname)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "Скорость UART CRSF",
   "flasher_home_wifi_ssid": "SSID домашнего Wi-Fi",
   "flasher_home_wifi_password": "Пароль домашнего Wi-Fi",
-  "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11.",
-  "flasher_github_token": "Токен GitHub",
-  "flasher_github_token_hint": "Создайте fine-grained токен для этого репозитория с правами Actions (чтение/запись). Хранится только в этом браузере.",
-  "flasher_github_repo": "Репозиторий",
-  "flasher_github_ref": "Ветка"
+  "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11."
 }

@@ -37,18 +37,18 @@ on:
       auto_wifi_on_interval:
         description: 'WiFi auto-on interval in seconds (-1 disables)'
         required: false
-        type: number
-        default: 30
+        type: string
+        default: '30'
       zephyrus_i2c_sda:
         description: 'MPU6050 I2C SDA pin (GPIO)'
         required: false
-        type: number
-        default: 1
+        type: string
+        default: '1'
       zephyrus_i2c_scl:
         description: 'MPU6050 I2C SCL pin (GPIO)'
         required: false
-        type: number
-        default: 3
+        type: string
+        default: '3'
       zephyrus_board_rotation:
         description: 'MPU6050 mounting orientation (0-6)'
         required: false
@@ -58,23 +58,23 @@ on:
       mushin_rx_pin:
         description: 'Mushin bridge RX pin (GPIO)'
         required: false
-        type: number
-        default: 9
+        type: string
+        default: '9'
       mushin_tx_pin:
         description: 'Mushin bridge TX pin (GPIO)'
         required: false
-        type: number
-        default: 10
+        type: string
+        default: '10'
       mushin_baud:
         description: 'Mushin bridge baud rate'
         required: false
-        type: number
-        default: 57600
+        type: string
+        default: '57600'
       rcvr_uart_baud:
         description: 'CRSF UART baud rate (420000 = ELRS default)'
         required: false
-        type: number
-        default: 420000
+        type: string
+        default: '420000'
       device_name:
         description: 'Device hostname on the network'
         required: false

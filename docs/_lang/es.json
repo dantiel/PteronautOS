@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Grabar vía Web Serial",
   "flasher_build_hint": "La compilación genera un único .bin fusionado en GitHub Actions (~3–4 min).",
   "flasher_heading_progress": "Progreso de compilación",
-  "flasher_foot_note": "Requiere Chrome / Edge para Web Serial. Tu token de GitHub se guarda solo en este navegador.",
+  "flasher_foot_note": "Requiere Chrome / Edge para Web Serial.",
   "nav_flasher": "Flasher",
   "flasher_heading_system": "Sistema y WebUI",
   "flasher_device_name": "Nombre del dispositivo (hostname)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "Baudios UART CRSF",
   "flasher_home_wifi_ssid": "SSID del WiFi doméstico",
   "flasher_home_wifi_password": "Contraseña del WiFi doméstico",
-  "flasher_locales_hint": "Selecciona los idiomas a incluir en la WebUI — ninguno incluye los 11.",
-  "flasher_github_token": "Token de GitHub",
-  "flasher_github_token_hint": "Crea un token fine-grained para este repositorio con Actions de lectura/escritura. Se guarda solo en este navegador.",
-  "flasher_github_repo": "Repositorio",
-  "flasher_github_ref": "Rama"
+  "flasher_locales_hint": "Selecciona los idiomas a incluir en la WebUI — ninguno incluye los 11."
 }

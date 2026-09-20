@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Flasher via Web Serial",
   "flasher_build_hint": "Le build compile un unique .bin fusionné dans GitHub Actions (~3–4 min).",
   "flasher_heading_progress": "Progression du build",
-  "flasher_foot_note": "Nécessite Chrome / Edge pour Web Serial. Votre jeton GitHub est stocké uniquement dans ce navigateur.",
+  "flasher_foot_note": "Nécessite Chrome / Edge pour Web Serial.",
   "nav_flasher": "Flasher",
   "flasher_heading_system": "Système et WebUI",
   "flasher_device_name": "Nom de l'appareil (hôte)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "Baud UART CRSF",
   "flasher_home_wifi_ssid": "SSID du WiFi domestique",
   "flasher_home_wifi_password": "Mot de passe du WiFi domestique",
-  "flasher_locales_hint": "Sélectionnez les langues à inclure dans la WebUI — aucune sélection inclut les 11.",
-  "flasher_github_token": "Jeton GitHub",
-  "flasher_github_token_hint": "Créez un jeton fine-grained pour ce dépôt avec Actions en lecture/écriture. Stocké uniquement dans ce navigateur.",
-  "flasher_github_repo": "Dépôt",
-  "flasher_github_ref": "Branche"
+  "flasher_locales_hint": "Sélectionnez les langues à inclure dans la WebUI — aucune sélection inclut les 11."
 }

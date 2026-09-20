@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Web Serial से फ्लैश करें",
   "flasher_build_hint": "बिल्ड GitHub Actions में एकल मर्ज किया हुआ .bin बनाता है (~3–4 मिनट)।",
   "flasher_heading_progress": "बिल्ड प्रगति",
-  "flasher_foot_note": "Web Serial के लिए Chrome / Edge आवश्यक है। GitHub टोकन केवल इसी ब्राउज़र में संग्रहीत है।",
+  "flasher_foot_note": "Web Serial के लिए Chrome / Edge आवश्यक है।",
   "nav_flasher": "फ्लैशर",
   "flasher_heading_system": "सिस्टम और WebUI",
   "flasher_device_name": "डिवाइस नाम (होस्टनाम)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "CRSF UART बॉड",
   "flasher_home_wifi_ssid": "होम WiFi SSID",
   "flasher_home_wifi_password": "होम WiFi पासवर्ड",
-  "flasher_locales_hint": "WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।",
-  "flasher_github_token": "GitHub टोकन",
-  "flasher_github_token_hint": "इस रिपॉज़िटरी के लिए Actions पढ़ने/लिखने की अनुमति वाला fine-grained टोकन बनाएँ। केवल इसी ब्राउज़र में संग्रहीत।",
-  "flasher_github_repo": "रिपॉज़िटरी",
-  "flasher_github_ref": "ब्रांच"
+  "flasher_locales_hint": "WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।"
 }

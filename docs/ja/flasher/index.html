@@ -28,21 +28,6 @@
 <section class='flasher-card'>
 <h2>ビルド設定</h2>
 <label class='flasher-field'>
-<span>GitHub トークン</span>
-<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
-</label>
-<p class='flasher-hint'>このリポジトリに Actions の読み書き権限を持つ fine-grained トークンを作成してください。このブラウザにのみ保存されます。</p>
-<div class='flasher-grid'>
-<label class='flasher-field'>
-<span>リポジトリ</span>
-<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
-</label>
-<label class='flasher-field'>
-<span>ブランチ</span>
-<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
-</label>
-</div>
-<label class='flasher-field'>
 <span>ミキサープロファイル</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -140,7 +125,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' selected='selected' type='checkbox'>
+<input checked='checked' id='locale-en' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -201,7 +186,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>Web Serial には Chrome / Edge が必要です。GitHub トークンはこのブラウザにのみ保存されます。</p>
+<p class='flasher-foot'>Web Serial には Chrome / Edge が必要です。</p>
 </div>
 </main>
 <footer>

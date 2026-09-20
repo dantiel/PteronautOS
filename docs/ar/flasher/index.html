@@ -28,21 +28,6 @@
 <section class='flasher-card'>
 <h2>إعدادات البناء</h2>
 <label class='flasher-field'>
-<span>رمز GitHub</span>
-<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
-</label>
-<p class='flasher-hint'>أنشئ رمزًا دقيق الصلاحيات لهذا المستودع مع صلاحيات Actions للقراءة/الكتابة. يُحفظ في هذا المتصفح فقط.</p>
-<div class='flasher-grid'>
-<label class='flasher-field'>
-<span>المستودع</span>
-<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
-</label>
-<label class='flasher-field'>
-<span>الفرع</span>
-<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
-</label>
-</div>
-<label class='flasher-field'>
 <span>ملف تعريف الخلاط</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -140,7 +125,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' selected='selected' type='checkbox'>
+<input checked='checked' id='locale-en' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -201,7 +186,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>يتطلب Chrome / Edge لـ Web Serial. يُحفظ رمز GitHub في هذا المتصفح فقط.</p>
+<p class='flasher-foot'>يتطلب Chrome / Edge لـ Web Serial.</p>
 </div>
 </main>
 <footer>

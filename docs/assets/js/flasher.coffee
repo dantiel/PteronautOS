@@ -1,10 +1,8 @@
 # PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
-# Drives GitHub Actions directly from the browser (no server) and flashes over
-# Web Serial with esptool-js. A fine-grained GitHub token is stored in this
-# browser's localStorage and used to trigger + download the build.
+# Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
+# flashes over Web Serial with esptool-js. No secrets live in the browser.
 
 import { ESPLoader, Transport } from "./vendor/esptool-js.js"
-import { unzipSync } from "./vendor/fflate.js"
 
 $ = (sel) -> document.querySelector sel
 
@@ -21,6 +19,10 @@ els =
 
 currentRunId = null
 firmwareBytes = null
+
+# The worker is reached same-origin when this page is served by the worker, or
+# via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
+API_BASE = (new URLSearchParams(location.search).get("api") or "").replace /\/$/, ""
 
 # Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config"
@@ -39,32 +41,13 @@ FIELD_IDS = [
   "#device_name"
   "#home_wifi_ssid"
   "#home_wifi_password"
-  "#github_token"
-  "#github_repo"
-  "#github_ref"
 ]
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"]
 
-WORKFLOW_NAME = "PteronautOS Cloud Build"
-ARTIFACT_NAME = "pteronautos-firmware"
-
 sleep = (ms) -> new Promise (r) -> setTimeout r, ms
 
-repoValue = -> ($("#github_repo").value or "dantiel/PteronautOS").trim()
-refValue = -> ($("#github_ref").value or "master").trim()
-
-authHeaders = ->
-  token = ($("#github_token").value or "").trim()
-  {
-    "Authorization": "Bearer " + token
-    "Accept": "application/vnd.github+json"
-    "User-Agent": "pteronautos-flasher"
-  }
-
-ghFetch = (path, init = {}) ->
-  init.headers = Object.assign (init.headers or {}), authHeaders()
-  resp = await fetch "https://api.github.com" + path, init
-  return null if resp.status is 204
+apiFetch = (path, init = {}) ->
+  resp = await fetch API_BASE + path, init
   text = await resp.text()
   data = null
   try
@@ -72,7 +55,7 @@ ghFetch = (path, init = {}) ->
   catch
     data = null
   unless resp.ok
-    throw new Error (data?.message or data?.error or text or "HTTP " + resp.status)
+    throw new Error (data?.error or data?.message or text or "HTTP " + resp.status)
   data
 
 saveConfig = ->
@@ -108,44 +91,23 @@ setStatus = (text, state) ->
   els.statusDot.classList.add "done" if state is "done"
   els.statusDot.classList.add "fail" if state is "fail"
 
-num = (id) -> parseInt $(id).value, 10
-
 collectParams = ->
   checked = LOCALES.filter (l) -> $("#locale-#{l}").checked
   mixer_profile: $("#mixer_profile").value
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
-  auto_wifi_on_interval: num "#auto_wifi_on_interval"
-  zephyrus_i2c_sda: num "#zephyrus_i2c_sda"
-  zephyrus_i2c_scl: num "#zephyrus_i2c_scl"
+  auto_wifi_on_interval: $("#auto_wifi_on_interval").value
+  zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
+  zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
-  mushin_rx_pin: num "#mushin_rx_pin"
-  mushin_tx_pin: num "#mushin_tx_pin"
-  mushin_baud: num "#mushin_baud"
-  rcvr_uart_baud: num "#rcvr_uart_baud"
+  mushin_rx_pin: $("#mushin_rx_pin").value
+  mushin_tx_pin: $("#mushin_tx_pin").value
+  mushin_baud: $("#mushin_baud").value
+  rcvr_uart_baud: $("#rcvr_uart_baud").value
   device_name: $("#device_name").value.trim()
   home_wifi_ssid: $("#home_wifi_ssid").value.trim()
   home_wifi_password: $("#home_wifi_password").value
   i18n_locales: checked.join(",")
-
-dispatchBuild = ->
-  repo = repoValue()
-  ref = refValue()
-  await ghFetch "/repos/#{repo}/actions/workflows/cloud-build.yml/dispatches",
-    method: "POST"
-    headers: {"Content-Type": "application/json"}
-    body: JSON.stringify { ref: ref, inputs: collectParams() }
-
-findNewestRun = (repo, dispatchTime) ->
-  for i in [0..30]
-    data = await ghFetch "/repos/#{repo}/actions/runs?event=workflow_dispatch&per_page=10"
-    run = (data.workflow_runs or [])
-      .filter((r) -> r.name is WORKFLOW_NAME)
-      .filter((r) -> new Date(r.created_at).getTime() >= dispatchTime - 5000)
-      .sort((a, b) -> b.run_number - a.run_number)[0]
-    return run if run
-    await sleep 1000
-  null
 
 startBuild = ->
   els.buildBtn.disabled = true
@@ -158,16 +120,14 @@ startBuild = ->
   els.progressWrap.classList.add "hidden"
 
   try
-    token = ($("#github_token").value or "").trim()
-    throw new Error "Enter a GitHub token first (see hint above)." unless token
-    repo = repoValue()
-    dispatchTime = Date.now()
-    await dispatchBuild()
-    run = await findNewestRun repo, dispatchTime
-    unless run
-      throw new Error "Build queued but the run was not found — check repo/branch and that the token has Actions access."
-    currentRunId = run.id
-    els.runLink.href = run.html_url
+    data = await apiFetch "/api/build",
+      method: "POST"
+      headers: {"Content-Type": "application/json"}
+      body: JSON.stringify collectParams()
+    unless data?.run_id
+      throw new Error "Build server returned no run id — is the worker deployed?"
+    currentRunId = data.run_id
+    els.runLink.href = data.html_url
     els.runLink.classList.remove "hidden"
     setStatus "Build queued — waiting for GitHub Actions…", "busy"
     poll()
@@ -178,9 +138,8 @@ startBuild = ->
 poll = ->
   return unless currentRunId
   try
-    repo = repoValue()
-    data = await ghFetch "/repos/#{repo}/actions/runs/" + currentRunId
-    unless data.status is "completed"
+    data = await apiFetch "/api/build/" + currentRunId
+    unless data.ready
       setStatus "Building… (" + (data.status or "queued") + ")", "busy"
       setTimeout poll, 5000
       return
@@ -197,20 +156,11 @@ poll = ->
 
 downloadFirmware = ->
   setStatus "Downloading firmware…", "busy"
-  repo = repoValue()
-  data = await ghFetch "/repos/#{repo}/actions/runs/" + currentRunId + "/artifacts"
-  art = (data.artifacts or []).find((a) -> a.name is ARTIFACT_NAME) or (data.artifacts or [])[0]
-  unless art?.archive_download_url
-    throw new Error "No firmware artifact found for this run."
-  resp = await fetch art.archive_download_url, { headers: authHeaders() }
+  resp = await fetch API_BASE + "/api/build/" + currentRunId + "/download"
   unless resp.ok
-    throw new Error "Artifact download failed (HTTP " + resp.status + ")."
-  buf = await resp.arrayBuffer()
-  files = unzipSync new Uint8Array buf
-  binName = Object.keys(files).find (n) -> n.endsWith ".bin"
-  unless binName
-    throw new Error "No .bin inside the artifact zip."
-  firmwareBytes = files[binName]
+    text = await resp.text()
+    throw new Error "Download failed (HTTP " + resp.status + "): " + text
+  firmwareBytes = new Uint8Array await resp.arrayBuffer()
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
 
 terminal = ->

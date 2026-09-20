@@ -936,7 +936,7 @@
   "flasher_flash_btn": "وميض عبر Web Serial",
   "flasher_build_hint": "ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).",
   "flasher_heading_progress": "تقدم البناء",
-  "flasher_foot_note": "يتطلب Chrome / Edge لـ Web Serial. يُحفظ رمز GitHub في هذا المتصفح فقط.",
+  "flasher_foot_note": "يتطلب Chrome / Edge لـ Web Serial.",
   "nav_flasher": "الوميض",
   "flasher_heading_system": "النظام و WebUI",
   "flasher_device_name": "اسم الجهاز (اسم المضيف)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "معدل الباود UART الخاص بـ CRSF",
   "flasher_home_wifi_ssid": "SSID لشبكة WiFi المنزلية",
   "flasher_home_wifi_password": "كلمة مرور WiFi المنزلية",
-  "flasher_locales_hint": "اختر اللغات لتضمينها في WebUI — عدم التحديد يضمّن كل اللغات الإحدى عشرة.",
-  "flasher_github_token": "رمز GitHub",
-  "flasher_github_token_hint": "أنشئ رمزًا دقيق الصلاحيات لهذا المستودع مع صلاحيات Actions للقراءة/الكتابة. يُحفظ في هذا المتصفح فقط.",
-  "flasher_github_repo": "المستودع",
-  "flasher_github_ref": "الفرع"
+  "flasher_locales_hint": "اختر اللغات لتضمينها في WebUI — عدم التحديد يضمّن كل اللغات الإحدى عشرة."
 }

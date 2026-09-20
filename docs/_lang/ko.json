@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Web Serial로 플래시",
   "flasher_build_hint": "빌드는 GitHub Actions에서 단일 병합 .bin을 생성합니다(약 3~4분).",
   "flasher_heading_progress": "빌드 진행률",
-  "flasher_foot_note": "Web Serial에는 Chrome / Edge가 필요합니다. GitHub 토큰은 이 브라우저에만 저장됩니다.",
+  "flasher_foot_note": "Web Serial에는 Chrome / Edge가 필요합니다.",
   "nav_flasher": "플래셔",
   "flasher_heading_system": "시스템 및 WebUI",
   "flasher_device_name": "장치 이름 (호스트명)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "CRSF UART 보드레이트",
   "flasher_home_wifi_ssid": "홈 WiFi SSID",
   "flasher_home_wifi_password": "홈 WiFi 비밀번호",
-  "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함.",
-  "flasher_github_token": "GitHub 토큰",
-  "flasher_github_token_hint": "이 저장소에 Actions 읽기/쓰기 권한을 가진 fine-grained 토큰을 만드세요. 이 브라우저에만 저장됩니다.",
-  "flasher_github_repo": "저장소",
-  "flasher_github_ref": "브랜치"
+  "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함."
 }

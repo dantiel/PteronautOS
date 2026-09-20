@@ -936,7 +936,7 @@
   "flasher_flash_btn": "通过 Web Serial 烧录",
   "flasher_build_hint": "构建会在 GitHub Actions 中编译出单个合并的 .bin（约 3–4 分钟）。",
   "flasher_heading_progress": "构建进度",
-  "flasher_foot_note": "Web Serial 需要 Chrome / Edge。GitHub 令牌仅保存在此浏览器中。",
+  "flasher_foot_note": "Web Serial 需要 Chrome / Edge。",
   "nav_flasher": "烧录",
   "flasher_heading_system": "系统与 WebUI",
   "flasher_device_name": "设备名称 (主机名)",
@@ -945,9 +945,5 @@
   "flasher_uart_baud": "CRSF UART 波特率",
   "flasher_home_wifi_ssid": "家庭 WiFi SSID",
   "flasher_home_wifi_password": "家庭 WiFi 密码",
-  "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。",
-  "flasher_github_token": "GitHub 令牌",
-  "flasher_github_token_hint": "为此仓库创建一个具有 Actions 读写权限的 fine-grained 令牌。仅保存在此浏览器中。",
-  "flasher_github_repo": "仓库",
-  "flasher_github_ref": "分支"
+  "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。"
 }

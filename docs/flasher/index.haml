@@ -30,19 +30,6 @@
           %h2!= flasher_heading_config
 
           %label.flasher-field
-            %span!= flasher_github_token
-            %input#github_token{type: "password", autocomplete: "off", spellcheck: "false", placeholder: "github_pat_…"}
-          %p.flasher-hint!= flasher_github_token_hint
-
-          .flasher-grid
-            %label.flasher-field
-              %span!= flasher_github_repo
-              %input#github_repo{type: "text", value: "dantiel/PteronautOS", autocomplete: "off", spellcheck: "false"}
-            %label.flasher-field
-              %span!= flasher_github_ref
-              %input#github_ref{type: "text", value: "master", autocomplete: "off", spellcheck: "false"}
-
-          %label.flasher-field
             %span!= flasher_mixer_profile
             %select#mixer_profile
               %option{value: "0"} SERVO_2WING — 2 flapping wings
@@ -121,7 +108,7 @@
                   %input{type: "checkbox", id: "locale-pt"}
                   %span Português
                 %label.flasher-check
-                  %input{type: "checkbox", id: "locale-en", selected: "selected"}
+                  %input{type: "checkbox", id: "locale-en", checked: "checked"}
                   %span English
                 %label.flasher-check
                   %input{type: "checkbox", id: "locale-ru"}

@@ -123,27 +123,12 @@ async function handleBuild(request, env) {
       "i18n_locales",
     ]);
 
-    // `type: number` dispatch inputs must be sent as JSON numbers, not strings —
-    // GitHub rejects stringified numbers with "The string did not match the
-    // expected pattern". Preserve their type here.
-    const numberFields = new Set([
-      "auto_wifi_on_interval",
-      "zephyrus_i2c_sda",
-      "zephyrus_i2c_scl",
-      "mushin_rx_pin",
-      "mushin_tx_pin",
-      "mushin_baud",
-      "rcvr_uart_baud",
-    ]);
+    // workflow_dispatch inputs are all strings — send every value as a string.
+    // GitHub rejects non-string values with "Invalid value for input 'X'".
     const dispatchInputs = {};
     for (const [k, v] of Object.entries(inputs)) {
       if (!allowed.has(k) || v == null || v === "") continue;
-      if (numberFields.has(k)) {
-        const n = Number(v);
-        if (Number.isFinite(n)) dispatchInputs[k] = n;
-      } else {
-        dispatchInputs[k] = String(v);
-      }
+      dispatchInputs[k] = String(v);
     }
 
   const dispatchTime = Date.now();
