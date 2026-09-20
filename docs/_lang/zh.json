@@ -947,5 +947,6 @@
   "flasher_uart_baud": "CRSF UART 波特率",
   "flasher_home_wifi_ssid": "家庭 WiFi SSID",
   "flasher_home_wifi_password": "家庭 WiFi 密码",
-  "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。"
+  "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。",
+  "flash_online_cta": "在线刷写"
 }

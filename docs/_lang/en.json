@@ -947,5 +947,6 @@
   "flasher_uart_baud": "CRSF UART baud",
   "flasher_home_wifi_ssid": "Home WiFi SSID",
   "flasher_home_wifi_password": "Home WiFi password",
-  "flasher_locales_hint": "Select languages to include in the WebUI — none selected bakes in all 11."
+  "flasher_locales_hint": "Select languages to include in the WebUI — none selected bakes in all 11.",
+  "flash_online_cta": "Flash online"
 }

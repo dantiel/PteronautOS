@@ -550,6 +550,40 @@ footer .lang-switch
     margin: 0 0.5rem
     opacity: 0.35
 
+.ext-link
+  white-space: nowrap
+
+  &::after
+    content: "\2197"
+    display: inline-block
+    margin-left: 0.3em
+    font-size: 0.9em
+    line-height: 1
+    opacity: 0.6
+
+.flasher-cta
+  margin: 1.25rem 0 2rem
+
+  a
+    display: inline-block
+    padding: 0.65rem 1.4rem
+    border: 1px solid var(--accent)
+    color: var(--accent)
+    text-decoration: none
+    font-weight: 700
+    font-size: 0.85rem
+    letter-spacing: 0.2em
+    text-transform: uppercase
+    transition: background 0.2s, color 0.2s
+
+    &::after
+      content: "\2192"
+      margin-left: 0.55em
+
+    &:hover
+      background: var(--accent)
+      color: var(--bg)
+
 // ── Responsive ────────────────────────────────────────────────
 
 // Mobile portrait — tight single column, compact hero

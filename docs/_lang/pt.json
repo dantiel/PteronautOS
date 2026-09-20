@@ -947,5 +947,6 @@
   "flasher_uart_baud": "Baud UART CRSF",
   "flasher_home_wifi_ssid": "SSID do WiFi de casa",
   "flasher_home_wifi_password": "Senha do WiFi de casa",
-  "flasher_locales_hint": "Selecione os idiomas a incluir na WebUI — nenhum selecionado inclui todos os 11."
+  "flasher_locales_hint": "Selecione os idiomas a incluir na WebUI — nenhum selecionado inclui todos os 11.",
+  "flash_online_cta": "Flashear online"
 }

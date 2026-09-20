@@ -149,7 +149,9 @@
         %span.sep ·
         %a{href: "#{asset_prefix}/#{lang_dir}hardware/"}!= nav_hardware
         %span.sep ·
-        %a{href: "https://pteronaut.myspreadshop.de/", target: "_blank", rel: "noopener"}!= footer_store
+        %a{href: "#{asset_prefix}/#{lang_dir}flasher/"}!= nav_flasher
+        %span.sep ·
+        %a.ext-link{href: "https://pteronaut.myspreadshop.de/", target: "_blank", rel: "noopener"}!= footer_store
       %p!= footer_hermetic
       %p.credit!= footer_credit
 

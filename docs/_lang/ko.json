@@ -947,5 +947,6 @@
   "flasher_uart_baud": "CRSF UART 보드레이트",
   "flasher_home_wifi_ssid": "홈 WiFi SSID",
   "flasher_home_wifi_password": "홈 WiFi 비밀번호",
-  "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함."
+  "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함.",
+  "flash_online_cta": "온라인으로 플래시"
 }

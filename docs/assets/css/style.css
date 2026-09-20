@@ -584,6 +584,42 @@ footer .lang-switch {
   opacity: 0.35;
 }
 
+.ext-link {
+  white-space: nowrap;
+}
+.ext-link::after {
+  content: "↗";
+  display: inline-block;
+  margin-left: 0.3em;
+  font-size: 0.9em;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.flasher-cta {
+  margin: 1.25rem 0 2rem;
+}
+.flasher-cta a {
+  display: inline-block;
+  padding: 0.65rem 1.4rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s;
+}
+.flasher-cta a::after {
+  content: "→";
+  margin-left: 0.55em;
+}
+.flasher-cta a:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
 @media (max-width: 480px) {
   nav {
     gap: 0.6rem;
