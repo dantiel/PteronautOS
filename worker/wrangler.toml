@@ -2,10 +2,6 @@ name = "build"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
 
-[assets]
-directory = "../docs"
-binding = "ASSETS"
-
 [vars]
 GITHUB_REPO = "dantiel/PteronautOS"
 GITHUB_REF = "master"

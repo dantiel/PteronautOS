@@ -4,7 +4,10 @@
 // `cloud-build.yml` workflow: trigger → poll → extract the .bin from the
 // GitHub artifact zip → serve raw bytes for esptool-js Web Serial flashing.
 //
-// Also serves the static webapp from `../webapp` via the ASSETS binding.
+// This worker is API-ONLY. The flasher webapp lives on GitHub Pages
+// (dantiel.github.io/PteronautOS/flasher/) and calls these endpoints
+// cross-origin via the baked-in DEFAULT_API_BASE. No static assets here —
+// the worker must not duplicate the docs site.
 
 import { unzipSync } from "fflate";
 
@@ -269,12 +272,15 @@ export default {
       return handleStatus(id, env);
     }
 
-    // The worker doubles as the flasher host — root lands on the flasher.
+    // The worker hosts no UI. Root bounces visitors to the real flasher page
+    // on GitHub Pages; unknown paths get a plain JSON 404.
     if (url.pathname === "/") {
-      return Response.redirect("/flasher/", 302);
+      return Response.redirect(
+        `https://${env.GITHUB_REPO.split("/")[0]}.github.io/${env.GITHUB_REPO.split("/")[1]}/flasher/`,
+        302,
+      );
     }
 
-    // Serve the static webapp.
-    return env.ASSETS.fetch(request);
+    return json({ error: "Not found." }, 404);
   },
 };
