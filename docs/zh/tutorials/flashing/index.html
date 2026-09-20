@@ -35,8 +35,10 @@
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS 刷写教程'></iframe>
 </div>
 <h2>01 · 构建固件</h2>
+<p>首先构建 WebUI —— 它是被烘焙进接收机固件的界面。此步骤需要 Node.js 20 或更高版本以及 npm。I18N_LOCALES 标志选择要编译的语言；下面的示例包含本教程的语言和英语。省略该标志则会包含全部 11 种语言。</p>
+<pre><code>cd src/html && nvm use 20 && I18N_LOCALES=zh,en npm run build:pteronautos&#x000A;</code></pre>
 <p>克隆仓库，安装 PlatformIO，然后从仓库根目录运行以下命令。PlatformIO 项目位于 src；此命令构建本示例所用的专用 ESP8285 接收机环境。</p>
-<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
 <h2>02 · 连接接收机</h2>
 <p>对于此 CYCLONE 接收机，请使用 FTDI 适配器的 5V 电源输出来给接收机供电，而非其 3.3V 输出。其 UART 连接位于通道 2 和 3 的信号引脚上——无需寻找单独的 UART 焊盘。</p>
 <table>
@@ -65,10 +67,11 @@
 <h2>03 · 进入引导加载程序</h2>
 <p>按住 BOOT（GPIO0），拔下并重新插入 FTDI USB 线，保持 BOOT 约一秒后松开。刷写脚本不会自动复位，因此运行前请手动进入引导加载程序。</p>
 <h2>04 · 写入镜像</h2>
-<p>从仓库根目录运行提供的刷写脚本。它会定位可用的 PlatformIO 自带刷写工具和已构建固件，选择串口，并以所需的 flash 设置写入镜像。</p>
-<pre><code>./scripts/flash.sh</code></pre>
+<p>从仓库根目录运行提供的烧录脚本。它会用你选择的语言构建 WebUI 和固件，定位 PlatformIO 自带的烧录工具和已构建的固件，选择串口，并按所需的 flash 设置写入镜像。</p>
+<p>下面的 --lang 标志会直接打包本教程的语言。省略它可交互选择 — 所有语言、部分语言或跳过重新构建。</p>
+<pre><code>./scripts/flash.sh --lang zh</code></pre>
 <p>自动端口选择会查找 macOS 的 /dev/cu.* 设备。若连接了多个串口设备，或使用其他操作系统，请显式选择接收机适配器的端口。将下方示例替换为你的实际设备路径。</p>
-<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<pre><code>./scripts/flash.sh --lang zh --port /dev/cu.usbserial-XXXX</code></pre>
 <p>要在不写入固件的情况下检查引导加载程序通信，请使用可选的检查模式。若失败，请在重试前重复 BOOT 上电循环。</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
 <h2>05 · 验证安装</h2>

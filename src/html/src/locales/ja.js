@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'エルロン',
     'ornithopter.crsf.elevator': 'エレベーター',
     'ornithopter.crsf.rudder': 'ラダー',
+    'ornithopter.saving': '保存中...',
     'ornithopter.saved': '保存済み',
     'ornithopter.kernel.title': 'カーネル & ミキサー',
     'ornithopter.kernel.kernel': 'カーネル',

@@ -309,14 +309,12 @@ When `i18n.setLocale('ar')` is called:
 
 3. **Set metadata**: Update `code`, `name`, `nativeName`, `dir` at the top of the file.
 
-4. **Register in loader**: Add to `src/utils/i18n-loader.js`:
+4. **Register the locale code**: Add the two-letter code to the `ALL_LOCALES` array in `build-plugins/i18n-locales-plugin.js`:
    ```js
-   import xx from '../locales/xx.js'
-   // Add to locales array:
-   const locales = [en, pt, de, es, fr, hi, ja, ko, ru, zh, ar, xx];
+   const ALL_LOCALES = ['en', 'pt', 'de', 'es', 'fr', 'hi', 'ja', 'ko', 'ru', 'zh', 'ar', 'xx']
    ```
 
-5. **Rebuild**: `npm run build:pteronautos`
+5. **Rebuild**: `I18N_LOCALES=en,xx npm run build:pteronautos` — or omit `I18N_LOCALES` to bundle all locales.
 
 ### Adding a New Translation Key
 
@@ -391,14 +389,17 @@ for (const [name, mod] of Object.entries({pt, de, es, fr, hi, ja, ko, ru, zh, ar
 
 ### Flash Budget (ESP8285)
 
-| Component | Raw Size | Gzipped (build output) |
-|-----------|----------|------------------------|
-| i18n engine (i18n.js) | 5.5 KB | ~1 KB |
-| All 11 locales | 117 KB | ~7 KB |
-| **Total i18n overhead** | ~123 KB raw | **~8 KB gzipped** |
-| Full PteronautOS WebUI header | 319 KB | 86 KB |
-| Baseline (pre-i18n) | 299 KB | 78 KB |
-| **i18n increase** | **+20 KB (6.7%)** | **+8 KB (10%)** |
+The PteronautOS WebUI is bundled into a single gzipped header. The locale set dominates the payload, so the `I18N_LOCALES` build flag (or `--lang` on `scripts/flash.sh`) lets you trim it:
+
+| Configuration | Gzipped header |
+|---------------|----------------|
+| All 11 locales (default) | 247.97 KiB |
+| `I18N_LOCALES=en,de` (or `--lang en,de`) | 151.63 KiB |
+| `I18N_LOCALES=de` (or `--lang de`) | 142.32 KiB |
+
+Selecting a single language saves ~106 KiB (~43%) versus the full bundle.
+
+The flash script (`./scripts/flash.sh`) exposes this as a short flag and builds + flashes in one go: `--lang de` (German), `--lang de,en` (German + English), `--lang all`, or omit it for an interactive prompt (all / a selection / skip rebuild).
 
 **Build time**: 2.43s (no measurable i18n impact).
 
@@ -459,9 +460,9 @@ The i18n system never uses `innerHTML`. Pre-existing ExpressLRS code uses `inner
 
 ### ADR-2: Statically Bundled Locales vs Dynamic Imports
 
-**Decision**: All 11 locales imported in `i18n-loader.js` and bundled into the main chunk.
+**Decision**: Selected locales imported via a virtual module (`virtual:i18n-locales`) and bundled into the main chunk. The `I18N_LOCALES` build flag selects which locales are included; unset, all 11 are bundled.
 
-**Rationale**: Dynamic imports add async complexity (suspense boundaries, loading states) for no real benefit — the gzipped overhead of all locales is ~8 KB, well within the ESP8285 flash budget. A single synchronous bundle is simpler, faster, and more reliable on embedded WiFi APs with limited bandwidth.
+**Rationale**: Dynamic imports add async complexity (suspense boundaries, loading states) for no real benefit. The ESP8285 has ~23 KB free heap, so a single synchronous bundle is simpler and more reliable on embedded WiFi APs — and the `I18N_LOCALES` flag trims the locale payload (~43% smaller with a single language) for the tightest first load.
 
 ### ADR-3: Flat Key Map vs Nested Objects
 

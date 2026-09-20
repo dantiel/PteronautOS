@@ -1,22 +1,15 @@
 /**
- * i18n Loader — Imports all locales, registers with engine, initializes.
+ * i18n Loader ??? Imports selected locales, registers with engine, initializes.
  * Import this ONCE in app.js to bootstrap the i18n system.
+ *
+ * The locale set is resolved at build time by the `i18n-locales-plugin`
+ * (virtual:i18n-locales), driven by the I18N_LOCALES env flag. When the flag
+ * is unset the virtual module re-exports all 11 locales.
  */
 import {i18n} from './i18n.js';
-import en from '../locales/en.js';
-import pt from '../locales/pt.js';
-import de from '../locales/de.js';
-import es from '../locales/es.js';
-import fr from '../locales/fr.js';
-import hi from '../locales/hi.js';
-import ja from '../locales/ja.js';
-import ko from '../locales/ko.js';
-import ru from '../locales/ru.js';
-import zh from '../locales/zh.js';
-import ar from '../locales/ar.js';
+import {locales} from 'virtual:i18n-locales';
 
-// Register all locales
-const locales = [en, pt, de, es, fr, hi, ja, ko, ru, zh, ar];
+// Register all (selected) locales
 for (const mod of locales) {
   i18n.register(mod);
 }

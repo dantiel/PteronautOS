@@ -19,9 +19,23 @@ PteronautOS replaces the traditional fixed-wing flight controller with an adapti
 
 ## Build
 
+The one-command path builds the WebUI, compiles the firmware, and flashes it:
+
 ```bash
-pio run -e PteronautOS_ESP8285_2400_RX
+./scripts/flash.sh --lang en     # English only
+./scripts/flash.sh --lang de,en  # German + English
+./scripts/flash.sh --lang all    # all 11 languages
+./scripts/flash.sh               # interactive: pick all / some / skip
 ```
+
+The flash script bakes the selected WebUI languages into the firmware, then runs `pio`. To build manually (without flashing):
+
+```bash
+cd src/html && nvm use 20 && I18N_LOCALES=en npm run build:pteronautos
+cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX
+```
+
+Requires Node.js 20+. The `I18N_LOCALES` flag (and `--lang` on the flash script) selects which languages are baked into the WebUI — a comma-separated list (e.g. `en,de`) or a single code; omit it to include all 11 languages.
 
 ### Current Footprint (ESP8285)
 

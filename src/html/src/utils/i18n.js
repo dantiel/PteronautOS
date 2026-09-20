@@ -63,6 +63,12 @@ class I18nEngine {
       }
     }
 
+    // Single-language builds may not bundle 'en'; fall back to the first
+    // registered locale so the UI never starts on a missing language.
+    if (!this._locales.has(code) && this._locales.size > 0) {
+      code = this._locales.keys().next().value;
+    }
+
     this._activate(code, false);
   }
 
@@ -72,8 +78,9 @@ class I18nEngine {
    */
   setLocale(code) {
     if (!this._locales.has(code)) {
-      console.warn(`[i18n] Unknown locale: ${code}, falling back to en`);
-      code = 'en';
+      const fallback = this._locales.keys().next().value || 'en';
+      console.warn(`[i18n] Unknown locale: ${code}, falling back to ${fallback}`);
+      code = fallback;
     }
     this._activate(code, true);
   }

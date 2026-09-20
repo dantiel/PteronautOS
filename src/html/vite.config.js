@@ -6,8 +6,9 @@ import { cssTreeShakePlugin } from './build-plugins/css-tree-shake-plugin.js'
 import { htmlFeatureBlocksPlugin } from './build-plugins/feature-blocks-plugin.js'
 import { inlineStaticHtmlAssetsPlugin } from './build-plugins/inline-static-html-assets-plugin.js'
 import { viteEsp32HeaderPlugin } from './build-plugins/esp32-header-plugin.js'
-import { hamlLitPlugin } from './build-plugins/haml-lit-plugin.js'
-import { coffeePlugin } from './build-plugins/coffee-plugin.js'
+import { hamlLitPlugin } from './build-plugins/haml-lit-plugin.js';
+import { coffeePlugin } from './build-plugins/coffee-plugin.js';
+import { i18nLocalesPlugin } from './build-plugins/i18n-locales-plugin.js';
 
 // Simple dev mock server plugin
 import { devMockPlugin } from './dev-plugins/dev-mock-plugin.js'
@@ -22,6 +23,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       coffeePlugin(),
       hamlLitPlugin(),
+      i18nLocalesPlugin(env),
       htmlFeatureBlocksPlugin(env),
       minifyTemplateLiterals({
         include: ['src/**/*.js'],

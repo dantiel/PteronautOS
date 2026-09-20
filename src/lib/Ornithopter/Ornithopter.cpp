@@ -422,11 +422,9 @@ void Ornithopter::_computeServoMixer() {
         float rudderFer = _crsfToNorm(voiceRudder) * rudderFerocityRange * 0.01f * ORNI_DIFFERENTIAL_MAX;
 
         // Yaw stick → L/R differential flap amplitude, scaled by
-        // rudder_amplitude_differential (0–100). Multiplicative so the two
-        // wings diverge symmetrically around the throttle-set amplitude.
+        // rudder_amplitude_differential (0–100). The aileron roll axis (below)
+        // joins this same differential before the stroke scales are computed.
         float rudderAmpDiff = _crsfToNorm(voiceRudder) * rudderAmplitudeDifferential * 0.01f;
-        float amplitudeL = amplitude * (1.0f + rudderAmpDiff);
-        float amplitudeR = amplitude * (1.0f - rudderAmpDiff);
 
         float strokeFerL = strokeFer + rudderFer;
         float strokeFerR = strokeFer - rudderFer;
@@ -466,15 +464,18 @@ void Ornithopter::_computeServoMixer() {
         float strokeSkewEff = strokeSkew + thrust.centreShift + throttleRateBoost;
         float returnSkewEff = returnSkew + thrust.centreShift + throttleRateBoost;
 
-        // Aileron → differential skew coupling (roll steering): aileron
-        // front-loads one wing while it late-loads the other — roll torque on
-        // the skew axis, mirror-image twin of the symmetric throttle skew.
-        float aileronSkewShift = orniAileronSkewShift(aileronNorm, aileronSkewMix);
+        // Aileron → differential flap AMPLITUDE coupling (roll steering).
+        // Centre-skew is aerodynamically roll-neutral: +skew and −skew produce
+        // the SAME lift impulse (time-reversal symmetry), so their L/R
+        // difference is exactly zero — that is why the old differential-skew
+        // "roll" produced no torque. Roll needs an impulse differential, so it
+        // lives on the amplitude axis (the same one that makes rudder_amplitude_
+        // differential work): aileron enlarges one stroke and shrinks the other.
+        float aileronRollShift = orniAileronRollShift(aileronNorm, aileronSkewMix);
 
-        // Aileron-RATE → transient differential skew boost/brake (slew):
-        // quick aileron movement front-loads one wing / late-loads the other,
-        // a roll-torque kick that decays once the stick rests. Mirror of the
-        // throttle slew, on the differential axis.
+        // Aileron-RATE → transient differential flap amplitude kick (slew):
+        // quick aileron movement briefly enlarges one wing / shrinks the other,
+        // a roll-torque kick that decays once the stick rests.
         float aileronRateBoost = 0.0f;
         if (_prevAileronNorm < -1.5f) {
             _prevAileronNorm = aileronNorm;
@@ -483,20 +484,25 @@ void Ornithopter::_computeServoMixer() {
             _prevAileronNorm = aileronNorm;
             float alpha = dt / (ORNI_SKEW_RATE_LPF_TAU + dt);
             _aileronRateLPF += (aileronRate - _aileronRateLPF) * alpha;
-            aileronRateBoost = orniAileronSkewRateShift(_aileronRateLPF, aileronSkewRateMix);
+            aileronRateBoost = orniAileronRollRateShift(_aileronRateLPF, aileronSkewRateMix);
         }
 
-        float strokeSkewL = strokeSkewEff + aileronSkewShift + aileronRateBoost;
-        float strokeSkewR = strokeSkewEff - aileronSkewShift - aileronRateBoost;
-        float returnSkewL = returnSkewEff + aileronSkewShift + aileronRateBoost;
-        float returnSkewR = returnSkewEff - aileronSkewShift - aileronRateBoost;
+        // Roll torque = amplitude differential from rudder (yaw) + aileron
+        // (static + slew). Clamped so neither wing's stroke collapses to zero.
+        float rollAmpDiff = rudderAmpDiff + aileronRollShift + aileronRateBoost;
+        if (rollAmpDiff > 0.9f) rollAmpDiff = 0.9f;
+        if (rollAmpDiff < -0.9f) rollAmpDiff = -0.9f;
+        float amplitudeL = amplitude * (1.0f + rollAmpDiff);
+        float amplitudeR = amplitude * (1.0f - rollAmpDiff);
 
+        // Centre-skew stays symmetric (throttle thrust vector); the roll axis
+        // moved to amplitude above, so both wings share the same skew.
         float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkewL, returnSkewL);
+                                                     strokeSkewEff, returnSkewEff);
         float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
                                                      limiarShared, ferocityShapeMix,
-                                                     strokeSkewR, returnSkewR);
+                                                     strokeSkewEff, returnSkewEff);
 
         // ── MUSHIN v1 parameter cache ────────────────────────────────
         // The spirit streams wave parameters, not servo µs: the muscle

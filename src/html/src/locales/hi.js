@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'एलरून',
     'ornithopter.crsf.elevator': 'एलिवेटर',
     'ornithopter.crsf.rudder': 'रडर',
+    'ornithopter.saving': 'सहेजा जा रहा है...',
     'ornithopter.saved': 'सहेजा गया',
     'ornithopter.kernel.title': 'कर्नल और मिक्सर',
     'ornithopter.kernel.kernel': 'कर्नल',

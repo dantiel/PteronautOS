@@ -35,8 +35,10 @@
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='Tutoriel de flashage PteronautOS'></iframe>
 </div>
 <h2>01 · Compiler le firmware</h2>
+<p>Compilez d'abord la WebUI — l'interface intégrée au firmware du récepteur. Cette étape nécessite Node.js 20 ou plus récent et npm. Le drapeau I18N_LOCALES sélectionne les langues compilées ; l'exemple ci-dessous intègre la langue de ce tutoriel plus l'anglais. Omettez le drapeau pour inclure les 11 langues.</p>
+<pre><code>cd src/html && nvm use 20 && I18N_LOCALES=fr,en npm run build:pteronautos&#x000A;</code></pre>
 <p>Clonez le dépôt, installez PlatformIO et exécutez la commande suivante depuis la racine du dépôt. Le projet PlatformIO est dans src ; cette commande compile l'environnement dédié du récepteur ESP8285 utilisé dans cet exemple.</p>
-<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
 <h2>02 · Connecter le récepteur</h2>
 <p>Pour ce récepteur CYCLONE, utilisez la sortie 5 V de l'adaptateur FTDI pour l'alimentation du récepteur, pas sa sortie 3,3 V. Ses connexions UART sont sur les broches de signal des canaux 2 et 3 — nul besoin de repérer des pastilles UART séparées.</p>
 <table>
@@ -65,10 +67,11 @@
 <h2>03 · Entrer dans le bootloader</h2>
 <p>Maintenez BOOT (GPIO0) enfoncé, débranchez et rebranchez le câble USB du FTDI, gardez BOOT enfoncé environ une seconde puis relâchez-le. Le script de flashage n'effectue pas de réinitialisation automatique : entrez donc dans le bootloader manuellement avant de l'exécuter.</p>
 <h2>04 · Écrire l'image</h2>
-<p>Depuis la racine du dépôt, exécutez le script de flashage fourni. Il localise un outil de flashage fourni avec PlatformIO et le firmware compilé, sélectionne un port série et écrit l'image avec les réglages flash requis.</p>
-<pre><code>./scripts/flash.sh</code></pre>
+<p>Depuis la racine du dépôt, exécutez le script de flashage fourni. Il compile la WebUI et le firmware avec la langue choisie, localise un outil de flashage fourni avec PlatformIO et le firmware compilé, sélectionne un port série et écrit l'image avec les réglages flash requis.</p>
+<p>Le drapeau --lang ci-dessous intègre directement la langue de ce tutoriel. Omettez-le pour choisir de façon interactive — toutes les langues, une sélection ou ignorer la recompilation.</p>
+<pre><code>./scripts/flash.sh --lang fr</code></pre>
 <p>La sélection automatique du port recherche les périphériques macOS /dev/cu.*. Si plusieurs périphériques série sont connectés, ou si vous utilisez un autre système d'exploitation, sélectionnez explicitement le port de l'adaptateur du récepteur. Remplacez l'exemple ci-dessous par le chemin réel de votre périphérique.</p>
-<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<pre><code>./scripts/flash.sh --lang fr --port /dev/cu.usbserial-XXXX</code></pre>
 <p>Pour vérifier la communication avec le bootloader sans écrire le firmware, utilisez le mode de vérification optionnel. En cas d'échec, répétez le cycle d'alimentation de BOOT avant de réessayer.</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
 <h2>05 · Vérifier l'installation</h2>

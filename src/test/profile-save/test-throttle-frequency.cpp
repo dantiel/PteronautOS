@@ -38,32 +38,33 @@ int main()
         previous = command;
     }
 
-    // Throttle → skew coupling: asymmetric thrust-vector steering.
-    // Full throttle front-loads the downstroke (+), idle front-loads the
-    // upstroke (−). Zero at mid-throttle, ±100 at the extremes at full mix.
-    expectNear(orniThrottleSkewShift(1.0f, 100.0f), 100.0f);
-    expectNear(orniThrottleSkewShift(0.0f, 100.0f), -100.0f);
-    expectNear(orniThrottleSkewShift(0.5f, 100.0f), 0.0f);
+    // Throttle → thrust-shape coupling: one aggression scalar α = expo(throttle)·mix
+    // drives dwell AND centre in lockstep. Idle = neutral (no shift), full
+    // throttle = full front-load (+100 centre) + full dwell boost (+8 ferocity).
+    expectNear(orniThrottleThrustShape(1.0f, 100.0f, 0.0f).centreShift, 100.0f);
+    expectNear(orniThrottleThrustShape(1.0f, 100.0f, 0.0f).dwellBoost, 8.0f);
+    expectNear(orniThrottleThrustShape(0.0f, 100.0f, 0.0f).centreShift, 0.0f);
+    expectNear(orniThrottleThrustShape(0.5f, 100.0f, 0.0f).centreShift, 50.0f);
     // Coupling scales linearly; 0% never shifts.
-    expectNear(orniThrottleSkewShift(1.0f, 50.0f), 50.0f);
-    expectNear(orniThrottleSkewShift(0.0f, 50.0f), -50.0f);
-    expectNear(orniThrottleSkewShift(0.75f, 0.0f), 0.0f);
+    expectNear(orniThrottleThrustShape(1.0f, 50.0f, 0.0f).centreShift, 50.0f);
+    expectNear(orniThrottleThrustShape(0.75f, 0.0f, 0.0f).centreShift, 0.0f);
     // Out-of-range inputs clamp without exceeding the skew envelope.
-    expectNear(orniThrottleSkewShift(2.0f, 100.0f), 100.0f);
-    expectNear(orniThrottleSkewShift(-1.0f, 100.0f), -100.0f);
-    expectNear(orniThrottleSkewShift(1.0f, 150.0f), 100.0f);
+    expectNear(orniThrottleThrustShape(2.0f, 100.0f, 0.0f).centreShift, 100.0f);
+    expectNear(orniThrottleThrustShape(-1.0f, 100.0f, 0.0f).centreShift, 0.0f);
+    expectNear(orniThrottleThrustShape(1.0f, 150.0f, 0.0f).centreShift, 100.0f);
 
-    // Aileron → differential skew coupling (roll steering): centred stick
-    // never shifts; full deflection front-loads one wing and late-loads the
-    // other (mirror-image shift). Coupling scales linearly and clamps.
-    expectNear(orniAileronSkewShift(0.0f, 100.0f), 0.0f);
-    expectNear(orniAileronSkewShift(1.0f, 100.0f), 100.0f);
-    expectNear(orniAileronSkewShift(-1.0f, 100.0f), -100.0f);
-    expectNear(orniAileronSkewShift(0.5f, 100.0f), 50.0f);
-    expectNear(orniAileronSkewShift(1.0f, 50.0f), 50.0f);
-    expectNear(orniAileronSkewShift(1.0f, 0.0f), 0.0f);
-    expectNear(orniAileronSkewShift(2.0f, 100.0f), 100.0f);
-    expectNear(orniAileronSkewShift(-2.0f, 100.0f), -100.0f);
+    // Aileron → differential flap amplitude (roll): centred stick never
+    // shifts; full deflection returns the full signed fraction (±mix) that
+    // enlarges one stroke and collapses the other. Coupling scales linearly
+    // and clamps to ±1.
+    expectNear(orniAileronRollShift(0.0f, 100.0f), 0.0f);
+    expectNear(orniAileronRollShift(1.0f, 100.0f), 1.0f);
+    expectNear(orniAileronRollShift(-1.0f, 100.0f), -1.0f);
+    expectNear(orniAileronRollShift(0.5f, 100.0f), 0.5f);
+    expectNear(orniAileronRollShift(1.0f, 50.0f), 0.5f);
+    expectNear(orniAileronRollShift(1.0f, 0.0f), 0.0f);
+    expectNear(orniAileronRollShift(2.0f, 100.0f), 1.0f);
+    expectNear(orniAileronRollShift(-2.0f, 100.0f), -1.0f);
 
     // Throttle-rate → transient skew boost/brake (slew): positive
     // throttle slew front-loads the downstroke (boost), negative slew
@@ -77,24 +78,27 @@ int main()
     expectNear(orniThrottleSkewRateShift(50.0f, 100.0f), 100.0f);
     expectNear(orniThrottleSkewRateShift(-50.0f, 100.0f), -100.0f);
     expectNear(orniThrottleSkewRateShift(5.0f, 150.0f), 50.0f);
-    expectNear(orniAileronSkewRateShift(5.0f, 100.0f), 50.0f);
-    expectNear(orniAileronSkewRateShift(-5.0f, 100.0f), -50.0f);
-    expectNear(orniAileronSkewRateShift(0.0f, 100.0f), 0.0f);
-    expectNear(orniAileronSkewRateShift(5.0f, 50.0f), 25.0f);
-    expectNear(orniAileronSkewRateShift(5.0f, 0.0f), 0.0f);
-    expectNear(orniAileronSkewRateShift(50.0f, 100.0f), 100.0f);
-    expectNear(orniAileronSkewRateShift(-50.0f, 100.0f), -100.0f);
+    expectNear(orniAileronRollRateShift(5.0f, 100.0f), 0.5f);
+    expectNear(orniAileronRollRateShift(-5.0f, 100.0f), -0.5f);
+    expectNear(orniAileronRollRateShift(0.0f, 100.0f), 0.0f);
+    expectNear(orniAileronRollRateShift(5.0f, 50.0f), 0.25f);
+    expectNear(orniAileronRollRateShift(5.0f, 0.0f), 0.0f);
+    expectNear(orniAileronRollRateShift(50.0f, 100.0f), 1.0f);
+    expectNear(orniAileronRollRateShift(-50.0f, 100.0f), -1.0f);
 
-    // Mirror-image aileron skew makes the two wings diverge mid-downstroke:
-    // the LEFT wing (skew +50) and RIGHT wing (skew −50) must not produce
-    // the same pulse — that divergence IS the roll torque.
+    // Roll torque = amplitude differential, NOT centre-skew. Full aileron at
+    // 100% mix doubles the LEFT stroke amplitude and collapses the RIGHT; the
+    // mirror-image fractions sum to zero so the differential is symmetric
+    // around the throttle-set amplitude.
     {
-        const float theta = 1.2f;  // inside the downstroke half
-        float pulseL = FlappingOscillator::shapeWave(theta, 0.0f, 0.0f, 3.14159265f, 0.0f, 50.0f, 0.0f);
-        float pulseR = FlappingOscillator::shapeWave(theta, 0.0f, 0.0f, 3.14159265f, 0.0f, -50.0f, 0.0f);
-        assert(std::fabs(pulseL - pulseR) > 0.0001f);
+        const float amp = 40.0f;
+        const float rollDiff = orniAileronRollShift(1.0f, 100.0f);
+        const float ampL = amp * (1.0f + rollDiff);
+        const float ampR = amp * (1.0f - rollDiff);
+        expectNear(ampL, 80.0f);
+        expectNear(ampR, 0.0f);
     }
 
-    std::cout << "Waveform coupling control laws passed (frequency, skew, aileron-skew, skew-rate, aileron-skew-rate)\n";
+    std::cout << "Waveform coupling control laws passed (frequency, thrust-shape, aileron-roll, skew-rate, aileron-roll-rate)\n";
     return 0;
 }

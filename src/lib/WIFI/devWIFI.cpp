@@ -150,8 +150,51 @@ static bool captivePortal(AsyncWebServerRequest *request)
   return false;
 }
 
+// ── Heap guard ────────────────────────────────────────────────────────────
+// The ESP8285 has ~23KB free heap once WiFi is up; a big JSON build or a
+// fragmented heap can push a malloc over the edge and reboot the radio
+// ("load too much at once" crash). Degrade gracefully instead: serve a 503
+// and let the WebUI (fetchJsonWithRetry) back off and retry.
+#if defined(PLATFORM_ESP8266)
+// Only the largest contiguous block matters: an ArduinoJson build needs one
+// ~4KB block. Total free heap can legitimately dip below 8KB while a 5KB block
+// is still available, so a total-heap threshold only causes false 503s during
+// normal load. Guard only when no single block can satisfy the JSON alloc.
+static const uint32_t HEAP_MAX_BLOCK_WATER = 4000; // largest contiguous block
+static bool heapCriticallyLow()
+{
+    return ESP.getMaxFreeBlockSize() < HEAP_MAX_BLOCK_WATER;
+}
+#else
+static bool heapCriticallyLow() { return false; }
+#endif
+
+static void serveHeapBusy(AsyncWebServerRequest *request)
+{
+    // Include the live heap numbers in the 503 itself so the retry loop is
+    // self-diagnosing: the browser Network tab shows free_heap/max_free_block
+    // without needing a separate (guarded) endpoint. Static stack buffer + a
+    // couple of int reads — no heap allocation, safe even when critically low.
+    char buf[128];
+#if defined(PLATFORM_ESP8266)
+    snprintf(buf, sizeof(buf),
+        "{\"ok\":false,\"busy\":true,\"free_heap\":%d,\"max_free_block\":%d}",
+        (int)ESP.getFreeHeap(), (int)ESP.getMaxFreeBlockSize());
+#else
+    snprintf(buf, sizeof(buf), "{\"ok\":false,\"busy\":true}");
+#endif
+    request->send(503, "application/json", buf);
+}
+
 static void WebUpdateSendContent(AsyncWebServerRequest *request)
 {
+  // Assets stream straight from PROGMEM (AsyncProgmemResponse) with no heap
+  // copy of the payload — the response object is ~100 bytes, no larger than the
+  // 503 fallback itself. A 503 here is *fatal*: <script src>/<link> tags have no
+  // retry path, so a 503'd app.js means the UI never boots. The heap-heavy path
+  // is the JSON endpoints, and those already 503+retry via fetchJsonWithRetry.
+  // Never guard assets — this guard caused app.js to load as a bare 503 and
+  // brick the panel while the device was otherwise healthy.
   for (size_t i=0 ; i<WEB_ASSETS_COUNT ; i++) {
     if (request->url().equals(WEB_ASSETS[i].path)) {
       AsyncWebServerResponse *response = request->beginResponse(200, WEB_ASSETS[i].content_type, WEB_ASSETS[i].data, WEB_ASSETS[i].size);
@@ -638,6 +681,7 @@ static void GetPteronautosI2cScan(AsyncWebServerRequest *request)
 
 static void GetPteronautosSystem(AsyncWebServerRequest *request)
 {
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     auto *response = new AsyncJsonResponse();
     JsonObject root = response->getRoot().to<JsonObject>();
 
@@ -681,6 +725,7 @@ static bool SaveOrnithopterConfig();
 
 static void GetPteronautosState(AsyncWebServerRequest *request)
 {
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     // Telemetry only. The ~90-field static config moved to GetPteronautosConfig
     // (fetched once per panel mount) so the 2s poll no longer rebuilds it.
     auto *response = new AsyncJsonResponse(false);
@@ -752,6 +797,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
 
 static void GetPteronautosConfig(AsyncWebServerRequest *request)
 {
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     // Static config — only changes via POST /pteronautos/config. Fetched once
     // per panel mount, not polled. Keeps the 2s state poll lean on the heap.
     auto *response = new AsyncJsonResponse(false);
@@ -855,6 +901,27 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
 static void GetPteronautosPing(AsyncWebServerRequest *request)
 {
     request->send(200, "application/json", "{\"ok\":true,\"firmware\":\"PteronautOS\"}");
+}
+
+// ── Unguarded diagnostic endpoint ─────────────────────────────────
+// Served even when the heap guard is firing on the heavy JSON handlers, so a
+// crash/reboot loop can be diagnosed without ever reaching a "healthy" state.
+// Static stack buffer + snprintf: zero heap allocation, cannot OOM.
+static void GetPteronautosDiag(AsyncWebServerRequest *request)
+{
+    char buf[256];
+#if defined(PLATFORM_ESP8266)
+    snprintf(buf, sizeof(buf),
+        "{\"ok\":true,\"heap_low\":%d,\"free_heap\":%d,\"max_free_block\":%d,\"uptime_ms\":%u,\"reset_reason\":\"%s\"}",
+        heapCriticallyLow() ? 1 : 0,
+        (int)ESP.getFreeHeap(), (int)ESP.getMaxFreeBlockSize(),
+        (unsigned)millis(), ESP.getResetReason().c_str());
+#else
+    snprintf(buf, sizeof(buf),
+        "{\"ok\":true,\"heap_low\":0,\"free_heap\":%d,\"uptime_ms\":%u,\"reset_reason\":\"%s\"}",
+        (int)ESP.getFreeHeap(), (unsigned)millis(), ESP.getResetReason().c_str());
+#endif
+    request->send(200, "application/json", buf);
 }
 
 // ── Ornithopter Config Endpoint ──────────────────────────────────
@@ -1130,6 +1197,13 @@ void LoadOrnithopterConfig()
 
 static void PostPteronautosConfig(AsyncWebServerRequest *request)
 {
+    // NO heap guard here: this path is heap-free. Params are read as String
+    // references (no copy) and SaveOrnithopterConfig() streams straight to
+    // LittleFS via PteroConfigWriter (no JsonDocument, no output buffer). The
+    // form-urlencoded POST body is *already* sitting in heap when this handler
+    // runs, so max_free_block naturally dips below HEAP_MAX_BLOCK_WATER — but
+    // the save needs none of that space. Guarding it (as before) produced a
+    // permanent false 503 and made flight-profile saves impossible.
     int fp = -1;
     if (request->hasParam("flight_profile", true)) {
         const String &slot = request->getParam("flight_profile", true)->value();
@@ -1314,6 +1388,7 @@ static void GetPteronautosSweepStatus(AsyncWebServerRequest *request)
 // POST /pteronautos/backup — restore that same shape, then reboot.
 static void GetPteronautosBackup(AsyncWebServerRequest *request)
 {
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     // RxConfig portion (EEPROM) — exactly the fields UpdateConfiguration consumes.
     JsonDocument cfgDoc;
     JsonObject cfg = cfgDoc.to<JsonObject>();
@@ -2166,6 +2241,7 @@ static void startServices()
   server.on("/pteronautos/state", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
+  server.on("/pteronautos/diag", HTTP_GET, GetPteronautosDiag);
   server.on("/pteronautos/config", HTTP_GET, GetPteronautosConfig);
   server.on("/pteronautos/config", HTTP_POST, PostPteronautosConfig);
   server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);

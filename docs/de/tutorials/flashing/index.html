@@ -35,8 +35,10 @@
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS-Flash-Tutorial'></iframe>
 </div>
 <h2>01 · Firmware bauen</h2>
+<p>Zuerst die WebUI bauen — die Oberfläche, die in die Empfänger-Firmware eingebacken wird. Dieser Schritt benötigt Node.js 20 oder neuer und npm. Das Flag I18N_LOCALES wählt die kompilierten Sprachen; das Beispiel unten backt die Sprache dieses Tutorials plus Englisch ein. Lassen Sie das Flag weg, um alle 11 Sprachen einzubinden.</p>
+<pre><code>cd src/html && nvm use 20 && I18N_LOCALES=de,en npm run build:pteronautos&#x000A;</code></pre>
 <p>Klonen Sie das Repository, installieren Sie PlatformIO und führen Sie den folgenden Befehl im Repository-Root aus. Das PlatformIO-Projekt liegt in src; dieser Befehl baut die dedizierte ESP8285-Empfängerumgebung dieses Beispiels.</p>
-<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
 <h2>02 · Empfänger anschließen</h2>
 <p>Verwenden Sie für diesen CYCLONE-Empfänger den 5-V-Ausgang des FTDI-Adapters für die Empfängerversorgung, nicht dessen 3,3-V-Ausgang. Seine UART-Verbindungen liegen auf den Signalpins von Kanal 2 und 3 — separate UART-Pads müssen nicht gesucht werden.</p>
 <table>
@@ -65,10 +67,11 @@
 <h2>03 · Bootloader aufrufen</h2>
 <p>Halten Sie BOOT (GPIO0) gedrückt, ziehen Sie das FTDI-USB-Kabel ab und stecken Sie es wieder ein, halten Sie BOOT etwa eine Sekunde lang gedrückt und lassen Sie es dann los. Das Flash-Skript führt keinen automatischen Reset durch — rufen Sie den Bootloader daher manuell auf, bevor Sie es ausführen.</p>
 <h2>04 · Image schreiben</h2>
-<p>Führen Sie im Repository-Root das bereitgestellte Flash-Skript aus. Es sucht ein funktionierendes, von PlatformIO gebündeltes Flash-Werkzeug und die gebaute Firmware, wählt einen seriellen Port und schreibt das Image mit den erforderlichen Flash-Einstellungen.</p>
-<pre><code>./scripts/flash.sh</code></pre>
+<p>Führen Sie im Repository-Root das bereitgestellte Flash-Skript aus. Es baut die WebUI und die Firmware mit der gewählten Sprache, sucht ein funktionierendes, von PlatformIO gebündeltes Flash-Werkzeug und die gebaute Firmware, wählt einen seriellen Port und schreibt das Image mit den erforderlichen Flash-Einstellungen.</p>
+<p>Das Flag --lang unten backt die Sprache dieses Tutorials direkt ein. Lassen Sie es weg, um interaktiv zu wählen — alle Sprachen, eine Auswahl oder die Neuerstellung überspringen.</p>
+<pre><code>./scripts/flash.sh --lang de</code></pre>
 <p>Die automatische Portauswahl sucht nach macOS-Geräten unter /dev/cu.*. Wenn mehrere serielle Geräte angeschlossen sind oder Sie ein anderes Betriebssystem nutzen, wählen Sie den Port des Empfängeradapters explizit aus. Ersetzen Sie das Beispiel unten durch Ihren tatsächlichen Gerätepfad.</p>
-<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<pre><code>./scripts/flash.sh --lang de --port /dev/cu.usbserial-XXXX</code></pre>
 <p>Um die Bootloader-Kommunikation ohne Firmware-Schreiben zu prüfen, nutzen Sie den optionalen Prüfmodus. Schlägt er fehl, wiederholen Sie den BOOT-Stromzyklus, bevor Sie es erneut versuchen.</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
 <h2>05 · Installation prüfen</h2>

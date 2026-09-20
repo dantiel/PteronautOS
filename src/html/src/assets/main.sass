@@ -61,6 +61,9 @@ button
   z-index: 2
   width: 100%
   top: calc(100% - var(--footer-height))
+  // Track the *visual* viewport on iOS Safari (bottom address bar) so the
+  // footer stays pinned above the dynamic toolbar instead of hiding behind it.
+  top: calc(100dvh - var(--footer-height))
 
 body.hide-sidedrawer #footer
   width: 100% !important
@@ -343,3 +346,15 @@ body.hide-sidedrawer #footer
 
   body.hide-sidedrawer #footer
     margin-left: 0
+
+//
+// iOS Safari (bottom address bar): `top: calc(100% - …)` on a `position: fixed`
+// element resolves against the large (toolbar-collapsed) layout viewport, which
+// tucks the footer behind the dynamic bottom toolbar. The `100dvh` override on
+// `#footer` tracks the visual viewport, so the footer stays fixed and pinned
+// above the toolbar. The bottom blur band is stretched by the toolbar height
+// (`100% - 100dvh`) so it still reaches down under the address bar.
+//
+@supports (-webkit-touch-callout: none)
+  .main-progressive-blur--bottom
+    height: calc(88px + 100% - 100dvh)

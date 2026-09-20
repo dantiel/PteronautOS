@@ -35,8 +35,10 @@
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS 플래싱 튜토리얼'></iframe>
 </div>
 <h2>01 · 펌웨어 빌드</h2>
+<p>먼저 WebUI를 빌드하세요 — 수신기 펌웨어에 내장되는 인터페이스입니다. 이 단계에는 Node.js 20 이상과 npm이 필요합니다. I18N_LOCALES 플래그는 컴파일할 언어를 선택합니다. 아래 예시는 이 튜토리얼의 언어와 영어를 포함합니다. 플래그를 생략하면 11개 언어가 모두 포함됩니다.</p>
+<pre><code>cd src/html && nvm use 20 && I18N_LOCALES=ko,en npm run build:pteronautos&#x000A;</code></pre>
 <p>저장소를 클론하고 PlatformIO를 설치한 뒤 저장소 루트에서 다음 명령을 실행하세요. PlatformIO 프로젝트는 src에 있습니다. 이 명령은 이 예시에 쓰이는 전용 ESP8285 수신기 환경을 빌드합니다.</p>
-<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
 <h2>02 · 수신기 연결</h2>
 <p>이 CYCLONE 수신기에는 3.3V 출력이 아니라 FTDI 어댑터의 5V 전원 출력을 수신기 공급에 사용하세요. UART 연결은 채널 2와 3의 신호 핀에 있으므로 별도 UART 패드를 찾을 필요가 없습니다.</p>
 <table>
@@ -65,10 +67,11 @@
 <h2>03 · 부트로더 진입</h2>
 <p>BOOT(GPIO0)을 누른 채 FTDI USB 케이블을 뽑았다 다시 연결하고, BOOT을 약 1초간 유지한 뒤 놓습니다. 플래싱 스크립트는 자동 리셋을 수행하지 않으므로 실행 전에 수동으로 부트로더에 진입하세요.</p>
 <h2>04 · 이미지 쓰기</h2>
-<p>저장소 루트에서 제공된 플래싱 스크립트를 실행하세요. 스크립트는 PlatformIO 번들 플래싱 도구와 빌드된 펌웨어를 찾고, 시리얼 포트를 선택한 뒤 필요한 플래시 설정으로 이미지를 기록합니다.</p>
-<pre><code>./scripts/flash.sh</code></pre>
+<p>리포지토리 루트에서 제공된 플래시 스크립트를 실행합니다. 선택한 언어로 WebUI와 펌웨어를 빌드하고, PlatformIO 번들 플래시 도구와 빌드된 펌웨어를 찾아 직렬 포트를 선택한 뒤 필요한 플래시 설정으로 이미지를 기록합니다.</p>
+<p>아래 --lang 플래그는 이 튜토리얼의 언어를 직접 빌드에 포함합니다. 생략하면 대화식으로 선택합니다 — 모든 언어, 일부 선택 또는 재빌드 건너뛰기.</p>
+<pre><code>./scripts/flash.sh --lang ko</code></pre>
 <p>자동 포트 선택은 macOS /dev/cu.* 장치를 찾습니다. 여러 시리얼 장치가 연결되어 있거나 다른 운영체제를 사용 중이면 수신기 어댑터 포트를 명시적으로 선택하세요. 아래 예시를 실제 장치 경로로 바꾸세요.</p>
-<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<pre><code>./scripts/flash.sh --lang ko --port /dev/cu.usbserial-XXXX</code></pre>
 <p>펌웨어를 쓰지 않고 부트로더 통신을 확인하려면 옵션인 체크 모드를 사용하세요. 실패하면 다시 시도하기 전에 BOOT 전원 사이클을 반복하세요.</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
 <h2>05 · 설치 확인</h2>

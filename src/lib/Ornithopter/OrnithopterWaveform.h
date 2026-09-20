@@ -7,6 +7,56 @@
 #include <cstdint>
 #include <cmath>
 
+// ── Wave-shape lookup tables ───────────────────────────────────────────
+// Defined in OrnithopterWaveformTables.cpp; declared here so shapeWave()
+// (inline) can use them. PROGMEM places the tables in flash (.irom.text,
+// memory-mapped at 0x40200000) so they cost ZERO heap/DRAM — read
+// transparently via direct dereference (the ESP8266 flash cache serves the
+// read; no pgm_read needed). The mixer runs in the main loop, never an ISR,
+// so cache reads are always safe.
+constexpr float kWaveMaxDwell    = 0.98f;  // never emit an impossible position jump
+constexpr float kWaveMaxPoint    = 0.98f;  // rounded, never infinite-accel triangle
+constexpr int   kWaveCosHalfN    = 256;    // phase intervals → 257 samples
+constexpr int   kWavePointedRows = 16;     // pointK bins (bilinear at runtime)
+
+extern const float kWaveCosHalf[kWaveCosHalfN + 1] PROGMEM;
+extern const float kWavePointed[kWavePointedRows][kWaveCosHalfN + 1] PROGMEM;
+
+// cos(π·u), u∈[0,1] → [1,−1], linear interpolation over kWaveCosHalf.
+static inline float waveCosHalfLerp(float u)
+{
+    float pos = u * (float)kWaveCosHalfN;
+    int i = (int)pos;
+    if (i < 0) i = 0;
+    else if (i > kWaveCosHalfN - 1) i = kWaveCosHalfN - 1;
+    float frac = pos - (float)i;
+    float a = kWaveCosHalf[i];
+    return a + (kWaveCosHalf[i + 1] - a) * frac;
+}
+
+// asin(pointK·cos(π·t)) / asin(pointK) — the ferocity-coupled pointedness
+// map, 2-D bilinear over kWavePointed (pointK∈[0,kWaveMaxPoint], t∈[0,1]).
+static inline float wavePointedLerp(float pointK, float t)
+{
+    float kPos = pointK * (1.0f / kWaveMaxPoint) * (float)(kWavePointedRows - 1);
+    int ki = (int)kPos;
+    if (ki < 0) ki = 0;
+    else if (ki > kWavePointedRows - 2) ki = kWavePointedRows - 2;
+    float kFrac = kPos - (float)ki;
+
+    float tPos = t * (float)kWaveCosHalfN;
+    int ti = (int)tPos;
+    if (ti < 0) ti = 0;
+    else if (ti > kWaveCosHalfN - 1) ti = kWaveCosHalfN - 1;
+    float tFrac = tPos - (float)ti;
+
+    const float* r0 = kWavePointed[ki];
+    const float* r1 = kWavePointed[ki + 1];
+    float row0 = r0[ti] + (r0[ti + 1] - r0[ti]) * tFrac;
+    float row1 = r1[ti] + (r1[ti + 1] - r1[ti]) * tFrac;
+    return row0 + (row1 - row0) * kFrac;
+}
+
 class FlappingOscillator {
 public:
     float phase;         // actual flap phase [rad], kept in [0, 2π)
@@ -92,14 +142,13 @@ inline float FlappingOscillator::shapeWave(
     // stroke: no dwell, nearly constant velocity through the middle, and a
     // finite-acceleration reversal. Each half uses its own ferocity, while the
     // shared reversal threshold below preserves anticipation from asymmetry.
-    constexpr float kPi = 3.14159265358979f;
     constexpr float kTwoPi = 6.283185307f;
-    constexpr float kMaxDwell = 0.98f;  // never emit an impossible position jump
-    constexpr float kMaxPoint = 0.98f;  // rounded rather than infinite-acceleration triangle
 
-    // Normalize phase into [0, 2π)
-    theta = fmodf(theta, kTwoPi);
-    if (theta < 0.0f) theta += kTwoPi;
+    // theta is guaranteed in [0, 2π) by FlappingOscillator::advance() — the
+    // only caller feeds rawWave straight out of advance(). The fmodf
+    // normalisation here was redundant and is removed: a real per-tick win on
+    // the no-FPU ESP8285. A future caller with an out-of-range phase must
+    // normalise before calling.
 
     float fD = strokeFerocity; if (fD < 0.0f) fD = 0.0f; else if (fD > 8.0f) fD = 8.0f;
     float fS = returnFerocity; if (fS < 0.0f) fS = 0.0f; else if (fS > 8.0f) fS = 8.0f;
@@ -142,7 +191,7 @@ inline float FlappingOscillator::shapeWave(
     }
 
     float ferocity01 = f * 0.125f;
-    float d = ferocity01 * kMaxDwell;
+    float d = ferocity01 * kWaveMaxDwell;
 
     // Skew also redistributes the square-wave plateau: the dwell is no longer
     // split 50/50. +s holds the START of the half longer (front-load — the
@@ -156,16 +205,16 @@ inline float FlappingOscillator::shapeWave(
     float plateau;
     if (t < frontDwell) plateau = 1.0f;
     else if (t > 1.0f - backDwell) plateau = -1.0f;
-    else plateau = cosf(kPi * (t - frontDwell) / (1.0f - d));
+    else plateau = waveCosHalfLerp((t - frontDwell) / (1.0f - d));
 
     // Coupling pointedness to this half's ferocity makes a strong half-stroke
     // direct and pyramidal while a weaker, elongated half remains sinusoidal.
     // The eased mapping reaches the direct-stroke family decisively at high
     // ferocity without ever reaching the sharp k=1 triangle singularity.
-    float pointK = kMaxPoint * (2.0f * ferocity01 - ferocity01 * ferocity01);
+    float pointK = kWaveMaxPoint * (2.0f * ferocity01 - ferocity01 * ferocity01);
     float pointed = pointK < 0.0001f
-        ? cosf(kPi * t)
-        : asinf(pointK * cosf(kPi * t)) / asinf(pointK);
+        ? waveCosHalfLerp(t)
+        : wavePointedLerp(pointK, t);
 
     float halfWave = plateau + (pointed - plateau) * shapeMix;
     return descida ? halfWave : -halfWave;

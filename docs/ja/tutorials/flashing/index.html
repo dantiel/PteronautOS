@@ -35,8 +35,10 @@
 <iframe allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' allowfullscreen loading='lazy' src='https://www.youtube.com/embed/h_MSh6qvfEA' title='PteronautOS 書き込みチュートリアル'></iframe>
 </div>
 <h2>01 · ファームウェアをビルド</h2>
+<p>まず WebUI をビルドします — 受信機ファームウェアに焼き込まれるインターフェースです。この手順には Node.js 20 以降と npm が必要です。I18N_LOCALES フラグはコンパイルする言語を選びます。以下の例では、このチュートリアルの言語と英語を含めています。フラグを省略すると 11 言語すべてが含まれます。</p>
+<pre><code>cd src/html && nvm use 20 && I18N_LOCALES=ja,en npm run build:pteronautos&#x000A;</code></pre>
 <p>リポジトリをクローンし、PlatformIO をインストールして、リポジトリのルートから次のコマンドを実行します。PlatformIO プロジェクトは src にあります。このコマンドは、この例で使う専用の ESP8285 受信機環境をビルドします。</p>
-<pre><code>pio run -d src -e PteronautOS_ESP8285_2400_RX</code></pre>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
 <h2>02 · 受信機を接続</h2>
 <p>この CYCLONE 受信機では、受信機の電源に FTDI アダプタの 5V 出力を使い、3.3V 出力は使わないでください。UART 接続はチャンネル 2 と 3 の信号ピンにあり、別途 UART パッドを探す必要はありません。</p>
 <table>
@@ -65,10 +67,11 @@
 <h2>03 · ブートローダーに入る</h2>
 <p>BOOT（GPIO0）を押したまま FTDI の USB ケーブルを抜き差しし、BOOT を約 1 秒押し続けてから離します。書き込みスクリプトは自動リセットを行わないため、実行前に手動でブートローダーに入ってください。</p>
 <h2>04 · イメージを書き込む</h2>
-<p>リポジトリのルートから、提供された書き込みスクリプトを実行します。スクリプトは PlatformIO 同梱の書き込みツールとビルド済みファームウェアを探し、シリアルポートを選び、必要なフラッシュ設定でイメージを書き込みます。</p>
-<pre><code>./scripts/flash.sh</code></pre>
+<p>リポジトリのルートから、提供された書き込みスクリプトを実行します。選択した言語で WebUI とファームウェアをビルドし、PlatformIO 同梱の書き込みツールとビルド済みファームウェアを特定し、シリアルポートを選んで必要なフラッシュ設定でイメージを書き込みます。</p>
+<p>下の --lang フラグはこのチュートリアルの言語を直接ビルドに含めます。省略すると対話形式で選択します — 全言語、一部の選択、または再ビルドをスキップ。</p>
+<pre><code>./scripts/flash.sh --lang ja</code></pre>
 <p>自動ポート選択は macOS の /dev/cu.* デバイスを探します。複数のシリアルデバイスが接続されている場合や、別の OS を使っている場合は、受信機アダプタのポートを明示的に選択してください。下の例を実際のデバイスパスに置き換えてください。</p>
-<pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX</code></pre>
+<pre><code>./scripts/flash.sh --lang ja --port /dev/cu.usbserial-XXXX</code></pre>
 <p>ファームウェアを書き込まずにブートローダー通信を確認するには、オプションのチェックモードを使います。失敗したら、再試行する前に BOOT の電源サイクルを繰り返してください。</p>
 <pre><code>./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check</code></pre>
 <h2>05 · インストールを確認</h2>

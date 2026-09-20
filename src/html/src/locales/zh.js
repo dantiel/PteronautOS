@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': '副翼',
     'ornithopter.crsf.elevator': '升降舵',
     'ornithopter.crsf.rudder': '方向舵',
+    'ornithopter.saving': '保存中...',
     'ornithopter.saved': '已保存',
     'ornithopter.kernel.title': '内核与混控器',
     'ornithopter.kernel.kernel': '内核',

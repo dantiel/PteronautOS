@@ -177,20 +177,50 @@ Status =
 
 delay = (ms) -> new Promise (resolve) -> setTimeout resolve, ms
 
-# A completed browser fetch can race the ESPAsyncWebServer response destructor.
-# Retry only transient busy/network failures; permanent HTTP errors return at once.
+# Global HTTP gate — the ESP8285 has ~23KB heap and only 5 active TCP
+# connections, but a browser opens up to 6 in parallel. On first load the
+# SPA fires /pteronautos/state + /pteronautos/config from every mounted
+# panel at once, exhausting the heap ("load too much at once" crash).
+# Serialize all pteronautos JSON reads so the device serves one at a time.
+_httpGate = Promise.resolve()
+# In-flight dedup: concurrent callers of the same GET share one request.
+# Everything only needs to load once, so N panels mounting at once produce
+# one fetch, not N queued fetches.
+_inflight = new Map()
+
+serializeHttp = (fn) ->
+  run = _httpGate.then fn
+  # Keep the chain alive even if a request rejects, so later calls proceed.
+  _httpGate = run.catch (->)
+  run
+
+# A completed browser fetch can race the ESPAsyncWebServer response destructor,
+# and a reset mid-request can leave a fetch hanging forever (stalling the gate).
+# Bound each attempt with an AbortController timeout and retry only transient
+# failures; permanent HTTP errors return at once.
 fetchJsonWithRetry = (url, attempts = 6) ->
-  lastError = null
-  for attempt in [0...attempts]
+  return _inflight.get url if _inflight.has url
+  p = serializeHttp ->
     try
-      resp = await fetch url
-      return await resp.json() if resp.ok
-      throw new Error "HTTP #{resp.status}" unless resp.status in [429, 503]
-      lastError = new Error "HTTP #{resp.status}"
-    catch e
-      lastError = e
-    await delay 150 * (attempt + 1) if attempt + 1 < attempts
-  throw lastError
+      lastError = null
+      for attempt in [0...attempts]
+        ctrl = new AbortController()
+        timer = setTimeout (-> ctrl.abort()), 8000
+        try
+          resp = await fetch url, {signal: ctrl.signal}
+          return await resp.json() if resp.ok
+          throw new Error "HTTP #{resp.status}" unless resp.status in [429, 503]
+          lastError = new Error "HTTP #{resp.status}"
+        catch e
+          lastError = e
+        finally
+          clearTimeout timer
+        await delay 150 * (attempt + 1) if attempt + 1 < attempts
+      throw lastError
+    finally
+      _inflight.delete url
+  _inflight.set url, p
+  p
 
 API =
   # Fetch pteronautos state JSON. Returns {data, error}.

@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'Alerón',
     'ornithopter.crsf.elevator': 'Elevador',
     'ornithopter.crsf.rudder': 'Timón',
+    'ornithopter.saving': 'Guardando...',
     'ornithopter.saved': 'Guardado',
     'ornithopter.kernel.title': 'Kernel & Mixer',
     'ornithopter.kernel.kernel': 'Kernel',

@@ -35,9 +35,16 @@
           %iframe{src: "https://www.youtube.com/embed/h_MSh6qvfEA", title: flash_iframe_title, loading: "lazy", allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share", allowfullscreen: true}
 
         %h2!= flash_h2_build
+        %p!= flash_build_web_p
+        %pre
+          %code
+            :preserve
+              cd src/html && nvm use 20 && I18N_LOCALES=#{i18n_locales_example} npm run build:pteronautos
         %p!= flash_build_p
         %pre
-          %code pio run -d src -e PteronautOS_ESP8285_2400_RX
+          %code
+            :preserve
+              cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX
 
         %h2!= flash_h2_connect
         %p!= flash_connect_p
@@ -64,11 +71,12 @@
 
         %h2!= flash_h2_write
         %p!= flash_write_p1
+        %p!= flash_write_lang_p
         %pre
-          %code ./scripts/flash.sh
+          %code ./scripts/flash.sh --lang #{flash_lang_arg}
         %p!= flash_write_p2
         %pre
-          %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX
+          %code ./scripts/flash.sh --lang #{flash_lang_arg} --port /dev/cu.usbserial-XXXX
         %p!= flash_write_p3
         %pre
           %code ./scripts/flash.sh --port /dev/cu.usbserial-XXXX --check

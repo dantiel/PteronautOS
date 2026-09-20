@@ -176,6 +176,15 @@ Or via PlatformIO:
 pio run -e PteronautOS_ESP8285_2400_RX -t upload --upload-port /dev/cu.usbserial-XXXX
 ```
 
+For routine UART re-flashing (build WebUI + firmware + flash in one step, with language selection), use the bundled script:
+
+```bash
+./scripts/flash.sh --lang en      # English only
+./scripts/flash.sh --lang de,en   # German + English
+./scripts/flash.sh --lang all     # all 11 languages
+./scripts/flash.sh                # interactive: all / a selection / skip rebuild
+```
+
 **Enter bootloader:** Hold the button (GPIO0→GND), power on, release after 1-2 seconds.
 
 **After first UART flash, all subsequent updates work via Wi-Fi.**
@@ -634,10 +643,14 @@ The PteronautOS WebUI ships with full 11-language localization, accessible via a
 
 ```bash
 cd src/html
-nvm use 22                         # Node 18+ required
+nvm use 20                         # Node 20+ required (see .nvmrc)
 npm install
 npm run build:pteronautos          # → headers/web-pteronautos-rx-8285.h
+# or bake in specific languages:  I18N_LOCALES=en,de npm run build:pteronautos
 ```
+
+The `./scripts/flash.sh` script drives this automatically — `--lang de` bakes German, `--lang de,en` bakes German + English, `--lang all` bakes all 11, and omitting `--lang` prompts interactively.
+=======
 
 The build process automatically:
 1. Strips all non-Pteronautos feature blocks

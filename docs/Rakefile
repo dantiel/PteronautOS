@@ -91,6 +91,8 @@ def build_page(name, lang)
 
   vars["asset_prefix"] = asset_prefix
   vars["lang_dir"] = lang_dir
+  vars["i18n_locales_example"] = lang == "en" ? "en" : "#{lang},en"
+  vars["flash_lang_arg"] = lang
 
   LANGS.each do |l|
     ldir = l == "pt" ? "" : "#{l}/"

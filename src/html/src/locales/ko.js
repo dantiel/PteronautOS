@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': '에일러론',
     'ornithopter.crsf.elevator': '엘리베이터',
     'ornithopter.crsf.rudder': '러더',
+    'ornithopter.saving': '저장 중...',
     'ornithopter.saved': '저장됨',
     'ornithopter.kernel.title': '커널 & 믹서',
     'ornithopter.kernel.kernel': '커널',

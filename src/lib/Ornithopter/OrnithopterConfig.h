@@ -224,16 +224,21 @@ constexpr OrniThrustShape orniThrottleThrustShape(float throttle01, float mixPer
 // yields ±50 skew units; the LPF τ decays the kick once the stick rests.
 #define ORNI_SKEW_RATE_GAIN     10.0f   // skew units per 1/s throttle rate at 100% mix
 #define ORNI_SKEW_RATE_LPF_TAU  0.10f   // s — slew transient decay
+#define ORNI_ROLL_RATE_GAIN     0.1f    // amplitude fraction per 1/s aileron rate at 100% mix
 
-// Aileron → differential skew coupling (roll steering): aileron front-loads
-// one wing while it late-loads the other — roll torque on the skew axis,
-// mirror-image twin of the symmetric throttle skew. Returns the signed
-// shift (±ORNI_SKEW_MAX) to ADD to the LEFT wing and SUBTRACT from the RIGHT.
+// Aileron → differential flap AMPLITUDE coupling (roll steering). Centre-skew
+// is aerodynamically roll-neutral: +skew and −skew produce the SAME lift
+// impulse (time-reversal symmetry), so their L/R difference is exactly zero —
+// that is why the old differential-skew "roll" produced no torque. Roll needs
+// an impulse differential, so it lives on the amplitude axis (the proven
+// rudder_amplitude_differential). Returns the signed fraction (±mix) to ADD to
+// the LEFT wing and SUBTRACT from the RIGHT: full aileron at 100% mix doubles
+// one stroke and collapses the other.
 // aileronNorm ∈ [-1, +1] (0 = centred stick).
-constexpr float orniAileronSkewShift(float aileronNorm, float couplingPercent) {
+constexpr float orniAileronRollShift(float aileronNorm, float couplingPercent) {
     const float mix = orniClamp01(couplingPercent * 0.01f);
     const float a = aileronNorm < -1.0f ? -1.0f : (aileronNorm > 1.0f ? 1.0f : aileronNorm);
-    return a * mix * ORNI_SKEW_MAX;
+    return a * mix;
 }
 
 // Throttle-rate → transient skew boost/brake (slew): the caller feeds
@@ -249,16 +254,16 @@ constexpr float orniThrottleSkewRateShift(float throttleRatePerSec, float rateMi
     return s;
 }
 
-// Aileron-rate → transient differential skew boost/brake (slew): the
-// low-passed aileron slew (1/s) briefly front-loads one wing / late-loads
-// the other — a roll-torque kick on stick movement. Positive rate (rolling
-// right) boosts the same direction as the static aileron skew. Hard-clamped
-// to the skew envelope; off at 0% mix.
-constexpr float orniAileronSkewRateShift(float aileronRatePerSec, float rateMixPercent) {
+// Aileron-rate → transient differential flap AMPLITUDE kick (slew): the
+// low-passed aileron slew (1/s) briefly enlarges one wing / shrinks the
+// other — a roll-torque kick on stick movement, decaying once the stick
+// rests. Positive rate boosts the same direction as the static aileron roll
+// shift. Hard-clamped to ±1.0 fraction; off at 0% mix.
+constexpr float orniAileronRollRateShift(float aileronRatePerSec, float rateMixPercent) {
     const float mix = orniClamp01(rateMixPercent * 0.01f);
-    float s = aileronRatePerSec * ORNI_SKEW_RATE_GAIN * mix;
-    if (s > ORNI_SKEW_MAX) s = ORNI_SKEW_MAX;
-    if (s < ORNI_SKEW_MIN) s = ORNI_SKEW_MIN;
+    float s = aileronRatePerSec * ORNI_ROLL_RATE_GAIN * mix;
+    if (s > 1.0f) s = 1.0f;
+    if (s < -1.0f) s = -1.0f;
     return s;
 }
 

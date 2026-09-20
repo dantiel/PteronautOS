@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'Элерон',
     'ornithopter.crsf.elevator': 'Руль высоты',
     'ornithopter.crsf.rudder': 'Руль направления',
+    'ornithopter.saving': 'Сохранение...',
     'ornithopter.saved': 'Сохранено',
     'ornithopter.kernel.title': 'Ядро и Микшер',
     'ornithopter.kernel.kernel': 'Ядро',

@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'جنيح',
     'ornithopter.crsf.elevator': 'مصعد',
     'ornithopter.crsf.rudder': 'دفة',
+    'ornithopter.saving': 'جارٍ الحفظ...',
     'ornithopter.saved': 'تم الحفظ',
     'ornithopter.kernel.title': 'النواة والخلاط',
     'ornithopter.kernel.kernel': 'نواة',

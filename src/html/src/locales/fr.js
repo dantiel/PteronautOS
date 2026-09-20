@@ -42,6 +42,7 @@ export default {
     'ornithopter.crsf.aileron': 'Aileron',
     'ornithopter.crsf.elevator': 'Profondeur',
     'ornithopter.crsf.rudder': 'Dérive',
+    'ornithopter.saving': 'Enregistrement...',
     'ornithopter.saved': 'Enregistré',
     'ornithopter.kernel.title': 'Noyau & Mixeur',
     'ornithopter.kernel.kernel': 'Noyau',
