@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Via Web Serial flashen",
   "flasher_build_hint": "Der Build erzeugt eine einzelne zusammengeführte .bin in GitHub Actions (~3–4 min).",
   "flasher_heading_progress": "Build-Fortschritt",
-  "flasher_foot_note": "Benötigt Chrome / Edge für Web Serial. Dein GitHub-Token verlässt den Worker nie.",
+  "flasher_foot_note": "Erfordert Chrome / Edge für Web Serial. Dein GitHub-Token wird nur in diesem Browser gespeichert.",
   "nav_flasher": "Flasher",
   "flasher_heading_system": "System & WebUI",
   "flasher_device_name": "Gerätename (Hostname)",
@@ -945,7 +945,9 @@
   "flasher_uart_baud": "CRSF-UART-Baudrate",
   "flasher_home_wifi_ssid": "Heim-WLAN-SSID",
   "flasher_home_wifi_password": "Heim-WLAN-Passwort",
-  "flasher_api_base": "Build-Server-URL",
-  "flasher_api_base_hint": "Leer lassen, wenn vom Worker geöffnet. Auf GitHub Pages hier die Worker-URL einfügen.",
-  "flasher_locales_hint": "Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein."
+  "flasher_locales_hint": "Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein.",
+  "flasher_github_token": "GitHub-Token",
+  "flasher_github_token_hint": "Erstelle ein Fine-Grained-Token für dieses Repo mit Actions Lese-/Schreibzugriff. Nur in diesem Browser gespeichert.",
+  "flasher_github_repo": "Repository",
+  "flasher_github_ref": "Branch"
 }

@@ -1,11 +1,10 @@
 # PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
-# Drives the Cloudflare Worker /api/* endpoints and flashes over Web Serial
-# with esptool-js. API base defaults to same-origin (the worker serves this
-# page); override with ?api=<worker-url> or the Build server URL field.
+# Drives GitHub Actions directly from the browser (no server) and flashes over
+# Web Serial with esptool-js. A fine-grained GitHub token is stored in this
+# browser's localStorage and used to trigger + download the build.
 
 import { ESPLoader, Transport } from "./vendor/esptool-js.js"
-
-params = new URLSearchParams location.search
+import { unzipSync } from "./vendor/fflate.js"
 
 $ = (sel) -> document.querySelector sel
 
@@ -40,18 +39,32 @@ FIELD_IDS = [
   "#device_name"
   "#home_wifi_ssid"
   "#home_wifi_password"
-  "#api_base"
+  "#github_token"
+  "#github_repo"
+  "#github_ref"
 ]
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"]
 
-apiBase = ->
-  u = params.get("api") or $("#api_base").value.trim()
-  u.replace /\/+$/, ""
+WORKFLOW_NAME = "PteronautOS Cloud Build"
+ARTIFACT_NAME = "pteronautos-firmware"
 
-api = (path) -> apiBase() + path
+sleep = (ms) -> new Promise (r) -> setTimeout r, ms
 
-request = (path, init) ->
-  resp = await fetch api(path), init
+repoValue = -> ($("#github_repo").value or "dantiel/PteronautOS").trim()
+refValue = -> ($("#github_ref").value or "master").trim()
+
+authHeaders = ->
+  token = ($("#github_token").value or "").trim()
+  {
+    "Authorization": "Bearer " + token
+    "Accept": "application/vnd.github+json"
+    "User-Agent": "pteronautos-flasher"
+  }
+
+ghFetch = (path, init = {}) ->
+  init.headers = Object.assign (init.headers or {}), authHeaders()
+  resp = await fetch "https://api.github.com" + path, init
+  return null if resp.status is 204
   text = await resp.text()
   data = null
   try
@@ -59,7 +72,7 @@ request = (path, init) ->
   catch
     data = null
   unless resp.ok
-    throw new Error (data?.error or text or "HTTP " + resp.status)
+    throw new Error (data?.message or data?.error or text or "HTTP " + resp.status)
   data
 
 saveConfig = ->
@@ -115,6 +128,25 @@ collectParams = ->
   home_wifi_password: $("#home_wifi_password").value
   i18n_locales: checked.join(",")
 
+dispatchBuild = ->
+  repo = repoValue()
+  ref = refValue()
+  await ghFetch "/repos/#{repo}/actions/workflows/cloud-build.yml/dispatches",
+    method: "POST"
+    headers: {"Content-Type": "application/json"}
+    body: JSON.stringify { ref: ref, inputs: collectParams() }
+
+findNewestRun = (repo, dispatchTime) ->
+  for i in [0..30]
+    data = await ghFetch "/repos/#{repo}/actions/runs?event=workflow_dispatch&per_page=10"
+    run = (data.workflow_runs or [])
+      .filter((r) -> r.name is WORKFLOW_NAME)
+      .filter((r) -> new Date(r.created_at).getTime() >= dispatchTime - 5000)
+      .sort((a, b) -> b.run_number - a.run_number)[0]
+    return run if run
+    await sleep 1000
+  null
+
 startBuild = ->
   els.buildBtn.disabled = true
   els.flashBtn.disabled = true
@@ -126,38 +158,36 @@ startBuild = ->
   els.progressWrap.classList.add "hidden"
 
   try
-    data = await request "/api/build",
-      method: "POST"
-      headers:
-        "Content-Type": "application/json"
-      body: JSON.stringify collectParams()
-    currentRunId = data.run_id
-    if data.html_url
-      els.runLink.href = data.html_url
-      els.runLink.classList.remove "hidden"
+    token = ($("#github_token").value or "").trim()
+    throw new Error "Enter a GitHub token first (see hint above)." unless token
+    repo = repoValue()
+    dispatchTime = Date.now()
+    await dispatchBuild()
+    run = await findNewestRun repo, dispatchTime
+    unless run
+      throw new Error "Build queued but the run was not found — check repo/branch and that the token has Actions access."
+    currentRunId = run.id
+    els.runLink.href = run.html_url
+    els.runLink.classList.remove "hidden"
     setStatus "Build queued — waiting for GitHub Actions…", "busy"
     poll()
   catch err
-    msg = err.message
-    if /404|405|Failed to fetch/.test msg
-      msg += " — check the Build server URL above (deploy the worker, or open this page from the worker itself)."
-    setStatus "Build failed: " + msg, "fail"
+    setStatus "Build failed: " + err.message, "fail"
     els.buildBtn.disabled = false
 
 poll = ->
   return unless currentRunId
   try
-    data = await request "/api/build/" + currentRunId
-    unless data.ready
+    repo = repoValue()
+    data = await ghFetch "/repos/#{repo}/actions/runs/" + currentRunId
+    unless data.status is "completed"
       setStatus "Building… (" + (data.status or "queued") + ")", "busy"
       setTimeout poll, 5000
       return
-
     unless data.conclusion is "success"
       setStatus "Build " + data.conclusion + " — check the GitHub run.", "fail"
       els.buildBtn.disabled = false
       return
-
     setStatus "Build complete — ready to flash.", "done"
     els.buildBtn.disabled = false
     els.flashBtn.disabled = false
@@ -167,17 +197,20 @@ poll = ->
 
 downloadFirmware = ->
   setStatus "Downloading firmware…", "busy"
-  resp = await fetch api("/api/build/" + currentRunId + "/download")
+  repo = repoValue()
+  data = await ghFetch "/repos/#{repo}/actions/runs/" + currentRunId + "/artifacts"
+  art = (data.artifacts or []).find((a) -> a.name is ARTIFACT_NAME) or (data.artifacts or [])[0]
+  unless art?.archive_download_url
+    throw new Error "No firmware artifact found for this run."
+  resp = await fetch art.archive_download_url, { headers: authHeaders() }
   unless resp.ok
-    text = await resp.text().catch -> ""
-    err = null
-    try
-      err = (JSON.parse text)?.error
-    catch
-      err = null
-    throw new Error err or text or "HTTP " + resp.status
+    throw new Error "Artifact download failed (HTTP " + resp.status + ")."
   buf = await resp.arrayBuffer()
-  firmwareBytes = new Uint8Array buf
+  files = unzipSync new Uint8Array buf
+  binName = Object.keys(files).find (n) -> n.endsWith ".bin"
+  unless binName
+    throw new Error "No .bin inside the artifact zip."
+  firmwareBytes = files[binName]
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
 
 terminal = ->
@@ -241,8 +274,6 @@ flash = ->
     els.flashBtn.disabled = false
 
 restoreConfig()
-if params.get("api")
-  $("#api_base").value = params.get "api"
 
 for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig

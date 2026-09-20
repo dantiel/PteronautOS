@@ -9,7 +9,7 @@
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
 </head>
-<body class='sub-page flasher-page' data-api-base=''>
+<body class='sub-page flasher-page'>
 <nav class='sub-nav'>
 <div aria-hidden='true' class='nav-progressive-blur'>
 <span></span>
@@ -28,10 +28,20 @@
 <section class='flasher-card'>
 <h2>إعدادات البناء</h2>
 <label class='flasher-field'>
-<span>عنوان URL لخادم البناء</span>
-<input autocomplete='off' id='api_base' placeholder='https://your-worker.workers.dev' spellcheck='false' type='url'>
+<span>رمز GitHub</span>
+<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
 </label>
-<p class='flasher-hint'>اتركه فارغًا عند الفتح من العامل. على GitHub Pages، الصق عنوان العامل هنا.</p>
+<p class='flasher-hint'>أنشئ رمزًا دقيق الصلاحيات لهذا المستودع مع صلاحيات Actions للقراءة/الكتابة. يُحفظ في هذا المتصفح فقط.</p>
+<div class='flasher-grid'>
+<label class='flasher-field'>
+<span>المستودع</span>
+<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
+</label>
+<label class='flasher-field'>
+<span>الفرع</span>
+<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
+</label>
+</div>
 <label class='flasher-field'>
 <span>ملف تعريف الخلاط</span>
 <select id='mixer_profile'>
@@ -103,7 +113,7 @@
 <label class='flasher-field'>
 <span>اسم الجهاز (اسم المضيف)</span>
 <div class='flasher-suffix'>
-<input autocomplete='off' id='device_name' spellcheck='false' type='text' value='pteronaut'>
+<input autocomplete='off' id='device_name' placeholder='pteronaut' spellcheck='false' type='text' value='pteronaut'>
 <span class='flasher-suffix-tag'>.local</span>
 </div>
 </label>
@@ -111,6 +121,8 @@
 <span>معدل الباود UART الخاص بـ CRSF</span>
 <input id='rcvr_uart_baud' min='9600' type='number' value='420000'>
 </label>
+</div>
+<div class='flasher-grid'>
 <label class='flasher-field'>
 <span>SSID لشبكة WiFi المنزلية</span>
 <input autocomplete='off' id='home_wifi_ssid' type='text'>
@@ -128,7 +140,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' type='checkbox'>
+<input id='locale-en' selected='selected' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -189,7 +201,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>يتطلب Chrome / Edge لـ Web Serial. لا يغادر رمز GitHub الخاص بك العامل أبدًا.</p>
+<p class='flasher-foot'>يتطلب Chrome / Edge لـ Web Serial. يُحفظ رمز GitHub في هذا المتصفح فقط.</p>
 </div>
 </main>
 <footer>

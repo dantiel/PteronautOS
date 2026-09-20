@@ -936,7 +936,7 @@
   "flasher_flash_btn": "Web Serial で書き込み",
   "flasher_build_hint": "ビルドはGitHub Actionsで単一の統合.binを生成します（約3〜4分）。",
   "flasher_heading_progress": "ビルドの進行状況",
-  "flasher_foot_note": "Web SerialにはChrome / Edgeが必要です。GitHubトークンはworkerから出ません。",
+  "flasher_foot_note": "Web Serial には Chrome / Edge が必要です。GitHub トークンはこのブラウザにのみ保存されます。",
   "nav_flasher": "フラッシャー",
   "flasher_heading_system": "システムとWebUI",
   "flasher_device_name": "デバイス名 (ホスト名)",
@@ -945,7 +945,9 @@
   "flasher_uart_baud": "CRSF UARTボーレート",
   "flasher_home_wifi_ssid": "自宅WiFi SSID",
   "flasher_home_wifi_password": "自宅WiFiパスワード",
-  "flasher_api_base": "ビルドサーバー URL",
-  "flasher_api_base_hint": "ワーカーから開く場合は空欄。GitHub Pages ではワーカーの URL を貼り付けてください。",
-  "flasher_locales_hint": "WebUI に含める言語を選択 — 未選択は全 11 言語を含む。"
+  "flasher_locales_hint": "WebUI に含める言語を選択 — 未選択は全 11 言語を含む。",
+  "flasher_github_token": "GitHub トークン",
+  "flasher_github_token_hint": "このリポジトリに Actions の読み書き権限を持つ fine-grained トークンを作成してください。このブラウザにのみ保存されます。",
+  "flasher_github_repo": "リポジトリ",
+  "flasher_github_ref": "ブランチ"
 }

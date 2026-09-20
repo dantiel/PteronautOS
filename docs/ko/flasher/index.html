@@ -9,7 +9,7 @@
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
 </head>
-<body class='sub-page flasher-page' data-api-base=''>
+<body class='sub-page flasher-page'>
 <nav class='sub-nav'>
 <div aria-hidden='true' class='nav-progressive-blur'>
 <span></span>
@@ -28,10 +28,20 @@
 <section class='flasher-card'>
 <h2>빌드 구성</h2>
 <label class='flasher-field'>
-<span>빌드 서버 URL</span>
-<input autocomplete='off' id='api_base' placeholder='https://your-worker.workers.dev' spellcheck='false' type='url'>
+<span>GitHub 토큰</span>
+<input autocomplete='off' id='github_token' placeholder='github_pat_…' spellcheck='false' type='password'>
 </label>
-<p class='flasher-hint'>워커에서 열 때는 비워 두세요. GitHub Pages에서는 워커 URL을 붙여넣으세요.</p>
+<p class='flasher-hint'>이 저장소에 Actions 읽기/쓰기 권한을 가진 fine-grained 토큰을 만드세요. 이 브라우저에만 저장됩니다.</p>
+<div class='flasher-grid'>
+<label class='flasher-field'>
+<span>저장소</span>
+<input autocomplete='off' id='github_repo' spellcheck='false' type='text' value='dantiel/PteronautOS'>
+</label>
+<label class='flasher-field'>
+<span>브랜치</span>
+<input autocomplete='off' id='github_ref' spellcheck='false' type='text' value='master'>
+</label>
+</div>
 <label class='flasher-field'>
 <span>믹서 프로필</span>
 <select id='mixer_profile'>
@@ -103,7 +113,7 @@
 <label class='flasher-field'>
 <span>장치 이름 (호스트명)</span>
 <div class='flasher-suffix'>
-<input autocomplete='off' id='device_name' spellcheck='false' type='text' value='pteronaut'>
+<input autocomplete='off' id='device_name' placeholder='pteronaut' spellcheck='false' type='text' value='pteronaut'>
 <span class='flasher-suffix-tag'>.local</span>
 </div>
 </label>
@@ -111,6 +121,8 @@
 <span>CRSF UART 보드레이트</span>
 <input id='rcvr_uart_baud' min='9600' type='number' value='420000'>
 </label>
+</div>
+<div class='flasher-grid'>
 <label class='flasher-field'>
 <span>홈 WiFi SSID</span>
 <input autocomplete='off' id='home_wifi_ssid' type='text'>
@@ -128,7 +140,7 @@
 <span>Português</span>
 </label>
 <label class='flasher-check'>
-<input id='locale-en' type='checkbox'>
+<input id='locale-en' selected='selected' type='checkbox'>
 <span>English</span>
 </label>
 <label class='flasher-check'>
@@ -189,7 +201,7 @@
 </div>
 <pre class='flasher-log' id='log'></pre>
 </section>
-<p class='flasher-foot'>Web Serial에는 Chrome / Edge가 필요합니다. GitHub 토큰은 worker를 떠나지 않습니다.</p>
+<p class='flasher-foot'>Web Serial에는 Chrome / Edge가 필요합니다. GitHub 토큰은 이 브라우저에만 저장됩니다.</p>
 </div>
 </main>
 <footer>
