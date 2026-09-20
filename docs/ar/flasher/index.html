@@ -9,7 +9,7 @@
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
 </head>
-<body class='sub-page' data-api-base=''>
+<body class='sub-page flasher-page' data-api-base=''>
 <nav class='sub-nav'>
 <div aria-hidden='true' class='nav-progressive-blur'>
 <span></span>
@@ -20,10 +20,6 @@
 <button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
 <a class='home-link' href='../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
 </a>
-<a href='../../ar/tutorials/'>دروس</a>
-<a href='../../ar/hardware/'>العتاد</a>
-<a href='../../ar/documentation/'>التوثيق</a>
-<a class='active' href='../../ar/flasher/'>الوميض</a>
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
@@ -93,6 +89,31 @@
 <label class='flasher-field'>
 <span>WiFi auto-on interval (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
+</label>
+</div>
+</details>
+<details class='flasher-advanced'>
+<summary>النظام و WebUI</summary>
+<div class='flasher-grid'>
+<label class='flasher-field'>
+<span>اسم الجهاز (اسم المضيف)</span>
+<input autocomplete='off' id='device_name' placeholder='pteronautos' type='text'>
+</label>
+<label class='flasher-field'>
+<span>لغات WebUI</span>
+<input autocomplete='off' id='i18n_locales' placeholder='ar,en (فارغ = الكل)' type='text'>
+</label>
+<label class='flasher-field'>
+<span>معدل الباود UART الخاص بـ CRSF</span>
+<input id='rcvr_uart_baud' min='9600' type='number' value='420000'>
+</label>
+<label class='flasher-field'>
+<span>SSID لشبكة WiFi المنزلية</span>
+<input autocomplete='off' id='home_wifi_ssid' type='text'>
+</label>
+<label class='flasher-field'>
+<span>كلمة مرور WiFi المنزلية</span>
+<input autocomplete='new-password' id='home_wifi_password' type='password'>
 </label>
 </div>
 </details>

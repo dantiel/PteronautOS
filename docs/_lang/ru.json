@@ -915,8 +915,7 @@
   "doc_wave_aileron_skew_mix": "Смесь aileron→skew",
   "doc_wave_slew": "Slew (скорость)",
   "doc_legend_wing_l": "Левое крыло",
-  "doc_legend_wing_r": "Правое крыло"
-,
+  "doc_legend_wing_r": "Правое крыло",
   "flasher_title": "PteronautOS — Облачная сборка и прошивка",
   "flasher_h1": "Облачная сборка и прошивка",
   "flasher_lead": "Собирайте и прошивайте прошивку из браузера — без консоли и PlatformIO.",
@@ -938,5 +937,12 @@
   "flasher_build_hint": "Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).",
   "flasher_heading_progress": "Прогресс сборки",
   "flasher_foot_note": "Требуется Chrome / Edge для Web Serial. Ваш GitHub-токен никогда не покидает worker.",
-  "nav_flasher": "Прошивка"
+  "nav_flasher": "Прошивка",
+  "flasher_heading_system": "Система и WebUI",
+  "flasher_device_name": "Имя устройства (hostname)",
+  "flasher_locales": "Языки WebUI",
+  "flasher_locales_placeholder": "ru,en (пусто = все)",
+  "flasher_uart_baud": "Скорость UART CRSF",
+  "flasher_home_wifi_ssid": "SSID домашнего Wi-Fi",
+  "flasher_home_wifi_password": "Пароль домашнего Wi-Fi"
 }

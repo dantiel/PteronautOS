@@ -24,6 +24,41 @@ els =
 currentRunId = null
 firmwareBytes = null
 
+# Persist config on this device (localStorage) so values survive page reloads.
+CONFIG_KEY = "pteronautos-flasher-config"
+FIELD_IDS = [
+  "#mixer_profile"
+  "#regulatory_domain"
+  "#binding_phrase"
+  "#auto_wifi_on_interval"
+  "#zephyrus_i2c_sda"
+  "#zephyrus_i2c_scl"
+  "#zephyrus_board_rotation"
+  "#mushin_rx_pin"
+  "#mushin_tx_pin"
+  "#mushin_baud"
+  "#rcvr_uart_baud"
+  "#device_name"
+  "#home_wifi_ssid"
+  "#home_wifi_password"
+  "#i18n_locales"
+]
+
+saveConfig = ->
+  try
+    cfg = {}
+    cfg[id] = $(id).value for id in FIELD_IDS
+    localStorage.setItem CONFIG_KEY, JSON.stringify cfg
+  catch
+
+restoreConfig = ->
+  try
+    cfg = JSON.parse localStorage.getItem CONFIG_KEY
+    return unless cfg
+    for id in FIELD_IDS
+      $(id).value = cfg[id] if cfg[id]?
+  catch
+
 log = (line) ->
   els.log.textContent += line + "\n"
   els.log.scrollTop = els.log.scrollHeight
@@ -48,6 +83,11 @@ collectParams = ->
   mushin_rx_pin: num "#mushin_rx_pin"
   mushin_tx_pin: num "#mushin_tx_pin"
   mushin_baud: num "#mushin_baud"
+  rcvr_uart_baud: num "#rcvr_uart_baud"
+  device_name: $("#device_name").value.trim()
+  home_wifi_ssid: $("#home_wifi_ssid").value.trim()
+  home_wifi_password: $("#home_wifi_password").value
+  i18n_locales: $("#i18n_locales").value.trim()
 
 startBuild = ->
   els.buildBtn.disabled = true
@@ -174,6 +214,12 @@ flash = ->
     log err.stack or err.message
   finally
     els.flashBtn.disabled = false
+
+restoreConfig()
+
+for id in FIELD_IDS
+  $(id).addEventListener "input", saveConfig
+  $(id).addEventListener "change", saveConfig
 
 els.buildBtn.addEventListener "click", startBuild
 els.flashBtn.addEventListener "click", flash

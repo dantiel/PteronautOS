@@ -74,16 +74,22 @@ async function handleBuild(request, env) {
     return json({ error: "Invalid JSON body." }, 400);
   }
 
-    // Validate + whitelist inputs. The binding phrase is interpolated into a
-    // shell heredoc by the workflow, so constrain it to a shell-safe charset —
-    // this also blocks command injection through a shared/public worker.
-    if (inputs.binding_phrase != null) {
-      const bp = String(inputs.binding_phrase).trim();
-      if (bp && !/^[A-Za-z0-9._ -]{1,32}$/.test(bp)) {
-        return json(
-          { error: "Binding phrase may only contain letters, digits, spaces, and . _ - (max 32 chars)." },
-          400,
-        );
+    // Validate + whitelist inputs. String values are interpolated into a shell
+    // heredoc by the workflow, so constrain them to shell-safe charsets — this
+    // also blocks command injection through a shared/public worker.
+    const stringRules = {
+      binding_phrase: /^[A-Za-z0-9._ -]{1,32}$/,
+      device_name: /^[A-Za-z0-9_-]{1,32}$/,
+      home_wifi_ssid: /^[A-Za-z0-9._ -]{1,32}$/,
+      home_wifi_password: /^[A-Za-z0-9._ -]{1,63}$/,
+      i18n_locales: /^[a-z, ]{0,64}$/,
+    };
+    for (const [k, re] of Object.entries(stringRules)) {
+      const raw = inputs[k];
+      if (raw == null || raw === "") continue;
+      const val = String(raw).trim();
+      if (!re.test(val)) {
+        return json({ error: `Invalid value for ${k} (unsupported characters).` }, 400);
       }
     }
   
@@ -110,10 +116,34 @@ async function handleBuild(request, env) {
       "mushin_rx_pin",
       "mushin_tx_pin",
       "mushin_baud",
+      "rcvr_uart_baud",
+      "device_name",
+      "home_wifi_ssid",
+      "home_wifi_password",
+      "i18n_locales",
+    ]);
+
+    // `type: number` dispatch inputs must be sent as JSON numbers, not strings —
+    // GitHub rejects stringified numbers with "The string did not match the
+    // expected pattern". Preserve their type here.
+    const numberFields = new Set([
+      "auto_wifi_on_interval",
+      "zephyrus_i2c_sda",
+      "zephyrus_i2c_scl",
+      "mushin_rx_pin",
+      "mushin_tx_pin",
+      "mushin_baud",
+      "rcvr_uart_baud",
     ]);
     const dispatchInputs = {};
     for (const [k, v] of Object.entries(inputs)) {
-      if (allowed.has(k) && v != null && v !== "") dispatchInputs[k] = String(v);
+      if (!allowed.has(k) || v == null || v === "") continue;
+      if (numberFields.has(k)) {
+        const n = Number(v);
+        if (Number.isFinite(n)) dispatchInputs[k] = n;
+      } else {
+        dispatchInputs[k] = String(v);
+      }
     }
 
   const dispatchTime = Date.now();

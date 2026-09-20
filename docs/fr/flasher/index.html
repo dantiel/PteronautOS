@@ -9,7 +9,7 @@
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
 <link href='../../assets/css/style.css' rel='stylesheet'>
 </head>
-<body class='sub-page' data-api-base=''>
+<body class='sub-page flasher-page' data-api-base=''>
 <nav class='sub-nav'>
 <div aria-hidden='true' class='nav-progressive-blur'>
 <span></span>
@@ -20,10 +20,6 @@
 <button aria-label='Remonter en haut' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Remonter en haut' type='button'>↑</button>
 <a class='home-link' href='../../fr/' title='Accueil PteronautOS'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
 </a>
-<a href='../../fr/tutorials/'>Tutoriels</a>
-<a href='../../fr/hardware/'>Matériel</a>
-<a href='../../fr/documentation/'>Documentation</a>
-<a class='active' href='../../fr/flasher/'>Flasher</a>
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
@@ -93,6 +89,31 @@
 <label class='flasher-field'>
 <span>Intervalle WiFi auto-on (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
+</label>
+</div>
+</details>
+<details class='flasher-advanced'>
+<summary>Système et WebUI</summary>
+<div class='flasher-grid'>
+<label class='flasher-field'>
+<span>Nom de l'appareil (hôte)</span>
+<input autocomplete='off' id='device_name' placeholder='pteronautos' type='text'>
+</label>
+<label class='flasher-field'>
+<span>Langues de la WebUI</span>
+<input autocomplete='off' id='i18n_locales' placeholder='fr,en (vide = tous)' type='text'>
+</label>
+<label class='flasher-field'>
+<span>Baud UART CRSF</span>
+<input id='rcvr_uart_baud' min='9600' type='number' value='420000'>
+</label>
+<label class='flasher-field'>
+<span>SSID du WiFi domestique</span>
+<input autocomplete='off' id='home_wifi_ssid' type='text'>
+</label>
+<label class='flasher-field'>
+<span>Mot de passe du WiFi domestique</span>
+<input autocomplete='new-password' id='home_wifi_password' type='password'>
 </label>
 </div>
 </details>

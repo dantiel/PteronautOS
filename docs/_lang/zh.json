@@ -915,8 +915,7 @@
   "doc_wave_aileron_skew_mix": "副翼→skew 混合",
   "doc_wave_slew": "Slew（速率）",
   "doc_legend_wing_l": "左翼",
-  "doc_legend_wing_r": "右翼"
-,
+  "doc_legend_wing_r": "右翼",
   "flasher_title": "PteronautOS — 云端构建与烧录",
   "flasher_h1": "云端构建与烧录",
   "flasher_lead": "在浏览器中构建并烧录固件 — 无需终端，也无需 PlatformIO。",
@@ -938,5 +937,12 @@
   "flasher_build_hint": "构建会在 GitHub Actions 中编译出单个合并的 .bin（约 3–4 分钟）。",
   "flasher_heading_progress": "构建进度",
   "flasher_foot_note": "Web Serial 需要 Chrome / Edge。你的 GitHub 令牌不会离开 worker。",
-  "nav_flasher": "烧录"
+  "nav_flasher": "烧录",
+  "flasher_heading_system": "系统与 WebUI",
+  "flasher_device_name": "设备名称 (主机名)",
+  "flasher_locales": "WebUI 语言",
+  "flasher_locales_placeholder": "zh,en (空 = 全部)",
+  "flasher_uart_baud": "CRSF UART 波特率",
+  "flasher_home_wifi_ssid": "家庭 WiFi SSID",
+  "flasher_home_wifi_password": "家庭 WiFi 密码"
 }

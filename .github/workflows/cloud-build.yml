@@ -70,6 +70,31 @@ on:
         required: false
         type: number
         default: 57600
+      rcvr_uart_baud:
+        description: 'CRSF UART baud rate (420000 = ELRS default)'
+        required: false
+        type: number
+        default: 420000
+      device_name:
+        description: 'Device hostname on the network'
+        required: false
+        type: string
+        default: ''
+      home_wifi_ssid:
+        description: 'Home WiFi SSID (auto-join on boot)'
+        required: false
+        type: string
+        default: ''
+      home_wifi_password:
+        description: 'Home WiFi password'
+        required: false
+        type: string
+        default: ''
+      i18n_locales:
+        description: 'WebUI languages, comma-separated (empty = all)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build:
@@ -115,11 +140,34 @@ jobs:
             echo "-DMUSHIN_RX_PIN=${{ inputs.mushin_rx_pin }}"
             echo "-DMUSHIN_TX_PIN=${{ inputs.mushin_tx_pin }}"
             echo "-DMUSHIN_BAUD=${{ inputs.mushin_baud }}"
+            echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
+            if [ -n "${{ inputs.device_name }}" ]; then
+              echo "-DDEVICE_NAME=\"${{ inputs.device_name }}\""
+            fi
+            if [ -n "${{ inputs.home_wifi_ssid }}" ]; then
+              echo "-DHOME_WIFI_SSID=\"${{ inputs.home_wifi_ssid }}\""
+            fi
+            if [ -n "${{ inputs.home_wifi_password }}" ]; then
+              echo "-DHOME_WIFI_PASSWORD=\"${{ inputs.home_wifi_password }}\""
+            fi
             if [ -n "${{ inputs.binding_phrase }}" ]; then
               echo "-DMY_BINDING_PHRASE=\"${{ inputs.binding_phrase }}\""
             fi
           } > src/user_defines.txt
           cat src/user_defines.txt
+
+      - name: Set up Node (WebUI locales)
+        if: ${{ inputs.i18n_locales != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build WebUI with selected locales
+        if: ${{ inputs.i18n_locales != '' }}
+        run: |
+          cd src/html
+          npm ci
+          I18N_LOCALES="${{ inputs.i18n_locales }}" npm run build:pteronautos
 
       - name: Build firmware
         run: |
@@ -145,7 +193,10 @@ jobs:
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
             "mushin_rx_pin": "${{ inputs.mushin_rx_pin }}",
             "mushin_tx_pin": "${{ inputs.mushin_tx_pin }}",
-            "mushin_baud": "${{ inputs.mushin_baud }}"
+            "mushin_baud": "${{ inputs.mushin_baud }}",
+            "rcvr_uart_baud": "${{ inputs.rcvr_uart_baud }}",
+            "device_name": "${{ inputs.device_name }}",
+            "i18n_locales": "${{ inputs.i18n_locales }}"
           }
           JSON
 

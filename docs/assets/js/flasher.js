@@ -3,7 +3,7 @@
 // Drives the Cloudflare Worker /api/* endpoints and flashes over Web Serial
 // with esptool-js. API_BASE defaults to same-origin (the worker serves this
 // page); override cross-origin with ?api=<worker-url>.
-var $, API_BASE, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, log, num, params, poll, setStatus, startBuild, terminal;
+var $, API_BASE, CONFIG_KEY, FIELD_IDS, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, len, log, num, params, poll, restoreConfig, saveConfig, setStatus, startBuild, terminal;
 
 import {
   ESPLoader,
@@ -33,6 +33,47 @@ els = {
 currentRunId = null;
 
 firmwareBytes = null;
+
+// Persist config on this device (localStorage) so values survive page reloads.
+CONFIG_KEY = "pteronautos-flasher-config";
+
+FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_rx_pin", "#mushin_tx_pin", "#mushin_baud", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password", "#i18n_locales"];
+
+saveConfig = function() {
+  var cfg, i, id, len;
+  try {
+    cfg = {};
+    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+      id = FIELD_IDS[i];
+      cfg[id] = $(id).value;
+    }
+    return localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+  } catch (error) {
+
+  }
+};
+
+restoreConfig = function() {
+  var cfg, i, id, len, results;
+  try {
+    cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
+    if (!cfg) {
+      return;
+    }
+    results = [];
+    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+      id = FIELD_IDS[i];
+      if (cfg[id] != null) {
+        results.push($(id).value = cfg[id]);
+      } else {
+        results.push(void 0);
+      }
+    }
+    return results;
+  } catch (error) {
+
+  }
+};
 
 log = function(line) {
   els.log.textContent += line + "\n";
@@ -66,7 +107,12 @@ collectParams = function() {
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
     mushin_rx_pin: num("#mushin_rx_pin"),
     mushin_tx_pin: num("#mushin_tx_pin"),
-    mushin_baud: num("#mushin_baud")
+    mushin_baud: num("#mushin_baud"),
+    rcvr_uart_baud: num("#rcvr_uart_baud"),
+    device_name: $("#device_name").value.trim(),
+    home_wifi_ssid: $("#home_wifi_ssid").value.trim(),
+    home_wifi_password: $("#home_wifi_password").value,
+    i18n_locales: $("#i18n_locales").value.trim()
   };
 };
 
@@ -228,6 +274,14 @@ flash = async function() {
     els.flashBtn.disabled = false;
   }
 };
+
+restoreConfig();
+
+for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+  id = FIELD_IDS[i];
+  $(id).addEventListener("input", saveConfig);
+  $(id).addEventListener("change", saveConfig);
+}
 
 els.buildBtn.addEventListener("click", startBuild);
 

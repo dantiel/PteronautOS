@@ -915,8 +915,7 @@
   "doc_wave_aileron_skew_mix": "مزج الجنيح→skew",
   "doc_wave_slew": "Slew (المعدل)",
   "doc_legend_wing_l": "الجناح الأيسر",
-  "doc_legend_wing_r": "الجناح الأيمن"
-,
+  "doc_legend_wing_r": "الجناح الأيمن",
   "flasher_title": "PteronautOS — البناء السحابي والوميض",
   "flasher_h1": "البناء السحابي والوميض",
   "flasher_lead": "ابنِ وامضِ البرنامج الثابت من المتصفح — دون طرفية، ودون PlatformIO.",
@@ -938,5 +937,12 @@
   "flasher_build_hint": "ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).",
   "flasher_heading_progress": "تقدم البناء",
   "flasher_foot_note": "يتطلب Chrome / Edge لـ Web Serial. لا يغادر رمز GitHub الخاص بك العامل أبدًا.",
-  "nav_flasher": "الوميض"
+  "nav_flasher": "الوميض",
+  "flasher_heading_system": "النظام و WebUI",
+  "flasher_device_name": "اسم الجهاز (اسم المضيف)",
+  "flasher_locales": "لغات WebUI",
+  "flasher_locales_placeholder": "ar,en (فارغ = الكل)",
+  "flasher_uart_baud": "معدل الباود UART الخاص بـ CRSF",
+  "flasher_home_wifi_ssid": "SSID لشبكة WiFi المنزلية",
+  "flasher_home_wifi_password": "كلمة مرور WiFi المنزلية"
 }

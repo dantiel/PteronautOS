@@ -915,8 +915,7 @@
   "doc_wave_aileron_skew_mix": "एलेरॉन→skew मिश्रण",
   "doc_wave_slew": "Slew (दर)",
   "doc_legend_wing_l": "बायाँ पंख",
-  "doc_legend_wing_r": "दायाँ पंख"
-,
+  "doc_legend_wing_r": "दायाँ पंख",
   "flasher_title": "PteronautOS — क्लाउड बिल्ड और फ्लैशर",
   "flasher_h1": "क्लाउड बिल्ड और फ्लैशर",
   "flasher_lead": "ब्राउज़र से फ़र्मवेयर बनाएँ और फ्लैश करें — कोई कंसोल नहीं, कोई PlatformIO नहीं।",
@@ -938,5 +937,12 @@
   "flasher_build_hint": "बिल्ड GitHub Actions में एकल मर्ज किया हुआ .bin बनाता है (~3–4 मिनट)।",
   "flasher_heading_progress": "बिल्ड प्रगति",
   "flasher_foot_note": "Web Serial के लिए Chrome / Edge आवश्यक है। आपका GitHub टोकन कभी worker से बाहर नहीं जाता।",
-  "nav_flasher": "फ्लैशर"
+  "nav_flasher": "फ्लैशर",
+  "flasher_heading_system": "सिस्टम और WebUI",
+  "flasher_device_name": "डिवाइस नाम (होस्टनाम)",
+  "flasher_locales": "WebUI भाषाएँ",
+  "flasher_locales_placeholder": "hi,en (खाली = सभी)",
+  "flasher_uart_baud": "CRSF UART बॉड",
+  "flasher_home_wifi_ssid": "होम WiFi SSID",
+  "flasher_home_wifi_password": "होम WiFi पासवर्ड"
 }

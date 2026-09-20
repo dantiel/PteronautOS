@@ -915,8 +915,7 @@
   "doc_wave_aileron_skew_mix": "Mix aileron→skew",
   "doc_wave_slew": "Slew (vitesse)",
   "doc_legend_wing_l": "Aile gauche",
-  "doc_legend_wing_r": "Aile droite"
-,
+  "doc_legend_wing_r": "Aile droite",
   "flasher_title": "PteronautOS — Build cloud & Flasher",
   "flasher_h1": "Build cloud & Flasher",
   "flasher_lead": "Compilez et flashez votre firmware depuis le navigateur — sans console, sans PlatformIO.",
@@ -938,5 +937,12 @@
   "flasher_build_hint": "Le build compile un unique .bin fusionné dans GitHub Actions (~3–4 min).",
   "flasher_heading_progress": "Progression du build",
   "flasher_foot_note": "Nécessite Chrome / Edge pour Web Serial. Votre token GitHub ne quitte jamais le worker.",
-  "nav_flasher": "Flasher"
+  "nav_flasher": "Flasher",
+  "flasher_heading_system": "Système et WebUI",
+  "flasher_device_name": "Nom de l'appareil (hôte)",
+  "flasher_locales": "Langues de la WebUI",
+  "flasher_locales_placeholder": "fr,en (vide = tous)",
+  "flasher_uart_baud": "Baud UART CRSF",
+  "flasher_home_wifi_ssid": "SSID du WiFi domestique",
+  "flasher_home_wifi_password": "Mot de passe du WiFi domestique"
 }
