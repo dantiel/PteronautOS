@@ -26,6 +26,8 @@ src/user_defines.txt
 !src/html/dev-plugins/*.js
 !src/html/features.js
 !src/html/eslint.config.js
+!webapp/**/*.js
+!worker/src/**/*.js
 
 # Generated LithAML JS ??? stale copies shadow fresh Vite compilation
 *.lithaml.js

@@ -1,0 +1,239 @@
+:root {
+  --bg: #0e1216;
+  --bg-card: #161c22;
+  --bg-soft: #1d262e;
+  --ink: #e6edf3;
+  --ink-dim: #8b98a5;
+  --accent: #7fd6c2;
+  --accent-dim: #3f6f66;
+  --warn: #e6c07b;
+  --danger: #e08a8a;
+  --line: #2a353e;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, #16302b 0%, transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(90deg, var(--accent), #9fd8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  margin: 6px 0 28px;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  margin: 0 0 18px;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.field > span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  margin-bottom: 5px;
+}
+
+.field em {
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 9px 11px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 14px;
+}
+
+.advanced {
+  margin-bottom: 18px;
+}
+
+.advanced summary {
+  cursor: pointer;
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.advanced summary:hover { color: var(--accent); }
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #06110f;
+  font-weight: 700;
+}
+
+button.primary:not(:disabled):hover {
+  background: var(--accent);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+
+button.secondary:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.hint {
+  margin: 16px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.hint code {
+  background: var(--bg-soft);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--warn);
+  flex-shrink: 0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.dot.done { background: var(--accent); animation: none; }
+.dot.fail { background: var(--danger); animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+#run-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.progress {
+  margin-top: 16px;
+  height: 8px;
+  background: var(--bg-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.2s ease;
+}
+
+.log {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  color: var(--ink-dim);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.hidden { display: none !important; }
+
+.foot {
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.75rem;
+  margin-top: 28px;
+}

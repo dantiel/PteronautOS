@@ -1,0 +1,159 @@
+name: PteronautOS Cloud Build
+
+# On-demand single-config firmware build, driven by the webapp (or the
+# GitHub "Run workflow" button). Produces one merged .bin that can be
+# flashed over Web Serial with esptool-js — no console, no PlatformIO.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mixer_profile:
+        description: 'Mixer profile (airframe type)'
+        required: true
+        type: choice
+        default: '1'
+        options:
+          - '0'   # SERVO_2WING
+          - '1'   # SERVO_2WING_1RUD
+          - '2'   # SERVO_4WING
+          - '3'   # GEARBOX_2VTAIL_1RUD
+          - '4'   # GEARBOX_1MOT_2VTAIL
+          - '5'   # GEARBOX_1MOT_2VTAIL_1RUD
+          - '6'   # GEARBOX_1ELE_1RUD
+          - '7'   # GEARBOX_1MOT_1ELE_1RUD
+      regulatory_domain:
+        description: 'RF regulatory domain (2.4 GHz)'
+        required: true
+        type: choice
+        default: 'EU_CE_2400'
+        options:
+          - 'EU_CE_2400'   # LBT (EU/CE limited)
+          - 'ISM_2400'     # full ISM band
+      binding_phrase:
+        description: 'Binding phrase (empty = traditional binding)'
+        required: false
+        type: string
+        default: ''
+      auto_wifi_on_interval:
+        description: 'WiFi auto-on interval in seconds (-1 disables)'
+        required: false
+        type: number
+        default: 30
+      zephyrus_i2c_sda:
+        description: 'MPU6050 I2C SDA pin (GPIO)'
+        required: false
+        type: number
+        default: 1
+      zephyrus_i2c_scl:
+        description: 'MPU6050 I2C SCL pin (GPIO)'
+        required: false
+        type: number
+        default: 3
+      zephyrus_board_rotation:
+        description: 'MPU6050 mounting orientation (0-6)'
+        required: false
+        type: choice
+        default: '0'
+        options: ['0', '1', '2', '3', '4', '5', '6']
+      mushin_rx_pin:
+        description: 'Mushin bridge RX pin (GPIO)'
+        required: false
+        type: number
+        default: 9
+      mushin_tx_pin:
+        description: 'Mushin bridge TX pin (GPIO)'
+        required: false
+        type: number
+        default: 10
+      mushin_baud:
+        description: 'Mushin bridge baud rate'
+        required: false
+        type: number
+        default: 57600
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-pteronautos-cloud
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+          pip install wheel
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-platformio
+
+      - name: Write user defines
+        run: |
+          {
+            echo "-DAUTO_WIFI_ON_INTERVAL=${{ inputs.auto_wifi_on_interval }}"
+            echo "-DLOCK_ON_FIRST_CONNECTION"
+            echo "-DMIXER_PROFILE=${{ inputs.mixer_profile }}"
+            echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"
+            echo "-DZEPHYR_I2C_SCL=${{ inputs.zephyrus_i2c_scl }}"
+            echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
+            echo "-DMUSHIN_RX_PIN=${{ inputs.mushin_rx_pin }}"
+            echo "-DMUSHIN_TX_PIN=${{ inputs.mushin_tx_pin }}"
+            echo "-DMUSHIN_BAUD=${{ inputs.mushin_baud }}"
+            if [ -n "${{ inputs.binding_phrase }}" ]; then
+              echo "-DMY_BINDING_PHRASE=\"${{ inputs.binding_phrase }}\""
+            fi
+          } > src/user_defines.txt
+          cat src/user_defines.txt
+
+      - name: Build firmware
+        run: |
+          if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
+            DOMAIN_FLAG="-DRegulatory_Domain_EU_CE_2400"
+          else
+            DOMAIN_FLAG="-DRegulatory_Domain_ISM_2400"
+          fi
+          cd src
+          PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e PteronautOS_ESP8285_2400_RX
+
+      - name: Stage firmware artifact
+        run: |
+          mkdir -p dist
+          cp src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin dist/pteronautos.bin
+          cat > dist/manifest.json <<'JSON'
+          {
+            "mixer_profile": "${{ inputs.mixer_profile }}",
+            "regulatory_domain": "${{ inputs.regulatory_domain }}",
+            "auto_wifi_on_interval": "${{ inputs.auto_wifi_on_interval }}",
+            "zephyrus_i2c_sda": "${{ inputs.zephyrus_i2c_sda }}",
+            "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
+            "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
+            "mushin_rx_pin": "${{ inputs.mushin_rx_pin }}",
+            "mushin_tx_pin": "${{ inputs.mushin_tx_pin }}",
+            "mushin_baud": "${{ inputs.mushin_baud }}"
+          }
+          JSON
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: pteronautos-firmware
+          path: |
+            dist/pteronautos.bin
+            dist/manifest.json
+          retention-days: 7
