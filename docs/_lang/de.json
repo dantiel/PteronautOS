@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "de,en (leer = alle)",
   "flasher_uart_baud": "CRSF-UART-Baudrate",
   "flasher_home_wifi_ssid": "Heim-WLAN-SSID",
-  "flasher_home_wifi_password": "Heim-WLAN-Passwort"
+  "flasher_home_wifi_password": "Heim-WLAN-Passwort",
+  "flasher_api_base": "Build-Server-URL",
+  "flasher_api_base_hint": "Leer lassen, wenn vom Worker geöffnet. Auf GitHub Pages hier die Worker-URL einfügen.",
+  "flasher_locales_hint": "Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein."
 }

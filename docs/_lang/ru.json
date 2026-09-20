@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "ru,en (пусто = все)",
   "flasher_uart_baud": "Скорость UART CRSF",
   "flasher_home_wifi_ssid": "SSID домашнего Wi-Fi",
-  "flasher_home_wifi_password": "Пароль домашнего Wi-Fi"
+  "flasher_home_wifi_password": "Пароль домашнего Wi-Fi",
+  "flasher_api_base": "URL сервера сборки",
+  "flasher_api_base_hint": "Оставьте пустым при открытии с воркера. На GitHub Pages вставьте сюда URL воркера.",
+  "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11."
 }

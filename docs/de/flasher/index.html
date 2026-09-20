@@ -28,6 +28,11 @@
 <section class='flasher-card'>
 <h2>Build-Konfiguration</h2>
 <label class='flasher-field'>
+<span>Build-Server-URL</span>
+<input autocomplete='off' id='api_base' placeholder='https://your-worker.workers.dev' spellcheck='false' type='url'>
+</label>
+<p class='flasher-hint'>Leer lassen, wenn vom Worker geöffnet. Auf GitHub Pages hier die Worker-URL einfügen.</p>
+<label class='flasher-field'>
 <span>Mixer-Profil</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -97,11 +102,10 @@
 <div class='flasher-grid'>
 <label class='flasher-field'>
 <span>Gerätename (Hostname)</span>
-<input autocomplete='off' id='device_name' placeholder='pteronautos' type='text'>
-</label>
-<label class='flasher-field'>
-<span>WebUI-Sprachen</span>
-<input autocomplete='off' id='i18n_locales' placeholder='de,en (leer = alle)' type='text'>
+<div class='flasher-suffix'>
+<input autocomplete='off' id='device_name' spellcheck='false' type='text' value='pteronaut'>
+<span class='flasher-suffix-tag'>.local</span>
+</div>
 </label>
 <label class='flasher-field'>
 <span>CRSF-UART-Baudrate</span>
@@ -115,6 +119,56 @@
 <span>Heim-WLAN-Passwort</span>
 <input autocomplete='new-password' id='home_wifi_password' type='password'>
 </label>
+</div>
+<div class='flasher-field flasher-locales'>
+<span>WebUI-Sprachen</span>
+<div class='flasher-checks'>
+<label class='flasher-check'>
+<input id='locale-pt' type='checkbox'>
+<span>Português</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-en' type='checkbox'>
+<span>English</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-ru' type='checkbox'>
+<span>Русский</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-es' type='checkbox'>
+<span>Español</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-de' type='checkbox'>
+<span>Deutsch</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-ko' type='checkbox'>
+<span>한국어</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-ja' type='checkbox'>
+<span>日本語</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-zh' type='checkbox'>
+<span>中文</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-ar' type='checkbox'>
+<span>العربية</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-hi' type='checkbox'>
+<span>हिन्दी</span>
+</label>
+<label class='flasher-check'>
+<input id='locale-fr' type='checkbox'>
+<span>Français</span>
+</label>
+</div>
+<p class='flasher-hint'>Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein.</p>
 </div>
 </details>
 <div class='flasher-actions'>

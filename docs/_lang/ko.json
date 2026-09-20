@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "ko,en (비우면 전체)",
   "flasher_uart_baud": "CRSF UART 보드레이트",
   "flasher_home_wifi_ssid": "홈 WiFi SSID",
-  "flasher_home_wifi_password": "홈 WiFi 비밀번호"
+  "flasher_home_wifi_password": "홈 WiFi 비밀번호",
+  "flasher_api_base": "빌드 서버 URL",
+  "flasher_api_base_hint": "워커에서 열 때는 비워 두세요. GitHub Pages에서는 워커 URL을 붙여넣으세요.",
+  "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함."
 }

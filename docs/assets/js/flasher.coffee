@@ -1,12 +1,11 @@
 # PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
 # Drives the Cloudflare Worker /api/* endpoints and flashes over Web Serial
-# with esptool-js. API_BASE defaults to same-origin (the worker serves this
-# page); override cross-origin with ?api=<worker-url>.
+# with esptool-js. API base defaults to same-origin (the worker serves this
+# page); override with ?api=<worker-url> or the Build server URL field.
 
 import { ESPLoader, Transport } from "./vendor/esptool-js.js"
 
 params = new URLSearchParams location.search
-API_BASE = params.get("api") or document.body.dataset.apiBase or ""
 
 $ = (sel) -> document.querySelector sel
 
@@ -41,13 +40,33 @@ FIELD_IDS = [
   "#device_name"
   "#home_wifi_ssid"
   "#home_wifi_password"
-  "#i18n_locales"
+  "#api_base"
 ]
+LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"]
+
+apiBase = ->
+  u = params.get("api") or $("#api_base").value.trim()
+  u.replace /\/+$/, ""
+
+api = (path) -> apiBase() + path
+
+request = (path, init) ->
+  resp = await fetch api(path), init
+  text = await resp.text()
+  data = null
+  try
+    data = JSON.parse text
+  catch
+    data = null
+  unless resp.ok
+    throw new Error (data?.error or text or "HTTP " + resp.status)
+  data
 
 saveConfig = ->
   try
     cfg = {}
     cfg[id] = $(id).value for id in FIELD_IDS
+    cfg.locales = LOCALES.filter (l) -> $("#locale-#{l}").checked
     localStorage.setItem CONFIG_KEY, JSON.stringify cfg
   catch
 
@@ -57,6 +76,12 @@ restoreConfig = ->
     return unless cfg
     for id in FIELD_IDS
       $(id).value = cfg[id] if cfg[id]?
+    if cfg.locales?
+      for l in LOCALES
+        $("#locale-#{l}").checked = l in cfg.locales
+    else
+      for l in LOCALES
+        $("#locale-#{l}").checked = false
   catch
 
 log = (line) ->
@@ -73,6 +98,7 @@ setStatus = (text, state) ->
 num = (id) -> parseInt $(id).value, 10
 
 collectParams = ->
+  checked = LOCALES.filter (l) -> $("#locale-#{l}").checked
   mixer_profile: $("#mixer_profile").value
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
@@ -87,7 +113,7 @@ collectParams = ->
   device_name: $("#device_name").value.trim()
   home_wifi_ssid: $("#home_wifi_ssid").value.trim()
   home_wifi_password: $("#home_wifi_password").value
-  i18n_locales: $("#i18n_locales").value.trim()
+  i18n_locales: checked.join(",")
 
 startBuild = ->
   els.buildBtn.disabled = true
@@ -100,15 +126,11 @@ startBuild = ->
   els.progressWrap.classList.add "hidden"
 
   try
-    resp = await fetch API_BASE + "/api/build",
+    data = await request "/api/build",
       method: "POST"
       headers:
         "Content-Type": "application/json"
       body: JSON.stringify collectParams()
-    data = await resp.json()
-    unless resp.ok
-      throw new Error data.error or "HTTP " + resp.status
-
     currentRunId = data.run_id
     if data.html_url
       els.runLink.href = data.html_url
@@ -116,17 +138,16 @@ startBuild = ->
     setStatus "Build queued — waiting for GitHub Actions…", "busy"
     poll()
   catch err
-    setStatus "Build failed: " + err.message, "fail"
+    msg = err.message
+    if /404|405|Failed to fetch/.test msg
+      msg += " — check the Build server URL above (deploy the worker, or open this page from the worker itself)."
+    setStatus "Build failed: " + msg, "fail"
     els.buildBtn.disabled = false
 
 poll = ->
   return unless currentRunId
   try
-    resp = await fetch API_BASE + "/api/build/" + currentRunId
-    data = await resp.json()
-    unless resp.ok
-      throw new Error data.error or "HTTP " + resp.status
-
+    data = await request "/api/build/" + currentRunId
     unless data.ready
       setStatus "Building… (" + (data.status or "queued") + ")", "busy"
       setTimeout poll, 5000
@@ -146,11 +167,15 @@ poll = ->
 
 downloadFirmware = ->
   setStatus "Downloading firmware…", "busy"
-  resp = await fetch API_BASE + "/api/build/" + currentRunId + "/download"
+  resp = await fetch api("/api/build/" + currentRunId + "/download")
   unless resp.ok
-    err = await resp.json().catch ->
-      error: "HTTP " + resp.status
-    throw new Error err.error or "HTTP " + resp.status
+    text = await resp.text().catch -> ""
+    err = null
+    try
+      err = (JSON.parse text)?.error
+    catch
+      err = null
+    throw new Error err or text or "HTTP " + resp.status
   buf = await resp.arrayBuffer()
   firmwareBytes = new Uint8Array buf
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
@@ -216,10 +241,15 @@ flash = ->
     els.flashBtn.disabled = false
 
 restoreConfig()
+if params.get("api")
+  $("#api_base").value = params.get "api"
 
 for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
+
+for l in LOCALES
+  $("#locale-#{l}").addEventListener "change", saveConfig
 
 els.buildBtn.addEventListener "click", startBuild
 els.flashBtn.addEventListener "click", flash

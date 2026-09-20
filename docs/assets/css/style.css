@@ -1613,20 +1613,22 @@ footer .lang-switch {
   display: block;
   margin-bottom: 1.1rem;
 }
-.flasher-field span {
+.flasher-field > span {
   display: block;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: "Turret Road", monospace;
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mut);
   margin-bottom: 0.4rem;
 }
 .flasher-field input, .flasher-field select {
   width: 100%;
-  padding: 0.55rem 0.7rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.65rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.85rem;
   color: var(--text);
   background: transparent;
   border: 1px solid var(--dim);
@@ -1641,6 +1643,59 @@ footer .lang-switch {
   color: var(--text);
 }
 
+.flasher-suffix {
+  display: flex;
+  align-items: stretch;
+}
+.flasher-suffix input {
+  flex: 1;
+  width: auto;
+  border-radius: 4px 0 0 4px;
+}
+.flasher-suffix .flasher-suffix-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.7rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--mut);
+  background: rgba(127, 127, 127, 0.08);
+  border: 1px solid var(--dim);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  white-space: nowrap;
+}
+
+.flasher-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+}
+
+.flasher-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+.flasher-check input {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--accent);
+}
+.flasher-check span {
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
 .flasher-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1653,9 +1708,10 @@ footer .lang-switch {
 .flasher-advanced summary {
   cursor: pointer;
   user-select: none;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: "Turret Road", monospace;
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mut);
 }
@@ -1670,8 +1726,9 @@ footer .lang-switch {
   margin-top: 1.25rem;
 }
 .flasher-actions button {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.85rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 700;
+  font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.65rem 1.25rem;
@@ -1702,19 +1759,21 @@ footer .lang-switch {
 }
 
 .flasher-hint {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 300;
+  font-size: 0.72rem;
   color: var(--mut);
-  margin: 1rem 0 0;
-  letter-spacing: 0.04em;
+  margin: 0.7rem 0 0;
+  letter-spacing: 0.02em;
 }
 
 .flasher-status .flasher-status-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.85rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.82rem;
   color: var(--text);
 }
 
@@ -1745,8 +1804,9 @@ footer .lang-switch {
 #run-link {
   display: inline-block;
   margin-top: 0.75rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.72rem;
   color: var(--accent);
   text-decoration: none;
   border-bottom: 1px solid var(--dim);
@@ -1774,8 +1834,9 @@ footer .lang-switch {
 .flasher-log {
   margin-top: 1rem;
   padding: 0.9rem;
-  font-family: "Turret Road Mono", monospace;
-  font-size: 0.72rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 300;
+  font-size: 0.7rem;
   color: var(--mut);
   white-space: pre-wrap;
   max-height: 16rem;
@@ -1786,10 +1847,11 @@ footer .lang-switch {
 }
 
 .flasher-foot {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
+  font-family: "Turret Road", monospace;
+  font-weight: 300;
+  font-size: 0.72rem;
   color: var(--mut);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .hidden {

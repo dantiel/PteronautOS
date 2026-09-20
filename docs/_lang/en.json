@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "en,de (empty = all)",
   "flasher_uart_baud": "CRSF UART baud",
   "flasher_home_wifi_ssid": "Home WiFi SSID",
-  "flasher_home_wifi_password": "Home WiFi password"
+  "flasher_home_wifi_password": "Home WiFi password",
+  "flasher_api_base": "Build server URL",
+  "flasher_api_base_hint": "Leave empty when opened from the worker itself. From GitHub Pages, paste your deployed worker URL here.",
+  "flasher_locales_hint": "Select languages to include in the WebUI — none selected bakes in all 11."
 }

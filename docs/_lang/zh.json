@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "zh,en (空 = 全部)",
   "flasher_uart_baud": "CRSF UART 波特率",
   "flasher_home_wifi_ssid": "家庭 WiFi SSID",
-  "flasher_home_wifi_password": "家庭 WiFi 密码"
+  "flasher_home_wifi_password": "家庭 WiFi 密码",
+  "flasher_api_base": "构建服务器 URL",
+  "flasher_api_base_hint": "从 worker 打开时留空。在 GitHub Pages 上请粘贴您的 worker URL。",
+  "flasher_locales_hint": "选择要包含在 WebUI 中的语言 — 不选则包含全部 11 种。"
 }

@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "ja,en (空 = すべて)",
   "flasher_uart_baud": "CRSF UARTボーレート",
   "flasher_home_wifi_ssid": "自宅WiFi SSID",
-  "flasher_home_wifi_password": "自宅WiFiパスワード"
+  "flasher_home_wifi_password": "自宅WiFiパスワード",
+  "flasher_api_base": "ビルドサーバー URL",
+  "flasher_api_base_hint": "ワーカーから開く場合は空欄。GitHub Pages ではワーカーの URL を貼り付けてください。",
+  "flasher_locales_hint": "WebUI に含める言語を選択 — 未選択は全 11 言語を含む。"
 }

@@ -944,5 +944,8 @@
   "flasher_locales_placeholder": "hi,en (खाली = सभी)",
   "flasher_uart_baud": "CRSF UART बॉड",
   "flasher_home_wifi_ssid": "होम WiFi SSID",
-  "flasher_home_wifi_password": "होम WiFi पासवर्ड"
+  "flasher_home_wifi_password": "होम WiFi पासवर्ड",
+  "flasher_api_base": "बिल्ड सर्वर URL",
+  "flasher_api_base_hint": "वर्कर से खोलने पर खाली छोड़ें। GitHub Pages पर अपना वर्कर URL यहाँ पेस्ट करें।",
+  "flasher_locales_hint": "WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।"
 }

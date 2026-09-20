@@ -30,6 +30,11 @@
           %h2!= flasher_heading_config
 
           %label.flasher-field
+            %span!= flasher_api_base
+            %input#api_base{type: "url", placeholder: "https://your-worker.workers.dev", autocomplete: "off", spellcheck: "false"}
+          %p.flasher-hint!= flasher_api_base_hint
+
+          %label.flasher-field
             %span!= flasher_mixer_profile
             %select#mixer_profile
               %option{value: "0"} SERVO_2WING — 2 flapping wings
@@ -88,10 +93,9 @@
             .flasher-grid
               %label.flasher-field
                 %span!= flasher_device_name
-                %input#device_name{type: "text", placeholder: "pteronautos", autocomplete: "off"}
-              %label.flasher-field
-                %span!= flasher_locales
-                %input#i18n_locales{type: "text", placeholder: flasher_locales_placeholder, autocomplete: "off"}
+                .flasher-suffix
+                  %input#device_name{type: "text", value: "pteronaut", autocomplete: "off", spellcheck: "false"}
+                  %span.flasher-suffix-tag .local
               %label.flasher-field
                 %span!= flasher_uart_baud
                 %input#rcvr_uart_baud{type: "number", value: "420000", min: "9600"}
@@ -101,6 +105,43 @@
               %label.flasher-field
                 %span!= flasher_home_wifi_password
                 %input#home_wifi_password{type: "password", autocomplete: "new-password"}
+            .flasher-field.flasher-locales
+              %span!= flasher_locales
+              .flasher-checks
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-pt"}
+                  %span Português
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-en"}
+                  %span English
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-ru"}
+                  %span Русский
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-es"}
+                  %span Español
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-de"}
+                  %span Deutsch
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-ko"}
+                  %span 한국어
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-ja"}
+                  %span 日本語
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-zh"}
+                  %span 中文
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-ar"}
+                  %span العربية
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-hi"}
+                  %span हिन्दी
+                %label.flasher-check
+                  %input{type: "checkbox", id: "locale-fr"}
+                  %span Français
+              %p.flasher-hint!= flasher_locales_hint
 
           .flasher-actions
             %button.flasher-primary#build-btn{type: "button"}!= flasher_build_btn
