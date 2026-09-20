@@ -191,6 +191,21 @@ async function handleStatus(id, env) {
   return json(out);
 }
 
+// GitHub 302-redirects the artifact zip to a pre-signed blob URL. Cloudflare
+// Workers follows redirects and would forward the Authorization header to that
+// cross-origin blob host, which Azure/S3 reject with 401. Follow manually and
+// fetch the signed URL WITHOUT credentials.
+async function fetchArtifact(env, archiveUrl) {
+  const resp = await githubFetch(env, archiveUrl, { redirect: "manual" });
+  if ([301, 302, 303, 307, 308].includes(resp.status)) {
+    const loc = resp.headers.get("location");
+    if (loc) {
+      return fetch(loc, { headers: { "User-Agent": "pteronautos-build-worker" } });
+    }
+  }
+  return resp;
+}
+
 async function handleDownload(id, env) {
   const a = await githubFetch(
     env,
@@ -205,9 +220,13 @@ async function handleDownload(id, env) {
     return json({ error: "No firmware artifact found for this run." }, 404);
   }
 
-  const zipResp = await githubFetch(env, art.archive_download_url);
+  const zipResp = await fetchArtifact(env, art.archive_download_url);
   if (!zipResp.ok) {
-    return json({ error: `Artifact download failed (${zipResp.status}).` }, zipResp.status);
+    const hint =
+      zipResp.status === 401
+        ? " Token lacks artifact-download permission (classic PAT needs `public_repo`; fine-grained needs Actions: read)."
+        : "";
+    return json({ error: `Artifact download failed (${zipResp.status}).${hint}` }, zipResp.status);
   }
 
   const zipBytes = new Uint8Array(await zipResp.arrayBuffer());
@@ -248,6 +267,11 @@ export default {
       const id = Number(m[1]);
       if (m[2] === "/download") return handleDownload(id, env);
       return handleStatus(id, env);
+    }
+
+    // The worker doubles as the flasher host — root lands on the flasher.
+    if (url.pathname === "/") {
+      return Response.redirect("/flasher/", 302);
     }
 
     // Serve the static webapp.

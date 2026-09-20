@@ -1,4 +1,4 @@
-name = "pteronautos-build"
+name = "build"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
 

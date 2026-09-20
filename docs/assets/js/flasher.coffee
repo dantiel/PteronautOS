@@ -28,7 +28,7 @@ serialSupported = "serial" of navigator
 # DEFAULT_API_BASE is baked in at deploy time so the GitHub Pages copy "just
 # works" for every visitor — nobody ever sees or types the worker URL. Leave ""
 # and the page falls back to same-origin (worker-hosted) or ?api= override.
-DEFAULT_API_BASE = "https://pteronautos-build.pteronautos.workers.dev"
+DEFAULT_API_BASE = "https://build.pteronautos.workers.dev"
 
 API_BASE = (new URLSearchParams(location.search).get("api") or DEFAULT_API_BASE or "").replace /\/$/, ""
 
@@ -95,7 +95,7 @@ log = (line) ->
 setStatus = (text, state) ->
   els.statusCard.classList.remove "hidden"
   els.statusText.textContent = text
-  els.statusDot.className = "dot"
+  els.statusDot.className = "flasher-dot"
   els.statusDot.classList.add "done" if state is "done"
   els.statusDot.classList.add "fail" if state is "fail"
 
@@ -156,12 +156,12 @@ poll = ->
       setStatus "Build " + data.conclusion + " — check the GitHub run.", "fail"
       els.buildBtn.disabled = false
       return
+    els.downloadBtn.disabled = false
     if serialSupported
-      setStatus "Build complete — ready to flash.", "done"
+      setStatus "Build complete — ready to flash or download.", "done"
       els.flashBtn.disabled = false
     else
       setStatus "Build complete — ready to download.", "done"
-      els.downloadBtn.disabled = false
     els.buildBtn.disabled = false
   catch err
     setStatus "Polling error: " + err.message, "fail"
@@ -268,7 +268,6 @@ for l in LOCALES
 unless serialSupported
   els.serialWarning.classList.remove "hidden"
   els.flashBtn.classList.add "hidden"
-  els.downloadBtn.classList.remove "hidden"
 
 els.buildBtn.addEventListener "click", startBuild
 els.flashBtn.addEventListener "click", flash
