@@ -28,7 +28,7 @@ serialSupported = "serial" of navigator
 # DEFAULT_API_BASE is baked in at deploy time so the GitHub Pages copy "just
 # works" for every visitor — nobody ever sees or types the worker URL. Leave ""
 # and the page falls back to same-origin (worker-hosted) or ?api= override.
-DEFAULT_API_BASE = ""
+DEFAULT_API_BASE = "https://pteronautos-build.pteronautos.workers.dev"
 
 API_BASE = (new URLSearchParams(location.search).get("api") or DEFAULT_API_BASE or "").replace /\/$/, ""
 
