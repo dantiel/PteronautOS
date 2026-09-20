@@ -1533,3 +1533,189 @@ footer .lang-switch
 
   .waveform-presets
     gap: .35rem .8rem
+// ── Cloud Build & Flasher ────────────────────────────────────
+.flasher-card
+  margin: 0 0 2rem
+  padding: 1.75rem 1.5rem
+  border: 1px solid var(--dim)
+  background: rgba(127, 127, 127, 0.04)
+
+  h2
+    font-size: .82rem
+    letter-spacing: .24em
+    text-transform: uppercase
+    color: var(--accent)
+    margin: 0 0 1.5rem
+
+.flasher-field
+  display: block
+  margin-bottom: 1.1rem
+
+  span
+    display: block
+    font-family: $turret-mono
+    font-size: .72rem
+    letter-spacing: .12em
+    text-transform: uppercase
+    color: var(--mut)
+    margin-bottom: .4rem
+
+  input, select
+    width: 100%
+    padding: .55rem .7rem
+    font: inherit
+    font-size: .95rem
+    color: var(--text)
+    background: transparent
+    border: 1px solid var(--dim)
+    border-radius: 4px
+
+    &:focus
+      outline: none
+      border-color: var(--accent)
+
+  select option
+    background: var(--bg)
+    color: var(--text)
+
+.flasher-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+  gap: 0 1.25rem
+
+.flasher-advanced
+  margin: .5rem 0 1.25rem
+
+  summary
+    cursor: pointer
+    user-select: none
+    font-family: $turret-mono
+    font-size: .72rem
+    letter-spacing: .12em
+    text-transform: uppercase
+    color: var(--mut)
+
+    &:hover
+      color: var(--accent)
+
+.flasher-actions
+  display: flex
+  flex-wrap: wrap
+  gap: .75rem
+  margin-top: 1.25rem
+
+  button
+    font-family: $turret
+    font-size: .82rem
+    letter-spacing: .16em
+    text-transform: uppercase
+    padding: .65rem 1.25rem
+    border-radius: 4px
+    cursor: pointer
+    border: 1px solid var(--dim)
+    transition: opacity .15s ease, border-color .15s ease, background .15s ease
+
+    &:disabled
+      opacity: .4
+      cursor: not-allowed
+
+  .flasher-primary
+    background: var(--accent)
+    border-color: var(--accent)
+    color: var(--bg)
+    font-weight: 700
+
+    &:not(:disabled):hover
+      background: var(--nav)
+
+  .flasher-secondary
+    background: transparent
+    color: var(--text)
+
+    &:not(:disabled):hover
+      border-color: var(--accent)
+
+.flasher-hint
+  font-family: $turret-mono
+  font-size: .72rem
+  color: var(--mut)
+  margin: 1rem 0 0
+  letter-spacing: .04em
+
+.flasher-status
+  .flasher-status-row
+    display: flex
+    align-items: center
+    gap: .75rem
+    font-family: $turret-mono
+    font-size: .85rem
+    color: var(--text)
+
+.flasher-dot
+  width: .65rem
+  height: .65rem
+  border-radius: 50%
+  background: var(--accent)
+  flex-shrink: 0
+  animation: flasher-pulse 1.4s ease-in-out infinite
+
+  &.done
+    animation: none
+
+  &.fail
+    background: var(--mut)
+    animation: none
+
+@keyframes flasher-pulse
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: .35
+
+#run-link
+  display: inline-block
+  margin-top: .75rem
+  font-family: $turret-mono
+  font-size: .72rem
+  color: var(--accent)
+  text-decoration: none
+  border-bottom: 1px solid var(--dim)
+
+  &:hover
+    color: var(--text)
+    border-color: var(--accent)
+
+.flasher-progress
+  margin-top: 1rem
+  height: 6px
+  background: var(--dim)
+  border-radius: 3px
+  overflow: hidden
+
+.flasher-progress-bar
+  height: 100%
+  width: 0%
+  background: linear-gradient(90deg, var(--accent), var(--text))
+  transition: width .2s ease
+
+.flasher-log
+  margin-top: 1rem
+  padding: .9rem
+  font-family: $turret-mono
+  font-size: .72rem
+  color: var(--mut)
+  white-space: pre-wrap
+  max-height: 16rem
+  overflow-y: auto
+  background: rgba(0, 0, 0, 0.25)
+  border: 1px solid var(--dim)
+  border-radius: 4px
+
+.flasher-foot
+  font-family: $turret-mono
+  font-size: .72rem
+  color: var(--mut)
+  letter-spacing: .04em
+
+.hidden
+  display: none !important

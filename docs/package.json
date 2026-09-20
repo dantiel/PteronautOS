@@ -2,7 +2,7 @@
   "name": "pteronautos-docs",
   "private": true,
   "scripts": {
-    "build:coffee": "coffee --compile --bare --output assets/js assets/js/ferocity-waveform.coffee"
+    "build:coffee": "coffee --compile --bare --output assets/js assets/js/ferocity-waveform.coffee assets/js/flasher.coffee"
   },
   "devDependencies": {
     "coffeescript": "2.7.0"

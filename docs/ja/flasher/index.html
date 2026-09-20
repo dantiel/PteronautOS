@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>PteronautOS — クラウドビルド＆フラッシャー</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page' data-api-base=''>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='トップへ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='トップへ' type='button'>↑</button>
+<a class='home-link' href='../../ja/' title='PteronautOS ホーム'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a href='../../ja/tutorials/'>チュートリアル</a>
+<a href='../../ja/hardware/'>ハードウェア</a>
+<a href='../../ja/documentation/'>ドキュメント</a>
+<a class='active' href='../../ja/flasher/'>フラッシャー</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<h1>クラウドビルド＆フラッシャー</h1>
+<p class='sub-lead'>ブラウザからファームウェアをビルド＆書き込み — コンソールもPlatformIOも不要。</p>
+<section class='flasher-card'>
+<h2>ビルド設定</h2>
+<label class='flasher-field'>
+<span>ミキサープロファイル</span>
+<select id='mixer_profile'>
+<option value='0'>SERVO_2WING — 2 flapping wings</option>
+<option selected value='1'>SERVO_2WING_1RUD — 2 wings + crest rudder (3 servo)</option>
+<option value='2'>SERVO_4WING — 4 flapping wings</option>
+<option value='3'>GEARBOX_2VTAIL_1RUD — V-tail + head rudder</option>
+<option value='4'>GEARBOX_1MOT_2VTAIL — motor + V-tail</option>
+<option value='5'>GEARBOX_1MOT_2VTAIL_1RUD — motor + V-tail + rudder</option>
+<option value='6'>GEARBOX_1ELE_1RUD — elevator + rudder</option>
+<option value='7'>GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder</option>
+</select>
+</label>
+<label class='flasher-field'>
+<span>規制ドメイン</span>
+<select id='regulatory_domain'>
+<option selected value='EU_CE_2400'>EU CE (LBT — restricted band)</option>
+<option value='ISM_2400'>ISM (full band)</option>
+</select>
+</label>
+<label class='flasher-field'>
+<span>バインディングフレーズ</span>
+<input autocomplete='off' id='binding_phrase' placeholder='従来のバインディングなら空欄' type='text'>
+</label>
+<details class='flasher-advanced'>
+<summary>詳細 — I2C・Mushin・WiFi</summary>
+<div class='flasher-grid'>
+<label class='flasher-field'>
+<span>MPU6050 I2C SDA pin</span>
+<input id='zephyrus_i2c_sda' max='16' min='0' type='number' value='1'>
+</label>
+<label class='flasher-field'>
+<span>MPU6050 I2C SCL pin</span>
+<input id='zephyrus_i2c_scl' max='16' min='0' type='number' value='3'>
+</label>
+<label class='flasher-field'>
+<span>MPU6050 mounting</span>
+<select id='zephyrus_board_rotation'>
+<option selected value='0'>0 — flat, pins forward</option>
+<option value='1'>1 — yaw 90° CW</option>
+<option value='2'>2 — yaw 180°</option>
+<option value='3'>3 — yaw 270°</option>
+<option value='4'>4 — upside down</option>
+<option value='5'>5 — vertical, pins forward</option>
+<option value='6'>6 — vertical, pins right</option>
+</select>
+</label>
+<label class='flasher-field'>
+<span>Mushin RX pin</span>
+<input id='mushin_rx_pin' max='16' min='0' type='number' value='9'>
+</label>
+<label class='flasher-field'>
+<span>Mushin TX pin</span>
+<input id='mushin_tx_pin' max='16' min='0' type='number' value='10'>
+</label>
+<label class='flasher-field'>
+<span>Mushin baud</span>
+<input id='mushin_baud' type='number' value='57600'>
+</label>
+<label class='flasher-field'>
+<span>WiFi auto-on interval (s)</span>
+<input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
+</label>
+</div>
+</details>
+<div class='flasher-actions'>
+<button class='flasher-primary' id='build-btn' type='button'>ファームウェアをビルド</button>
+<button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial で書き込み</button>
+</div>
+<p class='flasher-hint'>ビルドはGitHub Actionsで単一の統合.binを生成します（約3〜4分）。</p>
+</section>
+<section class='flasher-card flasher-status hidden' id='status-card'>
+<h2>ビルドの進行状況</h2>
+<div class='flasher-status-row'>
+<span class='flasher-dot' id='status-dot'></span>
+<span id='status-text'>Queued…</span>
+</div>
+<a class='hidden' href='#' id='run-link' rel='noopener' target='_blank'>View run on GitHub ↗</a>
+<div class='flasher-progress hidden' id='progress-wrap'>
+<div class='flasher-progress-bar' id='progress-bar'></div>
+</div>
+<pre class='flasher-log' id='log'></pre>
+</section>
+<p class='flasher-foot'>Web SerialにはChrome / Edgeが必要です。GitHubトークンはworkerから出ません。</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../flasher/'>PT</a>
+<a class='' href='../../en/flasher/'>EN</a>
+<a class='' href='../../es/flasher/'>ES</a>
+<a class='' href='../../fr/flasher/'>FR</a>
+<a class='' href='../../de/flasher/'>DE</a>
+<a class='' href='../../ru/flasher/'>RU</a>
+<a class='' href='../../ko/flasher/'>한국어</a>
+<a class='active' href='../../ja/flasher/'>日本語</a>
+<a class='' href='../../zh/flasher/'>中文</a>
+<a class='' href='../../ar/flasher/'>عربي</a>
+<a class='' href='../../hi/flasher/'>हिन्दी</a>
+</div>
+<p>
+<a href='https://github.com/dantiel/PteronautOS' target='_blank'>GitHub</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+<script src='../../assets/js/flasher.js' type='module'></script>
+</body>
+</html>

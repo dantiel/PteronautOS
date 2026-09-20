@@ -1586,5 +1586,205 @@ footer .lang-switch {
     gap: 0.35rem 0.8rem;
   }
 }
+.flasher-card {
+  margin: 0 0 2rem;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid var(--dim);
+  background: rgba(127, 127, 127, 0.04);
+}
+.flasher-card h2 {
+  font-size: 0.82rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1.5rem;
+}
+
+.flasher-field {
+  display: block;
+  margin-bottom: 1.1rem;
+}
+.flasher-field span {
+  display: block;
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 0.4rem;
+}
+.flasher-field input, .flasher-field select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--dim);
+  border-radius: 4px;
+}
+.flasher-field input:focus, .flasher-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.flasher-field select option {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.flasher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 1.25rem;
+}
+
+.flasher-advanced {
+  margin: 0.5rem 0 1.25rem;
+}
+.flasher-advanced summary {
+  cursor: pointer;
+  user-select: none;
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+.flasher-advanced summary:hover {
+  color: var(--accent);
+}
+
+.flasher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.flasher-actions button {
+  font-family: "Turret Road", monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.65rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--dim);
+  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.flasher-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.flasher-actions .flasher-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+.flasher-actions .flasher-primary:not(:disabled):hover {
+  background: var(--nav);
+}
+.flasher-actions .flasher-secondary {
+  background: transparent;
+  color: var(--text);
+}
+.flasher-actions .flasher-secondary:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.flasher-hint {
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--mut);
+  margin: 1rem 0 0;
+  letter-spacing: 0.04em;
+}
+
+.flasher-status .flasher-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.flasher-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: flasher-pulse 1.4s ease-in-out infinite;
+}
+.flasher-dot.done {
+  animation: none;
+}
+.flasher-dot.fail {
+  background: var(--mut);
+  animation: none;
+}
+
+@keyframes flasher-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+#run-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--dim);
+}
+#run-link:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.flasher-progress {
+  margin-top: 1rem;
+  height: 6px;
+  background: var(--dim);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.flasher-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--text));
+  transition: width 0.2s ease;
+}
+
+.flasher-log {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--mut);
+  white-space: pre-wrap;
+  max-height: 16rem;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--dim);
+  border-radius: 4px;
+}
+
+.flasher-foot {
+  font-family: "Turret Road Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--mut);
+  letter-spacing: 0.04em;
+}
+
+.hidden {
+  display: none !important;
+}
 
 /*# sourceMappingURL=style.css.map */

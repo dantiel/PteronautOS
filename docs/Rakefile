@@ -50,6 +50,7 @@ PAGES = %w[
   documentation/servo-kernel
   documentation/failsafe
   documentation/budget
+  flasher
 ]
 
 CLOBBER.include(

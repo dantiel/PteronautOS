@@ -1,0 +1,125 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title!= flasher_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+
+  %body.sub-page{"data-api-base": ""}
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
+      %a{href: "#{asset_prefix}#{lang_dir}flasher/", class: "active"}!= nav_flasher
+
+    %main.sub-main
+      .sub-content
+        %h1!= flasher_h1
+        %p.sub-lead!= flasher_lead
+
+        %section.flasher-card
+          %h2!= flasher_heading_config
+
+          %label.flasher-field
+            %span!= flasher_mixer_profile
+            %select#mixer_profile
+              %option{value: "0"} SERVO_2WING — 2 flapping wings
+              %option{value: "1", selected: true} SERVO_2WING_1RUD — 2 wings + crest rudder (3 servo)
+              %option{value: "2"} SERVO_4WING — 4 flapping wings
+              %option{value: "3"} GEARBOX_2VTAIL_1RUD — V-tail + head rudder
+              %option{value: "4"} GEARBOX_1MOT_2VTAIL — motor + V-tail
+              %option{value: "5"} GEARBOX_1MOT_2VTAIL_1RUD — motor + V-tail + rudder
+              %option{value: "6"} GEARBOX_1ELE_1RUD — elevator + rudder
+              %option{value: "7"} GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder
+
+          %label.flasher-field
+            %span!= flasher_regulatory_domain
+            %select#regulatory_domain
+              %option{value: "EU_CE_2400", selected: true} EU CE (LBT — restricted band)
+              %option{value: "ISM_2400"} ISM (full band)
+
+          %label.flasher-field
+            %span!= flasher_binding_phrase
+            %input#binding_phrase{type: "text", placeholder: flasher_binding_placeholder, autocomplete: "off"}
+
+          %details.flasher-advanced
+            %summary!= flasher_advanced
+            .flasher-grid
+              %label.flasher-field
+                %span!= flasher_i2c_sda
+                %input#zephyrus_i2c_sda{type: "number", value: "1", min: "0", max: "16"}
+              %label.flasher-field
+                %span!= flasher_i2c_scl
+                %input#zephyrus_i2c_scl{type: "number", value: "3", min: "0", max: "16"}
+              %label.flasher-field
+                %span!= flasher_board_rotation
+                %select#zephyrus_board_rotation
+                  %option{value: "0", selected: true} 0 — flat, pins forward
+                  %option{value: "1"} 1 — yaw 90° CW
+                  %option{value: "2"} 2 — yaw 180°
+                  %option{value: "3"} 3 — yaw 270°
+                  %option{value: "4"} 4 — upside down
+                  %option{value: "5"} 5 — vertical, pins forward
+                  %option{value: "6"} 6 — vertical, pins right
+              %label.flasher-field
+                %span!= flasher_mushin_rx
+                %input#mushin_rx_pin{type: "number", value: "9", min: "0", max: "16"}
+              %label.flasher-field
+                %span!= flasher_mushin_tx
+                %input#mushin_tx_pin{type: "number", value: "10", min: "0", max: "16"}
+              %label.flasher-field
+                %span!= flasher_mushin_baud
+                %input#mushin_baud{type: "number", value: "57600"}
+              %label.flasher-field
+                %span!= flasher_wifi_interval
+                %input#auto_wifi_on_interval{type: "number", value: "30", min: "-1"}
+
+          .flasher-actions
+            %button.flasher-primary#build-btn{type: "button"}!= flasher_build_btn
+            %button.flasher-secondary#flash-btn{type: "button", disabled: true}!= flasher_flash_btn
+
+          %p.flasher-hint!= flasher_build_hint
+
+        %section.flasher-card.flasher-status.hidden#status-card
+          %h2!= flasher_heading_progress
+          .flasher-status-row
+            %span.flasher-dot#status-dot
+            %span#status-text Queued…
+          %a#run-link{href: "#", target: "_blank", rel: "noopener", class: "hidden"} View run on GitHub ↗
+          .flasher-progress.hidden#progress-wrap
+            .flasher-progress-bar#progress-bar
+          %pre.flasher-log#log
+
+        %p.flasher-foot!= flasher_foot_note
+
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p
+        %a{href: "https://github.com/dantiel/PteronautOS", target: "_blank"}!= footer_github
+      %p.credit!= footer_credit
+
+    %script{type: "module", src: "#{asset_prefix}assets/js/flasher.js"}

@@ -21,12 +21,13 @@ src/user_defines.txt
 *.js
 !docs/*.js
 !docs/assets/js/hw-table.js
+!docs/assets/js/flasher.js
+!docs/assets/js/vendor/*.js
 !src/html/src/**/*.js
 !src/html/build-plugins/*.js
 !src/html/dev-plugins/*.js
 !src/html/features.js
 !src/html/eslint.config.js
-!webapp/**/*.js
 !worker/src/**/*.js
 
 # Generated LithAML JS ??? stale copies shadow fresh Vite compilation
