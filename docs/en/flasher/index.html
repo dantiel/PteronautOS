@@ -168,9 +168,11 @@
 <p class='flasher-hint'>Select languages to include in the WebUI — none selected bakes in all 11.</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial isn't supported in Safari or Firefox. Build the firmware here and download the .bin, then flash it with esptool — or open this page in Chrome/Edge to flash over USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Build firmware</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Flash via Web Serial</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>Download .bin</button>
 </div>
 <p class='flasher-hint'>Building compiles a single merged .bin in GitHub Actions (~3–4 min).</p>
 </section>

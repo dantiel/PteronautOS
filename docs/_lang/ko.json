@@ -935,6 +935,8 @@
   "flasher_build_btn": "펌웨어 빌드",
   "flasher_flash_btn": "Web Serial로 플래시",
   "flasher_build_hint": "빌드는 GitHub Actions에서 단일 병합 .bin을 생성합니다(약 3~4분).",
+  "flasher_download_btn": ".bin 다운로드",
+  "flasher_serial_warning": "Safari/Firefox에서는 Web Serial이 지원되지 않습니다. 여기서 펌웨어를 빌드하고 .bin을 다운로드한 뒤 esptool로 플래시하세요 — 또는 Chrome/Edge에서 이 페이지를 열어 USB로 플래시하세요.",
   "flasher_heading_progress": "빌드 진행률",
   "flasher_foot_note": "Web Serial에는 Chrome / Edge가 필요합니다.",
   "nav_flasher": "플래셔",

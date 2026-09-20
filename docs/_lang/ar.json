@@ -935,6 +935,8 @@
   "flasher_build_btn": "بناء البرنامج الثابت",
   "flasher_flash_btn": "وميض عبر Web Serial",
   "flasher_build_hint": "ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).",
+  "flasher_download_btn": "تنزيل .bin",
+  "flasher_serial_warning": "Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge للكتابة عبر USB.",
   "flasher_heading_progress": "تقدم البناء",
   "flasher_foot_note": "يتطلب Chrome / Edge لـ Web Serial.",
   "nav_flasher": "الوميض",

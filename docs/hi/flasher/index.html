@@ -168,9 +168,11 @@
 <p class='flasher-hint'>WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox में Web Serial समर्थित नहीं है. यहाँ फर्मवेयर बनाएँ और .bin डाउनलोड करें, फिर esptool से फ्लैश करें — या USB से फ्लैश करने के लिए इस पेज को Chrome/Edge में खोलें।</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>फ़र्मवेयर बनाएँ</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial से फ्लैश करें</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>.bin डाउनलोड करें</button>
 </div>
 <p class='flasher-hint'>बिल्ड GitHub Actions में एकल मर्ज किया हुआ .bin बनाता है (~3–4 मिनट)।</p>
 </section>

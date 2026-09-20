@@ -168,9 +168,11 @@
 <p class='flasher-hint'>WebUI に含める言語を選択 — 未選択は全 11 言語を含む。</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox は Web Serial に対応していません。ここでファームウェアをビルドして .bin をダウンロードし、esptool で書き込むか、Chrome/Edge でこのページを開いて USB 書き込みしてください。</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>ファームウェアをビルド</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial で書き込み</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>.bin をダウンロード</button>
 </div>
 <p class='flasher-hint'>ビルドはGitHub Actionsで単一の統合.binを生成します（約3〜4分）。</p>
 </section>

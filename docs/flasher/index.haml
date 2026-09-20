@@ -139,9 +139,12 @@
                   %span Français
               %p.flasher-hint!= flasher_locales_hint
 
+          %p.flasher-serial-warning.hidden#serial-warning!= flasher_serial_warning
+
           .flasher-actions
             %button.flasher-primary#build-btn{type: "button"}!= flasher_build_btn
             %button.flasher-secondary#flash-btn{type: "button", disabled: true}!= flasher_flash_btn
+            %button.flasher-secondary.hidden#download-btn{type: "button", disabled: true}!= flasher_download_btn
 
           %p.flasher-hint!= flasher_build_hint
 

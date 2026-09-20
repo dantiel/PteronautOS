@@ -9,6 +9,8 @@ $ = (sel) -> document.querySelector sel
 els =
   buildBtn: $("#build-btn")
   flashBtn: $("#flash-btn")
+  downloadBtn: $("#download-btn")
+  serialWarning: $("#serial-warning")
   statusCard: $("#status-card")
   statusDot: $("#status-dot")
   statusText: $("#status-text")
@@ -19,6 +21,7 @@ els =
 
 currentRunId = null
 firmwareBytes = null
+serialSupported = "serial" of navigator
 
 # The worker is reached same-origin when this page is served by the worker, or
 # via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
@@ -117,6 +120,7 @@ collectParams = ->
 startBuild = ->
   els.buildBtn.disabled = true
   els.flashBtn.disabled = true
+  els.downloadBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
   els.log.textContent = ""
@@ -152,9 +156,13 @@ poll = ->
       setStatus "Build " + data.conclusion + " — check the GitHub run.", "fail"
       els.buildBtn.disabled = false
       return
-    setStatus "Build complete — ready to flash.", "done"
+    if serialSupported
+      setStatus "Build complete — ready to flash.", "done"
+      els.flashBtn.disabled = false
+    else
+      setStatus "Build complete — ready to download.", "done"
+      els.downloadBtn.disabled = false
     els.buildBtn.disabled = false
-    els.flashBtn.disabled = false
   catch err
     setStatus "Polling error: " + err.message, "fail"
     els.buildBtn.disabled = false
@@ -167,6 +175,26 @@ downloadFirmware = ->
     throw new Error "Download failed (HTTP " + resp.status + "): " + text
   firmwareBytes = new Uint8Array await resp.arrayBuffer()
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
+
+saveFirmware = ->
+  els.downloadBtn.disabled = true
+  try
+    unless firmwareBytes?
+      await downloadFirmware()
+    blob = new Blob [firmwareBytes], type: "application/octet-stream"
+    url = URL.createObjectURL blob
+    a = document.createElement "a"
+    a.href = url
+    a.download = "pteronautos-firmware.bin"
+    document.body.appendChild a
+    a.click()
+    a.remove()
+    URL.revokeObjectURL url
+    log "Saved pteronautos-firmware.bin (" + firmwareBytes.length + " bytes)"
+  catch err
+    setStatus "Download failed: " + err.message, "fail"
+  finally
+    els.downloadBtn.disabled = false
 
 terminal = ->
   clean: ->
@@ -237,5 +265,11 @@ for id in FIELD_IDS
 for l in LOCALES
   $("#locale-#{l}").addEventListener "change", saveConfig
 
+unless serialSupported
+  els.serialWarning.classList.remove "hidden"
+  els.flashBtn.classList.add "hidden"
+  els.downloadBtn.classList.remove "hidden"
+
 els.buildBtn.addEventListener "click", startBuild
 els.flashBtn.addEventListener "click", flash
+els.downloadBtn.addEventListener "click", saveFirmware

@@ -935,6 +935,8 @@
   "flasher_build_btn": "构建固件",
   "flasher_flash_btn": "通过 Web Serial 烧录",
   "flasher_build_hint": "构建会在 GitHub Actions 中编译出单个合并的 .bin（约 3–4 分钟）。",
+  "flasher_download_btn": "下载 .bin",
+  "flasher_serial_warning": "Safari/Firefox 不支持 Web Serial。可在此编译固件并下载 .bin，然后用 esptool 烧录 — 或在 Chrome/Edge 中打开本页通过 USB 烧录。",
   "flasher_heading_progress": "构建进度",
   "flasher_foot_note": "Web Serial 需要 Chrome / Edge。",
   "nav_flasher": "烧录",

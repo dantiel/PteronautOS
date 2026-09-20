@@ -935,6 +935,8 @@
   "flasher_build_btn": "Собрать прошивку",
   "flasher_flash_btn": "Прошить через Web Serial",
   "flasher_build_hint": "Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).",
+  "flasher_download_btn": "Скачать .bin",
+  "flasher_serial_warning": "Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge для прошивки по USB.",
   "flasher_heading_progress": "Прогресс сборки",
   "flasher_foot_note": "Требуется Chrome / Edge для Web Serial.",
   "nav_flasher": "Прошивка",

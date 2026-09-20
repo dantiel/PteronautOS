@@ -168,9 +168,11 @@
 <p class='flasher-hint'>Выберите языки для WebUI — пустой выбор включает все 11.</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge для прошивки по USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Собрать прошивку</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Прошить через Web Serial</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>Скачать .bin</button>
 </div>
 <p class='flasher-hint'>Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).</p>
 </section>

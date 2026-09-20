@@ -168,9 +168,11 @@
 <p class='flasher-hint'>اختر اللغات لتضمينها في WebUI — عدم التحديد يضمّن كل اللغات الإحدى عشرة.</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge للكتابة عبر USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>بناء البرنامج الثابت</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>وميض عبر Web Serial</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>تنزيل .bin</button>
 </div>
 <p class='flasher-hint'>ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).</p>
 </section>

@@ -935,6 +935,8 @@
   "flasher_build_btn": "ファームウェアをビルド",
   "flasher_flash_btn": "Web Serial で書き込み",
   "flasher_build_hint": "ビルドはGitHub Actionsで単一の統合.binを生成します（約3〜4分）。",
+  "flasher_download_btn": ".bin をダウンロード",
+  "flasher_serial_warning": "Safari/Firefox は Web Serial に対応していません。ここでファームウェアをビルドして .bin をダウンロードし、esptool で書き込むか、Chrome/Edge でこのページを開いて USB 書き込みしてください。",
   "flasher_heading_progress": "ビルドの進行状況",
   "flasher_foot_note": "Web Serial には Chrome / Edge が必要です。",
   "nav_flasher": "フラッシャー",

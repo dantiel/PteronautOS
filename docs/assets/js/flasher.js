@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, setStatus, sleep, startBuild, terminal,
+var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -17,6 +17,8 @@ $ = function(sel) {
 els = {
   buildBtn: $("#build-btn"),
   flashBtn: $("#flash-btn"),
+  downloadBtn: $("#download-btn"),
+  serialWarning: $("#serial-warning"),
   statusCard: $("#status-card"),
   statusDot: $("#status-dot"),
   statusText: $("#status-text"),
@@ -29,6 +31,8 @@ els = {
 currentRunId = null;
 
 firmwareBytes = null;
+
+serialSupported = "serial" in navigator;
 
 // The worker is reached same-origin when this page is served by the worker, or
 // via ?api=https://<worker> when hosted elsewhere (e.g. GitHub Pages).
@@ -163,6 +167,7 @@ startBuild = async function() {
   var data, err;
   els.buildBtn.disabled = true;
   els.flashBtn.disabled = true;
+  els.downloadBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
   els.log.textContent = "";
@@ -209,9 +214,14 @@ poll = async function() {
       els.buildBtn.disabled = false;
       return;
     }
-    setStatus("Build complete — ready to flash.", "done");
-    els.buildBtn.disabled = false;
-    return els.flashBtn.disabled = false;
+    if (serialSupported) {
+      setStatus("Build complete — ready to flash.", "done");
+      els.flashBtn.disabled = false;
+    } else {
+      setStatus("Build complete — ready to download.", "done");
+      els.downloadBtn.disabled = false;
+    }
+    return els.buildBtn.disabled = false;
   } catch (error) {
     err = error;
     setStatus("Polling error: " + err.message, "fail");
@@ -229,6 +239,33 @@ downloadFirmware = async function() {
   }
   firmwareBytes = new Uint8Array((await resp.arrayBuffer()));
   return log("Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)");
+};
+
+saveFirmware = async function() {
+  var a, blob, err, url;
+  els.downloadBtn.disabled = true;
+  try {
+    if (firmwareBytes == null) {
+      await downloadFirmware();
+    }
+    blob = new Blob([firmwareBytes], {
+      type: "application/octet-stream"
+    });
+    url = URL.createObjectURL(blob);
+    a = document.createElement("a");
+    a.href = url;
+    a.download = "pteronautos-firmware.bin";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return log("Saved pteronautos-firmware.bin (" + firmwareBytes.length + " bytes)");
+  } catch (error) {
+    err = error;
+    return setStatus("Download failed: " + err.message, "fail");
+  } finally {
+    els.downloadBtn.disabled = false;
+  }
 };
 
 terminal = function() {
@@ -319,6 +356,14 @@ for (j = 0, len1 = LOCALES.length; j < len1; j++) {
   $(`#locale-${l}`).addEventListener("change", saveConfig);
 }
 
+if (!serialSupported) {
+  els.serialWarning.classList.remove("hidden");
+  els.flashBtn.classList.add("hidden");
+  els.downloadBtn.classList.remove("hidden");
+}
+
 els.buildBtn.addEventListener("click", startBuild);
 
 els.flashBtn.addEventListener("click", flash);
+
+els.downloadBtn.addEventListener("click", saveFirmware);

@@ -1719,6 +1719,20 @@ footer .lang-switch {
   color: var(--accent);
 }
 
+.flasher-serial-warning {
+  font-family: "Turret Road", monospace;
+  font-weight: 400;
+  font-size: 0.74rem;
+  color: var(--text);
+  padding: 0.8rem 1rem;
+  margin: 0 0 1rem;
+  border: 1px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  letter-spacing: 0.02em;
+}
+
 .flasher-actions {
   display: flex;
   flex-wrap: wrap;

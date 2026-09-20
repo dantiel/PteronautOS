@@ -168,9 +168,11 @@
 <p class='flasher-hint'>WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함.</p>
 </div>
 </details>
+<p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox에서는 Web Serial이 지원되지 않습니다. 여기서 펌웨어를 빌드하고 .bin을 다운로드한 뒤 esptool로 플래시하세요 — 또는 Chrome/Edge에서 이 페이지를 열어 USB로 플래시하세요.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>펌웨어 빌드</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial로 플래시</button>
+<button class='flasher-secondary hidden' disabled id='download-btn' type='button'>.bin 다운로드</button>
 </div>
 <p class='flasher-hint'>빌드는 GitHub Actions에서 단일 병합 .bin을 생성합니다(약 3~4분).</p>
 </section>

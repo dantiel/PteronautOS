@@ -935,6 +935,8 @@
   "flasher_build_btn": "Firmware bauen",
   "flasher_flash_btn": "Via Web Serial flashen",
   "flasher_build_hint": "Der Build erzeugt eine einzelne zusammengeführte .bin in GitHub Actions (~3–4 min).",
+  "flasher_download_btn": ".bin herunterladen",
+  "flasher_serial_warning": "Web Serial wird in Safari/Firefox nicht unterstützt. Erstelle die Firmware, lade die .bin herunter und flashe sie mit esptool — oder öffne diese Seite in Chrome/Edge zum Flashen per USB.",
   "flasher_heading_progress": "Build-Fortschritt",
   "flasher_foot_note": "Erfordert Chrome / Edge für Web Serial.",
   "nav_flasher": "Flasher",
