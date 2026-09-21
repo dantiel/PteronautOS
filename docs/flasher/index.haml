@@ -75,13 +75,13 @@
                 %select#mushin_enabled
                   %option{value: "0", selected: true} Off — local PWM (wings flap on this board)
                   %option{value: "1"} On — RP2040 muscle owns servos (bridge GPIO9/10)
-              %label.flasher-field
+              %label.flasher-field.flasher-conditional
                 %span!= flasher_mushin_rx
                 %input#mushin_rx_pin{type: "number", value: "9", min: "0", max: "16"}
-              %label.flasher-field
+              %label.flasher-field.flasher-conditional
                 %span!= flasher_mushin_tx
                 %input#mushin_tx_pin{type: "number", value: "10", min: "0", max: "16"}
-              %label.flasher-field
+              %label.flasher-field.flasher-conditional
                 %span!= flasher_mushin_baud
                 %input#mushin_baud{type: "number", value: "57600"}
               %label.flasher-field

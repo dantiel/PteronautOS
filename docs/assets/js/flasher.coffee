@@ -275,11 +275,19 @@ flash = ->
     els.flashBtn.disabled = false
     busy = false
 
+syncMushinFields = ->
+  enabled = $("#mushin_enabled").value is "1"
+  for el in document.querySelectorAll ".flasher-conditional"
+    el.classList.toggle "hidden", not enabled
+
 restoreConfig()
+syncMushinFields()
 
 for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
+
+$("#mushin_enabled").addEventListener "change", syncMushinFields
 
 for l in LOCALES
   $("#locale-#{l}").addEventListener "change", saveConfig

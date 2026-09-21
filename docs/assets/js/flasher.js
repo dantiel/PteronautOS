@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, busy, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, terminal,
+var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, busy, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, syncMushinFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -363,13 +363,29 @@ flash = async function() {
   }
 };
 
+syncMushinFields = function() {
+  var el, enabled, i, len, ref, results;
+  enabled = $("#mushin_enabled").value === "1";
+  ref = document.querySelectorAll(".flasher-conditional");
+  results = [];
+  for (i = 0, len = ref.length; i < len; i++) {
+    el = ref[i];
+    results.push(el.classList.toggle("hidden", !enabled));
+  }
+  return results;
+};
+
 restoreConfig();
+
+syncMushinFields();
 
 for (i = 0, len = FIELD_IDS.length; i < len; i++) {
   id = FIELD_IDS[i];
   $(id).addEventListener("input", saveConfig);
   $(id).addEventListener("change", saveConfig);
 }
+
+$("#mushin_enabled").addEventListener("change", syncMushinFields);
 
 for (j = 0, len1 = LOCALES.length; j < len1; j++) {
   l = LOCALES[j];
