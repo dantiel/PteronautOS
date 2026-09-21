@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>Configuração do Rádio</h1>
-<p class='sub-lead'>Faça binding num rádio ELRS, mapeie os quatro canais de controlo e defina endpoints que correspondam ao kernel de servos.</p>
+<p class='sub-lead'>Faça binding num rádio ELRS, mapeie os sete canais de controlo e defina endpoints que correspondam ao kernel de servos.</p>
 <h2>Binding</h2>
 <p>Coloque o receptor em modo bind (alimente com a frase de bind configurada, ou use a WebUI / botão) e inicie a ação <strong>Bind</strong> no rádio. A frase de bind padrão <code>YOUR-BIND-PHRASE</code> gera um UID fixo; um bind bem-sucedido é confirmado por um LED de link sólido e movimento de canal ao vivo no poll de estado da WebUI.</p>
 <h2>Mapeamento de canais</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>Leme (guinada / crista)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>Armar (interruptor de segurança)</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>Modulador de frequência de batimento</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>Seletor de perfil de voo</td>
+</tr>
 </table>
-<p>Mapeie os quatro controles nessa ordem. O PteronautOS os lê na ordem CRSF, então mantenha CH1–CH4 no layout AETR padrão (ou combine com o que o mixer espera se você os reordenar na configuração).</p>
+<p>Mapeie os sete controles nessa ordem. O PteronautOS os lê na ordem CRSF, então mantenha CH1–CH4 no layout AETR padrão e atribua o interruptor de armar, o modulador de frequência de batimento e o seletor de perfil de voo a CH5–CH7 (ou combine com o que o mixer espera se você os reordenar na configuração).</p>
 <h2>Endpoints e direção</h2>
 <p>Ajuste a saída do rádio para <strong>±100%</strong> (CRSF 172–1811&nbsp;µs em torno de um centro de 992&nbsp;µs). <em>Não</em> use limites estendidos — o servo-kernel já mapeia o envelope completo de pulso de 988–2012&nbsp;µs, e limitar o rádio só desperdiça resolução. O sub-trim deve permanecer zero; o neutro é 1500&nbsp;µs por projeto.</p>
 <h2>Rates e expo</h2>

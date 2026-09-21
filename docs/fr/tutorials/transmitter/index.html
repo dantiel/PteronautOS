@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>Configuration de l'émetteur</h1>
-<p class='sub-lead'>Relie une radio ELRS, mappe les quatre voies et règle des débattements alignés sur le noyau servo.</p>
+<p class='sub-lead'>Relie une radio ELRS, mappe les sept voies et règle des débattements alignés sur le noyau servo.</p>
 <h2>Binding</h2>
 <p>Mettez le récepteur en mode liaison (alimentez avec la phrase de liaison configurée, ou utilisez la WebUI / le bouton) et lancez l’action <strong>Bind</strong> sur la radio. La phrase de liaison par défaut <code>YOUR-BIND-PHRASE</code> donne un UID fixe ; une liaison réussie est confirmée par une LED de liaison fixe et un mouvement de canal en direct dans le sondage d’état WebUI.</p>
 <h2>Mappage des voies</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>Direction (lacet / crête)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>Armement (interrupteur de sécurité)</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>Modulateur de fréquence de battement</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>Sélecteur de profil de vol</td>
+</tr>
 </table>
-<p>Mappez les quatre commandes dans cet ordre. PteronautOS les lit dans l’ordre CRSF, donc gardez CH1–CH4 dans la disposition AETR par défaut (ou faites correspondre ce que le mixeur attend si vous les avez réordonnés dans la config).</p>
+<p>Mappez les sept commandes dans cet ordre. PteronautOS les lit dans l'ordre CRSF, donc gardez CH1–CH4 dans la disposition AETR par défaut et assignez l'interrupteur d'armement, le modulateur de fréquence de battement et le sélecteur de profil de vol à CH5–CH7 (ou faites correspondre ce que le mixeur attend si vous les avez réordonnés dans la config).</p>
 <h2>Débattements et sens</h2>
 <p>Réglez la sortie radio à <strong>±100%</strong> (CRSF 172–1811&nbsp;µs autour d’un centre de 992&nbsp;µs). N’utilisez <em>pas</em> de limites étendues — le noyau servo mappe déjà l’enveloppe d’impulsion complète de 988–2012&nbsp;µs et écrêter la radio ne fait que gaspiller la résolution. Le sub-trim doit rester à zéro ; le neutre est 1500&nbsp;µs par conception.</p>
 <h2>Taux et expo</h2>

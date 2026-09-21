@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>Transmitter Configuration</h1>
-<p class='sub-lead'>Bind an ELRS radio, map the four control channels and set endpoints that match the servo kernel.</p>
+<p class='sub-lead'>Bind an ELRS radio, map the seven control channels and set endpoints that match the servo kernel.</p>
 <h2>Binding</h2>
 <p>Put the receiver in bind mode (power with the bind phrase configured, or use the WebUI / button) and start the <strong>Bind</strong> action on the radio. Your configured bind phrase yields a fixed UID; a successful bind is confirmed by a solid link LED and live channel movement in the WebUI state poll.</p>
 <h2>Channel mapping</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>Rudder (yaw / crest)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>Arm (safety switch)</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>Flap frequency modulator</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>Flight profile selector</td>
+</tr>
 </table>
-<p>Map the four controls in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout (or match whatever the mixer expects if you reordered them in the config).</p>
+<p>Map the seven channels in that order. PteronautOS reads them in CRSF order, so keep CH1–CH4 in the default AETR layout and assign the arm switch, flap-frequency modulator and flight-profile selector to CH5–CH7 (or match whatever the mixer expects if you reordered them in the config).</p>
 <h2>Endpoints &amp; direction</h2>
 <p>Set the radio output to <strong>±100%</strong> (CRSF 172–1811&nbsp;µs around a 992&nbsp;µs centre). Do <em>not</em> use extended limits — the servo kernel already maps the full 988–2012&nbsp;µs pulse envelope and clipping the radio only wastes resolution. Sub-trim must remain zero; neutral is 1500&nbsp;µs by design.</p>
 <h2>Rates &amp; expo</h2>

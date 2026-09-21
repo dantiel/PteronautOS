@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>Configuración del transmisor</h1>
-<p class='sub-lead'>Vincula una radio ELRS, mapea los cuatro canales y define límites que coincidan con el kernel de servos.</p>
+<p class='sub-lead'>Vincula una radio ELRS, mapea los siete canales y define límites que coincidan con el kernel de servos.</p>
 <h2>Binding</h2>
 <p>Pon el receptor en modo bind (alimenta con la frase de bind configurada, o usa la WebUI / botón) e inicia la acción <strong>Bind</strong> en la radio. La frase de bind por defecto <code>YOUR-BIND-PHRASE</code> produce un UID fijo; un bind correcto se confirma con un LED de enlace fijo y movimiento de canal en vivo en el sondeo de estado de la WebUI.</p>
 <h2>Mapeo de canales</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>Timón (guiñada / cresta)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>Armado (interruptor de seguridad)</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>Modulador de frecuencia de aleteo</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>Selector de perfil de vuelo</td>
+</tr>
 </table>
-<p>Mapea los cuatro controles en ese orden. PteronautOS los lee en orden CRSF, así que mantén CH1–CH4 en la disposición AETR por defecto (o haz coincidir lo que el mezclador espera si los reordenaste en la configuración).</p>
+<p>Mapea los siete controles en ese orden. PteronautOS los lee en orden CRSF, así que mantén CH1–CH4 en la disposición AETR por defecto y asigna el interruptor de armado, el modulador de frecuencia de aleteo y el selector de perfil de vuelo a CH5–CH7 (o haz coincidir lo que el mezclador espera si los reordenaste en la configuración).</p>
 <h2>Límites y dirección</h2>
 <p>Ajusta la salida de la radio a <strong>±100%</strong> (CRSF 172–1811&nbsp;µs alrededor de un centro de 992&nbsp;µs). <em>No</em> uses límites extendidos — el núcleo de servo ya mapea la envolvente completa de pulso de 988–2012&nbsp;µs y recortar la radio solo desperdicia resolución. El sub-trim debe permanecer en cero; el neutro es 1500&nbsp;µs por diseño.</p>
 <h2>Tasas y expo</h2>

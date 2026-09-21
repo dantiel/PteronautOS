@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>Sender-Konfiguration</h1>
-<p class='sub-lead'>Binde ein ELRS-Funkgerät, ordne die vier Steuerkanäle zu und setze Endpunkte passend zum Servo-Kernel.</p>
+<p class='sub-lead'>Binde ein ELRS-Funkgerät, ordne die sieben Steuerkanäle zu und setze Endpunkte passend zum Servo-Kernel.</p>
 <h2>Binding</h2>
 <p>Versetze den Empfänger in den Bind-Modus (Strom mit der konfigurierten Bind-Phrase, oder über WebUI / Taste) und starte die <strong>Bind</strong>-Aktion am Radio. Die Standard-Bind-Phrase <code>YOUR-BIND-PHRASE</code> ergibt eine feste UID; ein erfolgreicher Bind wird durch eine dauerhafte Link-LED und Live-Kanalbewegung im WebUI-Status-Poll bestätigt.</p>
 <h2>Kanalzuordnung</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>Seitenruder (Gieren / Kamm)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>Arm (Sicherheitsschalter)</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>Flügelschlag-Frequenzmodulator</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>Flugprofil-Wahlschalter</td>
+</tr>
 </table>
-<p>Ordne die vier Steuerungen in dieser Reihenfolge zu. PteronautOS liest sie in CRSF-Reihenfolge, also halte CH1–CH4 im Standard-AETR-Layout (oder passe es an das an, was der Mixer erwartet, falls du sie in der Config umsortiert hast).</p>
+<p>Ordne die sieben Steuerungen in dieser Reihenfolge zu. PteronautOS liest sie in CRSF-Reihenfolge, also halte CH1–CH4 im Standard-AETR-Layout und weise den Arm-Schalter, den Flügelschlag-Frequenzmodulator und den Flugprofil-Wahlschalter CH5–CH7 zu (oder passe es an das an, was der Mixer erwartet, falls du sie in der Config umsortiert hast).</p>
 <h2>Endpunkte und Richtung</h2>
 <p>Stelle den Radio-Ausgang auf <strong>±100%</strong> (CRSF 172–1811&nbsp;µs um ein 992&nbsp;µs-Zentrum). Nutze <em>keine</em> erweiterten Limits — der Servo-Kernel mappt bereits die volle 988–2012&nbsp;µs-Pulshülle, und das Beschneiden des Radios verschwendet nur Auflösung. Sub-Trim muss null bleiben; Neutral ist per Design 1500&nbsp;µs.</p>
 <h2>Raten und Expo</h2>

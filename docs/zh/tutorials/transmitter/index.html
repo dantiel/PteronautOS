@@ -28,7 +28,7 @@
 <div class='sub-content'>
 <p class='tutorial-number'>03</p>
 <h1>发射机配置</h1>
-<p class='sub-lead'>绑定ELRS遥控、映射四个控制通道并设置与舵机内核匹配的行程。</p>
+<p class='sub-lead'>绑定 ELRS 遥控器，映射七个控制通道，并设置与舵机内核匹配的行程端点。</p>
 <h2>绑定</h2>
 <p>将接收机置于绑定模式(以配置的绑定口令供电，或使用 WebUI/按钮)，并在遥控器上启动 <strong>Bind</strong> 操作。默认绑定口令 <code>YOUR-BIND-PHRASE</code> 产生固定 UID；绑定成功由常亮的链路 LED 以及 WebUI 状态轮询中的实时通道动作来确认。</p>
 <h2>通道映射</h2>
@@ -53,8 +53,20 @@
 <td>CH4</td>
 <td>方向舵(偏航/冠)</td>
 </tr>
+<tr>
+<td>CH5</td>
+<td>解锁（安全开关）</td>
+</tr>
+<tr>
+<td>CH6</td>
+<td>扑翼频率调制</td>
+</tr>
+<tr>
+<td>CH7</td>
+<td>飞行配置档位选择</td>
+</tr>
 </table>
-<p>按此顺序映射四个控制通道。PteronautOS 按 CRSF 顺序读取它们，因此请让 CH1–CH4 保持默认的 AETR 布局(若在配置中重排了它们，则与混控器的期望保持一致)。</p>
+<p>按此顺序映射七个控制通道。PteronautOS 按 CRSF 顺序读取，因此 CH1–CH4 保持默认 AETR 布局，将解锁开关、扑翼频率调制和飞行配置档位选择分配到 CH5–CH7（若在配置中重新排序，则与混控器期望的顺序保持一致）。</p>
 <h2>行程与方向</h2>
 <p>将遥控输出设为 <strong>±100%</strong>(CRSF 172–1811&nbsp;µs，围绕 992&nbsp;µs 中心)。<em>不要</em>使用扩展限位——伺服内核已经映射完整的 988–2012&nbsp;µs 脉冲包络，裁剪遥控只会浪费分辨率。副微调必须保持为零；中立值按设计为 1500&nbsp;µs。</p>
 <h2>速率与指数曲线</h2>
