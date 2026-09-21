@@ -936,9 +936,9 @@
   "flasher_flash_btn": "Via Web Serial flashen",
   "flasher_build_hint": "Der Build erzeugt eine einzelne zusammengeführte .bin in GitHub Actions (~3–4 min).",
   "flasher_download_btn": ".bin herunterladen",
-  "flasher_serial_warning": "Web Serial wird in Safari/Firefox nicht unterstützt. Erstelle die Firmware, lade die .bin herunter und flashe sie mit esptool — oder öffne diese Seite in Chrome/Edge zum Flashen per USB.",
+  "flasher_serial_warning": "Web Serial wird in Safari/Firefox nicht unterstützt. Erstelle die Firmware, lade die .bin herunter und flashe sie mit esptool — oder öffne diese Seite in Chrome/Edge/Opera zum Flashen per USB.",
   "flasher_heading_progress": "Build-Fortschritt",
-  "flasher_foot_note": "Erfordert Chrome / Edge für Web Serial.",
+  "flasher_foot_note": "Erfordert Chrome / Edge / Opera für Web Serial.",
   "nav_flasher": "Flasher",
   "flasher_heading_system": "System & WebUI",
   "flasher_device_name": "Gerätename (Hostname)",
@@ -949,5 +949,5 @@
   "flasher_home_wifi_password": "Heim-WLAN-Passwort",
   "flasher_locales_hint": "Sprachen für die WebUI auswählen — keine Auswahl bäckt alle 11 ein.",
   "flash_online_cta": "Online flashen",
-  "flash_online_cta_desc": "Firmware direkt im Browser bauen und flashen — ohne Toolchain, ohne Treiber. Chrome und Edge flashen per USB; andere Browser laden die .bin herunter."
+  "flash_online_cta_desc": "Firmware direkt im Browser bauen und flashen — ohne Toolchain, ohne Treiber. Chrome, Edge und Opera flashen per USB; andere Browser laden die .bin herunter."
 }

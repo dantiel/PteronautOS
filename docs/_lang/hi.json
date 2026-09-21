@@ -936,9 +936,9 @@
   "flasher_flash_btn": "Web Serial से फ्लैश करें",
   "flasher_build_hint": "बिल्ड GitHub Actions में एकल मर्ज किया हुआ .bin बनाता है (~3–4 मिनट)।",
   "flasher_download_btn": ".bin डाउनलोड करें",
-  "flasher_serial_warning": "Safari/Firefox में Web Serial समर्थित नहीं है. यहाँ फर्मवेयर बनाएँ और .bin डाउनलोड करें, फिर esptool से फ्लैश करें — या USB से फ्लैश करने के लिए इस पेज को Chrome/Edge में खोलें।",
+  "flasher_serial_warning": "Safari/Firefox में Web Serial समर्थित नहीं है. यहाँ फर्मवेयर बनाएँ और .bin डाउनलोड करें, फिर esptool से फ्लैश करें — या USB से फ्लैश करने के लिए इस पेज को Chrome/Edge/Opera में खोलें।",
   "flasher_heading_progress": "बिल्ड प्रगति",
-  "flasher_foot_note": "Web Serial के लिए Chrome / Edge आवश्यक है।",
+  "flasher_foot_note": "Web Serial के लिए Chrome / Edge / Opera आवश्यक है।",
   "nav_flasher": "फ्लैशर",
   "flasher_heading_system": "सिस्टम और WebUI",
   "flasher_device_name": "डिवाइस नाम (होस्टनाम)",
@@ -949,5 +949,5 @@
   "flasher_home_wifi_password": "होम WiFi पासवर्ड",
   "flasher_locales_hint": "WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।",
   "flash_online_cta": "ऑनलाइन फ्लैश करें",
-  "flash_online_cta_desc": "ब्राउज़र से सीधे फ़र्मवेयर बनाएँ और फ्लैश करें — न टूलचेन, न ड्राइवर। Chrome और Edge USB से फ्लैश करते हैं; बाकी ब्राउज़र .bin डाउनलोड करते हैं।"
+  "flash_online_cta_desc": "ब्राउज़र से सीधे फ़र्मवेयर बनाएँ और फ्लैश करें — न टूलचेन, न ड्राइवर। Chrome, Edge और Opera USB से फ्लैश करते हैं; बाकी ब्राउज़र .bin डाउनलोड करते हैं।"
 }

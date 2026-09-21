@@ -936,9 +936,9 @@
   "flasher_flash_btn": "Web Serial로 플래시",
   "flasher_build_hint": "빌드는 GitHub Actions에서 단일 병합 .bin을 생성합니다(약 3~4분).",
   "flasher_download_btn": ".bin 다운로드",
-  "flasher_serial_warning": "Safari/Firefox에서는 Web Serial이 지원되지 않습니다. 여기서 펌웨어를 빌드하고 .bin을 다운로드한 뒤 esptool로 플래시하세요 — 또는 Chrome/Edge에서 이 페이지를 열어 USB로 플래시하세요.",
+  "flasher_serial_warning": "Safari/Firefox에서는 Web Serial이 지원되지 않습니다. 여기서 펌웨어를 빌드하고 .bin을 다운로드한 뒤 esptool로 플래시하세요 — 또는 Chrome/Edge/Opera에서 이 페이지를 열어 USB로 플래시하세요.",
   "flasher_heading_progress": "빌드 진행률",
-  "flasher_foot_note": "Web Serial에는 Chrome / Edge가 필요합니다.",
+  "flasher_foot_note": "Web Serial에는 Chrome / Edge / Opera가 필요합니다.",
   "nav_flasher": "플래셔",
   "flasher_heading_system": "시스템 및 WebUI",
   "flasher_device_name": "장치 이름 (호스트명)",
@@ -949,5 +949,5 @@
   "flasher_home_wifi_password": "홈 WiFi 비밀번호",
   "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함.",
   "flash_online_cta": "온라인으로 플래시",
-  "flash_online_cta_desc": "브라우저에서 바로 펌웨어를 빌드하고 플래시하세요 — 툴체인도 드라이버도 필요 없습니다. Chrome과 Edge는 USB로 플래시하고, 다른 브라우저는 .bin을 다운로드합니다."
+  "flash_online_cta_desc": "브라우저에서 바로 펌웨어를 빌드하고 플래시하세요 — 툴체인도 드라이버도 필요 없습니다. Chrome, Edge과 Opera는 USB로 플래시하고, 다른 브라우저는 .bin을 다운로드합니다."
 }

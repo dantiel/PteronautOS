@@ -936,9 +936,9 @@
   "flasher_flash_btn": "وميض عبر Web Serial",
   "flasher_build_hint": "ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).",
   "flasher_download_btn": "تنزيل .bin",
-  "flasher_serial_warning": "Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge للكتابة عبر USB.",
+  "flasher_serial_warning": "Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge/Opera للكتابة عبر USB.",
   "flasher_heading_progress": "تقدم البناء",
-  "flasher_foot_note": "يتطلب Chrome / Edge لـ Web Serial.",
+  "flasher_foot_note": "يتطلب Chrome / Edge / Opera لـ Web Serial.",
   "nav_flasher": "الوميض",
   "flasher_heading_system": "النظام و WebUI",
   "flasher_device_name": "اسم الجهاز (اسم المضيف)",
@@ -949,5 +949,5 @@
   "flasher_home_wifi_password": "كلمة مرور WiFi المنزلية",
   "flasher_locales_hint": "اختر اللغات لتضمينها في WebUI — عدم التحديد يضمّن كل اللغات الإحدى عشرة.",
   "flash_online_cta": "فلاش عبر الإنترنت",
-  "flash_online_cta_desc": "قم ببناء وحرق البرنامج الثابت مباشرة من المتصفح — دون أدوات بناء أو تعريفات. يحرق Chrome وEdge عبر USB؛ أما بقية المتصفحات فتُنزّل ملف .bin."
+  "flash_online_cta_desc": "قم ببناء وحرق البرنامج الثابت مباشرة من المتصفح — دون أدوات بناء أو تعريفات. يحرق Chrome, Edge وOpera عبر USB؛ أما بقية المتصفحات فتُنزّل ملف .bin."
 }

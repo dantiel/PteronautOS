@@ -301,7 +301,7 @@ terminal = function() {
 flash = async function() {
   var chip, err, esploader, port, transport;
   if (!("serial" in navigator)) {
-    setStatus("Web Serial is not supported in this browser — use Chrome or Edge.", "fail");
+    setStatus("Web Serial is not supported in this browser — use Chrome, Edge or Opera.", "fail");
     return;
   }
   els.flashBtn.disabled = true;

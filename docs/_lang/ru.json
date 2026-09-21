@@ -936,9 +936,9 @@
   "flasher_flash_btn": "Прошить через Web Serial",
   "flasher_build_hint": "Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).",
   "flasher_download_btn": "Скачать .bin",
-  "flasher_serial_warning": "Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge для прошивки по USB.",
+  "flasher_serial_warning": "Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge/Opera для прошивки по USB.",
   "flasher_heading_progress": "Прогресс сборки",
-  "flasher_foot_note": "Требуется Chrome / Edge для Web Serial.",
+  "flasher_foot_note": "Требуется Chrome / Edge / Opera для Web Serial.",
   "nav_flasher": "Прошивка",
   "flasher_heading_system": "Система и WebUI",
   "flasher_device_name": "Имя устройства (hostname)",
@@ -949,5 +949,5 @@
   "flasher_home_wifi_password": "Пароль домашнего Wi-Fi",
   "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11.",
   "flash_online_cta": "Прошить онлайн",
-  "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome и Edge прошивают по USB; остальные браузеры скачивают .bin."
+  "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome, Edge и Opera прошивают по USB; остальные браузеры скачивают .bin."
 }
