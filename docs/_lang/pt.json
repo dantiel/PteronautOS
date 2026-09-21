@@ -931,6 +931,7 @@
   "flasher_mushin_rx": "Pino RX Mushin",
   "flasher_mushin_tx": "Pino TX Mushin",
   "flasher_mushin_baud": "Baud Mushin",
+  "flasher_mushin_enabled": "Ponte Mushin (músculo RP2040)",
   "flasher_wifi_interval": "Intervalo WiFi auto-on (s)",
   "flasher_build_btn": "Compilar firmware",
   "flasher_flash_btn": "Gravar via Web Serial",

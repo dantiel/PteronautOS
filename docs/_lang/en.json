@@ -931,6 +931,7 @@
   "flasher_mushin_rx": "Mushin RX pin",
   "flasher_mushin_tx": "Mushin TX pin",
   "flasher_mushin_baud": "Mushin baud",
+  "flasher_mushin_enabled": "Mushin bridge (RP2040 muscle)",
   "flasher_wifi_interval": "WiFi auto-on interval (s)",
   "flasher_build_btn": "Build firmware",
   "flasher_flash_btn": "Flash via Web Serial",

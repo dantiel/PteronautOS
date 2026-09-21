@@ -55,6 +55,14 @@ on:
         type: choice
         default: '0'
         options: ['0', '1', '2', '3', '4', '5', '6']
+      mushin_enabled:
+        description: 'Enable the MUSHIN bridge (RP2040 muscle link)'
+        required: false
+        type: choice
+        default: '0'
+        options:
+          - '0'   # off — standalone PWM receiver, wings flap locally
+          - '1'   # on  — RP2040 muscle owns the servos, bridge on GPIO9/10
       mushin_rx_pin:
         description: 'Mushin bridge RX pin (GPIO)'
         required: false
@@ -137,9 +145,12 @@ jobs:
             echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"
             echo "-DZEPHYR_I2C_SCL=${{ inputs.zephyrus_i2c_scl }}"
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
-            echo "-DMUSHIN_RX_PIN=${{ inputs.mushin_rx_pin }}"
-            echo "-DMUSHIN_TX_PIN=${{ inputs.mushin_tx_pin }}"
-            echo "-DMUSHIN_BAUD=${{ inputs.mushin_baud }}"
+            if [ "${{ inputs.mushin_enabled }}" = "1" ]; then
+              echo "-DMUSHIN_ENABLED=1"
+              echo "-DMUSHIN_RX_PIN=${{ inputs.mushin_rx_pin }}"
+              echo "-DMUSHIN_TX_PIN=${{ inputs.mushin_tx_pin }}"
+              echo "-DMUSHIN_BAUD=${{ inputs.mushin_baud }}"
+            fi
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
             if [ -n "${{ inputs.device_name }}" ]; then
               echo "-DDEVICE_NAME=\"${{ inputs.device_name }}\""
@@ -191,6 +202,7 @@ jobs:
             "zephyrus_i2c_sda": "${{ inputs.zephyrus_i2c_sda }}",
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
+            "mushin_enabled": "${{ inputs.mushin_enabled }}",
             "mushin_rx_pin": "${{ inputs.mushin_rx_pin }}",
             "mushin_tx_pin": "${{ inputs.mushin_tx_pin }}",
             "mushin_baud": "${{ inputs.mushin_baud }}",

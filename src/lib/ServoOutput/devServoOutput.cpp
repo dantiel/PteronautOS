@@ -415,6 +415,17 @@ static bool initialize()
             pin = UNDEF_PIN;
         }
 #endif
+#if defined(MUSHIN_ENABLED) && defined(MUSHIN_RX_PIN) && defined(MUSHIN_TX_PIN)
+        // Exclude the MUSHIN bridge pins from PWM (reserved for the RP2040 link).
+        // In a muscle build the RP2040 owns the servos; the bridge serial must
+        // never fight the local wing PWM for GPIO9/GPIO10. This exclusion is the
+        // design guarantee — not just a comment in the target ini. (ESP32 uses
+        // hardware UART1, so these pin macros don't exist and nothing to exclude.)
+        if (pin != UNDEF_PIN && (pin == MUSHIN_RX_PIN || pin == MUSHIN_TX_PIN))
+        {
+            pin = UNDEF_PIN;
+        }
+#endif
 #if defined(PLATFORM_ESP32)
         else if (mode == somDShot || mode == somDShot3D)
         {

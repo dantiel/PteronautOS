@@ -55,7 +55,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_rx_pin", "#mushin_tx_pin", "#mushin_baud", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#mushin_rx_pin", "#mushin_tx_pin", "#mushin_baud", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -158,10 +158,11 @@ collectParams = function() {
     regulatory_domain: $("#regulatory_domain").value,
     binding_phrase: $("#binding_phrase").value.trim(),
     auto_wifi_on_interval: $("#auto_wifi_on_interval").value,
-    zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value,
-    zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
-    zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
-    mushin_rx_pin: $("#mushin_rx_pin").value,
+    zephyrus_i2c_sda: $("...").value,
+    zephyrus_i2c_scl: $("...").value,
+    zephyrus_board_rotation: $("...").value,
+    mushin_enabled: $("...").value,
+    mushin_rx_pin: $("...").value,
     mushin_tx_pin: $("#mushin_tx_pin").value,
     mushin_baud: $("#mushin_baud").value,
     rcvr_uart_baud: $("#rcvr_uart_baud").value,

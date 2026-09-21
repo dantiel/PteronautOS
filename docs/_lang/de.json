@@ -931,6 +931,7 @@
   "flasher_mushin_rx": "Mushin RX-Pin",
   "flasher_mushin_tx": "Mushin TX-Pin",
   "flasher_mushin_baud": "Mushin-Baudrate",
+  "flasher_mushin_enabled": "Mushin-Brücke (RP2040-Muskel)",
   "flasher_wifi_interval": "WiFi-Auto-On-Intervall (s)",
   "flasher_build_btn": "Firmware bauen",
   "flasher_flash_btn": "Via Web Serial flashen",

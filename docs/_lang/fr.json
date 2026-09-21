@@ -931,6 +931,7 @@
   "flasher_mushin_rx": "Broche RX Mushin",
   "flasher_mushin_tx": "Broche TX Mushin",
   "flasher_mushin_baud": "Débit Mushin",
+  "flasher_mushin_enabled": "Pont Mushin (muscle RP2040)",
   "flasher_wifi_interval": "Intervalle WiFi auto-on (s)",
   "flasher_build_btn": "Compiler le firmware",
   "flasher_flash_btn": "Flasher via Web Serial",

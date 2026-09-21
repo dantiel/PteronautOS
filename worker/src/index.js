@@ -100,6 +100,7 @@ async function handleBuild(request, env) {
       mixer_profile: ["0", "1", "2", "3", "4", "5", "6", "7"],
       regulatory_domain: ["EU_CE_2400", "ISM_2400"],
       zephyrus_board_rotation: ["0", "1", "2", "3", "4", "5", "6"],
+      mushin_enabled: ["0", "1"],
     };
     for (const [k, valid] of Object.entries(choices)) {
       if (inputs[k] != null && !valid.includes(String(inputs[k]))) {
@@ -116,6 +117,7 @@ async function handleBuild(request, env) {
       "zephyrus_i2c_sda",
       "zephyrus_i2c_scl",
       "zephyrus_board_rotation",
+      "mushin_enabled",
       "mushin_rx_pin",
       "mushin_tx_pin",
       "mushin_baud",

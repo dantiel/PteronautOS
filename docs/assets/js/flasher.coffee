@@ -48,6 +48,7 @@ FIELD_IDS = [
   "#zephyrus_i2c_sda"
   "#zephyrus_i2c_scl"
   "#zephyrus_board_rotation"
+  "#mushin_enabled"
   "#mushin_rx_pin"
   "#mushin_tx_pin"
   "#mushin_baud"
@@ -111,10 +112,11 @@ collectParams = ->
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
   auto_wifi_on_interval: $("#auto_wifi_on_interval").value
-  zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
-  zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
-  zephyrus_board_rotation: $("#zephyrus_board_rotation").value
-  mushin_rx_pin: $("#mushin_rx_pin").value
+  zephyrus_i2c_sda: $("...").value
+  zephyrus_i2c_scl: $("...").value
+  zephyrus_board_rotation: $("...").value
+  mushin_enabled: $("...").value
+  mushin_rx_pin: $("...").value
   mushin_tx_pin: $("#mushin_tx_pin").value
   mushin_baud: $("#mushin_baud").value
   rcvr_uart_baud: $("#rcvr_uart_baud").value

@@ -14,12 +14,6 @@
 #endif
 
 #if defined(PLATFORM_ESP8266)
-  #ifndef MUSHIN_RX_PIN
-    #define MUSHIN_RX_PIN 9   // ESP8285 GPIO9  ← RP2040 TX (bridge UART1 TX)
-  #endif
-  #ifndef MUSHIN_TX_PIN
-    #define MUSHIN_TX_PIN 10  // ESP8285 GPIO10 → RP2040 RX (bridge UART1 RX)
-  #endif
   #include <SoftwareSerial.h>
   static SoftwareSerial mushinSerial(MUSHIN_RX_PIN, MUSHIN_TX_PIN);
 #else  // PLATFORM_ESP32

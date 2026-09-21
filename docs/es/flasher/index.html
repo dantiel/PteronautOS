@@ -75,6 +75,13 @@
 </select>
 </label>
 <label class='flasher-field'>
+<span>Puente Mushin (músculo RP2040)</span>
+<select id='mushin_enabled'>
+<option selected value='0'>Off — local PWM (wings flap on this board)</option>
+<option value='1'>On — RP2040 muscle owns servos (bridge GPIO9/10)</option>
+</select>
+</label>
+<label class='flasher-field'>
 <span>Pin RX Mushin</span>
 <input id='mushin_rx_pin' max='16' min='0' type='number' value='9'>
 </label>

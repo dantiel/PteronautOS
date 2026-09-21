@@ -39,6 +39,19 @@
 #define MUSHIN_MAX_PAY   16     // 8 servos × 2 bytes
 #define MUSHIN_INTENT_V1_LEN 11 // v1 parameter intent payload (MushinIntentV1)
 
+// Bridge pin defaults (ESP8266/ESP8285: no free hardware UART → SoftwareSerial
+// on GPIO9(RX)/GPIO10(TX)). Defined here — not in the .cpp — so devServoOutput
+// can exclude these exact GPIOs from PWM allocation. The bridge and the local
+// wing PWM are mutually exclusive by design and must never share a pin.
+#if defined(PLATFORM_ESP8266)
+  #ifndef MUSHIN_RX_PIN
+    #define MUSHIN_RX_PIN 9   // ESP8285 GPIO9  ← RP2040 TX (bridge UART1 TX)
+  #endif
+  #ifndef MUSHIN_TX_PIN
+    #define MUSHIN_TX_PIN 10  // ESP8285 GPIO10 → RP2040 RX (bridge UART1 RX)
+  #endif
+#endif
+
 #ifndef MUSHIN_ANNOUNCE_STALE_MS
   #define MUSHIN_ANNOUNCE_STALE_MS 1500   // announce is 1 Hz; 1.5× grace before unlink
 #endif
