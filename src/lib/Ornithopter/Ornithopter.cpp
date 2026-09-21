@@ -151,6 +151,7 @@ Ornithopter::Ornithopter()
   , _ferHold(0.0f), _ferHoldVel(0.0f)
  #endif
   , _lastUpdateUs(0)
+  , _armedState(false)
   , _prevThrottlePct(-1.0f)
   , _throttleRateLPF(0.0f)
   , _prevAileronNorm(-2.0f)
@@ -193,6 +194,7 @@ void Ornithopter::onLinkUp() {
 void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }
 
 void Ornithopter::enterFailsafe() {
+    _armedState = false;  // disarm — require fresh throttle-zero + arm cycle
     for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
@@ -247,6 +249,19 @@ void Ornithopter::_readChannels() {
     if (prof != activeFlightProfile) applyFlightProfile(prof);
 }
 
+// ─── Arming latch ──────────────────────────────────────────────────
+// Requires the arm switch high AND throttle at zero (below the pre-arm
+// threshold). Once latched, throttle may rise to flap; dropping the arm
+// switch (or link loss / failsafe) clears the latch.
+bool Ornithopter::_isArmed() {
+    if (voiceArm <= 992) {
+        _armedState = false;                 // disarm on switch low
+    } else if (!_armedState) {
+        _armedState = (voiceThrottle < ORNI_ARM_THROTTLE_ZERO_US);  // arm only at zero throttle
+    }
+    return _armedState;
+}
+
 uint16_t Ornithopter::_clampServo(int32_t us) {
     if (us < ORNI_SERVO_ABS_MIN_US) return ORNI_SERVO_ABS_MIN_US;
     if (us > ORNI_SERVO_ABS_MAX_US) return ORNI_SERVO_ABS_MAX_US;
@@ -260,7 +275,7 @@ void Ornithopter::_computeServoMixer() {
     float aileronNorm  = _crsfToNorm(voiceAileron);
     float elevatorNorm = _crsfToNorm(voiceElevator);
     float throttleUsF  = (float)voiceThrottle;
-    bool armed = (voiceArm > 992);
+    bool armed = _isArmed();
 
     static bool wasFlapping = false;
     bool isFlapping;
@@ -606,7 +621,7 @@ void Ornithopter::_computeGearboxMixer() {
     float elevatorNorm = _crsfToNorm(voiceElevator);
     float throttleNorm = _crsfToNorm(voiceThrottle);
     float rudderNorm   = _crsfToNorm(voiceRudder);
-    bool armed = (voiceArm > 992);
+    bool armed = _isArmed();
 
 #ifdef ZEPHYRUS_ENABLED
     // Aeroelastic PID gain modulation for gearbox

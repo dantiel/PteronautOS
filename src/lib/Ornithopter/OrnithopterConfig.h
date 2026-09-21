@@ -112,6 +112,9 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
 #define ORNI_FLAP_THRESHOLD_US  303     // 1080µs PWM glide/flap boundary (CRSF raw: 172=988µs, 1811=2012µs)
 #define ORNI_FLAP_HYSTERESIS_US 50
 
+// ─── Pre-arm gate ──────────────────────────────────────────────────
+#define ORNI_ARM_THROTTLE_ZERO_US 300   // CRSF raw throttle ≤ this (~1068µs, below flap threshold) to arm
+
 // ─── Amplitude scaling ─────────────────────────────────────────────
 #define ORNI_MAGNITUDE_SCALE    0.04f
 

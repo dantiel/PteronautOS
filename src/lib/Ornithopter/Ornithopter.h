@@ -168,6 +168,7 @@ public:
 private:
     FlappingOscillator _osc;
     uint32_t _lastUpdateUs;
+    bool _armedState;         // arming latch — throttle-zero + arm-switch high
  
     float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
     float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost
@@ -178,6 +179,7 @@ private:
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);
     float _crsfToNorm(uint16_t raw);
     void  _readChannels();
+    bool  _isArmed();              // throttle-zero pre-arm latch
     void  _computeServoMixer();    // waveform kernel
     void  _computeGearboxMixer();  // gearbox kernel
     static uint16_t _clampServo(int32_t us);
