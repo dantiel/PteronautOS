@@ -298,6 +298,7 @@ if [[ -z "$FW" ]]; then
 fi
 FW_SIZE=$(stat -f%z "$FW" 2>/dev/null || stat -c%s "$FW" 2>/dev/null || echo "?")
 ok "Firmware: $C_DIM$FW$C_RESET  ($FW_SIZE B)"
+python3 "$PROJECT_ROOT/src/python/verify_pteronautos_image.py" "$FW"
 
 # ---- 6) Flash (single connection, no pre-probe) -----------------------------
 # NOTE: we intentionally do NOT probe chip_id before flashing in normal mode.

@@ -183,10 +183,9 @@ class FerocityWaveformExplorer
 
     dwell = amount * 0.98
     halfDwell = dwell / 2
-    # Skew redistributes the square-wave plateau: +s holds the start longer,
-    # −s the end. Front + back still sum to dwell, so the ramp width is fixed.
-    frontDwell = halfDwell * (1 + skew01)
-    backDwell = halfDwell * (1 - skew01)
+    # Skew already warps intrinsic phase; do not shift the dwell a second time.
+    frontDwell = halfDwell
+    backDwell = halfDwell
     plateau = if phase < frontDwell
       1
     else if phase > 1 - backDwell

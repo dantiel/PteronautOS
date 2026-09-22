@@ -252,7 +252,7 @@ staircase on the wings — so the full byte is used.
 2. `dtUs = clamp(nowUs − mwLastUs, 1, 100000)`.
 3. `targetQ16 = flapFreq × MUSHIN_OMEGA_DHZ_Q16` (where `MUSHIN_OMEGA_DHZ_Q16 = 41177`,
    i.e. `0.1 Hz × 2π × 65536`), or `0` during easing.
-4. Unity-gain damping `k = 10` mirroring the spirit's `FlappingOscillator`:
+4. Unity-gain damping `k = 10` (not the spirit's ONDAS phase-debt oscillator):
    `mwCadence += 10 · (target − cadence) · dtUs / 1e6`; during easing `cadence ×= 9/10`.
 5. `mwPhaseAcc += cadence × dtUs` — a 64-bit accumulator in **Q16 rad·µs**, wrapped at
    `MUSHIN_TWO_PI_Q16 × 1e6`. µs-exact phase means slower ticks lose nothing.
@@ -262,13 +262,14 @@ staircase on the wings — so the full byte is used.
 `mushinShapeWave(phaseQ16)` is a fixed-point mirror of the spirit's `shapeWave` with
 `shapeMix = 0` (plateau + cos, the classic GralhaAzul family):
 
-- **Ferocity** → `f8 = clamp((ferocity×8+50)/100, 0, 8)`, symmetric half-stroke weights
-  `wD = wS = 8 − f8` (single ferocity byte → symmetric for v1), giving a limiar at exactly
-  π for symmetric strokes.
+- **Ferocity** retains all 101 wire values (0–100), with symmetric half-strokes
+  (a single ferocity byte in v1), giving a reversal at π to fixed-point precision.
 - **Skew warp** `t' = t + s·t·(1−t)` in Q14, mirrored on the upstroke (`s → −s`),
   endpoints stay pinned.
-- **Dwell plateau** `d = f8 × 2007` (Q14, `2007 = 0.98 × 2048`), `dh = d/2`; the plateau
+- **Dwell plateau** `d = ferocity × 16056 / 100` (Q14), `dh = d/2`; the plateau
   holds `±16384`, the middle sweeps `cos(π·x)` via the LUT (`thetaQ16 = x·32768`).
+  Dwell is symmetric in warped phase. Do not redistribute it again with skew:
+  that would oppose the warp and reverse the meaning of front/back at high ferocity.
 - **Return** `descida ? wave : −wave` — the downstroke is the positive half.
 
 ---
@@ -299,7 +300,10 @@ Without a gyro, three laws keep the muscle graceful:
   1500 µs rather than flapping feebly.
 - **Velocity clamp from slew** — `slew` (ms/60°) becomes a per-tick µs step cap:
   `maxDelta = 333 · dtUs / (slew · 1000)`. `slew = 0` means unlimited. The clamp anchors
-  on `mwWingL/R`, so no parameter change can rip a servo.
+  on `mwWingL/R`. Division remainders carry fractional movement to the next tick;
+  whole unused steps are not banked. Zero elapsed time permits zero movement.
+  A slew change or re-link clears the remainder, and unlimited operation still
+  updates the clock. This is a command velocity bound, not a hardware guarantee.
 - **Damped failsafe** — on link loss the wings ease to centre (see §9).
 
 ---
@@ -364,7 +368,7 @@ controllable clock (`g_ms`/`g_us`):
 
 | Harness                          | Covers                                                             | Checks |
 |----------------------------------|--------------------------------------------------------------------|--------|
-| `tools/mushin_test/test_wave.cpp` | cos-LUT interp, phase accumulator + cadence filter, shapeWave (plateau+cos, skew mirror, pinned endpoints), protocol round-trip (v1 + v0 fallback + corrupt xor), KINCHO deadband + velocity clamp, damped failsafe, MANJI crest PID, version handshake, full-flap integration | 1955 |
+| `tools/mushin_test/test_wave.cpp` | cos-LUT interp, phase accumulator + cadence filter, shapeWave (plateau+cos, skew mirror, pinned endpoints), protocol round-trip (v1 + v0 fallback + corrupt xor), KINCHO deadband + fractional velocity clamp, damped failsafe, MANJI crest PID, version handshake, full-flap integration | 2182 |
 | `tools/spirit_test/main.cpp`      | v1 framing (15 bytes, field offsets, xor), v0 µs fallback framing   | 61    |
 
 Syntax check (muscle):
@@ -375,6 +379,31 @@ g++ -std=c++17 -fsyntax-only -DARDUINO_ARCH_ESP32S3 -DYOSHI_RP2040=0 \
 ```
 
 Both harnesses ship green (0 failures); their binaries are git-ignored.
+
+The wave harness also tests front/back sign across the full ferocity range,
+adjacent ferocity levels, fractional slew at 1 µs–10 ms intervals, repeated
+timestamps, timer wrap, and transitions from unlimited to limited movement.
+These are host tests, not RP2040 board or flight validation.
+
+### Waveform axes and remaining limits
+
+The ESP shape's per-half ferocity and skew are independent axes: ferocity selects
+stroke duration/shape character, while signed skew advances or delays progress
+within that half. Both plateau and pyramidal families now share one time warp.
+The docs explorer follows the same rule. Stick-rate “slew” is a transient input
+to this timing axis; MUSHIN's wire field `slew` is instead a physical speed setting.
+Saved profile field names and the v1 wire layout have not changed.
+
+ESP phase integration now uses bounded steps of at most 4 ms (at most 25 steps
+for a delayed 100 ms update). SSFF uses the shaped reversal boundary rather than
+the sign of the oscillator sine; its new bias applies on the next mixer tick.
+
+This is not a complete feasible-trajectory planner. Extreme asymmetry can still
+request a half-stroke shorter than the output sampling interval, and the ESP
+amplitude estimate does not yet account for every waveform slope or parameter
+transition. A future unified ferocity planner must allocate duration/amplitude
+against velocity and acceleration budgets. Do not treat high-ferocity settings
+or MUSHIN v1 as flight-validated by these host tests.
 
 ---
 
@@ -405,6 +434,6 @@ Both harnesses ship green (0 failures); their binaries are git-ignored.
 | `src/targets/pteronautos-rx.ini`           | spirit: MUSHIN_ENABLED + pins/baud build flags |
 | `sketches/yoshimitsu/src/Yoshimitsu.h`     | muscle: parser, wave core, KINCHO laws, PID  |
 | `sketches/yoshimitsu/src/Yoshimitsu_Loadout.h` | muscle: servo/gyro loadout defaults      |
-| `tools/mushin_test/test_wave.cpp`          | muscle harness (1955 checks)                |
+| `tools/mushin_test/test_wave.cpp`          | muscle harness (2182 checks)                |
 | `tools/spirit_test/main.cpp`               | spirit harness (61 checks)                  |
 | `tools/stub/`                              | Arduino/Serial/Servo/Wire host stubs        |

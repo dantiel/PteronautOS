@@ -174,7 +174,7 @@ collectParams = function() {
 };
 
 startBuild = async function() {
-  var data, err;
+  var data, delay, err, params;
   els.buildBtn.disabled = true;
   els.flashBtn.disabled = true;
   els.downloadBtn.disabled = true;
@@ -186,12 +186,18 @@ startBuild = async function() {
   els.progressWrap.classList.add("hidden");
   busy = true;
   try {
+    params = collectParams();
+    delay = Number(params.auto_wifi_on_interval);
+    if (!(Number.isInteger(delay) && delay >= -1 && delay <= 2147483)) {
+      throw new Error("Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds.");
+    }
+    log("Wi-Fi fallback: " + (delay === -1 ? "disabled" : `${delay} seconds (0 uses the firmware's 30-second default)`));
     data = (await apiFetch("/api/build", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(collectParams())
+      body: JSON.stringify(params)
     }));
     if (!(data != null ? data.run_id : void 0)) {
       throw new Error("Build server returned no run id — is the worker deployed?");
@@ -333,7 +339,7 @@ flash = async function() {
         }
       ],
       flashMode: "dout",
-      flashFreq: "80m",
+      flashFreq: "40m",
       flashSize: "1MB",
       eraseAll: false,
       compress: true,

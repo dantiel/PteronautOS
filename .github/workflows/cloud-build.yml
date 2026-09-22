@@ -165,7 +165,10 @@ jobs:
               echo "-DMY_BINDING_PHRASE=\"${{ inputs.binding_phrase }}\""
             fi
           } > src/user_defines.txt
-          cat src/user_defines.txt
+          echo "User defines written."
+
+      - name: Test firmware artifact validation
+        run: python src/python/test_pteronautos_image.py
 
       - name: Set up Node (WebUI locales)
         if: ${{ inputs.i18n_locales != '' }}
@@ -192,6 +195,7 @@ jobs:
 
       - name: Stage firmware artifact
         run: |
+          python src/python/verify_pteronautos_image.py src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
           mkdir -p dist
           cp src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin dist/pteronautos.bin
           cat > dist/manifest.json <<'JSON'

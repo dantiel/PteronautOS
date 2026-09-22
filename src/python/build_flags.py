@@ -14,7 +14,7 @@ UIDbytes = ""
 define = ""
 target_name = env.get('PIOENV', '').upper()
 
-isRX = True if '_RX_' in target_name else False
+isRX = bool(re.search(r'(^|_)RX(_|$)', target_name))
 
 def print_error(error):
     time.sleep(1)
@@ -43,8 +43,10 @@ def process_json_flag(define):
         if parts.group(1) == "HOME_WIFI_PASSWORD":
             json_flags['wifi-password'] = dequote(parts.group(2))
         if parts.group(1) == "AUTO_WIFI_ON_INTERVAL":
-            parts = re.search(r"-D(.*)\s*=\s*\"?([0-9]+).*\"?$", define)
-            json_flags['wifi-on-interval'] = int(dequote(parts.group(2)))
+            interval = int(dequote(parts.group(2)))
+            if not -1 <= interval <= 2147483:
+                raise ValueError('AUTO_WIFI_ON_INTERVAL must be -1 or nonnegative seconds fitting int32 milliseconds')
+            json_flags['wifi-on-interval'] = interval
         if parts.group(1) == "TLM_REPORT_INTERVAL_MS"  and not isRX:
             parts = re.search(r"-D(.*)\s*=\s*\"?([0-9]+).*\"?$", define)
             json_flags['tlm-interval'] = int(dequote(parts.group(2)))

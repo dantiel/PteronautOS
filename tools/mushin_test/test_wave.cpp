@@ -19,6 +19,13 @@ int16_t  TwoWire::rate = 0;
 uint8_t  TwoWire::whoami = 0x68;
 SerialType Serial, Serial1, Serial2;
 TwoWire Wire;
+#if YOSHI_RP2040
+EEPROMClass EEPROM;
+#if YOSHI_RTC
+void rtc_init(void) {}
+void rtc_get_datetime(datetime_t *t) { *t = {}; }
+#endif
+#endif
 
 unsigned long millis(void) { return g_ms; }
 unsigned long micros(void) { return g_us; }
@@ -54,6 +61,7 @@ static void reset_all() {
   mushinLinked = false; mushinV1 = 0; mushinParamDirty = 0; mwEasing = 0;
   mushinLastIntentMs = 0;
   mwLastUs = 0; mwClampUs = 0; mwCadence = 0; mwPhaseAcc = 0; mwIterm = 0;
+  mwClampRemainder = 0; mwClampSlew = 0;
   mwWingL = 1500; mwWingR = 1500; mwUnlinkMs = 0;
   for (int i = 0; i < SERVO_COUNT_MAX; i++) { mushinIntent[i] = 1500; servos[i].last_us = 1500; servos[i].write_count = 0; }
   servoCount = 3;
@@ -153,12 +161,58 @@ static void test_shapewave() {
   mushinParam.skew = 90;
   CHECK_EQ(mushinShapeWave(0), 16384);
   CHECK_NEAR(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 2), -16384, 3);
-  // skew also redistributes the plateau: +s front-loads (mid downstroke stays
-  // in the +1 plateau), −s late-loads (mid downstroke is already the −1 plateau)
-  CHECK_EQ(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4), 16384);
-  mushinParam.skew = -90;
+  // Positive skew advances even a high-ferocity plateau; negative delays it.
   CHECK_EQ(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4), -16384);
+  mushinParam.skew = -90;
+  CHECK_EQ(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4), 16384);
   mushinParam.skew = 0;
+
+  // Adjacent transmitted ferocities no longer collapse into nine levels.
+  mushinParam.ferocity = 50;
+  int at50 = mushinShapeWave(MUSHIN_TWO_PI_Q16 * 3 / 16);
+  mushinParam.ferocity = 51;
+  CHECK(mushinShapeWave(MUSHIN_TWO_PI_Q16 * 3 / 16) > at50);
+
+  for (int f = 0; f <= 100; ++f) {
+    mushinParam.ferocity = f;
+    mushinParam.skew = 90;
+    CHECK(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4) < 0);
+    mushinParam.skew = -90;
+    CHECK(mushinShapeWave(MUSHIN_TWO_PI_Q16 / 4) > 0);
+  }
+}
+
+static void test_fractional_slew() {
+  printf("\n[fractional slew] elapsed-time budget, zero dt, wrap and mode changes\n");
+  const uint32_t intervals[] = {1, 100, 1000, 10000};
+  for (uint32_t step : intervals) {
+    reset_all();
+    feed_v1(1000, 0, 100, 0, 255, 0, 0, 0); // stationary target, isolate slew
+    g_us = 0xffff0000UL; // exercise micros wrap too
+    mushinWaveApply(g_us);
+    CHECK_EQ(mwWingL, 1500);
+    const int64_t phase = mwPhaseAcc;
+    for (int i = 0; i < 10; ++i) mushinWaveApply(g_us);
+    CHECK_EQ(mwWingL, 1500);
+    CHECK_EQ(mwPhaseAcc, phase);
+    for (uint32_t elapsed = 0; elapsed < 100000; elapsed += step) {
+      g_us += step;
+      mushinWaveApply(g_us);
+    }
+    CHECK_EQ(mwWingL, 1500 + 333 * 100 / 255);
+    CHECK_EQ(mwWingR, 1500 - 333 * 100 / 255);
+  }
+  // Unlimited time must not become a burst of banked movement on re-enable.
+  reset_all();
+  feed_v1(1000, 0, 100, 0, 0, 0, 0, 0);
+  g_us = 1000000; mushinWaveApply(g_us);
+  g_us += 100000; mushinWaveApply(g_us);
+  mushinParam.slew = 255;
+  mushinParam.throttle = 0;
+  mushinWaveApply(g_us);
+  CHECK_EQ(mwWingL, 2000);
+  g_us += 1000; mushinWaveApply(g_us);
+  CHECK_EQ(mwWingL, 1999);
 }
 
 static void test_protocol_roundtrip() {
@@ -541,6 +595,7 @@ static void test_forged_params() {
 }
 
 int main() {
+  test_fractional_slew();
   Serial.id = 0; Serial1.id = 1; Serial2.id = 2;
   printf("=== MUSHIN v1 muscle wave-core functional test ===\n");
   test_cos_lut_and_interp();

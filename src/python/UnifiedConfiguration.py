@@ -5,9 +5,11 @@ import re
 import json
 import struct
 import sys
+from pathlib import Path
 
 from external import jmespath
 from firmware import TXType
+from verify_pteronautos_image import verify_image
 
 
 def findFirmwareEnd(f):
@@ -224,8 +226,9 @@ def appendConfiguration(source, target, env):
 
     with open(str(target[0]), "r+b") as firmware_file:
         if 'PteronautOS' in target_name:
-            # PteronautOS — embed PWMP7 hardware definition directly
-            hw_file = 'hardware/RX/Generic 2400 PWMP7.json'
+            # Project-owned map, NOT the ignored upstream hardware checkout.
+            # GPIO2 resets this receiver's radio and must never become PWM.
+            hw_file = Path(__file__).resolve().parents[1] / 'targets/hardware/pteronautos-pwmp7.json'
             appendToFirmware(
                 firmware_file,
                 "PteronautOS PWMP7",
@@ -238,6 +241,10 @@ def appendConfiguration(source, target, env):
             print("PteronautOS: embedded PWMP7 hardware definition")
         else:
             doConfiguration(firmware_file, defines, config, target_name, device_name, None)
+
+    if 'PteronautOS' in target_name:
+        verify_image(Path(str(target[0])))
+        print('PteronautOS: verified embedded hardware/options and DOUT / 40 MHz flash header')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Configure Unified Firmware")

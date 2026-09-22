@@ -343,32 +343,14 @@ void Ornithopter::_computeServoMixer() {
         float rawWave = _osc.advance(dt);
 
 #ifdef ZEPHYRUS_ENABLED
-        // ── SSFF — Stroke-Synchronous Feed-Forward ───────────────────
-        // The oscillator returns the phase angle (rad, [0, 2π)), so the
-        // sign of sin(phase) marks the half-stroke. At each reversal the
-        // error accumulated over the finished half-stroke becomes a
-        // ferocity bias for the next one (clamped to ±2.0 units).
+        // Resonance uses the oscillator fundamental. SSFF below must instead
+        // use the shaped wave's asymmetric reversal boundary.
         float waveSin = sinf(rawWave);
-        if ((_prevFlappingSin >= 0.0f && waveSin < 0.0f) ||
-            (_prevFlappingSin < 0.0f  && waveSin >= 0.0f)) {
-            if (_ssffAccumCount > 0 && ssffGain > 0.0f) {
-                float meanError = _ssffAccumError / (float)_ssffAccumCount;
-                float bias = meanError * ssffGain * 0.00001f;
-                if (bias > 2.0f) bias = 2.0f;
-                if (bias < -2.0f) bias = -2.0f;
-                if (waveSin >= 0.0f) _ssffFerocityDownBias = bias;  // entering downstroke → bias next upstroke
-                else                 _ssffFerocityUpBias   = bias;  // entering upstroke   → bias next downstroke
-            }
-            _ssffAccumError = 0.0f;
-            _ssffAccumCount = 0;
-        } else if (ssffGain <= 0.0f) {
+        if (ssffGain <= 0.0f) {
             // Purificatio: zero stale biases when SSFF is disabled
             _ssffFerocityUpBias   = 0.0f;
             _ssffFerocityDownBias = 0.0f;
         }
-        _ssffAccumError += gyroPitchErrorRate;
-        _ssffAccumCount++;
-        _prevFlappingSin = waveSin;
 #endif
 
         // Amplitude = throttle % of the servo-speed-limited max at this freq.
@@ -455,6 +437,27 @@ void Ornithopter::_computeServoMixer() {
         float wDbase = 8.0f - fDbase; if (wDbase < 0.01f) wDbase = 0.01f;
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
+
+#ifdef ZEPHYRUS_ENABLED
+        // Use exactly the boundary consumed by both shapeWave calls, not π.
+        // Updated biases take effect on the NEXT mixer tick: do not recompute
+        // this tick's boundary from its own feedback event.
+        const float strokeSign = rawWave < limiarShared ? 1.0f : -1.0f;
+        if (_prevFlappingSin != strokeSign) {
+            if (_ssffAccumCount > 0 && ssffGain > 0.0f) {
+                float bias = (_ssffAccumError / (float)_ssffAccumCount) * ssffGain * 0.00001f;
+                if (bias > 2.0f) bias = 2.0f;
+                if (bias < -2.0f) bias = -2.0f;
+                if (strokeSign > 0.0f) _ssffFerocityDownBias = bias;
+                else                  _ssffFerocityUpBias = bias;
+            }
+            _ssffAccumError = 0.0f;
+            _ssffAccumCount = 0;
+        }
+        _ssffAccumError += gyroPitchErrorRate;
+        _ssffAccumCount++;
+        _prevFlappingSin = strokeSign;
+#endif
 
         // Thrust-shape centre (dwell + centre blended above) shifts both
         // half-stroke centres symmetrically; the throttle-rate slew adds

@@ -146,7 +146,7 @@ public:
     float _resonanceAccum;          // Phase-locked accumulator (τ=0.15s leaky)
 
     // SSFF state (private to _computeServoMixer, persisted across calls)
-    float _prevFlappingSin;
+    float _prevFlappingSin;        // legacy name: +1 down / -1 up / 0 unseeded
     float _ssffAccumError;
     int   _ssffAccumCount;
     float _ssffFerocityUpBias;

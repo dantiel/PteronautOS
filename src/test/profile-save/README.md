@@ -11,15 +11,16 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   src/test/profile-save/test-throttle-frequency.cpp \
   -o /tmp/ptero-test-throttle-frequency
 /tmp/ptero-test-throttle-frequency
-clang++ -std=c++17 -Wall -Wextra -Werror \
+clang++ -std=c++17 -Wall -Wextra -Werror -DPROGMEM= \
   src/test/profile-save/test-ferocity-shape.cpp \
+  src/lib/Ornithopter/OrnithopterWaveformTables.cpp \
   -o /tmp/ptero-test-ferocity-shape
 /tmp/ptero-test-ferocity-shape
 clang++ -std=c++17 -Wall -Wextra -Werror \
   src/test/profile-save/test-thrust-expo.cpp \
   -o /tmp/ptero-test-thrust-expo
 /tmp/ptero-test-thrust-expo
-clang++ -std=c++17 -Wall -Wextra -Werror \
+clang++ -std=c++17 -Wall -Wextra -Werror -DPROGMEM= \
   src/test/profile-save/test-phase-harmonizer.cpp \
   -o /tmp/ptero-test-phase-harmonizer
 /tmp/ptero-test-phase-harmonizer

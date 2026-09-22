@@ -81,10 +81,9 @@ public:
     // strokeSkewPercent / returnSkewPercent (±100) shift the CENTRE of each
     // half-stroke along its own [start…end] axis — the same per-half mirroring
     // as stroke/return ferocity ("as above so below"). + shifts the centre
-    // toward the START of the half (augmented thrust: the wing reaches peak
-    // velocity sooner) AND lengthens the leading plateau of the square family;
-    // − shifts both toward the END (diminished/late thrust, longer trailing
-    // plateau). 0 keeps the wave symmetric. The warp is monotonic and
+    // toward the START of the half; − shifts it toward the END. This is a
+    // timing axis, not a guarantee of aerodynamic thrust. The SAME time warp
+    // acts on both shape families. 0 keeps the wave symmetric. It is monotonic and
     // end-point-preserving — exactly an asymmetric mix of the square (dwell)
     // and triangular families, never a position jump.
     static float shapeWave(float theta, float strokeFerocity, float returnFerocity,
@@ -99,6 +98,8 @@ inline float FlappingOscillator::advance(float dt) {
     constexpr float kZeta     = 0.7f;   // underdamped → the debt RINGS and decays (inertia)
     constexpr float kTwoPi    = 6.283185307f;
     float omega0 = kBaseDamp + anchorGain;  // anchorGain=0→10 (soft catch), 100→110 (stiff catch)
+    if (!(dt > 0.0f)) return phase;
+    if (dt > 0.1f) dt = 0.1f; // same bounded catch-up budget as the mixer
 
     // The base beat grid always advances at the commanded flap frequency, so
     // "on beat" is a whole number of strokes (2π) ahead or behind it.
@@ -118,9 +119,16 @@ inline float FlappingOscillator::advance(float dt) {
     // lands on a beat, never between beats. ζ<1 keeps the return inertial
     // (pendulum momentum):
     //   φ_offset'' = −ω₀²·sin(φ_offset) − 2ζω₀·(φ_offset' − extraTarget)
-    debtVel += (-omega0 * omega0 * sinf(phaseOffset)
-                - 2.0f * kZeta * omega0 * (debtVel - extraTarget)) * dt;
-    phaseOffset += debtVel * dt;
+    // Semi-implicit Euler is unstable for large omega0*dt. At the maximum
+    // configured omega0=110, 4 ms gives 0.44 (stability boundary ~1.04).
+    // Normal 250 Hz ticks remain one step; a delayed tick costs at most 25.
+    const int steps = (int)ceilf(dt / 0.004f);
+    const float h = dt / (float)steps;
+    for (int i = 0; i < steps; ++i) {
+        debtVel += (-omega0 * omega0 * sinf(phaseOffset)
+                    - 2.0f * kZeta * omega0 * (debtVel - extraTarget)) * h;
+        phaseOffset += debtVel * h;
+    }
 
     // Actual flap phase = base grid + debt; instantaneous rate = base + debt velocity.
     cadence = cadenceTarget + debtVel;
@@ -193,14 +201,12 @@ inline float FlappingOscillator::shapeWave(
     float ferocity01 = f * 0.125f;
     float d = ferocity01 * kWaveMaxDwell;
 
-    // Skew also redistributes the square-wave plateau: the dwell is no longer
-    // split 50/50. +s holds the START of the half longer (front-load — the
-    // wing dwells at full extension before the ramp), −s holds the END longer
-    // (late thrust). front + back still sum to d, so the ramp keeps its width
-    // and only its position within the half moves — monotonic, no jump.
+    // Dwell is symmetric in intrinsic phase. The common warp above already
+    // redistributes it in real time. Redistributing it again with skew would
+    // oppose that warp and reverse the control's meaning at high ferocity.
     float dh = d * 0.5f;
-    float frontDwell = dh * (1.0f + skew01);
-    float backDwell  = dh * (1.0f - skew01);
+    float frontDwell = dh;
+    float backDwell  = dh;
 
     float plateau;
     if (t < frontDwell) plateau = 1.0f;

@@ -889,6 +889,8 @@ static uint32_t mwLastUs   = 0;        // last tick timestamp (µs)
 static uint32_t mwLastApplyUs = 0;     // 1 kHz rate gate — the free-spinning loop must
                                        // not churn the division-heavy core per iteration
 static uint32_t mwClampUs  = 0;        // last velocity-clamp timestamp (µs)
+static uint32_t mwClampRemainder = 0; // fractional step budget; never bank whole steps
+static uint8_t mwClampSlew = 0;      // denominator changes invalidate the remainder
 static int32_t  mwCadence  = 0;        // Q16 rad/s approach value (unity-gain damped)
 static int64_t  mwPhaseAcc = 0;        // 64-bit phase accumulator, Q16 rad·µs
 static int32_t  mwIterm    = 0;        // crest PID I accumulator (LSB·tick)
@@ -1070,6 +1072,8 @@ static void mushinWaveTick(uint32_t nowUs) {
   if (mushinParamDirty) {                 // first v1 frame after (re)link: seed
     mwLastUs = nowUs;                     // the clock — no dt jump
     mwClampUs = nowUs;                    // and the velocity-clamp clock — no link kick
+    mwClampRemainder = 0;
+    mwClampSlew = mushinParam.slew;
     mwPhaseAcc = 0;
     mwCadence = 0;
     mwEasing = 0;
@@ -1078,7 +1082,7 @@ static void mushinWaveTick(uint32_t nowUs) {
   uint32_t dtUs = nowUs - mwLastUs;
   mwLastUs = nowUs;
   if (dtUs > 100000UL) dtUs = 100000UL;
-  if (dtUs == 0) dtUs = 1;
+  if (dtUs == 0) return;  // repeated timestamp must not invent elapsed time
 
   int32_t targetQ16 = mwEasing ? 0 : (int32_t)mushinParam.flapFreq * MUSHIN_OMEGA_DHZ_Q16;
   mwCadence += (int32_t)(((int64_t)10 * (int64_t)(targetQ16 - mwCadence) * (int64_t)dtUs) / 1000000);
@@ -1094,11 +1098,9 @@ static void mushinWaveTick(uint32_t nowUs) {
 // both half-strokes symmetrically; skew warps the downstroke +s and the
 // upstroke −s (endpoints stay pinned). No float anywhere.
 static int16_t mushinShapeWave(uint32_t phaseQ16) {
-  int32_t f8 = ((int32_t)mushinParam.ferocity * 8 + 50) / 100;   // 0..8
-  if (f8 > 8) f8 = 8;
-  int32_t wD = 8 - f8; if (wD < 1) wD = 1;
-  int32_t wS = 8 - f8; if (wS < 1) wS = 1;
-  uint32_t limiarQ16 = (uint32_t)((MUSHIN_TWO_PI_Q16 * (uint64_t)wD) / (uint64_t)(wD + wS));
+  int32_t ferocity = mushinParam.ferocity;
+  if (ferocity > 100) ferocity = 100;
+  const uint32_t limiarQ16 = MUSHIN_TWO_PI_Q16 / 2; // v1 is symmetric
 
   bool descida = phaseQ16 < limiarQ16;
   uint32_t t;                              // normalised half-stroke position, Q14
@@ -1108,18 +1110,20 @@ static int16_t mushinShapeWave(uint32_t phaseQ16) {
 
   // skew warp: t' = t + s·t·(1−t), s = skew% in Q14, mirrored on the upstroke
   int32_t s = ((int32_t)mushinParam.skew * 16384) / 100;
+  if (s > 16384) s = 16384;
+  if (s < -16384) s = -16384;
   if (!descida) s = -s;
   int32_t tw = (int32_t)t + ((s * (int32_t)t >> 14) * (16384 - (int32_t)t) >> 14);
   if (tw < 0) tw = 0;
   if (tw > 16384) tw = 16384;
 
-  // dwell plateau: d = (f8/8)·0.98 in Q14 (8·2007 = 16056 ≈ 0.98·16384)
-  int32_t d  = f8 * 2007;
+  // Keep all 101 transmitted ferocity levels, not just nine rounded f8 bins.
+  int32_t d  = ferocity * 16056 / 100; // 0.98 in Q14
   int32_t dh = d / 2;
-  // skew also redistributes the plateau: +s holds the start longer (front-load),
-  // −s the end (late thrust); front+back still sum to d so the ramp keeps width.
-  int32_t frontDwell = dh + ((s * dh) >> 14);
-  int32_t backDwell  = dh - ((s * dh) >> 14);
+  // The phase warp already shifts the plateau in time. A second dwell shift
+  // would oppose it and reverse the sign of skew at high ferocity.
+  int32_t frontDwell = dh;
+  int32_t backDwell  = dh;
 
   int32_t wave;
   if (tw < frontDwell) wave = MUSHIN_COS_ONE_Q14;
@@ -1155,12 +1159,20 @@ static void mushinWaveApply(uint32_t nowUs) {
 
   // velocity clamp from slew (ms/60° → µs/ms ≈ 333/slew); 0 = unlimited
   int32_t maxDelta = 0x7FFFFFFF;
+  uint32_t dtUs = nowUs - mwClampUs;
+  mwClampUs = nowUs; // also track time while unlimited
+  if (dtUs > 100000UL) dtUs = 100000UL;
+  if (mwClampSlew != mushinParam.slew) {
+    mwClampRemainder = 0;
+    mwClampSlew = mushinParam.slew;
+  }
   if (mushinParam.slew > 0) {
-    uint32_t dtUs = nowUs - mwClampUs;
-    mwClampUs = nowUs;
-    if (dtUs > 100000UL) dtUs = 100000UL;
-    maxDelta = (int32_t)((333UL * dtUs) / ((uint32_t)mushinParam.slew * 1000UL));
-    if (maxDelta < 1) maxDelta = 1;
+    const uint32_t denominator = (uint32_t)mushinParam.slew * 1000UL;
+    const uint32_t budget = 333UL * dtUs + mwClampRemainder;
+    maxDelta = (int32_t)(budget / denominator);
+    mwClampRemainder = budget % denominator;
+  } else {
+    mwClampRemainder = 0;
   }
   if (servoCount >= 1) {
     mwWingL = mushinEaseTo(mwWingL, wing, maxDelta);

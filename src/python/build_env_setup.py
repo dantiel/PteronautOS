@@ -110,5 +110,5 @@ if platform in ['espressif32']:
     env.AddPreAction("$BUILD_DIR/${PROGNAME}.bin", copyBootApp0bin)
 
 if platform in ['espressif32', 'espressif8266']:
-    if not os.path.exists('hardware'):
+    if 'PTERONAUTOS' not in target_name and not os.path.exists('hardware'):
         elrs_helpers.git_cmd('clone', 'https://github.com/ExpressLRS/targets', 'hardware')

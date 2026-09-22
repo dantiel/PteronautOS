@@ -77,18 +77,36 @@ int main()
     assert(upFront > 0.5f);
     assert(upBack < -0.5f);
 
-    // Skew also redistributes the square-wave plateau: at full ferocity and
-    // shapeMix=0 (pure square family) the symmetric half's ramp is centred on
-    // t=0.5 (value ≈ 0). +100 front-loads so the leading plateau still covers
-    // mid-stroke (+1); −100 late-loads so mid-stroke is already the trailing
-    // plateau (−1).
+    // Skew keeps the same direction at maximum plateau ferocity.
     const float downMidFer = 0.5f * kPi;
     expectNear(FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, 0.0f, 0.0f),
                0.0f, 0.05f);
     const float frontPlateau = FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, 100.0f, 0.0f);
     const float backPlateau = FlappingOscillator::shapeWave(downMidFer, 8.0f, 8.0f, -1.0f, 0.0f, -100.0f, 0.0f);
-    assert(frontPlateau > 0.99f);
-    assert(backPlateau < -0.99f);
+    assert(frontPlateau < -0.99f);
+    assert(backPlateau > 0.99f);
+
+    // Front/back is an independent timing axis: for EVERY ferocity and shape
+    // mix, positive skew advances the downstroke, negative skew delays it.
+    // Sweep the interior too, so preserving only the centre cannot hide a
+    // non-monotonic warp or an out-of-range lookup.
+    for (float f : {0.0f, 1.0f, 4.0f, 7.9f, 8.0f}) {
+        for (float mix : {0.0f, 25.0f, 50.0f, 100.0f}) {
+            for (float skew : {-100.0f, -50.0f, 0.0f, 50.0f, 100.0f}) {
+                float previous = 1.0f;
+                for (int i = 0; i <= 256; ++i) {
+                    const float phase = kPi * i / 256.0f;
+                    const float y = FlappingOscillator::shapeWave(phase, f, f, kPi, mix, skew, 0);
+                    const float neutral = FlappingOscillator::shapeWave(phase, f, f, kPi, mix, 0, 0);
+                    assert(std::isfinite(y) && y >= -1.0001f && y <= 1.0001f);
+                    assert(y <= previous + 0.0001f);
+                    if (skew > 0) assert(y <= neutral + 0.0001f);
+                    if (skew < 0) assert(y >= neutral - 0.0001f);
+                    previous = y;
+                }
+            }
+        }
+    }
 
     std::cout << "Ferocity plateau-to-pyramidal mixing + centre-skew + plateau-skew passed\n";
     return 0;

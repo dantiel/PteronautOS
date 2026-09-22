@@ -138,10 +138,15 @@ startBuild = ->
   busy = true
 
   try
+    params = collectParams()
+    delay = Number params.auto_wifi_on_interval
+    unless Number.isInteger(delay) and delay >= -1 and delay <= 2147483
+      throw new Error "Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds."
+    log "Wi-Fi fallback: " + (if delay is -1 then "disabled" else "#{delay} seconds (0 uses the firmware's 30-second default)")
     data = await apiFetch "/api/build",
       method: "POST"
       headers: {"Content-Type": "application/json"}
-      body: JSON.stringify collectParams()
+      body: JSON.stringify params
     unless data?.run_id
       throw new Error "Build server returned no run id — is the worker deployed?"
     currentRunId = data.run_id
@@ -250,7 +255,7 @@ flash = ->
     await esploader.writeFlash
       fileArray: [ { data: firmwareBytes, address: 0x0000 } ]
       flashMode: "dout"
-      flashFreq: "80m"
+      flashFreq: "40m"
       flashSize: "1MB"
       eraseAll: false
       compress: true

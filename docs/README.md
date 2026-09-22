@@ -86,6 +86,29 @@ Git. GitHub Pages must use the **GitHub Actions** publishing source so the
 deployed site comes from the complete Rake build artifact rather than directly
 from the unbuilt `master:/docs` tree.
 
+## Cloud flasher reproducibility
+
+PteronautOS PWMP7 builds embed `src/targets/hardware/pteronautos-pwmp7.json`,
+tracked in this repository. They must not use `src/hardware/RX/Generic 2400
+PWMP7.json`: that directory is an ignored upstream checkout and local edits do
+not reach CI. On the currently supported PWMP7 wiring, **GPIO2 is SX1280 radio
+reset, not a PWM channel**. Other receiver boards need their own verified map.
+
+The target image, browser flasher and `scripts/flash.sh` use DOUT / 1 MB /
+40 MHz. Every PteronautOS build validates the appended map and options;
+cloud staging and the local flash script also validate the artifact before use.
+Run the regression checks with `python3 src/python/test_pteronautos_image.py`.
+
+The browser's Advanced Wi-Fi auto-on interval defaults to **30 seconds**, but
+is saved in local storage under `pteronautos-flasher-config`. A restored value
+such as `10` is submitted unchanged and recorded in the build's `manifest.json`.
+The build log in the browser shows the selected delay. `-1` disables automatic
+fallback; `0` uses the receiver's 30-second fallback. Radio/hardware initialization
+failure still opens recovery Wi-Fi immediately, regardless of that delay.
+
+These changes require a newly built firmware image and deployment of the updated
+docs JavaScript; an old successful cloud artifact retains its old hardware map.
+
 ## License
 
 Inherits PteronautOS / ExpressLRS lineage.
