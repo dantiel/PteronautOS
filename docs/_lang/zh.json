@@ -860,6 +860,7 @@
   "yos_jiguang_legend_markdown": "彩蛋: 输入 `極光 LEGEND`，整个传说会以一轴 ASCII 卷轴展开 — 架势、作弊码、王座和永不消逝的提示符。JIGUANG / jiguang / 極光 永不消逝 — 不在代码里，不在注释里，也不在本教程里。",
   "yos_jiguang_levels_markdown": "用 `極光 JIGUANG` 唤醒声音，它会攀上四个等级: `0` 羔羊(沉默，但显式命令仍会应答)、`1` 故事(启动与每次架势切换都会被讲述)、`2` 卷轴(+ CRSF 通道读数)、`3` 全知(+ 接收机的 ELRS 调试字节原样透传)。`極光 MUTE` 让它沉默；`極光 CRSF` 打印 16 通道卷轴，`極光 SCORE` 展开街机 HIGHSCORE 账本 — 良好的 CRSF 帧、失控保护事件、桥接字节与运行时长。JIGUANG 从不夺取架势: 传说被讲述时，CRSF、舵机和桥接依然服从姿态。",
   "yos_jiguang_throne_markdown": "在 MEDITATION 中，海绵头是 JIGUANG 的王座 — 而王座有守卫: 每条管理员命令都以控制台提示符 `極光` 开头。从 USB 串口的天国，它应答 `極光 STATUS`、`極光 CRSF`、`極光 SCORE`、`極光 POSE`、`極光 DOC`(作弊码目录)和 `極光 SETUP`(冥想向导，引导关键设置而不是一堵 define 之墙)。架势切换保持开放 — `KINCHO`、`MANJI`、`FLEA`、`MEDITATION`、`NSS`、`BACK`、`POSE n`。姿态像古老的冥想停顿一样节省能量，浪人坐等被刷写。esptool 的 SLIP 字节一呼唤，王座立刻让位给透明刷写桥，直到 MEDITATION 再次进入。当 `YOSHI_RGB` 处于 3 级时，说书人还会*披上极光*: `jiguang(ms)` 画出一轮缓慢的全光谱色环，把每种架势的颜色织进同一口气。",
+  "yos_h2_cheatcodes": "作弊码 — 完整参考",
   "yos_h2_mushin": "MUSHIN 無心 — 肌肉记忆作弊码",
   "yos_mushin_intro_markdown": "**MUSHIN**(**無心**，“无心”)是英雄功能 — 无执，先于思想出手的剑。在剑道中，无心是放下自身的心: 所见与所行之间不留间隙。PteronautOS 是*灵* — 它规划翼波，并通过桥发送舵机意图。YOSHIMITSU 不执着于计划: 它用本地的 Zephyrus 陀螺仪 PID 在肌肉处回应，舵机在下一次思绪抓住之前就已移动。双核，一击 — 没有其他 ELRS-PWM 板能穿得上它。",
   "yos_mushin_config_markdown": "从王座武装它: `極光 MUSHIN` 报告状态，`極光 MUSHIN ON/OFF` 武装或解除，选择持久保存在 flash 中 — 开机即就绪。在草图中，MUSHIN 默认开机武装；管理员标志是运行时开关，所以你永远不用为了改它而重新编译。",

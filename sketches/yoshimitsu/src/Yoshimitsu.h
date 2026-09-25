@@ -628,6 +628,7 @@ static void jigLegend() {
   jigCmd(); Serial.println("  gyro. The pose never seizes while the legend is told — 極光 never dies.");
   jigCmd(); Serial.println();
   jigCmd(); Serial.println("  Cheatcodes: KINCHO · MANJI · FLEA · MEDITATION · NSS · BACK · POSE n");
+  jigCmd(); Serial.println("              NSS SERVO i us · SWEEP [i ms] · WAVE hz amp […] — the bench wave");
   jigCmd(); Serial.println("              極光 MUSHIN ON/OFF · 無心 · 極光 DOC · 極光 SETUP");
   jigCmd(); Serial.println("              極光 JIGUANG n · MUTE · CRSF · SCORE · ELRS · LEGEND");
   jigCmd(); Serial.println("════════════════════════════════════════════════");
@@ -1756,6 +1757,8 @@ static void printHelp() {
   Serial.println("  STATUS       stance + counters + pin map");
   Serial.println("  GATES        compile-time flags (board, JIGUANG, gyro, RGB)");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
+  Serial.println("  SWEEP [i ms] (NSS only) triangle sweep — SWEEP STOP sheaths it");
+  Serial.println("  WAVE hz amp  (NSS only) full waveform [ferD ferU skewD skewU mix] — WAVE STOP");
   Serial.println("  HELP         this list");
 #if JIGUANG
   Serial.println("JIGUANG (極光) — the storyteller / commentator / administrator:");
@@ -1782,7 +1785,7 @@ static void printDocs() {
   jigCmd(); Serial.println("  voice     JIGUANG 0..3 · MUTE · CRSF · SCORE · ELRS · LEGEND");
   jigCmd(); Serial.println("  muscle    MUSHIN ON/OFF/? — the no-mind bridge");
   jigCmd(); Serial.println("  throne    ADMIN · BRIDGE — yield / retake the flasher console");
-  jigCmd(); Serial.println("  bench     SERVO i us — direct servo drive (NSS)");
+  jigCmd(); Serial.println("  bench     SERVO i us · SWEEP [i ms] · WAVE <hz> <ampDeg> [ferD ferU skewD skewU mix] (NSS)");
   jigCmd(); Serial.println("  gates     board · JIGUANG · YOSHI_GYRO · YOSHI_RGB · JIGUANG_PROMPT");
 }
 
@@ -1806,6 +1809,196 @@ static void printBootBanner() {
 }
 
 // =============================================================================
+//  NSS SWEEP — the no-sword bench wave
+// -----------------------------------------------------------------------------
+//  A non-blocking triangle sweep for the bench pose: no delay(), no dynamic
+//  memory. The loop pumps it; SERVO, SWEEP STOP and any stance change sheath
+//  it. sweepServo 0 = every attached servo, else the 1-based index.
+// =============================================================================
+
+static bool     sweepActive   = false;
+static uint8_t  sweepServo    = 0;
+static uint16_t sweepLoUs     = PWM_MIN;
+static uint16_t sweepHiUs     = PWM_MAX;
+static uint32_t sweepPeriodMs = 2000;
+static uint16_t sweepLastUs   = 0xFFFF;
+
+static void sweepStop() {
+  if (!sweepActive) return;
+  sweepActive = false;
+  for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(1500);
+}
+
+static void waveStop();   // defined below — the bench waveform's sheath
+
+static void pumpSweep() {
+  if (!sweepActive || stance != STANCE_NSS) return;
+  const uint32_t t = millis() % sweepPeriodMs;
+  const uint32_t half = sweepPeriodMs >> 1;
+  const uint16_t us = (t < half)
+    ? (uint16_t)(sweepLoUs + (uint32_t)(sweepHiUs - sweepLoUs) * t / half)
+    : (uint16_t)(sweepHiUs - (uint32_t)(sweepHiUs - sweepLoUs) * (t - half) / half);
+  if (us == sweepLastUs) return;               // write only on a change of step
+  sweepLastUs = us;
+  if (sweepServo == 0) for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(us);
+  else servos[sweepServo - 1].writeMicroseconds(us);
+}
+
+static void handleSweepCmd(const char* arg) {
+  if (stance != STANCE_NSS) { Serial.println("YOSHIMITSU: SWEEP only obeys in NSS (no-sword bench)."); return; }
+  while (*arg == ' ') arg++;
+  if (strncmp(arg, "STOP", 4) == 0 || strncmp(arg, "OFF", 3) == 0) {
+    if (sweepActive) { sweepStop(); Serial.println("YOSHIMITSU: sweep sheathed — wings centred."); }
+    else Serial.println("YOSHIMITSU: no sweep to sheath.");
+    return;
+  }
+  const int idx = atoi(arg);                   // 0 / empty → every servo
+  const char* p = arg;
+  while (*p && *p != ' ') p++;
+  while (*p == ' ') p++;
+  int period = atoi(p);                        // 0 / empty → 2000 ms
+  if (idx < 0 || idx > (int)servoCount) { Serial.println("YOSHIMITSU: SWEEP index out of range (0 = all)."); return; }
+  if (period == 0) period = 2000;
+  else if (period < 100) period = 100;         // never a spin; non-blocking floor
+  else if (period > 30000) period = 30000;
+  sweepServo = (uint8_t)idx;
+  sweepPeriodMs = (uint32_t)period;
+  sweepLoUs = PWM_MIN;
+  sweepHiUs = PWM_MAX;
+  sweepLastUs = 0xFFFF;
+  waveStop();                                   // the bench holds one oscillator at a time
+  sweepActive = true;
+  Serial.print("YOSHIMITSU: sweep ");
+  if (idx == 0) Serial.print("all");
+  else { Serial.print("servo "); Serial.print(idx); }
+  Serial.print(" · "); Serial.print(period); Serial.print(" ms · ");
+  Serial.print((int)PWM_MIN); Serial.print(".."); Serial.print((int)PWM_MAX);
+  Serial.println(" µs — SWEEP STOP sheaths it");
+}
+
+// =============================================================================
+//  NSS WAVE — the no-sword bench waveform (the cheatcode)
+// -----------------------------------------------------------------------------
+//  One line synthesises the full FlappingOscillator: frequency, amplitude
+//  angle, stroke/return ferocity, down/up skew and form mix. It drives the
+//  SAME Motion::Intent core the MUSHIN spirit sends, computed locally — the
+//  bench wave is the flight wave, not a toy triangle. No delay(), no heap.
+//
+//    WAVE <hz> <ampDeg> [ferD] [ferU] [skewD] [skewU] [mix]
+//    WAVE STOP
+// =============================================================================
+
+static bool           waveActive      = false;
+static Motion::Intent waveIntent;
+static float          wavePhase       = 0.0f;
+static float          waveCyclesPerUs = 0.0f;
+static uint32_t       waveLastUs      = 0;
+static uint32_t       waveLastApplyUs = 0;
+
+static void waveStop() {
+  if (!waveActive) return;
+  waveActive = false;
+  for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(1500);
+}
+
+// skip spaces; parse one float token, advancing p. false when exhausted.
+static bool waveFloat(const char*& p, float& out) {
+  while (*p == ' ') p++;
+  if (*p == '\0') return false;
+  out = (float)atof(p);
+  while (*p && *p != ' ') p++;
+  return true;
+}
+
+static void pumpWave() {
+  if (!waveActive || stance != STANCE_NSS) return;
+  const uint32_t us = micros();
+  if (us - waveLastApplyUs < 1000UL) return;     // ≤1 kHz — spare the PWM registers
+  waveLastApplyUs = us;
+  const uint32_t elapsed = us - waveLastUs;
+  waveLastUs = us;
+  if (waveIntent.flapping) {
+    wavePhase += elapsed * waveCyclesPerUs;
+    wavePhase -= (uint32_t)wavePhase;            // wrap to [0,1) cycles
+  } else wavePhase = 0.0f;
+  uint16_t output[7];
+  Motion::outputs(waveIntent, wavePhase, output);
+  for (uint8_t i = 0; i < servoCount; i++)
+    servos[i].writeMicroseconds(Motion::safePulse(i < 7 ? output[i] : 1500));
+}
+
+static void handleWaveCmd(const char* arg) {
+  if (stance != STANCE_NSS) { Serial.println("YOSHIMITSU: WAVE only obeys in NSS (no-sword bench)."); return; }
+  while (*arg == ' ') arg++;
+  if (strncmp(arg, "STOP", 4) == 0 || strncmp(arg, "OFF", 3) == 0) {
+    if (waveActive) { waveStop(); Serial.println("YOSHIMITSU: wave sheathed — wings centred."); }
+    else Serial.println("YOSHIMITSU: no wave to sheath.");
+    return;
+  }
+  if (*arg == '\0' || *arg == '?') {
+    Serial.println("YOSHIMITSU: WAVE <hz> <ampDeg> [ferD] [ferU] [skewD] [skewU] [mix]");
+    Serial.println("  hz 0.05..20 · amp 0..90 deg (half-peak) · fer 0..100 · skew ±100 · mix 0..100");
+    Serial.println("  WAVE STOP sheaths it. Defaults: fer 50/50 · skew 0/0 · mix 50");
+    return;
+  }
+
+  float tok[7];
+  uint8_t n = 0;
+  const char* p = arg;
+  while (n < 7 && waveFloat(p, tok[n])) n++;
+
+  if (n < 2) { Serial.println("YOSHIMITSU: WAVE needs at least <hz> <ampDeg>."); return; }
+
+  float hz     = tok[0];
+  float ampDeg = tok[1];
+  float ferD   = n > 2 ? tok[2] : 50.0f;
+  float ferU   = n > 3 ? tok[3] : ferD;          // default: mirror the stroke
+  float skewD  = n > 4 ? tok[4] : 0.0f;
+  float skewU  = n > 5 ? tok[5] : 0.0f;
+  float mix    = n > 6 ? tok[6] : 50.0f;
+
+  if (hz < 0.05f) hz = 0.05f; else if (hz > 20.0f) hz = 20.0f;
+  if (ampDeg < 0.0f) ampDeg = 0.0f; else if (ampDeg > 90.0f) ampDeg = 90.0f;
+  if (ferD < 0.0f) ferD = 0.0f; else if (ferD > 100.0f) ferD = 100.0f;
+  if (ferU < 0.0f) ferU = 0.0f; else if (ferU > 100.0f) ferU = 100.0f;
+  if (skewD < -100.0f) skewD = -100.0f; else if (skewD > 100.0f) skewD = 100.0f;
+  if (skewU < -100.0f) skewU = -100.0f; else if (skewU > 100.0f) skewU = 100.0f;
+  if (mix < 0.0f) mix = 0.0f; else if (mix > 100.0f) mix = 100.0f;
+
+  // 0..100 ferocity → the 0..8 half units the Intent's dwell/pointK consume
+  const float fD = ferD * 0.08f;
+  const float fU = ferU * 0.08f;
+  // shared reversal threshold, exactly as the spirit's mixer derives it
+  float wD = 8.0f - fD; if (wD < 0.01f) wD = 0.01f;
+  float wU = 8.0f - fU; if (wU < 0.01f) wU = 0.01f;
+  const float boundary = Motion::twoPi * wD / (wD + wU);
+
+  sweepStop();                                   // the bench holds one oscillator at a time
+  waveIntent = Motion::Intent{};
+  Motion::prepare(waveIntent, boundary, fD, fU, fD, fU, mix, skewD, skewU);
+  waveIntent.hz = hz;
+  waveIntent.centre[0] = waveIntent.centre[1] = 90.0f;
+  waveIntent.amplitude[0] = waveIntent.amplitude[1] = ampDeg;
+  waveIntent.minimum = PWM_MIN;
+  waveIntent.maximum = PWM_MAX;
+  waveIntent.flapping = 1;
+  waveIntent.kind[0] = 1;                        // servo 1 = left front wing
+  waveIntent.kind[1] = 2;                        // servo 2 = right front wing
+  wavePhase = 0.0f;
+  waveCyclesPerUs = hz * 0.000001f;
+  waveLastUs = waveLastApplyUs = micros();
+  waveActive = true;
+
+  Serial.print("YOSHIMITSU: wave ");
+  Serial.print(hz, 2); Serial.print(" Hz · ±");
+  Serial.print(ampDeg, 1); Serial.print("° · fer ");
+  Serial.print(ferD, 0); Serial.print("/"); Serial.print(ferU, 0);
+  Serial.print(" · skew "); Serial.print(skewD, 0); Serial.print("/"); Serial.print(skewU, 0);
+  Serial.print(" · mix "); Serial.print(mix, 0);
+  Serial.println(" — WAVE STOP sheaths it");
+}
+
+// =============================================================================
 //  STANCE TRANSITIONS
 // =============================================================================
 
@@ -1815,6 +2008,8 @@ static void enterStance(Stance next) {
   motionCancel();
   motionActive = false;
   motionReceiver.reset();
+  sweepStop();                                  // any stance change sheaths the bench wave
+  waveStop();                                   // ...and the bench waveform
   // A new stance cancels an unfinished boot dance; it must not later force
   // runtime back into MEDITATION or power up a receiver in a silent stance.
   dancePhase = DANCE_IDLE;
@@ -1890,13 +2085,16 @@ static void enterStance(Stance next) {
 
 static void handleServoCmd(const char* arg) {
   if (stance != STANCE_NSS) { Serial.println("YOSHIMITSU: SERVO only obeys in NSS (no-sword bench)."); return; }
+  while (*arg == ' ') arg++;                    // dispatch hands us " 1 1500" — drop the lead gap
   int idx = atoi(arg);
   const char* us = arg;
-  while (*us && *us != ' ') us++;
-  while (*us == ' ') us++;
+  while (*us && *us != ' ') us++;               // skip the index token
+  while (*us == ' ') us++;                      // skip the gap before µs
   int pw = atoi(us);
   if (idx < 1 || idx > (int)servoCount) { Serial.println("YOSHIMITSU: SERVO index out of range."); return; }
   if (pw < PWM_MIN || pw > PWM_MAX) { Serial.println("YOSHIMITSU: SERVO microseconds out of 988..2012."); return; }
+  sweepStop();                                  // a manual drive sheaths any running sweep
+  waveStop();                                   // ...and any running waveform
   servos[idx - 1].writeMicroseconds(pw);
   Serial.print("YOSHIMITSU: servo "); Serial.print(idx);
   Serial.print(" → "); Serial.print(pw); Serial.println(" µs");
@@ -2015,10 +2213,12 @@ static void runCommand(const char* line) {
   else if (strncmp(line, "GATES",  5) == 0) printGates();
   else if (strncmp(line, "HELP",   4) == 0) printHelp();
   else if (strncmp(line, "SERVO",  5) == 0) handleServoCmd(line + 5);
+  else if (strncmp(line, "SWEEP",  5) == 0) handleSweepCmd(line + 5);
+  else if (strncmp(line, "WAVE",   4) == 0) handleWaveCmd(line + 4);
   else Serial.println("YOSHIMITSU: unknown — type HELP.");
 }
 
-static char consoleLine[24];
+static char consoleLine[64];
 static uint8_t consoleN = 0;
 
 static void parseConsoleLine() {
@@ -2316,6 +2516,7 @@ void loop() {
     pumpMirror();
   } else if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY || stance == STANCE_NSS) {
     if (stance != STANCE_NSS) pumpCrsf();     // NSS drives servos manually, no CRSF
+    else { pumpSweep(); pumpWave(); }         // NSS bench — triangle sweep + waveform (no-op when idle)
     mushinPoll();                     // MUSHIN — the muscle-memory layer (no-op when off)
   }
 #if JIGUANG

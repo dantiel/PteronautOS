@@ -844,6 +844,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["rudder_ferocity_range"] = (int)ornithopter.rudderFerocityRange;
     orni["rudder_amplitude_differential"] = (int)ornithopter.rudderAmplitudeDifferential;
     orni["elevator_ferocity_mix"] = (int)ornithopter.elevatorFerocityMix;
+    orni["elevator_ferocity_rate_mix"] = (int)ornithopter.elevatorFerocityRateMix;
+    orni["elevator_antigravity_mix"] = (int)ornithopter.elevatorAntigravityMix;
     orni["throttle_frequency_mix"] = (int)ornithopter.throttleFrequencyMix;
     orni["ferocity_shape_mix"] = (int)ornithopter.ferocityShapeMix;
     orni["elevon_scale"]        = (int)ornithopter.elevonScale;
@@ -892,6 +894,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["rudder_ferocity_range"] = (int)ornithopter.flightProfiles[i].rudderFerocityRange;
         p["rudder_amplitude_differential"] = (int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential;
         p["elevator_ferocity_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityMix;
+        p["elevator_ferocity_rate_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityRateMix;
+        p["elevator_antigravity_mix"] = (int)ornithopter.flightProfiles[i].elevatorAntigravityMix;
         p["throttle_frequency_mix"] = (int)ornithopter.flightProfiles[i].throttleFrequencyMix;
         p["ferocity_shape_mix"] = (int)ornithopter.flightProfiles[i].ferocityShapeMix;
     }
@@ -1010,6 +1014,10 @@ static bool SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential);
         f.print(",\"elevator_ferocity_mix\":");
         f.print((int)ornithopter.flightProfiles[i].elevatorFerocityMix);
+        f.print(",\"elevator_ferocity_rate_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].elevatorFerocityRateMix);
+        f.print(",\"elevator_antigravity_mix\":");
+        f.print((int)ornithopter.flightProfiles[i].elevatorAntigravityMix);
         f.print(",\"throttle_frequency_mix\":");
         f.print((int)ornithopter.flightProfiles[i].throttleFrequencyMix);
         f.print(",\"ferocity_shape_mix\":");
@@ -1133,6 +1141,18 @@ void LoadOrnithopterConfig()
             if (p["rudder_ferocity_range"].is<int>()) dst.rudderFerocityRange = p["rudder_ferocity_range"].as<int>();
             if (p["rudder_amplitude_differential"].is<int>()) dst.rudderAmplitudeDifferential = p["rudder_amplitude_differential"].as<int>();
             if (p["elevator_ferocity_mix"].is<int>()) dst.elevatorFerocityMix = p["elevator_ferocity_mix"].as<int>();
+            if (p["elevator_ferocity_rate_mix"].is<int>()) {
+                int32_t mix = p["elevator_ferocity_rate_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.elevatorFerocityRateMix = mix;
+            }
+            if (p["elevator_antigravity_mix"].is<int>()) {
+                int32_t mix = p["elevator_antigravity_mix"].as<int>();
+                if (mix < 0) mix = 0;
+                if (mix > 100) mix = 100;
+                dst.elevatorAntigravityMix = mix;
+            }
             if (p["throttle_frequency_mix"].is<int>()) {
                 int32_t mix = p["throttle_frequency_mix"].as<int>();
                 if (mix < 0) mix = 0;
@@ -1250,6 +1270,12 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     float   rudRng= (float)_pteroParamInt(request, "rudder_ferocity_range", (int)defaults.rudderFerocityRange);
     float   rudAmpDiff = (float)_pteroParamInt(request, "rudder_amplitude_differential", (int)defaults.rudderAmplitudeDifferential);
     float   elevFerMix = (float)_pteroParamInt(request, "elevator_ferocity_mix", (int)defaults.elevatorFerocityMix);
+    float   elevFerRateMix = (float)_pteroParamInt(request, "elevator_ferocity_rate_mix", (int)defaults.elevatorFerocityRateMix);
+    if (elevFerRateMix < 0.0f) elevFerRateMix = 0.0f;
+    if (elevFerRateMix > 100.0f) elevFerRateMix = 100.0f;
+    float   elevAntiGravMix = (float)_pteroParamInt(request, "elevator_antigravity_mix", (int)defaults.elevatorAntigravityMix);
+    if (elevAntiGravMix < 0.0f) elevAntiGravMix = 0.0f;
+    if (elevAntiGravMix > 100.0f) elevAntiGravMix = 100.0f;
     float   thrThrustShape = (float)_pteroParamInt(request, "throttle_thrust_shape_mix", (int)defaults.throttleThrustShapeMix);
     if (thrThrustShape < 0.0f) thrThrustShape = 0.0f;
     if (thrThrustShape > 100.0f) thrThrustShape = 100.0f;
@@ -1280,7 +1306,7 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
 
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
@@ -1292,6 +1318,8 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.rudderFerocityRange = rudRng;
         ornithopter.rudderAmplitudeDifferential = rudAmpDiff;
         ornithopter.elevatorFerocityMix = elevFerMix;
+        ornithopter.elevatorFerocityRateMix = elevFerRateMix;
+        ornithopter.elevatorAntigravityMix = elevAntiGravMix;
         ornithopter.throttleThrustShapeMix = thrThrustShape;
         ornithopter.throttleThrustExpo = thrThrustExpo;
         ornithopter.throttleFrequencyMix = thrFreqMix;
@@ -1301,7 +1329,7 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.aileronSkewMix      = ailSkewMix;
         ornithopter.throttleSkewRateMix = thrSkewRateMix;
         ornithopter.aileronSkewRateMix = ailSkewRateMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix);
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     }
 
     // Global mixer params (not per-profile)

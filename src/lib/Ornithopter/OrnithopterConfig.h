@@ -244,6 +244,19 @@ constexpr OrniThrustShape orniThrottleThrustShape(float throttle01, float mixPer
 #define ORNI_SKEW_RATE_LPF_TAU  0.10f   // s — slew transient decay
 #define ORNI_ROLL_RATE_GAIN     0.1f    // amplitude fraction per 1/s aileron rate at 100% mix
 
+// ─── Elevator-rate → ferocity transient (slew) + antigravity ────────
+// The faster the elevator stick moves, the more ferocity dwells in that
+// stroke direction (climb → downstroke, dive → upstroke). The transient
+// DECAYS toward the CURRENT static stick coupling, so a held climb settles on
+// the steady climb ferocity rather than neutral. Antigravity is a rate-gated,
+// stick-direction feed-forward that fights gravity while the stick moves, then
+// fades once the stick rests.
+#define ORNI_ELEV_RATE_GAIN     0.4f    // ferocity units per 1/s elevator rate at 100% mix
+#define ORNI_ELEV_RATE_LPF_TAU  0.08f   // s — elevator slew LPF
+#define ORNI_ELEV_RATE_TAU      0.15f   // s — transient decay toward static coupling
+#define ORNI_ANTIGRAV_GATE_GAIN 0.10f   // 1/s⁻¹ — maps |elevRate| to gate 0..1 (full slam ≈ saturates)
+#define ORNI_ANTIGRAV_GATE_TAU  0.30f   // s — antigravity gate decay after stick rests
+
 // Aileron → differential flap AMPLITUDE coupling (roll steering). Centre-skew
 // is aerodynamically roll-neutral: +skew and −skew produce the SAME lift
 // impulse (time-reversal symmetry), so their L/R difference is exactly zero —
@@ -285,6 +298,28 @@ constexpr float orniAileronRollRateShift(float aileronRatePerSec, float rateMixP
     return s;
 }
 
+// Elevator-rate → ferocity dwell kick (slew): the caller feeds the low-passed
+// elevator slew (1/s), always non-negative (the caller splits climb/dive). Maps
+// a full stick slam to a strong dwell kick in that stroke direction; clamped to
+// the ferocity envelope; off at 0% mix.
+constexpr float orniElevatorRateFerKick(float elevRateAbsPerSec, float rateMixPercent) {
+    const float mix = orniClamp01(rateMixPercent * 0.01f);
+    float s = elevRateAbsPerSec * ORNI_ELEV_RATE_GAIN * mix;
+    if (s > ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) s = ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN;
+    if (s < 0.0f) s = 0.0f;
+    return s;
+}
+
+// Antigravity feed-forward: a rate-gated, stick-proportional ferocity assist in
+// the stick direction. gate01 is the moving-average |elevRate| gate (0 rest …
+// 1 moving); the result adds to the same stroke as the static coupling. Off at 0%.
+constexpr float orniElevatorAntigravity(float gate01, float elevatorDeflection01, float antigravMixPercent) {
+    const float mix = orniClamp01(antigravMixPercent * 0.01f);
+    float g = gate01 < 0.0f ? 0.0f : (gate01 > 1.0f ? 1.0f : gate01);
+    float e = elevatorDeflection01 < 0.0f ? 0.0f : (elevatorDeflection01 > 1.0f ? 1.0f : elevatorDeflection01);
+    return g * e * mix * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN);
+}
+
 // ─── Flight Profiles (multi-position channel) ──────────────────────
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
 // Kernel (MixerProfile / servo geometry) is NOT per-profile — it stays fixed.
@@ -310,6 +345,8 @@ struct FlightProfileParams {
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll steering)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake (slew)
     float   aileronSkewRateMix; // 0–100, aileron-rate → transient differential skew boost/brake (slew)
+    float   elevatorFerocityRateMix; // 0–100, elevator-rate → transient ferocity dwell (slew)
+    float   elevatorAntigravityMix;  // 0–100, rate-gated stick-direction gravity assist
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

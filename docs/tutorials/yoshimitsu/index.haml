@@ -307,6 +307,41 @@
         %p!= yos_jiguang_legend_markdown
         %p!= yos_jiguang_levels_markdown
         %p!= yos_jiguang_throne_markdown
+
+        %h2!= yos_h2_cheatcodes
+        %pre
+          %code
+            :preserve
+              Open commands (no prefix):
+                KINCHO            CRSF->PWM converter (the parry)
+                MANJI / GYRO      converter + Zephyrus gyro (the levitation)
+                FLEA / JIG        power-cycle jig -> bootloader -> MEDITATION
+                MEDITATION        pocket flasher (MED / FLASH / FLASHER also work)
+                NSS / BENCH       No-Sword bench — direct servo, no radio
+                BACK / TURN       receiver off, shared UART silent
+                POSE n            jump to stance 0..5
+                STATUS            stance + counters + pin map
+                GATES             compile-time flags
+                HELP              the scroll of stances
+                SERVO i us        (NSS) drive servo i to microseconds
+                SWEEP [i ms]      (NSS) triangle sweep — SWEEP STOP sheaths it
+                WAVE hz amp [...] (NSS) full waveform — WAVE STOP sheaths it
+                  hz 0.05..20 · amp 0..90 deg · fer 0..100 · skew ±100 · mix 0..100
+              極光-gated (type 極光 first):
+                DOC               the cheatcode catalog
+                SETUP             the meditation wizard
+                JIGUANG           toggle the voice · JIGUANG 0..3 set level
+                MUTE              silence the storyteller
+                LEGEND            the whole legend as one ASCII scroll (easter egg)
+                CRSF              print the 16-channel scroll
+                SCORE             arcade HIGHSCORE ledger
+                ELRS              toggle receiver debug passthrough
+                BRIDGE / ADMIN    (MEDITATION) yield to / retake the flasher console
+                MUSHIN ON/OFF/?   arm / disarm / report the no-mind bridge
+              Easter eggs:
+                YOSHI             the always-on RGB aurora — every stance breathes its colour
+                極光 LEGEND       the one-ASCII-scroll legend — JIGUANG never dies
+                MUSHIN 無心       the no-mind bridge — the spirit plans, the muscle strikes
         %h2!= yos_h2_mushin
         %p!= yos_mushin_intro_markdown
         %p!= yos_mushin_config_markdown

@@ -45,6 +45,8 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     aileronSkewMix      = p.aileronSkewMix;
     throttleSkewRateMix = p.throttleSkewRateMix;
     aileronSkewRateMix = p.aileronSkewRateMix;
+    elevatorFerocityRateMix = p.elevatorFerocityRateMix;
+    elevatorAntigravityMix  = p.elevatorAntigravityMix;
 }
 
 void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
@@ -56,7 +58,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          float ferShapeMix,
                                          float strokeSkew, float returnSkew,
                                          float ailSkewMix,
-                                         float thrSkewRateMix, float ailSkewRateMix)
+                                         float thrSkewRateMix, float ailSkewRateMix,
+                                         float elevFerRateMix, float elevAntiGravMix)
 {
     if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
     FlightProfileParams &p = flightProfiles[idx];
@@ -78,6 +81,8 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.aileronSkewMix      = ailSkewMix;
     p.throttleSkewRateMix = thrSkewRateMix;
     p.aileronSkewRateMix = ailSkewRateMix;
+    p.elevatorFerocityRateMix = elevFerRateMix;
+    p.elevatorAntigravityMix  = elevAntiGravMix;
     if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
@@ -121,6 +126,8 @@ Ornithopter::Ornithopter()
   , aileronSkewMix(0.0f)
   , throttleSkewRateMix(0.0f)
   , aileronSkewRateMix(0.0f)
+  , elevatorFerocityRateMix(0.0f)
+  , elevatorAntigravityMix(0.0f)
   , elevonScale(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
@@ -156,6 +163,11 @@ Ornithopter::Ornithopter()
   , _throttleRateLPF(0.0f)
   , _prevAileronNorm(-2.0f)
   , _aileronRateLPF(0.0f)
+  , _prevElevatorNorm(-2.0f)
+  , _elevatorRateLPF(0.0f)
+  , _elevFerStroke(0.0f)
+  , _elevFerReturn(0.0f)
+  , _antiGravGate(0.0f)
 {
     modelName[0] = '\0';
     for (uint8_t i = 0; i < STK_COUNT; ++i) stickChannels[i] = 992; // center (CRSF neutral)
@@ -179,6 +191,11 @@ void Ornithopter::onLinkUp() {
     _throttleRateLPF = 0.0f;
     _prevAileronNorm = -2.0f;   // seed on next flap tick — no stale roll slew kick
     _aileronRateLPF = 0.0f;
+    _prevElevatorNorm = -2.0f;  // seed on next flap tick — no stale fer dwell kick
+    _elevatorRateLPF = 0.0f;
+    _elevFerStroke = 0.0f;
+    _elevFerReturn = 0.0f;
+    _antiGravGate = 0.0f;
 #ifdef ZEPHYRUS_ENABLED
     // Reset SSFF state on arm — fresh biases for each flight
     _prevFlappingSin = 0.0f;
@@ -200,6 +217,11 @@ void Ornithopter::enterFailsafe() {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
     } else {
         _osc.reset();
+        _prevElevatorNorm = -2.0f;  // fresh seed on next flap tick
+        _elevatorRateLPF = 0.0f;
+        _elevFerStroke = 0.0f;
+        _elevFerReturn = 0.0f;
+        _antiGravGate = 0.0f;
     }
 #ifdef ZEPHYRUS_ENABLED
     _prevFlappingSin = 0.0f;
@@ -374,6 +396,54 @@ void Ornithopter::_computeServoMixer() {
         float elevUpBoost   = fmaxf( elevatorNorm, 0.0f) * elevFerScale;   // climb → downstroke
         float elevDownBoost = fmaxf(-elevatorNorm, 0.0f) * elevFerScale;   // dive  → upstroke
 
+        // ── Elevator-RATE → ferocity transient (slew) + antigravity ──
+        // The faster the elevator stick moves, the more ferocity dwells in
+        // that stroke direction (climb → downstroke, dive → upstroke). The
+        // transient DECAYS toward the CURRENT static stick coupling (so a held
+        // climb settles on the steady climb ferocity, not neutral). Antigravity
+        // is a rate-gated, stick-proportional feed-forward that fights gravity
+        // in the stick direction while moving, then fades when the stick rests.
+        float elevRateKickUp   = 0.0f;
+        float elevRateKickDown = 0.0f;
+        float antiGravUp       = 0.0f;
+        float antiGravDown     = 0.0f;
+
+        if (_prevElevatorNorm < -1.5f) {
+            // First flap tick after glide/link: seed the transient at the static
+            // coupling so the pre-existing elevator→ferocity mix applies
+            // instantly (no soft-start dip) — only the kicks ride on top.
+            _prevElevatorNorm = elevatorNorm;
+            _elevFerStroke = elevUpBoost;
+            _elevFerReturn = elevDownBoost;
+        } else if (dt > 0.0f) {
+            float elevRate = (elevatorNorm - _prevElevatorNorm) / dt;
+            _prevElevatorNorm = elevatorNorm;
+            float alphaRate = dt / (ORNI_ELEV_RATE_LPF_TAU + dt);
+            _elevatorRateLPF += (elevRate - _elevatorRateLPF) * alphaRate;
+
+            elevRateKickUp   = orniElevatorRateFerKick( _elevatorRateLPF, elevatorFerocityRateMix);
+            elevRateKickDown = orniElevatorRateFerKick(-_elevatorRateLPF, elevatorFerocityRateMix);
+
+            float gate = fabsf(_elevatorRateLPF) * ORNI_ANTIGRAV_GATE_GAIN;
+            if (gate > 1.0f) gate = 1.0f;
+            float alphaGate = dt / (ORNI_ANTIGRAV_GATE_TAU + dt);
+            _antiGravGate += (gate - _antiGravGate) * alphaGate;
+
+            antiGravUp   = orniElevatorAntigravity(_antiGravGate,  elevatorNorm, elevatorAntigravityMix);
+            antiGravDown = orniElevatorAntigravity(_antiGravGate, -elevatorNorm, elevatorAntigravityMix);
+
+            // Decaying accumulator toward the current static coupling + kick +
+            // antigravity — so the transient relaxes "in the direction of the
+            // current stick input". The DELTA over the static is what we add.
+            float alphaFer = dt / (ORNI_ELEV_RATE_TAU + dt);
+            _elevFerStroke += ((elevUpBoost + elevRateKickUp   + antiGravUp)   - _elevFerStroke) * alphaFer;
+            _elevFerReturn += ((elevDownBoost + elevRateKickDown + antiGravDown) - _elevFerReturn) * alphaFer;
+        }
+
+        // Transient EXTRA ferocity riding on the static coupling (≈0 at rest).
+        float elevFerRateUp   = _elevFerStroke - elevUpBoost;    // downstroke dwell kick
+        float elevFerRateDown = _elevFerReturn - elevDownBoost;  // upstroke dwell kick
+
         // Throttle → thrust-shape coupling (per-profile, 0–100). One blended
         // knob: thrust aggression α = expo(throttle)·mix drives dwell (square)
         // AND centre (front-load) together — the defined overlap of ferocity
@@ -414,12 +484,12 @@ void Ornithopter::_computeServoMixer() {
         float resonanceBias = _resonanceAccum;
 
         float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + thrust.dwellBoost;
+                          + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + elevFerRateUp + thrust.dwellBoost;
         float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal - iBias + _ssffFerocityDownBias + resonanceBias + elevDownBoost + thrust.dwellBoost;
+                          + ferocitySignal - iBias + _ssffFerocityDownBias + resonanceBias + elevDownBoost + elevFerRateDown + thrust.dwellBoost;
 #else
-        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + thrust.dwellBoost;
-        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + thrust.dwellBoost;
+        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + elevFerRateUp + thrust.dwellBoost;
+        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + elevFerRateDown + thrust.dwellBoost;
 #endif
         // Yaw stick → L/R wing differential, scaled by rudder_ferocity_range (0–100)
         float rudderFer = _crsfToNorm(voiceRudder) * rudderFerocityRange * 0.01f * ORNI_DIFFERENTIAL_MAX;
@@ -598,6 +668,11 @@ void Ornithopter::_computeServoMixer() {
         _throttleRateLPF = 0.0f;
         _prevAileronNorm = -2.0f;   // glide: sentinel seeds without roll slew kick
         _aileronRateLPF = 0.0f;
+        _prevElevatorNorm = -2.0f;  // glide: sentinel seeds without fer dwell kick
+        _elevatorRateLPF = 0.0f;
+        _elevFerStroke = 0.0f;
+        _elevFerReturn = 0.0f;
+        _antiGravGate = 0.0f;
 #ifdef ZEPHYRUS_ENABLED
         // Glide pause: purge half-stroke accumulators so a fresh flap
         // burst starts clean (no stale SSFF biases / resonance charge).

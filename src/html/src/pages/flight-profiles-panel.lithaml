@@ -127,6 +127,24 @@
             %input{type: "range", min: "0", max: "100", .value: self.elevatorFerocityMix, @input: self._onSlider('elevatorFerocityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
             %span.value= self.elevatorFerocityMix
             %
+        %tr
+          %td
+            %b= self._t('ornithopter.elevator_ferocity_rate_mix.title')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.elevator_ferocity_rate_mix.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.elevatorFerocityRateMix, @input: self._onSlider('elevatorFerocityRateMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.elevatorFerocityRateMix
+            %
+        %tr
+          %td
+            %b= self._t('ornithopter.elevator_antigravity_mix.title')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.elevator_antigravity_mix.desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.elevatorAntigravityMix, @input: self._onSlider('elevatorAntigravityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.elevatorAntigravityMix
+            %
        %tr
          %td
            %b= self._t('ornithopter.throttle_frequency_mix.title')

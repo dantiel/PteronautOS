@@ -82,7 +82,8 @@ public:
                                 float thrFreqMix, float ferShapeMix,
                                 float strokeSkew, float returnSkew,
                                 float ailSkewMix,
-                                float thrSkewRateMix, float ailSkewRateMix);
+                                float thrSkewRateMix, float ailSkewRateMix,
+                                float elevFerRateMix, float elevAntiGravMix);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
@@ -111,6 +112,8 @@ public:
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake
     float   aileronSkewRateMix; // 0–100, aileron-rate → transient differential skew boost/brake (slew)
+    float   elevatorFerocityRateMix; // 0–100, elevator-rate → transient ferocity dwell (slew)
+    float   elevatorAntigravityMix;  // 0–100, rate-gated stick-direction gravity assist
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
@@ -180,6 +183,11 @@ private:
     float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost
     float _prevAileronNorm;  // last flap-tick aileron (sentinel -2 after glide/reset)
     float _aileronRateLPF;   // low-passed aileron slew (1/s) — roll slew boost
+    float _prevElevatorNorm; // last flap-tick elevator (sentinel -2 after glide/reset)
+    float _elevatorRateLPF;  // low-passed elevator slew (1/s) — ferocity dwell kick
+    float _elevFerStroke;    // decaying downstroke fer accumulator (tracks static + kick + antigrav)
+    float _elevFerReturn;    // decaying upstroke fer accumulator
+    float _antiGravGate;     // |elevRate| moving-average gate (0 rest … 1 moving)
     uint16_t _f[SF_COUNT];  // servo output indexed by ServoFunc
 
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);
