@@ -5,51 +5,50 @@
   The spirit (ESP8285 RX) plans the wave; the muscle (RP2040) strikes.
   This module is the spirit's half of the no-mind bridge: it listens for the
   muscle's heartbeat (ANNOUNCE), and — while the link is fresh — streams the
-  unified waveform+gyro result as servo intents instead of driving local PWM.
+  complete pilot mix as a Motion::Intent (the precomputed waveform, boundary,
+  skew, mix, trims and output routing) instead of driving local PWM. The muscle
+  evaluates the intent from its own phase oscillator; no servo µs and no wave
+  samples cross the wire.
 
-  Standalone-first: PteronautOS keeps its own PWM + gyro (Zephyrus) untouched
-  until MUSHIN_ENABLED is compiled in — the shared-compute mode where the
-  muscle owns the servos and the gyro. No RP2040 attached ⇒ no change.
+  MUSHIN_ENABLED selects an EP2 companion build: UART0 belongs to this module,
+  while the RP2040 owns servos and gyro. No companion means no actuator output.
+  The separate PWMP7 target retains its standalone PWM + local gyro path.
 
-  Wire format mirrors sketches/yoshimitsu/src/Yoshimitsu.h MUSHIN v1:
+  CRSF at 420000 baud shares UART0 with ROM flashing at 115200. The Motion
+  intent (type 0x81) is a chunked CRSF frame. The muscle's return channel
+  travels inside a project-private 0x80 envelope carrying the legacy 0x9B frame:
     [0x9B][len][type][payload…][xor]    xor over len+type+payload
-      0x01 INTENT    spirit → muscle   v1: 11-byte wave parameters (the muscle
-                                       computes phase + shapeWave locally, so
-                                       the bit-banged bridge no longer limits
-                                       flapping resolution); v0: n × uint16
-                                       servo µs (little-endian) as fallback.
       0x02 ANNOUNCE  muscle → spirit   version + posture heartbeat (1 Hz)
       0x03 TELEMETRY muscle → spirit   gyro rate + correction
-  Version handshake: the muscle announces its protocol version in ANNOUNCE
-  byte 0. A v1 muscle gets parameter frames; a v0 muscle keeps the old µs
-  path. The muscle parses by payload length (11 → v1, else even → v0), so
-  both generations coexist on the same wire.
-
-  No dynamic memory, no delay(), never blocking. Graceful degradation: if the
-  heartbeat falls quiet, the spirit returns to its own local PWM.
+      0x04 STOP      spirit → muscle   RF/model-match loss, centring the muscle
+  No dynamic memory, no delay(), no partial writes. Update both peers together;
+  the former bare 0x9B SoftwareSerial transport is not accepted.
 */
 
 #include <cstdint>
+#include "../../../sketches/yoshimitsu/src/CompanionTransport.h"
+#include "../../../sketches/yoshimitsu/src/PreparedMotion.h"
 
 #define MUSHIN_SYNC      0x9B   // 無心 — the no-mind sync
-#define MUSHIN_VER       1      // protocol version — 1 = parameter intents
-#define MUSHIN_INTENT    0x01   // spirit → muscle: servo intents / wave params
+#define MUSHIN_VER       1      // protocol version — reported in ANNOUNCE byte 0
 #define MUSHIN_ANNOUNCE  0x02   // muscle → spirit: version + posture
 #define MUSHIN_TELEMETRY 0x03   // muscle → spirit: gyro telemetry
-#define MUSHIN_MAX_PAY   16     // 8 servos × 2 bytes
-#define MUSHIN_INTENT_V1_LEN 11 // v1 parameter intent payload (MushinIntentV1)
+#define MUSHIN_SWEEP     0x05   // spirit → muscle: raw µs bench sweep (u16 LE)
+#define MUSHIN_MAX_PAY   16     // legacy 0x9B payload ceiling (announce/telemetry)
 
-// Bridge pin defaults (ESP8266/ESP8285: no free hardware UART → SoftwareSerial
-// on GPIO9(RX)/GPIO10(TX)). Defined here — not in the .cpp — so devServoOutput
-// can exclude these exact GPIOs from PWM allocation. The bridge and the local
-// wing PWM are mutually exclusive by design and must never share a pin.
+// Single UART0. No SoftwareSerial or second wiring pair.
 #if defined(PLATFORM_ESP8266)
   #ifndef MUSHIN_RX_PIN
-    #define MUSHIN_RX_PIN 9   // ESP8285 GPIO9  ← RP2040 TX (bridge UART1 TX)
+    #define MUSHIN_RX_PIN 3   // UART0 RX ← RP2040 TX
   #endif
   #ifndef MUSHIN_TX_PIN
-    #define MUSHIN_TX_PIN 10  // ESP8285 GPIO10 → RP2040 RX (bridge UART1 RX)
+    #define MUSHIN_TX_PIN 1   // UART0 TX → RP2040 RX
   #endif
+#endif
+
+#if defined(PLATFORM_ESP8266) && defined(MUSHIN_ENABLED)
+static_assert(MUSHIN_RX_PIN == 3 && MUSHIN_TX_PIN == 1,
+              "EP2 requires UART0 RX=3 / TX=1, not GPIO9/10");
 #endif
 
 #ifndef MUSHIN_ANNOUNCE_STALE_MS
@@ -63,31 +62,6 @@
 #ifndef MUSHIN_GYRO_SCALE_LSB
   #define MUSHIN_GYRO_SCALE_LSB 131       // mirrors Yoshimitsu_Loadout.h GYRO_SCALE_LSB_DEFAULT (±250 dps)
 #endif
-
-// The muscle's return channel — parsed from MUSHIN_TELEMETRY frames. Sent at
-// 1 Hz (same cadence as ANNOUNCE): raw gyro rate (LSB), the µs correction the
-// muscle's PID applied, and the muscle's own view of the link.
-// MUSHIN v1 parameter intent — the spirit plans the wave, the muscle strikes.
-// Payload layout (11 bytes, little-endian multi-byte):
-//   [0..1]  throttle       u16   0..1000   (throttlePct × 1000)
-//   [2]     flapFreq       u8    10..200   deci-Hz (0 = cadence decay)
-//   [3]     ferocity       u8    0..100    post-mix stroke/return ferocity
-//   [4]     skew           i8    -100..100 post-mix stroke skew (return = −skew)
-//   [5]     slew           u8    0..255    servoSpeed ms/60° (0 = unlimited)
-//   [6]     stance         u8    0..5      active flight profile
-//   [7..8]  setpointRoll   i16   ±250      dps stick→rate setpoint (muscle PID)
-//   [9..10] setpointPitch  i16   ±250      dps stick→rate setpoint
-struct MushinIntentV1
-{
-    uint16_t throttle = 0;
-    uint8_t  flapFreq = 0;
-    uint8_t  ferocity = 0;
-    int8_t   skew = 0;
-    uint8_t  slew = 0;
-    uint8_t  stance = 0;
-    int16_t  setpointRoll = 0;
-    int16_t  setpointPitch = 0;
-};
 
 // The muscle's return channel — parsed from MUSHIN_TELEMETRY frames. Sent at
 // 1 Hz (same cadence as ANNOUNCE): raw gyro rate (LSB), the µs correction the
@@ -111,8 +85,6 @@ public:
     void begin(Stream &serial);
     void update(uint32_t nowMs);
     bool isLinked() const;
-    void emitIntents(const uint16_t *us, uint8_t count);
-    void emitIntentV1(const MushinIntentV1 &p);
     uint8_t announcedServoCount() const { return _announcedServos; }
     uint8_t muscleVersion() const { return _announcedVersion; }
     const MushinTelemetry &telemetry() const { return _tele; }
@@ -122,6 +94,7 @@ public:
     }
 
 private:
+    Companion::Parser _transport;
     enum : uint8_t { MS_IDLE, MS_LEN, MS_TYPE, MS_PAY, MS_XOR };
 
     Stream  *_serial = nullptr;
@@ -141,8 +114,10 @@ private:
 void mushinInit();
 void mushinUpdate(uint32_t nowMs);
 bool mushinIsLinked();
-void mushinEmitIntents(const uint16_t *us, uint8_t count);
-void mushinEmitIntentV1(const MushinIntentV1 &p);
+void mushinEmitChannels(const uint32_t *channels);
+void mushinStop();
+void mushinEmitSweep(uint16_t us);
+void mushinEmitIntent(const Motion::Intent &intent, uint32_t nowMs);
 uint8_t mushinMuscleVersion();
 const MushinTelemetry &mushinTelemetry();
 bool mushinTelemetryFresh(uint32_t nowMs);

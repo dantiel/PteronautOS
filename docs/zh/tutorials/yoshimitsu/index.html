@@ -29,6 +29,10 @@
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — 完整解决方案：所有秘籍，一卷尽藏</h1>
 <p class='sub-lead'>一场只有赢家的作弊码寓言。一个轻松的草图，六种架势，一副永久的挽具: CRSF→PWM 的格挡(KINCHO)、Zephyrus 陀螺仪悬浮(MANJI_DRAGONFLY)、口袋刷写器(FLEA · MEDITATION)、无剑工作台(NSS)、从不回望的镜子(BACK_TURNED) — 还有常亮的极光 YOSHI，以及讲述传说的冥想管理员 JIGUANG(極光)。接一次线，刷一次机；此后库负责更新，王座负责发令。</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>一块板，六个架势</h2>
 <p><p>YOSHIMITSU 是拥有<strong>六种架势</strong>的<strong>秘传忍者</strong> — 每种架势都是一场不同的胜利，全都穿着同一个灵魂。一个轻松的草图同时为两块板编译；架势通过 USB 命令、GPIO0 按钮(ESP32-S3)或 RESET 点按(RP2040-Tiny)切换:</p></p>
 <table>
@@ -196,7 +200,7 @@
 <td>共地（必需）</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>电源极性 &amp; 电压</strong>
 <p><p>⚠ 接收机在治具上时，<strong>只供 3.3&nbsp;V</strong>，绝不供 5&nbsp;V。连接接收机前用电压表验证 MOSFET：GPIO10 为高时漏极应读 0&nbsp;V；GPIO10 为低时应读 3.3&nbsp;V。</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>桥接 RX ← 接收机 TX</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;baud</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>桥接 TX → 接收机 RX</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>交叉：TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>舵机 1（<code>SERVO_PIN_1</code>）</p></td>

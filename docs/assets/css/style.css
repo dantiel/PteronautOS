@@ -619,23 +619,22 @@ footer .lang-switch {
 }
 .flasher-cta a {
   display: inline-block;
-  padding: 0.65rem 1.4rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  text-decoration: none;
+  font-family: "Turret Road", monospace;
   font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.2em;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: background 0.2s, color 0.2s;
-}
-.flasher-cta a::after {
-  content: "→";
-  margin-left: 0.55em;
-}
-.flasher-cta a:hover {
+  padding: 0.65rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--accent);
   background: var(--accent);
   color: var(--bg);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.flasher-cta a:hover {
+  background: var(--nav);
 }
 
 @media (max-width: 480px) {

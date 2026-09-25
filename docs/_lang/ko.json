@@ -919,8 +919,8 @@
   "doc_wave_slew": "Slew(레이트)",
   "doc_legend_wing_l": "왼쪽 날개",
   "doc_legend_wing_r": "오른쪽 날개",
-  "flasher_title": "PteronautOS — 클라우드 빌드 및 플래셔",
-  "flasher_h1": "클라우드 빌드 및 플래셔",
+  "flasher_title": "PteronautOS — Fossil Etcher",
+  "flasher_h1": "Fossil Etcher",
   "flasher_lead": "브라우저에서 펌웨어를 빌드하고 플래시 — 콘솔도 PlatformIO도 필요 없음.",
   "flasher_heading_config": "빌드 구성",
   "flasher_mixer_profile": "믹서 프로필",
@@ -953,5 +953,7 @@
   "flasher_home_wifi_password": "홈 WiFi 비밀번호",
   "flasher_locales_hint": "WebUI에 포함할 언어 선택 — 선택 없음은 11개 모두 포함.",
   "flash_online_cta": "온라인으로 플래시",
-  "flash_online_cta_desc": "브라우저에서 바로 펌웨어를 빌드하고 플래시하세요 — 툴체인도 드라이버도 필요 없습니다. Chrome, Edge과 Opera는 USB로 플래시하고, 다른 브라우저는 .bin을 다운로드합니다."
+  "flash_online_cta_desc": "브라우저에서 바로 펌웨어를 빌드하고 플래시하세요 — 툴체인도 드라이버도 필요 없습니다. Chrome, Edge과 Opera는 USB로 플래시하고, 다른 브라우저는 .bin을 다운로드합니다.",
+  "flasher_load_btn": ".bin 불러오기",
+  "flasher_disconnect_btn": "연결 해제"
 }

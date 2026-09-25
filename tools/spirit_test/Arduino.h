@@ -11,6 +11,7 @@ public:
     virtual int read() = 0;
     virtual size_t write(uint8_t) = 0;
     virtual size_t write(const uint8_t*, size_t) = 0;
+    virtual int availableForWrite() { return 128; }
 };
 
 class SerialType : public Stream {
@@ -20,6 +21,8 @@ public:
     static uint8_t  rx[512];
     static int16_t  rxlen;
     static int16_t  rxpos;
+    inline static int capacity = 128;
+    int availableForWrite() override { return capacity; }
     void begin(uint32_t) {}
     void begin(uint32_t, uint32_t) {}
     void begin(uint32_t, uint32_t, int, int) {}
@@ -30,3 +33,4 @@ public:
 };
 
 extern SerialType Serial1;
+extern SerialType Serial;

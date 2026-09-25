@@ -29,6 +29,10 @@
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — 完全ソリューション：すべてのチートコード、ひとつの巻物</h1>
 <p class='sub-lead'>勝者しかいないチートコード寓話。ひとつのゆるやかなスケッチ、六つの構え、ひとつの常設ハーネス: CRSF→PWMの受け流し(KINCHO)、Zephyrusジャイロの浮揚(MANJI_DRAGONFLY)、ポケット・フラッシャー(FLEA · MEDITATION)、剣なき作業台(NSS)、決して振り返らない鏡(BACK_TURNED) — さらに常時点灯のオーロラYOSHIと、伝説を語る瞑想する管理者JIGUANG(極光)。配線は一度、書き込みも一度。その後はライブラリが更新され、玉座が命じる。</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>1枚のボード、6つの構え</h2>
 <p><p>YOSHIMITSUは<strong>六つの構え</strong>を持つ<strong>隠秘の忍び</strong>だ — 構えごとに異なる勝利、すべて同じ魂をまとう。ひとつのゆるやかなスケッチが両ボードでビルドされ、構えはUSBコマンド、GPIO0ボタン(ESP32-S3)、またはRESETタップ(RP2040-Tiny)で切り替わる:</p></p>
 <table>
@@ -196,7 +200,7 @@
 <td>共通グランド（必須）</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>電源の極性 &amp; 電圧</strong>
 <p><p>⚠ 治具に載せている間、受信機へは<strong>3.3&nbsp;Vのみ</strong>を供給してください、5&nbsp;Vは厳禁です。受信機を繋ぐ前に電圧計でMOSFETを確認してください：GPIO10 HIGHならドレインは0&nbsp;V、GPIO10 LOWなら3.3&nbsp;Vを示すはずです。</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>ブリッジRX ← 受信機TX</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;baud</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>ブリッジTX → 受信機RX</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>交差：TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>サーボ1（<code>SERVO_PIN_1</code>）</p></td>

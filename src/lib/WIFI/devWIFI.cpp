@@ -813,6 +813,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["kernel_fixed"]        = false;  // profile is runtime-switchable
     orni["model_name"]          = ornithopter.modelName;
 
+#ifdef ZEPHYRUS_ENABLED
     orni["cadence_gain"]        = (int)ornithopter.cadenceGain;
     orni["ferocity_d_gain"]     = (int)ornithopter.ferocityDGain;
     orni["balance_gain"]        = (int)ornithopter.balanceGain;
@@ -822,6 +823,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["ssff_gain"]           = (int)ornithopter.ssffGain;
     orni["aero_glide_coeff"]    = (int)ornithopter.aeroGlideCoeff;
     orni["aero_flap_coeff"]     = (int)ornithopter.aeroFlapCoeff;
+#endif
 
     // Runtime waveform/mixer config fields
     orni["stroke_ferocity"]     = (int)ornithopter.strokeFerocity;

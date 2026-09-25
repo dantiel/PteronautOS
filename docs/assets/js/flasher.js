@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, DEFAULT_API_BASE, FIELD_IDS, LOCALES, apiFetch, busy, collectParams, currentRunId, downloadFirmware, els, firmwareBytes, flash, i, id, j, l, len, len1, log, poll, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, syncMushinFields, terminal,
+var $, API_BASE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, STORE, activePort, activeTransport, apiFetch, builtFingerprint, busy, cacheFirmware, collectParams, currentRunId, dbPromise, disconnect, downloadFirmware, els, enableFirmware, firmwareBytes, firmwareKey, flash, hashStr, id, idbGet, idbPut, j, k, l, len, len1, loadFromDisk, log, openDb, poll, restoreCachedBuild, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, syncMushinFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -18,6 +18,9 @@ els = {
   buildBtn: $("#build-btn"),
   flashBtn: $("#flash-btn"),
   downloadBtn: $("#download-btn"),
+  loadBtn: $("#load-btn"),
+  disconnectBtn: $("#disconnect-btn"),
+  fileInput: $("#firmware-file"),
   serialWarning: $("#serial-warning"),
   statusCard: $("#status-card"),
   statusDot: $("#status-dot"),
@@ -33,6 +36,12 @@ currentRunId = null;
 firmwareBytes = null;
 
 busy = false;
+
+activePort = null;
+
+activeTransport = null;
+
+builtFingerprint = null;
 
 serialSupported = "serial" in navigator;
 
@@ -55,7 +64,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#mushin_rx_pin", "#mushin_tx_pin", "#mushin_baud", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -82,11 +91,11 @@ apiFetch = async function(path, init = {}) {
 };
 
 saveConfig = function() {
-  var cfg, i, id, len;
+  var cfg, id, j, len;
   try {
     cfg = {};
-    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
-      id = FIELD_IDS[i];
+    for (j = 0, len = FIELD_IDS.length; j < len; j++) {
+      id = FIELD_IDS[j];
       cfg[id] = $(id).value;
     }
     cfg.locales = LOCALES.filter(function(l) {
@@ -99,29 +108,29 @@ saveConfig = function() {
 };
 
 restoreConfig = function() {
-  var cfg, i, id, j, k, l, len, len1, len2, results, results1;
+  var cfg, id, j, k, l, len, len1, len2, m, results, results1;
   try {
     cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
     if (!cfg) {
       return;
     }
-    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
-      id = FIELD_IDS[i];
+    for (j = 0, len = FIELD_IDS.length; j < len; j++) {
+      id = FIELD_IDS[j];
       if (cfg[id] != null) {
         $(id).value = cfg[id];
       }
     }
     if (cfg.locales != null) {
       results = [];
-      for (j = 0, len1 = LOCALES.length; j < len1; j++) {
-        l = LOCALES[j];
+      for (k = 0, len1 = LOCALES.length; k < len1; k++) {
+        l = LOCALES[k];
         results.push($(`#locale-${l}`).checked = indexOf.call(cfg.locales, l) >= 0);
       }
       return results;
     } else {
       results1 = [];
-      for (k = 0, len2 = LOCALES.length; k < len2; k++) {
-        l = LOCALES[k];
+      for (m = 0, len2 = LOCALES.length; m < len2; m++) {
+        l = LOCALES[m];
         results1.push($(`#locale-${l}`).checked = false);
       }
       return results1;
@@ -162,15 +171,166 @@ collectParams = function() {
     zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
     mushin_enabled: $("#mushin_enabled").value,
-    mushin_rx_pin: $("#mushin_rx_pin").value,
-    mushin_tx_pin: $("#mushin_tx_pin").value,
-    mushin_baud: $("#mushin_baud").value,
     rcvr_uart_baud: $("#rcvr_uart_baud").value,
     device_name: $("#device_name").value.trim(),
     home_wifi_ssid: $("#home_wifi_ssid").value.trim(),
     home_wifi_password: $("#home_wifi_password").value,
     i18n_locales: checked.join(",")
   };
+};
+
+enableFirmware = function() {
+  els.downloadBtn.disabled = false;
+  if (serialSupported) {
+    return els.flashBtn.disabled = false;
+  }
+};
+
+// Stable fingerprint of the current build config — the IndexedDB cache key.
+hashStr = function(s) {
+  var h, i, j, ref;
+  h = 0x811c9dc5;
+  for (i = j = 0, ref = s.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16);
+};
+
+// Browser cache (IndexedDB): a cloud-built image survives reloads — no rebuild.
+DB_NAME = "pteronautos-fossil-etcher";
+
+DB_VERSION = 1;
+
+STORE = "builds";
+
+dbPromise = null;
+
+openDb = function() {
+  if (dbPromise) {
+    return dbPromise;
+  }
+  dbPromise = new Promise(function(resolve, reject) {
+    var req;
+    req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = function() {
+      var db;
+      db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        return db.createObjectStore(STORE);
+      }
+    };
+    req.onsuccess = function() {
+      return resolve(req.result);
+    };
+    return req.onerror = function() {
+      return reject(req.error);
+    };
+  });
+  return dbPromise;
+};
+
+idbPut = async function(key, value) {
+  var db;
+  db = (await openDb());
+  return new Promise(function(resolve, reject) {
+    var tx;
+    tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put(value, key);
+    tx.oncomplete = function() {
+      return resolve();
+    };
+    return tx.onerror = function() {
+      return reject(tx.error);
+    };
+  });
+};
+
+idbGet = async function(key) {
+  var db;
+  db = (await openDb());
+  return new Promise(function(resolve, reject) {
+    var req, tx;
+    tx = db.transaction(STORE, "readonly");
+    req = tx.objectStore(STORE).get(key);
+    req.onsuccess = function() {
+      return resolve(req.result);
+    };
+    return req.onerror = function() {
+      return reject(req.error);
+    };
+  });
+};
+
+firmwareKey = function() {
+  return hashStr(JSON.stringify(collectParams()));
+};
+
+cacheFirmware = async function() {
+  var err, record;
+  if (firmwareBytes == null) {
+    return;
+  }
+  try {
+    record = {
+      name: "pteronautos-firmware.bin",
+      size: firmwareBytes.length,
+      ts: Date.now(),
+      blob: firmwareBytes.slice().buffer
+    };
+    await idbPut(firmwareKey(), record);
+    return log("Saved build in this browser (" + firmwareBytes.length + " bytes) — reload and it's reused.");
+  } catch (error) {
+    err = error;
+    return log("Couldn't cache build: " + err.message);
+  }
+};
+
+restoreCachedBuild = async function() {
+  var record;
+  if (!("indexedDB" in window)) {
+    return;
+  }
+  try {
+    record = (await idbGet(firmwareKey()));
+    if ((record != null ? record.blob : void 0) != null) {
+      firmwareBytes = new Uint8Array(record.blob);
+      enableFirmware();
+      log("Reusing saved build (" + record.size + " bytes) — no rebuild needed.");
+      return setStatus("Saved build loaded — ready to flash or download.", "done");
+    }
+  } catch (error) {
+
+  }
+};
+
+// no cache or storage blocked — nothing to load
+loadFromDisk = async function(file) {
+  var buf;
+  buf = (await file.arrayBuffer());
+  firmwareBytes = new Uint8Array(buf);
+  enableFirmware();
+  log("Loaded " + file.name + " (" + firmwareBytes.length + " bytes) from disk.");
+  return setStatus("Firmware image loaded — ready to flash or download.", "done");
+};
+
+disconnect = async function() {
+  try {
+    await (activeTransport != null ? activeTransport.disconnect() : void 0);
+  } catch (error) {
+
+  }
+  try {
+    if (activePort != null) {
+      activePort.close();
+    }
+  } catch (error) {
+
+  }
+  activeTransport = null;
+  activePort = null;
+  els.disconnectBtn.classList.add("hidden");
+  return log("Disconnected.");
 };
 
 startBuild = async function() {
@@ -180,6 +340,7 @@ startBuild = async function() {
   els.downloadBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
+  builtFingerprint = null;
   els.log.textContent = "";
   setStatus("Dispatching build…", "busy");
   els.runLink.classList.add("hidden");
@@ -187,6 +348,7 @@ startBuild = async function() {
   busy = true;
   try {
     params = collectParams();
+    builtFingerprint = hashStr(JSON.stringify(params));
     delay = Number(params.auto_wifi_on_interval);
     if (!(Number.isInteger(delay) && delay >= -1 && delay <= 2147483)) {
       throw new Error("Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds.");
@@ -233,13 +395,11 @@ poll = async function() {
       busy = false;
       return;
     }
-    els.downloadBtn.disabled = false;
-    if (serialSupported) {
-      setStatus("Build complete — ready to flash or download.", "done");
-      els.flashBtn.disabled = false;
-    } else {
-      setStatus("Build complete — ready to download.", "done");
-    }
+    setStatus("Build complete — downloading image…", "busy");
+    await downloadFirmware();
+    await cacheFirmware();
+    enableFirmware();
+    setStatus("Build complete — cached in this browser. Ready to flash or download.", "done");
     els.buildBtn.disabled = false;
     return busy = false;
   } catch (error) {
@@ -306,7 +466,7 @@ terminal = function() {
 };
 
 flash = async function() {
-  var chip, err, esploader, port, transport;
+  var chip, err, esploader;
   if (!("serial" in navigator)) {
     setStatus("Web Serial is not supported in this browser — use Chrome, Edge or Opera.", "fail");
     return;
@@ -320,15 +480,16 @@ flash = async function() {
       await downloadFirmware();
     }
     setStatus("Connecting to device…", "busy");
-    port = (await navigator.serial.requestPort());
-    transport = new Transport(port, true);
+    activePort = (await navigator.serial.requestPort());
+    activeTransport = new Transport(activePort, true);
+    els.disconnectBtn.classList.remove("hidden");
     esploader = new ESPLoader({
-      transport: transport,
+      transport: activeTransport,
       baudrate: 115200,
       terminal: terminal(),
       debugLogging: false
     });
-    chip = (await esploader.main());
+    chip = (await esploader.main("no_reset"));
     log("Connected: " + chip);
     setStatus("Flashing…", "busy");
     await esploader.writeFlash({
@@ -350,15 +511,11 @@ flash = async function() {
         return els.statusText.textContent = "Flashing… " + pct + "%";
       }
     });
-    log("Flashing complete. Resetting…");
-    await esploader.after("hard_reset");
-    setStatus("Flashed successfully.", "done");
+    log("Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware.");
+    await esploader.after("no_reset_stub");
+    setStatus("Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done");
     els.progressBar.style.width = "100%";
-    try {
-      return (await transport.disconnect());
-    } catch (error) {
-      return log("Note: serial port already released.");
-    }
+    return (await disconnect());
   } catch (error) {
     err = error;
     setStatus("Flash failed: " + err.message, "fail");
@@ -370,12 +527,12 @@ flash = async function() {
 };
 
 syncMushinFields = function() {
-  var el, enabled, i, len, ref, results;
+  var el, enabled, j, len, ref, results;
   enabled = $("#mushin_enabled").value === "1";
   ref = document.querySelectorAll(".flasher-conditional");
   results = [];
-  for (i = 0, len = ref.length; i < len; i++) {
-    el = ref[i];
+  for (j = 0, len = ref.length; j < len; j++) {
+    el = ref[j];
     results.push(el.classList.toggle("hidden", !enabled));
   }
   return results;
@@ -385,16 +542,18 @@ restoreConfig();
 
 syncMushinFields();
 
-for (i = 0, len = FIELD_IDS.length; i < len; i++) {
-  id = FIELD_IDS[i];
+restoreCachedBuild();
+
+for (j = 0, len = FIELD_IDS.length; j < len; j++) {
+  id = FIELD_IDS[j];
   $(id).addEventListener("input", saveConfig);
   $(id).addEventListener("change", saveConfig);
 }
 
 $("#mushin_enabled").addEventListener("change", syncMushinFields);
 
-for (j = 0, len1 = LOCALES.length; j < len1; j++) {
-  l = LOCALES[j];
+for (k = 0, len1 = LOCALES.length; k < len1; k++) {
+  l = LOCALES[k];
   $(`#locale-${l}`).addEventListener("change", saveConfig);
 }
 
@@ -404,6 +563,26 @@ if (!serialSupported) {
 }
 
 els.buildBtn.addEventListener("click", startBuild);
+
+els.loadBtn.addEventListener("click", function() {
+  return els.fileInput.click();
+});
+
+els.disconnectBtn.addEventListener("click", disconnect);
+
+els.fileInput.addEventListener("change", async function() {
+  var err, file, ref;
+  file = (ref = els.fileInput.files) != null ? ref[0] : void 0;
+  if (file) {
+    try {
+      await loadFromDisk(file);
+    } catch (error) {
+      err = error;
+      setStatus("Load failed: " + err.message, "fail");
+    }
+  }
+  return els.fileInput.value = "";
+});
 
 els.flashBtn.addEventListener("click", flash);
 

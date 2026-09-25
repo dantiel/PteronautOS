@@ -62,19 +62,19 @@ on:
         default: '0'
         options:
           - '0'   # off — standalone PWM receiver, wings flap locally
-          - '1'   # on  — RP2040 muscle owns the servos, bridge on GPIO9/10
+          - '1'   # EP2 + RP2040, shared UART0 on GPIO1/3
       mushin_rx_pin:
-        description: 'Mushin bridge RX pin (GPIO)'
+        description: 'Deprecated / ignored: EP2 RX is GPIO3'
         required: false
         type: string
         default: '9'
       mushin_tx_pin:
-        description: 'Mushin bridge TX pin (GPIO)'
+        description: 'Deprecated / ignored: EP2 TX is GPIO1'
         required: false
         type: string
         default: '10'
       mushin_baud:
-        description: 'Mushin bridge baud rate'
+        description: 'Deprecated / ignored: shared runtime UART is 420000'
         required: false
         type: string
         default: '57600'
@@ -145,12 +145,7 @@ jobs:
             echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"
             echo "-DZEPHYR_I2C_SCL=${{ inputs.zephyrus_i2c_scl }}"
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
-            if [ "${{ inputs.mushin_enabled }}" = "1" ]; then
-              echo "-DMUSHIN_ENABLED=1"
-              echo "-DMUSHIN_RX_PIN=${{ inputs.mushin_rx_pin }}"
-              echo "-DMUSHIN_TX_PIN=${{ inputs.mushin_tx_pin }}"
-              echo "-DMUSHIN_BAUD=${{ inputs.mushin_baud }}"
-            fi
+            # Companion UART pins/baud belong to the EP2 target, not user overrides.
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
             if [ -n "${{ inputs.device_name }}" ]; then
               echo "-DDEVICE_NAME=\"${{ inputs.device_name }}\""
@@ -185,19 +180,24 @@ jobs:
 
       - name: Build firmware
         run: |
+          TARGET_ENV=PteronautOS_ESP8285_2400_RX
+          if [ "${{ inputs.mushin_enabled }}" = "1" ]; then
+            TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX
+          fi
+          echo "TARGET_ENV=$TARGET_ENV" >> "$GITHUB_ENV"
           if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
             DOMAIN_FLAG="-DRegulatory_Domain_EU_CE_2400"
           else
             DOMAIN_FLAG="-DRegulatory_Domain_ISM_2400"
           fi
           cd src
-          PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e PteronautOS_ESP8285_2400_RX
+          PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e "$TARGET_ENV"
 
       - name: Stage firmware artifact
         run: |
-          python src/python/verify_pteronautos_image.py src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin
+          python src/python/verify_pteronautos_image.py "src/.pio/build/$TARGET_ENV/firmware.bin"
           mkdir -p dist
-          cp src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin dist/pteronautos.bin
+          cp "src/.pio/build/$TARGET_ENV/firmware.bin" dist/pteronautos.bin
           cat > dist/manifest.json <<'JSON'
           {
             "mixer_profile": "${{ inputs.mixer_profile }}",
@@ -207,9 +207,7 @@ jobs:
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
             "mushin_enabled": "${{ inputs.mushin_enabled }}",
-            "mushin_rx_pin": "${{ inputs.mushin_rx_pin }}",
-            "mushin_tx_pin": "${{ inputs.mushin_tx_pin }}",
-            "mushin_baud": "${{ inputs.mushin_baud }}",
+            "target": "${{ env.TARGET_ENV }}",
             "rcvr_uart_baud": "${{ inputs.rcvr_uart_baud }}",
             "device_name": "${{ inputs.device_name }}",
             "i18n_locales": "${{ inputs.i18n_locales }}"

@@ -57,6 +57,10 @@ static int g_fails  = 0;
 } while (0)
 
 static void reset_all() {
+  motionActive=false; motionReceiver.reset(); motionRecipe=Motion::Recipe{};
+  motionPhase=0; motionLastUs=motionLastMs=0; mwLastApplyUs=0;
+  companionParser.reset();
+  for (int i = 0; i < 3; ++i) SerialType::rxlen[i] = SerialType::rxpos[i] = 0;
   msState = MS_IDLE; msLen = 0; msType = 0; msIdx = 0; msXor = 0;
   mushinLinked = false; mushinV1 = 0; mushinParamDirty = 0; mwEasing = 0;
   mushinLastIntentMs = 0;
@@ -317,7 +321,11 @@ static void test_handshake() {
   mushinLinked = true;
   mushinAnnounce();                 // writes ANNOUNCE + TELEMETRY to BRIDGE_SERIAL (Serial2)
   // ANNOUNCE: [0x9B, 6, 0x02, ver, servos, rp2040, manji, gyro, linked, xor]
-  const uint8_t* T = SerialType::tx[2];   // Serial2 is the BRIDGE_SERIAL on ESP32S3
+  const uint8_t* wire = SerialType::tx[1];
+  CHECK_EQ(wire[0], 0xc8);
+  CHECK_EQ(wire[2], Companion::mushinType);
+  CHECK_EQ(wire[13], Companion::crc(wire + 2, 11));
+  const uint8_t* T = wire + 3;
   CHECK_EQ(T[0], 0x9B);
   CHECK_EQ(T[1], 6);
   CHECK_EQ(T[2], 0x02);
@@ -327,10 +335,11 @@ static void test_handshake() {
   for (int i = 3; i < 9; i++) x ^= T[i];
   CHECK_EQ(T[9], x);       // xor correct
   // TELEMETRY starts at offset 10: [0x9B, 6, 0x03, r0 r1 c0 c1 linked ver xor]
-  CHECK_EQ(T[10], 0x9B);
-  CHECK_EQ(T[11], 6);
-  CHECK_EQ(T[12], 0x03);
-  CHECK_EQ(T[18], 1);      // t[5] = MUSHIN_VER
+  T = wire + 14 + 3;
+  CHECK_EQ(T[0], 0x9B);
+  CHECK_EQ(T[1], 6);
+  CHECK_EQ(T[2], 0x03);
+  CHECK_EQ(T[8], 1);      // t[5] = MUSHIN_VER
 }
 
 static void test_full_flap() {
@@ -594,6 +603,128 @@ static void test_forged_params() {
   CHECK(mwWingR >= 1000 && mwWingR <= 2000);
 }
 
+static void queue_frame(uint8_t type, const uint8_t* payload, int n, bool corrupt = false) {
+  uint8_t frame[64];
+  size_t size = Companion::encode(type, payload, n, frame);
+  if (corrupt) frame[size - 1] ^= 1;
+  for (size_t i = 0; i < size; ++i) SerialType::rx[1][SerialType::rxlen[1]++] = frame[i];
+}
+
+static void test_single_uart() {
+  printf("\n[single UART] mixed frames, channels, CRC, stop, meditation and return\n");
+  reset_all();
+  mushin = true;
+  g_ms = 100; g_us = 100000;
+  uint32_t input[16];
+  for (int i = 0; i < 16; ++i) input[i] = (i * 137 + 172) & 2047;
+  uint8_t packed[22];
+  Companion::packChannels(input, packed);
+  queue_frame(Companion::rcType, packed, 22);
+  pumpCrsf();
+  for (int i = 0; i < 16; ++i) CHECK_EQ(channel[i], input[i]);
+  const uint32_t good = goodFrames;
+  queue_frame(Companion::rcType, packed, 22, true);
+  pumpCrsf();
+  CHECK_EQ(goodFrames, good);
+  // Non-RC frame lengths must not desynchronise the following RC packet.
+  uint8_t other[2] = {0x9b, 0xc8};
+  queue_frame(0x08, other, 2);
+  uint8_t intent[10] = {0x9b, 6, 1, 0x78, 0x05, 0xdc, 0x05, 0x40, 0x06, 0};
+  intent[9] = 6 ^ 1;
+  for (int i = 3; i < 9; ++i) intent[9] ^= intent[i];
+  queue_frame(Companion::mushinType, intent, sizeof(intent));
+  queue_frame(Companion::rcType, packed, 22);
+  pumpCrsf();
+  CHECK(mushinLinked);
+  CHECK_EQ(mushinIntent[0], 1400);
+  CHECK_EQ(goodFrames, good + 1);
+  mushinApply();
+  CHECK_EQ(servos[0].last_us, 1400);
+  const uint8_t stop[] = {0x9b, 0, 4, 4};
+  queue_frame(Companion::mushinType, stop, sizeof(stop));
+  pumpCrsf();
+  CHECK(!mushinLinked);
+  for (int i = 0; i < servoCount; ++i) CHECK_EQ(servos[i].last_us, 1500);
+
+  // A truncated frame expires; subsequent complete frames recover.
+  companionParser.feed(0xc8, g_ms);
+  companionParser.feed(60, g_ms);
+  g_ms += 10;
+  queue_frame(Companion::rcType, packed, 22);
+  pumpCrsf();
+  CHECK_EQ(goodFrames, good + 2);
+
+  const int otherUartBegins = Serial2.begins;
+  enterStance(STANCE_MEDITATION);
+  CHECK_EQ(Serial1.baud, 115200);
+  CHECK_EQ(Serial2.begins, otherUartBegins);
+  CHECK(!mushinLinked);
+  for (int i = 0; i < 6; ++i) { g_ms += 1000; pumpDance(); }
+  CHECK_EQ(dancePhase, DANCE_IDLE);
+  // Switch to binary by sending SLIP END, then forward every possible byte.
+  SerialType::txlen[1] = SerialType::txlen[0] = 0;
+  SerialType::rxlen[0] = SerialType::rxpos[0] = 0;
+  SerialType::rx[0][SerialType::rxlen[0]++] = 0xc0;
+  for (int i = 0; i < 256; ++i) SerialType::rx[0][SerialType::rxlen[0]++] = i;
+  for (int i = 0; i < 128; ++i) handleUsb();
+  CHECK_EQ(SerialType::txlen[1], 257);
+  CHECK_EQ(SerialType::tx[1][0], 0xc0);
+  for (int i = 0; i < 256; ++i) CHECK_EQ(SerialType::tx[1][i + 1], i);
+  SerialType::rxlen[1] = SerialType::rxpos[1] = 0;
+  for (int i = 0; i < 256; ++i) SerialType::rx[1][SerialType::rxlen[1]++] = i;
+  for (int i = 0; i < 128; ++i) handleUsb();
+  CHECK_EQ(SerialType::txlen[0], 256);
+  for (int i = 0; i < 256; ++i) CHECK_EQ(SerialType::tx[0][i], i);
+  const int before = SerialType::txlen[1];
+  g_ms += 2000; mushinPoll(); mushinAnnounce();
+  CHECK_EQ(SerialType::txlen[1], before); // no heartbeat in bootloader mode
+  enterStance(STANCE_KINCHO);
+  CHECK_EQ(Serial1.baud, 420000);
+  CHECK_EQ(Serial2.begins, otherUartBegins);
+  CHECK_EQ(companionParser.used, 0);
+}
+
+static void test_prepared_transport() {
+  printf("\n[prepared] atomic recipes, packet gaps, unsupported maps and STOP\n");
+  reset_all(); mushin=true; g_ms=1000; g_us=1000000;
+  Motion::Recipe recipe;
+  recipe.flapping=1; recipe.hz=10;
+  recipe.centre[0]=recipe.centre[1]=90;
+  recipe.amplitude[0]=-60; recipe.amplitude[1]=60;
+  recipe.kind[0]=1; recipe.kind[1]=2; recipe.kind[2]=6; recipe.output[2]=1700;
+  auto sendPart=[&](unsigned part,uint16_t gen) {
+    uint8_t bytes[Motion::wireSize],p[59]={(uint8_t)gen,(uint8_t)(gen>>8),(uint8_t)part};
+    Motion::encode(recipe,bytes);
+    const unsigned offset=part*Motion::chunkSize;
+    const unsigned n=Motion::wireSize-offset<Motion::chunkSize?Motion::wireSize-offset:Motion::chunkSize;
+    memcpy(p+3,bytes+offset,n); queue_frame(Motion::frameType,p,n+3); pumpCrsf();
+  };
+  sendPart(0,1); sendPart(1,1); CHECK(!motionActive);
+  sendPart(2,1); CHECK(motionActive); CHECK_EQ(motionRecipe.hz,10);
+  mushinApply(); CHECK(servos[0].last_us<1500); CHECK_EQ(servos[2].last_us,1700);
+  g_ms+=25; g_us+=25000; mushinApply(); CHECK(std::fabs(motionPhase-0.25f)<0.001f);
+  recipe.hz=20; sendPart(0,2); CHECK_EQ(motionRecipe.hz,10);
+  sendPart(1,3); sendPart(2,2); CHECK_EQ(motionRecipe.hz,10); // mixed generations
+  recipe.hz=NAN;
+  for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,4);
+  CHECK_EQ(motionRecipe.hz,10);
+  recipe.hz=20; recipe.kind[3]=4; // no fourth servo configured
+  for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,5);
+  CHECK_EQ(motionRecipe.hz,10);
+  recipe.kind[3]=7;
+  for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,6);
+  CHECK_EQ(motionRecipe.hz,20); CHECK(std::fabs(motionPhase-0.25f)<0.001f);
+  g_ms+=101; g_us+=101000; mushinApply();
+  CHECK(!motionActive); CHECK_EQ(servos[0].last_us,1500); CHECK_EQ(servos[2].last_us,1000);
+  for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,7);
+  const uint8_t stop[]={0x9b,0,4,4}; queue_frame(Companion::mushinType,stop,4); pumpCrsf();
+  CHECK(!motionActive); CHECK_EQ(servos[2].last_us,1000);
+  uint32_t raw[16]; for(auto& v:raw) v=1811;
+  uint8_t packed[22]; Companion::packChannels(raw,packed);
+  queue_frame(Companion::rcType,packed,22); pumpCrsf();
+  CHECK_EQ(servos[0].last_us,1500); CHECK_EQ(servos[2].last_us,1000);
+}
+
 int main() {
   test_fractional_slew();
   Serial.id = 0; Serial1.id = 1; Serial2.id = 2;
@@ -612,6 +743,8 @@ int main() {
   test_pid_bounds();
   test_failsafe_edge();
   test_forged_params();
+  test_single_uart();
+  test_prepared_transport();
   printf("\n%d checks, %d failures\n", g_checks, g_fails);
   return g_fails ? 1 : 0;
 }

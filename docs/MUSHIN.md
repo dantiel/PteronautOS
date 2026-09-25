@@ -1,5 +1,13 @@
 # MUSHIN v1 — The No-Mind Bridge
 
+> The flight path now uses [EP2-prepared motion](PREPARED_MOTION.md), with
+> full pilot-driven shaping on a local RP2040 clock. This v1 document is historical.
+
+> **Transport update:** See [EP2 + RP2040](EP2_COMPANION.md) for current wiring,
+> framing and flashing. The old separate-UART / 57600-baud transport descriptions
+> below are historical and superseded. The v1 inner payload and math reference
+> remain relevant; both peers now share the CRSF UART at 420000 baud.
+
 > **A shared-compute protocol between PteronautOS (the spirit) and YOSHIMITSU (the muscle).**
 > The spirit plans the wave; the muscle strikes. Instead of streaming finished servo µs,
 > PteronautOS streams *wave parameters* over a 57600-baud two-wire UART — and the RP2040

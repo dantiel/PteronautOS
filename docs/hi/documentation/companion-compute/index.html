@@ -34,6 +34,10 @@
 <div class='sub-content'>
 <h1>कम्पैनियन कम्प्यूट मोड</h1>
 <p class='sub-lead'>सहजीवन: PteronautOS आत्मा है, YOSHIMITSU मांसपेशी है। दो बोर्ड, एक उड़ान — एक ही एडमिन आदेश MUSHIN (無心) से पुल के आर-पार बँटे।</p>
+<p>
+EP2 + RP2040 transport update: CRSF and MUSHIN now share one UART at 420000 baud. MEDITATION reuses that UART at 115200 for raw USB flashing. Earlier separate-UART descriptions below are superseded; both firmwares must be updated together.
+<a href='../../../EP2_COMPANION.md'>Current transport reference</a>
+</p>
 <h2>आर्किटेक्चर</h2>
 <p>कम्पैनियन मोड में दोनों MCU रिसीवर और कन्वर्टर होना छोड़कर दो हिस्सों वाला एक मस्तिष्क बन जाते हैं। यह आरेख शाश्वत नक़्शा है:</p>
 <pre class='mermaid'>graph LR&#x000A;  subgraph P["PTERONAUTOS · ESP8285 · 80 MHz — the spirit"]&#x000A;    CRSF["CRSF RX · SX1280"]&#x000A;    INTENT["mixer intent · waveform soul"]&#x000A;  end&#x000A;  subgraph Y[&quot;YOSHIMITSU · RP2040-Tiny · 133 MHz dual-core — the muscle&quot;]&#x000A;    GYRO["MPU6050 gyro · local I2C"]&#x000A;    PID["Zephyrus PID · runs here"]&#x000A;    C1["Core1 · companion compute<br/>mixer + flapping offload"]&#x000A;    C0["Core0 · muscle memory 無心<br/>PIO servo-PWM"]&#x000A;  end&#x000A;  CRSF --> INTENT&#x000A;  INTENT -- "intent · shortly before" --> C1&#x000A;  GYRO --> PID&#x000A;  PID -- "correction" --> C1&#x000A;  C1 -- "samples" --> C0&#x000A;  C0 --> SRV["servos · wing L/R · crest rudder"]&#x000A;</pre>

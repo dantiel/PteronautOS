@@ -10,6 +10,9 @@
 #include <cstdint>
 #include "OrnithopterConfig.h"
 #include "OrnithopterWaveform.h"
+#if defined(MUSHIN_ENABLED)
+#include "../../../sketches/yoshimitsu/src/PreparedMotion.h"
+#endif
 
 #if defined(ZEPHYRUS_ENABLED)
 #include "../Zephyrus/ZephyrusConfig.h"   // for ZEPHYR_GEARBOX_CLAMP_US (only used in gearbox kernel)
@@ -31,6 +34,9 @@ enum StickCh : uint8_t {
 
 class Ornithopter {
 public:
+#if defined(MUSHIN_ENABLED)
+    Motion::Intent motionIntent;
+#endif
     bool enabled;
     bool linkUp;
     bool stickOverride;   // when true, _readChannels uses stickChannels instead of CRSF

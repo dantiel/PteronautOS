@@ -29,6 +29,10 @@
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — la solución completa: todos los códigos, un pergamino</h1>
 <p class='sub-lead'>Una fábula de cheatcodes donde solo hay ganadores. Un sketch relajado, seis posturas, un arnés permanente: la parada CRSF→PWM (KINCHO), la levitación giroscópica de Zephyrus (MANJI_DRAGONFLY), el flasher de bolsillo (FLEA · MEDITATION), el banco sin espada (NSS), el espejo que nunca mira atrás (BACK_TURNED) — más YOSHI, la aurora siempre encendida, y JIGUANG (極光), el administrador meditante que cuenta la leyenda. Cabléalo una vez, flashealo una vez; después la biblioteca se actualiza y el trono ordena.</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>Una placa, seis posturas</h2>
 <p><p>YOSHIMITSU es el <strong>Shinobi Hermético</strong> con <strong>seis posturas</strong> — cada postura una victoria distinta, todas con la misma alma. Un sketch relajado compila para ambas placas; las posturas cambian por comando USB, botón GPIO0 (ESP32-S3) o toques de RESET (RP2040-Tiny):</p></p>
 <table>
@@ -196,7 +200,7 @@ El puente funciona con cualquier receptor ELRS ESP8285/SX1280 que exponga TX, RX
 <td>Tierra común (obligatoria)</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>Polaridad de alimentación &amp; tensión</strong>
 <p><p>⚠ alimenta el receptor <strong>solo con 3,3&nbsp;V</strong>, nunca 5&nbsp;V, mientras esté en el útil. Verifica el MOSFET con un voltímetro antes de conectar un receptor: con GPIO10 ALTO el drenador debe leer 0&nbsp;V; con GPIO10 BAJO debe leer 3,3&nbsp;V.</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>Puente RX ← TX del receptor</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;baudios</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>Puente TX → RX del receptor</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>Cruzado: TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>Servo 1 (<code>SERVO_PIN_1</code>)</p></td>

@@ -31,6 +31,9 @@
       .sub-content
         %h1!= cc_h1
         %p.sub-lead!= cc_lead
+        %p
+          EP2 + RP2040 transport update: CRSF and MUSHIN now share one UART at 420000 baud. MEDITATION reuses that UART at 115200 for raw USB flashing. Earlier separate-UART descriptions below are superseded; both firmwares must be updated together.
+          %a{href: "#{asset_prefix}EP2_COMPANION.md"} Current transport reference
 
         %h2!= cc_h2_arch
         %p!= cc_arch_p1

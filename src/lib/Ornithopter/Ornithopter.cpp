@@ -338,9 +338,15 @@ void Ornithopter::_computeServoMixer() {
         if (_osc.kGainMod > 2.0f) _osc.kGainMod = 2.0f;
 #endif
 
-        _osc.anchorGain = anchorGain;  // k₂ damping delta (0→tight 10 … 100→110)
+#ifdef ZEPHYRUS_ENABLED
+        _osc.anchorGain = anchorGain;
+#else
+        _osc.anchorGain = 0.0f;
+#endif
 
+#if !defined(MUSHIN_ENABLED)
         float rawWave = _osc.advance(dt);
+#endif
 
 #ifdef ZEPHYRUS_ENABLED
         // Resonance uses the oscillator fundamental. SSFF below must instead
@@ -515,6 +521,19 @@ void Ornithopter::_computeServoMixer() {
 
         // Centre-skew stays symmetric (throttle thrust vector); the roll axis
         // moved to amplitude above, so both wings share the same skew.
+#if defined(MUSHIN_ENABLED)
+        // Compile the entire pilot-driven motion on EP2, but never evaluate
+        // phase or wave samples here. RP2040 owns the only running oscillator.
+        Motion::prepare(motionIntent, limiarShared, strokeFerL, returnFerL,
+                        strokeFerR, returnFerR, ferocityShapeMix, strokeSkewEff, returnSkewEff);
+        motionIntent.flapping = 1;
+        motionIntent.hz = freqHz;
+        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.amplitude[0] = -amplitudeL * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.amplitude[1] = amplitudeR * ORNI_ANGULAR_MULTIPLIER;
+        const float pulseL = 0, pulseR = 0; // local preview centres, not actuator samples
+#else
         float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
                                                      limiarShared, ferocityShapeMix,
                                                      strokeSkewEff, returnSkewEff);
@@ -523,6 +542,7 @@ void Ornithopter::_computeServoMixer() {
                                                      strokeSkewEff, returnSkewEff);
 
         // ── MUSHIN v1 parameter cache ────────────────────────────────
+#endif
         // The spirit streams wave parameters, not servo µs: the muscle
         // reconstructs phase + shapeWave locally per tick. Values are
         // post-mix (L wing) and symmetric (skew before aileron differential).
@@ -561,7 +581,15 @@ void Ornithopter::_computeServoMixer() {
                 angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd - degL) * ORNI_ANGULAR_MULTIPLIER);
                 angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd + degR) * ORNI_ANGULAR_MULTIPLIER);
     } else {
+#if defined(MUSHIN_ENABLED)
+        motionIntent.flapping = 0;
+        motionIntent.hz = 0;
+        motionIntent.amplitude[0] = motionIntent.amplitude[1] = 0;
+        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd) * ORNI_ANGULAR_MULTIPLIER;
+#else
         _osc.decay(0.0f);
+#endif
         _lastUpdateUs = 0;
         _prevThrottlePct = -1.0f;   // glide: sentinel seeds the next flap tick without kick
         lastFlapping = false;       // MUSHIN v1: glide → cadence decay on the muscle
@@ -710,5 +738,25 @@ bool Ornithopter::update() {
     } else {
         _computeServoMixer();
     }
+#if defined(MUSHIN_ENABLED)
+    motionIntent.minimum = servoMinUs;
+    motionIntent.maximum = servoMaxUs;
+    motionIntent.trim[0] = servoTrimUs[SF_LEFT_WING];
+    motionIntent.trim[1] = servoTrimUs[SF_RIGHT_WING];
+    motionIntent.backTrim[0] = servoTrimUs[SF_BACK_LEFT_WING];
+    motionIntent.backTrim[1] = servoTrimUs[SF_BACK_RIGHT_WING];
+    if (PROFILE_IS_GEARBOX) { motionIntent.flapping = 0; motionIntent.hz = 0; }
+    uint8_t n = 0;
+    for (uint8_t ch = 0; ch < 7; ++ch) {
+        const uint8_t f = COMPANION_FUNCTIONS[activeProfile][ch];
+        if (f == SF_NONE) continue;
+        motionIntent.output[n] = _f[f];
+        motionIntent.kind[n] = f == SF_LEFT_WING ? 1 : f == SF_RIGHT_WING ? 2 :
+                              f == SF_BACK_LEFT_WING ? 3 : f == SF_BACK_RIGHT_WING ? 4 :
+                              f == SF_RUDDER ? 5 : f == SF_MOTOR ? 6 : 0;
+        ++n;
+    }
+    while (n < 7) { motionIntent.kind[n] = 7; motionIntent.output[n++] = 1500; }
+#endif
     return true;
 }

@@ -228,17 +228,18 @@ def appendConfiguration(source, target, env):
         if 'PteronautOS' in target_name:
             # Project-owned map, NOT the ignored upstream hardware checkout.
             # GPIO2 resets this receiver's radio and must never become PWM.
-            hw_file = Path(__file__).resolve().parents[1] / 'targets/hardware/pteronautos-pwmp7.json'
+            ep2 = target_name == 'PteronautOS_ESP8285_EP2_2400_RX'
+            hw_file = Path(__file__).resolve().parents[1] / ('targets/hardware/pteronautos-ep2.json' if ep2 else 'targets/hardware/pteronautos-pwmp7.json')
             appendToFirmware(
                 firmware_file,
-                "PteronautOS PWMP7",
-                "PWMP7 RX",
+                "PteronautOS EP2" if ep2 else "PteronautOS PWMP7",
+                "EP2 RP2040" if ep2 else "PWMP7 RX",
                 defines,
                 None,           # config not needed
                 hw_file,        # layout_file
                 None            # rx_as_tx not needed
             )
-            print("PteronautOS: embedded PWMP7 hardware definition")
+            print("PteronautOS: embedded project hardware definition")
         else:
             doConfiguration(firmware_file, defines, config, target_name, device_name, None)
 

@@ -29,6 +29,10 @@
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — die Komplettlösung: alle Cheatcodes, eine Schriftrolle</h1>
 <p class='sub-lead'>Eine Cheatcode-Fabel, in der es nur Gewinner gibt. Ein entspannter Sketch, sechs Stellungen, ein permanentes Geschirr: die CRSF→PWM-Parade (KINCHO), die Zephyrus-Gyro-Levitation (MANJI_DRAGONFLY), der Taschenflasher (FLEA · MEDITATION), die schwertlose Werkbank (NSS), der Spiegel, der nie zurückschaut (BACK_TURNED) — dazu YOSHI, die immer leuchtende Aurora, und JIGUANG (極光), der meditierende Administrator, der die Legende erzählt. Einmal verdrahten, einmal flashen; danach aktualisiert sich die Bibliothek und der Thron befiehlt.</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>Ein Board, sechs Posen</h2>
 <p><p>YOSHIMITSU ist der <strong>Hermetische Shinobi</strong> mit <strong>sechs Stellungen</strong> — jede Stellung ein anderer Sieg, alle tragen dieselbe Seele. Ein entspannter Sketch baut für beide Boards; die Stellungen wechseln per USB-Befehl, GPIO0-Taste (ESP32-S3) oder RESET-Taps (RP2040-Tiny):</p></p>
 <table>
@@ -196,7 +200,7 @@ Die Brücke funktioniert mit jedem ESP8285/SX1280-ELRS-Empfänger, der TX, RX, 3
 <td>Gemeinsame Masse (Pflicht)</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>Spannungs-Polarität &amp; Spannung</strong>
 <p><p>⚠ speise den Empfänger <strong>nur mit 3,3&nbsp;V</strong>, niemals 5&nbsp;V, solange er auf dem Jig liegt. Prüfe den MOSFET mit einem Voltmeter, bevor du einen Empfänger anschließt: bei GPIO10 HIGH muss der Drain 0&nbsp;V lesen; bei GPIO10 LOW muss er 3,3&nbsp;V lesen.</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>Brücke RX ← Empfänger-TX</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;baud</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>Brücke TX → Empfänger-RX</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>Gekreuzt: TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>Servo 1 (<code>SERVO_PIN_1</code>)</p></td>

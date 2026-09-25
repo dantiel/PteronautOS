@@ -919,8 +919,8 @@
   "doc_wave_slew": "Slew (taxa)",
   "doc_legend_wing_l": "Asa esquerda",
   "doc_legend_wing_r": "Asa direita",
-  "flasher_title": "PteronautOS — Build na Nuvem e Flasher",
-  "flasher_h1": "Build na Nuvem e Flasher",
+  "flasher_title": "PteronautOS — Fossil Etcher",
+  "flasher_h1": "Fossil Etcher",
   "flasher_lead": "Compila e grava o teu firmware a partir do navegador — sem consola, sem PlatformIO.",
   "flasher_heading_config": "Configuração do build",
   "flasher_mixer_profile": "Perfil do mixer",
@@ -953,5 +953,7 @@
   "flasher_home_wifi_password": "Senha do WiFi de casa",
   "flasher_locales_hint": "Selecione os idiomas a incluir na WebUI — nenhum selecionado inclui todos os 11.",
   "flash_online_cta": "Flashear online",
-  "flash_online_cta_desc": "Compile e grave o firmware direto do navegador — sem toolchain, sem drivers. Chrome, Edge e Opera gravam por USB; os outros navegadores baixam o .bin."
+  "flash_online_cta_desc": "Compile e grave o firmware direto do navegador — sem toolchain, sem drivers. Chrome, Edge e Opera gravam por USB; os outros navegadores baixam o .bin.",
+  "flasher_load_btn": "Carregar .bin",
+  "flasher_disconnect_btn": "Desconectar"
 }

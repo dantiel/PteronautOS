@@ -29,6 +29,10 @@
 <p class='tutorial-number'>०६</p>
 <h1>YOSHIMITSU — संपूर्ण समाधान: सभी चीटकोड, एक स्क्रॉल</h1>
 <p class='sub-lead'>ऐसी चीटकोड-कथा जिसमें केवल विजेता हैं। एक सहज स्केच, छह मुद्राएँ, एक स्थायी साज़: CRSF→PWM रोक (KINCHO), Zephyrus जायरो-उत्तोलन (MANJI_DRAGONFLY), जेब-फ्लैशर (FLEA · MEDITATION), बिना तलवार की कार्यशाला (NSS), वह दर्पण जो कभी पीछे नहीं देखता (BACK_TURNED) — साथ ही YOSHI, सदा जलती ध्रुवज्योति, और JIGUANG (極光), वह ध्यानस्थ प्रशासक जो कथा सुनाता है। एक बार तार जोड़ो, एक बार फ्लैश करो; उसके बाद लाइब्रेरी अपडेट होती है और सिंहासन आदेश देता है।</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>एक बोर्ड, छह मुद्राएँ</h2>
 <p><p>YOSHIMITSU <strong>छह मुद्राओं</strong> वाला <strong>हर्मेटिक शिनोबी</strong> है — हर मुद्रा एक अलग विजय, सब एक ही आत्मा पहने हुए। एक सहज स्केच दोनों बोर्डों के लिए बनता है; मुद्राएँ USB कमांड, GPIO0 बटन (ESP32-S3) या RESET-टैप (RP2040-Tiny) से बदलती हैं:</p></p>
 <table>
@@ -196,7 +200,7 @@
 <td>साझा ग्राउंड (अनिवार्य)</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>पावर ध्रुवता &amp; वोल्टेज</strong>
 <p><p>⚠ जिग पर रहते रिसीवर को <strong>केवल 3.3&nbsp;V</strong> दें, 5&nbsp;V कभी नहीं। रिसीवर जोड़ने से पहले वोल्टमीटर से MOSFET जाँचें: GPIO10 HIGH पर ड्रेन 0&nbsp;V पढ़े; GPIO10 LOW पर 3.3&nbsp;V पढ़े।</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>ब्रिज RX ← रिसीवर TX</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;baud</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>ब्रिज TX → रिसीवर RX</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>क्रॉस: TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>सर्वो 1 (<code>SERVO_PIN_1</code>)</p></td>

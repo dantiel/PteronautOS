@@ -27,6 +27,9 @@
         %p.tutorial-number!= tut_card_yos_number
         %h1!= yos_h1
         %p.sub-lead!= yos_lead
+        %p
+          EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+          %a{href: "#{asset_prefix}EP2_COMPANION.md"} Current wiring and flashing reference
 
         %h2!= yos_h2_dual
         %p!= yos_dual_intro_markdown
@@ -169,8 +172,8 @@
               S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3
               S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)
               S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)
-              S3 GPIO18 ◄── EP2 TX       (U1 RX)
-              S3 GPIO17 ──► EP2 RX       (U1 TX)
+              S3 GPIO44 ◄── EP2 TX       (shared U1 RX)
+              S3 GPIO43 ──► EP2 RX       (shared U1 TX)
               S3 GND     ──► EP2 GND
         %aside.waveform-caution
           %strong!= yos_polarity_html
@@ -228,12 +231,12 @@
             %td!= yos_pins_n2_html
           %tr
             %td!= yos_pins_f3_html
-            %td GPIO9 (UART1 RX)
-            %td!= yos_pins_n3_html
+            %td GPIO1 (same UART0 RX)
+            %td Shared with CRSF; no additional wire
           %tr
             %td!= yos_pins_f4_html
-            %td GPIO8 (UART1 TX)
-            %td!= yos_pins_n4_html
+            %td GPIO0 (same UART0 TX)
+            %td Shared with CRSF; no additional wire
           %tr
             %td!= yos_pins_f5_markdown
             %td GPIO2

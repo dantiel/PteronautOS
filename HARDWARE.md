@@ -21,19 +21,19 @@
 
 ```
                     ┌──────────────────────────────┐
-                    │    SX1280 Radio Module        │
-                    │   (SPI: GPIO12-15, IRQ: 4)    │
-                    │                               │
-    + ──────────────┤  POWER RAIL (+ and - pads)    │
-    - ──────────────┤  → AMS1117-3.3V regulator     │
-                    │  → All servo headers          │
-                    │                               │
+                    │    SX1280 Radio Module       │
+                    │   (SPI: GPIO12-15, IRQ: 4)   │
+                    │                              │
+    + ──────────────┤  POWER RAIL (+ and - pads)   │
+    - ──────────────┤  → AMS1117-3.3V regulator    │
+                    │  → All servo headers         │
+                    │                              │
   CH1 (GPIO0/BOOT) ─┤ ← Button shared              │
   CH2 (GPIO1/TX)   ─┤ ← UART TX + I²C SDA          │
   CH3 (GPIO3/RX)   ─┤ ← UART RX + I²C SCL          │
-  CH7 (GPIO9)      ─┤                               │
-  (unlabeled)       ┤── GPIO10                      │
-  LED  (GPIO16)    ─┤ ← Digital only                │
+  CH7 (GPIO9)      ─┤                              │
+  (unlabeled)       ┤── GPIO10                     │
+  LED  (GPIO16)    ─┤ ← Digital only               │
                     └──────────────────────────────┘
 ```
 
@@ -72,14 +72,14 @@
      GY-521                    PWMP7 v1.1
      ──────                    ──────────
      ┌──────┐                  ┌──────────────┐
-     │ VCC  │──────────────────│  +  (5V rail) │
-     │ GND  │──────────────────│  -  (GND)     │
-     │ SDA  │──────────────────│  CH2 (GPIO1)  │
-     │ SCL  │──────────────────│  CH3 (GPIO3)  │
-     │ AD0  │  (leave open)    │               │
-     │ INT  │  (leave open)    │               │
-     │ XDA  │  (leave open)    │               │
-     │ XCL  │  (leave open)    │               │
+     │ VCC  │──────────────────│  +  (5V rail)│
+     │ GND  │──────────────────│  -  (GND)    │
+     │ SDA  │──────────────────│  CH2 (GPIO1) │
+     │ SCL  │──────────────────│  CH3 (GPIO3) │
+     │ AD0  │  (leave open)    │              │
+     │ INT  │  (leave open)    │              │
+     │ XDA  │  (leave open)    │              │
+     │ XCL  │  (leave open)    │              │
      └──────┘                  └──────────────┘
 ```
 
@@ -93,10 +93,10 @@ The GY-521 has onboard **4.7kΩ I²C pull-up resistors** and an **AMS1117-3.3V r
      USB-UART (FTDI)            PWMP7 v1.1
      ────────────────            ──────────
      ┌────────┐                  ┌──────────────┐
-     │ TX     │──────────────────│  CH3 / RX     │  (GPIO3)
-     │ RX     │──────────────────│  CH2 / TX     │  (GPIO1)
-     │ GND    │──────────────────│  -  (GND)     │
-     │        │                  │               │
+     │ TX     │──────────────────│  CH3 / RX    │  (GPIO3)
+     │ RX     │──────────────────│  CH2 / TX    │  (GPIO1)
+     │ GND    │──────────────────│  -  (GND)    │
+     │        │                  │              │
      │ 5V/VCC │  ← DO NOT CONNECT (power separately)
      └────────┘                  └──────────────┘
 ```
@@ -108,14 +108,14 @@ The GY-521 has onboard **4.7kΩ I²C pull-up resistors** and an **AMS1117-3.3V r
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                    FLASH MODE                         │
+│                    FLASH MODE                        │
 │                                                      │
 │  FTDI ──→ CH2 (TX), CH3 (RX), GND                    │
 │  MPU  ──→ DISCONNECTED (remove plug from CH2/CH3)    │
 │  Power → 5V to + rail                                │
-│  Hold BOOT (CH1 button), power on, release            │
+│  Hold BOOT (CH1 button), power on, release           │
 │                                                      │
-│  esptool.py write_flash 0x0 firmware.bin              │
+│  esptool.py write_flash 0x0 firmware.bin             │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼

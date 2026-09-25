@@ -87,6 +87,21 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
 
 #define PROFILE PROFILES[activeProfile]
 
+#if defined(MUSHIN_ENABLED)
+// Logical companion outputs are not constrained by the PWMP7's three PWM pads.
+// Preserve existing order and restore the fourth output on four-actuator models.
+constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][7] = {
+    {SF_LEFT_WING, SF_RIGHT_WING},
+    {SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER},
+    {SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING},
+    {SF_RUDDER, SF_VTAIL_LEFT, SF_VTAIL_RIGHT},
+    {SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT},
+    {SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT},
+    {SF_RUDDER, SF_ELEVATOR},
+    {SF_RUDDER, SF_MOTOR, SF_ELEVATOR},
+};
+#endif
+
 // ─── CRSF Channel Indices (0-based into ChannelData[]) ─────────────
 #define ORNI_CH_AILERON         0
 #define ORNI_CH_ELEVATOR        1

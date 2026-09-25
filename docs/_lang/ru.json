@@ -919,8 +919,8 @@
   "doc_wave_slew": "Slew (скорость)",
   "doc_legend_wing_l": "Левое крыло",
   "doc_legend_wing_r": "Правое крыло",
-  "flasher_title": "PteronautOS — Облачная сборка и прошивка",
-  "flasher_h1": "Облачная сборка и прошивка",
+  "flasher_title": "PteronautOS — Fossil Etcher",
+  "flasher_h1": "Fossil Etcher",
   "flasher_lead": "Собирайте и прошивайте прошивку из браузера — без консоли и PlatformIO.",
   "flasher_heading_config": "Конфигурация сборки",
   "flasher_mixer_profile": "Профиль микшера",
@@ -953,5 +953,7 @@
   "flasher_home_wifi_password": "Пароль домашнего Wi-Fi",
   "flasher_locales_hint": "Выберите языки для WebUI — пустой выбор включает все 11.",
   "flash_online_cta": "Прошить онлайн",
-  "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome, Edge и Opera прошивают по USB; остальные браузеры скачивают .bin."
+  "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome, Edge и Opera прошивают по USB; остальные браузеры скачивают .bin.",
+  "flasher_load_btn": "Загрузить .bin",
+  "flasher_disconnect_btn": "Отключить"
 }

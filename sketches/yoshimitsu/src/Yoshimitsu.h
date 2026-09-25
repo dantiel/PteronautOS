@@ -15,6 +15,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Yoshimitsu_Loadout.h"
+#include "CompanionTransport.h"
+#include "PreparedMotion.h"
+#include "MotionServo.h"
+static Companion::Parser companionParser;
+static Motion::Receiver motionReceiver;
+static Motion::Intent motionIntent;
+static bool motionActive = false;
+static float motionPhase = 0, motionCyclesPerUs = 0;
+static uint32_t motionLastUs = 0, motionLastMs = 0;
 
 /* ── Target detection ── */
 #if defined(ARDUINO_ARCH_RP2040)
@@ -29,12 +38,25 @@
   #error "YOSHIMITSU targets ESP32-S3 or RP2040 only — no other core."
 #endif
 
-/* ── Optional onboard WS2812B (RP2040) ── */
-#if YOSHI_RP2040 && __has_include(<Adafruit_NeoPixel.h>) && !defined(YOSHI_RGB)
-  #include <Adafruit_NeoPixel.h>
-  #define YOSHI_RGB 1
-#elif !defined(YOSHI_RGB)
-  #define YOSHI_RGB 0
+/* ── Onboard WS2812B aurora (RP2040-Tiny/Zero) ── */
+// Defaults ON on RP2040 (the Tiny/Zero ship an onboard WS2812B); the ESP32-S3
+// boards carry a plain status LED (LED_PIN) instead, so it stays OFF there.
+// Force it off with `#define YOSHI_RGB 0` (e.g. when NeoPixel isn't installed).
+#if YOSHI_RP2040
+  #if !defined(YOSHI_RGB)
+    #define YOSHI_RGB 1
+  #endif
+  #if YOSHI_RGB
+    #if __has_include(<Adafruit_NeoPixel.h>)
+      #include <Adafruit_NeoPixel.h>
+    #else
+      #error "YOSHI_RGB is ON but <Adafruit_NeoPixel.h> is missing — install the Adafruit NeoPixel library, or #define YOSHI_RGB 0."
+    #endif
+  #endif
+#else
+  #if !defined(YOSHI_RGB)
+    #define YOSHI_RGB 0
+  #endif
 #endif
 
 /* ── Buttonless RESET-tap bookkeeping (RP2040) ── */
@@ -72,13 +94,17 @@
 //  BOARD PROFILES
 // =============================================================================
 #if YOSHI_RP2040
-  #if !defined(BOARD_RP2040_TINY) && !defined(BOARD_RP2040_ZERO) && !defined(BOARD_CUSTOM)
-    #define BOARD_RP2040_TINY 1
+  #if !defined(BOARD_RP2040_TINY) && !defined(BOARD_RP2040_ZERO)
+    #define BOARD_RP2040_TINY 1          // default — the Tiny (Zero shares its pinout)
   #endif
-  #ifdef BOARD_CUSTOM
-    #define YOSHI_DEFAULT(n) CUSTOM_RP2040_##n##_DEFAULT
+  #if defined(BOARD_RP2040_ZERO)
+    #define YOSHI_DEFAULT(n)  RP2040_ZERO_##n##_DEFAULT
+    #define YOSHI_BOARD_NAME  "RP2040-Zero"
+  #elif defined(BOARD_RP2040_TINY)
+    #define YOSHI_DEFAULT(n)  RP2040_TINY_##n##_DEFAULT
+    #define YOSHI_BOARD_NAME  "RP2040-Tiny"
   #else
-    #define YOSHI_DEFAULT(n) RP2040_TINY_##n##_DEFAULT
+    #error "Pick a board: #define BOARD_RP2040_TINY or BOARD_RP2040_ZERO"
   #endif
   #ifndef CRSF_UART_NUM
     #define CRSF_UART_NUM YOSHI_DEFAULT(CRSF_UART_NUM)
@@ -144,13 +170,14 @@
     #define RGB_LED_PIN YOSHI_DEFAULT(RGB_LED_PIN)
   #endif
 #elif YOSHI_ESP32
-  #if !defined(BOARD_S3_WAVESHARE) && !defined(BOARD_CUSTOM)
+  #if !defined(BOARD_S3_WAVESHARE)
     #define BOARD_S3_WAVESHARE 1
   #endif
-  #ifdef BOARD_CUSTOM
-    #define YOSHI_DEFAULT(n) CUSTOM_S3_##n##_DEFAULT
+  #if defined(BOARD_S3_WAVESHARE)
+    #define YOSHI_DEFAULT(n)  S3_WAVESHARE_##n##_DEFAULT
+    #define YOSHI_BOARD_NAME  "ESP32-S3 (Waveshare)"
   #else
-    #define YOSHI_DEFAULT(n) S3_WAVESHARE_##n##_DEFAULT
+    #error "Pick a board: #define BOARD_S3_WAVESHARE"
   #endif
   #ifndef CRSF_RX_PIN
     #define CRSF_RX_PIN YOSHI_DEFAULT(CRSF_RX_PIN)
@@ -231,19 +258,25 @@
   #else
     #error "BRIDGE_UART_NUM must be 0 or 1"
   #endif
-  #if CRSF_UART_NUM == BRIDGE_UART_NUM
-    #error "CRSF and BRIDGE need two DIFFERENT UARTs"
+  #if CRSF_UART_NUM != BRIDGE_UART_NUM
+    #error "EP2 uses ONE UART: BRIDGE_UART_NUM must equal CRSF_UART_NUM"
   #endif
   #define CRSF_UART_DISPLAY   CRSF_UART_NUM
   #define BRIDGE_UART_DISPLAY BRIDGE_UART_NUM
 #else
   #define CRSF_SERIAL   Serial1
-  #define BRIDGE_SERIAL Serial2
+  #define BRIDGE_SERIAL Serial1
   #define CRSF_UART_DISPLAY   1
-  #define BRIDGE_UART_DISPLAY 2
+  #define BRIDGE_UART_DISPLAY 1
 #endif
+static_assert(CRSF_TX_PIN == BRIDGE_TX_PIN && CRSF_RX_PIN == BRIDGE_RX_PIN,
+              "Runtime and flashing must use the same receiver TX/RX pins");
+static_assert(CRSF_BAUD == Companion::runtimeBaud && BRIDGE_BAUD == Companion::flashBaud,
+              "Use 420000 runtime / 115200 flashing on the shared link");
 
 static void crsfSerialBegin() {
+  CRSF_SERIAL.end();
+  companionParser.reset();
 #if YOSHI_RP2040
   CRSF_SERIAL.setTX(CRSF_TX_PIN);
   CRSF_SERIAL.setRX(CRSF_RX_PIN);
@@ -254,6 +287,8 @@ static void crsfSerialBegin() {
 }
 
 static void bridgeSerialBegin() {
+  BRIDGE_SERIAL.end();
+  companionParser.reset();
 #if YOSHI_RP2040
   BRIDGE_SERIAL.setTX(BRIDGE_TX_PIN);
   BRIDGE_SERIAL.setRX(BRIDGE_RX_PIN);
@@ -310,6 +345,9 @@ static void bridgeSerialRecover() {
 #endif
 #ifndef BRIDGE_BURST
   #define BRIDGE_BURST BRIDGE_BURST_DEFAULT
+#endif
+#ifndef RX_PWR_MANUAL
+  #define RX_PWR_MANUAL 0   // 1 = no P-MOSFET: receiver power/reset is the user's hand (two-phase MEDITATION)
 #endif
 #ifndef HOLD_OFF_MS
   #define HOLD_OFF_MS HOLD_OFF_MS_DEFAULT
@@ -388,7 +426,30 @@ static const char* STANCE_NAME[STANCE_COUNT] = {
 //  STATE
 // =============================================================================
 
+#if YOSHI_MOTION_CORE
+static MotionServo servos[SERVO_COUNT_MAX];
+// Single producer/single consumer mailbox: the producer never rewrites a
+// published slot until the consumer releases it. No spinlocks or allocation.
+static Motion::Intent motionPending;
+static uint32_t motionPendingMs, motionPendingEpoch;
+static std::atomic<bool> motionReady{false}, motionSetupReady{false};
+static std::atomic<uint32_t> motionEpoch{0};
+static std::atomic<int32_t> motionCorrection{0};
+static std::atomic<uint32_t> motionDeadlineMisses{0};
+static std::atomic<uint32_t> motionMaxComputeUs{0};
+static void motionCancel() { motionEpoch.fetch_add(1,std::memory_order_release); }
+static void motionPublish(uint32_t now) {
+    if(motionReady.load(std::memory_order_acquire)) return; // never block flight
+    motionPending=motionIntent;
+    motionPendingMs=now;
+    motionPendingEpoch=motionEpoch.load(std::memory_order_acquire);
+    motionReady.store(true,std::memory_order_release);
+}
+#else
 static Servo servos[SERVO_COUNT_MAX];
+static void motionCancel() {}
+static void motionPublish(uint32_t) {}
+#endif
 
 // Generic servo pins — no channel NAMES. A servo is just an index; which CRSF
 // channel feeds it lives in CHANNEL_TO_SERVO below. Reorder to taste.
@@ -576,9 +637,8 @@ static void jigLegend() {
 
 // Level-3 omni: relay the receiver's ELRS debug bytes verbatim to the console.
 static void pumpElrsDebug() {
-  while (BRIDGE_SERIAL.available() && Serial.availableForWrite()) {
-    Serial.write(BRIDGE_SERIAL.read());
-  }
+  // Runtime bytes belong exclusively to the frame parser, never to a second
+  // debug reader. Console diagnostics may report decoded state instead.
 }
 #else
 #define JIG_SIGIL ""
@@ -751,11 +811,16 @@ static uint16_t mapRaw(uint16_t raw) {
 }
 
 #if YOSHI_GYRO
+static int32_t gyroCachedRate=0;
 static bool gyroInit() {
 #if YOSHI_RP2040
   Wire.setSDA(GYRO_SDA_PIN);
   Wire.setSCL(GYRO_SCL_PIN);
   Wire.begin();
+#if YOSHI_MOTION_CORE
+  Wire.setClock(400000);
+  Wire.setTimeout(2,true); // a failed sensor cannot monopolise the UART core
+#endif
 #else
   Wire.begin(GYRO_SDA_PIN, GYRO_SCL_PIN, 400000UL);
 #endif
@@ -777,13 +842,19 @@ static bool gyroInit() {
   return gyroConnected;
 }
 
-static int32_t gyroZRate() {                       // raw yaw rate, ±250 dps
+static int32_t gyroReadZRate() {                  // raw yaw rate, ±250 dps
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(MPU_GZ_H);
-  Wire.endTransmission(false);
-  Wire.requestFrom((int)MPU_ADDR, 2);
-  if (Wire.available() < 2) return 0;
+  if(Wire.endTransmission(false)!=0) { gyroConnected=false; return 0; }
+  if(Wire.requestFrom((int)MPU_ADDR, 2)!=2 || Wire.available()<2) { gyroConnected=false; return 0; }
   return (int32_t)(int16_t)((Wire.read() << 8) | Wire.read());
+}
+static int32_t gyroZRate() {
+#if YOSHI_MOTION_CORE
+  return gyroCachedRate; // consumers never start extra I2C transactions
+#else
+  return gyroReadZRate();
+#endif
 }
 #endif
 
@@ -820,7 +891,7 @@ static void applyChannels() {
 
 static void attachServos() {
   for (uint8_t i = 0; i < servoCount; i++) {
-    if (!servos[i].attached()) servos[i].attach(SERVO_PIN[i], PWM_MIN, PWM_MAX);
+    if (!servos[i].attached()) servos[i].attach(SERVO_PIN[i], 500, 2500);
     servos[i].writeMicroseconds(1500);
   }
 }
@@ -851,6 +922,7 @@ static void detachServos() {
 #define MUSHIN_INTENT    0x01        // spirit → muscle: wave params / servo µs
 #define MUSHIN_ANNOUNCE  0x02        // muscle → spirit: version + posture
 #define MUSHIN_TELEMETRY 0x03        // muscle → spirit: gyro rate + correction
+#define MUSHIN_SWEEP     0x05        // spirit → muscle: raw µs bench sweep (u16 LE)
 #define MUSHIN_MAX_PAY   16          // 8 servos × 2 bytes
 #define MUSHIN_INTENT_STALE_MS   500         // intents stale after this → CRSF path resumes
 #define MUSHIN_INTENT_V1_LEN    11          // v1 parameter intent payload length
@@ -929,6 +1001,28 @@ static void mushinParse(uint8_t b) {
     case MS_XOR:
       msState = MS_IDLE;
       if (b != msXor) return;
+      if (msType == 4 && msLen == 0) { // STOP: RF/model-match lost on EP2
+        motionCancel();
+        motionActive = false;
+        motionReceiver.reset();
+        mushinLinked = false;
+        mushinV1 = 0;
+        mwEasing = 0;
+        mwIterm = 0;
+        mwWingL = mwWingR = 1500;
+        for (uint8_t i = 0; i < servoCount; ++i)
+          servos[i].writeMicroseconds(i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
+        return;
+      }
+      if (msType == MUSHIN_SWEEP) {   // raw µs bench sweep from the WebUI
+        if (msLen == 2) {
+          uint16_t us = (uint16_t)(msBuf[0] | (msBuf[1] << 8));
+          if (us < 900) us = 900; else if (us > 2100) us = 2100;
+          for (uint8_t i = 0; i < servoCount; ++i)
+            servos[i].writeMicroseconds(us);
+        }
+        return;
+      }
       if (msType == MUSHIN_INTENT) {
         if (msLen == MUSHIN_INTENT_V1_LEN) {
           // v1 parameter frame — the muscle computes phase + shapeWave locally
@@ -968,11 +1062,12 @@ static void mushinParse(uint8_t b) {
 }
 
 static void mushinSend(uint8_t type, const uint8_t* p, uint8_t n) {
-  uint8_t hdr[3] = { MUSHIN_SYNC, n, type };
+  if (n > MUSHIN_MAX_PAY || (stance != STANCE_KINCHO && stance != STANCE_MANJI_DRAGONFLY)) return;
+  uint8_t frame[MUSHIN_MAX_PAY + 4] = { MUSHIN_SYNC, n, type };
   uint8_t x = (uint8_t)(n ^ type);
-  BRIDGE_SERIAL.write(hdr, 3);
-  for (uint8_t i = 0; i < n; i++) { BRIDGE_SERIAL.write(p[i]); x ^= p[i]; }
-  BRIDGE_SERIAL.write(x);
+  for (uint8_t i = 0; i < n; i++) { frame[i + 3] = p[i]; x ^= p[i]; }
+  frame[n + 3] = x;
+  Companion::send(CRSF_SERIAL, Companion::mushinType, frame, n + 4);
   bridgeRxToUsb += n;                   // the muscle also keeps the ledger honest
 }
 
@@ -1215,6 +1310,45 @@ static void mushinApply() {
   if (us - mwLastApplyUs < 1000UL) return;
   mwLastApplyUs = us;
 
+  if (motionActive) {
+    // Packet arrival never advances/restarts phase. A complete recipe only
+    // changes the velocity and shape of this autonomous local oscillator.
+    if (millis() - motionLastMs > 100) {
+      motionCancel();
+      motionActive = false;
+      mushinLinked = false;
+      motionReceiver.reset();
+      for (uint8_t i=0; i<servoCount; ++i)
+        servos[i].writeMicroseconds(i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
+      return;
+    }
+#if YOSHI_MOTION_CORE
+    // The second core owns motion time and hardware output. The I2C/USB/UART
+    // loop may be late without stopping that clock or its own local failsafe.
+    return;
+#endif
+    const uint32_t elapsed = us - motionLastUs;
+    motionLastUs = us;
+    if (motionIntent.flapping) {
+      motionPhase += elapsed * motionCyclesPerUs;
+      motionPhase -= (uint32_t)motionPhase;
+    } else motionPhase = 0;
+    uint16_t output[7];
+    Motion::outputs(motionIntent, motionPhase, output);
+#if YOSHI_GYRO
+    const int32_t correction = stance == STANCE_MANJI_DRAGONFLY && gyroConnected
+        ? -(gyroZRate() * GYRO_GAIN) / GYRO_SCALE_LSB : 0;
+#endif
+    for (uint8_t i=0; i<servoCount; ++i) {
+      int32_t value = i<7 ? output[i] : 1500;
+#if YOSHI_GYRO
+      if (i<7 && motionIntent.kind[i]==5) value += correction;
+#endif
+      servos[i].writeMicroseconds(Motion::safePulse(value));
+    }
+    return;
+  }
+
   uint32_t now = millis();
   if (!mushinLinked || now - mushinLastIntentMs > MUSHIN_INTENT_STALE_MS) {
     if (mushinLinked && mushinV1) {
@@ -1256,7 +1390,6 @@ static void mushinApply() {
 static void mushinPoll() {
   if (!mushin) return;
   if (stance != STANCE_KINCHO && stance != STANCE_MANJI_DRAGONFLY) return;
-  while (BRIDGE_SERIAL.available()) mushinParse((uint8_t)BRIDGE_SERIAL.read());
   if (millis() - mushinLastAnnounceMs >= 1000) {
     mushinLastAnnounceMs = millis();
     mushinAnnounce();
@@ -1265,53 +1398,43 @@ static void mushinPoll() {
 }
 
 static void pumpCrsf() {
-  while (CRSF_SERIAL.available()) {
+  uint16_t byteBudget=256; // leave core-0 time for scheduled sensor work
+  while (byteBudget-- && CRSF_SERIAL.available()) {
     uint8_t b = (uint8_t)CRSF_SERIAL.read();
-
-    switch (crsfState) {
-      case S_HEADER:
-        if (b == 0xC8 || b == 0xEE) crsfState = S_LEN;
-        break;
-      case S_LEN:
-        frameLen = b;
-        crsfState = (b >= 2 && b <= 64) ? S_TYPE : S_HEADER;
-        break;
-      case S_TYPE:
-        frameType = b;
-        payloadIdx = 0;
-        crsfState = S_PAYLOAD;
-        break;
-      case S_PAYLOAD:
-        if (payloadIdx < CRSF_PAYLOAD) {
-          payload[payloadIdx++] = b;
-          if (payloadIdx == CRSF_PAYLOAD) crsfState = S_CRC;
-        } else {
-          crsfState = S_HEADER;
-        }
-        break;
-      case S_CRC: {
-        uint8_t crcBuf[CRSF_PAYLOAD + 2];
-        crcBuf[0] = frameLen;
-        crcBuf[1] = frameType;
-        memcpy(crcBuf + 2, payload, CRSF_PAYLOAD);
-        if (frameType == CRSF_RC_TYPE && crsfCrc8(crcBuf, CRSF_PAYLOAD + 2) == b) {
-          for (uint8_t i = 0; i < CHANNEL_COUNT; i++) {
-            uint8_t byteIdx = (uint8_t)((i * 11) >> 3);
-            uint8_t shift   = (uint8_t)((i * 11) & 7);
-            channel[i] = (uint16_t)((payload[byteIdx] | (payload[byteIdx + 1] << 8)) >> shift) & 0x07FF;
-          }
-          lastGoodMs = millis();
-          goodFrames++;
-          applyChannels();
-        }
-        crsfState = S_HEADER;
-        break;
+    if (!companionParser.feed(b, millis())) continue;
+    if (companionParser.type() == Motion::frameType && mushin) {
+      Motion::Intent candidate;
+      if (motionReceiver.accept(companionParser.payload(), companionParser.length(), millis(), candidate)) {
+        bool supported=true;
+        for(uint8_t i=servoCount;i<7;++i) if(candidate.kind[i]!=7) supported=false;
+        if(!supported) continue; // never silently drop an actuator from a model
+        motionIntent=candidate;
+        if (!motionActive) { motionPhase=0; motionLastUs=micros(); }
+        motionCyclesPerUs = motionIntent.hz * 0.000001f;
+        motionActive = true;
+        mushinLinked = true;
+        mushinV1 = 0;
+        motionLastMs = millis();
+        motionPublish(motionLastMs);
+        mushinLastIntentMs = motionLastMs;
+        ++mushinFrames;
       }
+    } else if (companionParser.type() == Companion::mushinType && mushin) {
+      msState = MS_IDLE;
+      for (uint8_t i = 0; i < companionParser.length(); ++i) mushinParse(companionParser.payload()[i]);
+    } else if (companionParser.type() == Companion::rcType && companionParser.length() == 22) {
+      Companion::unpackChannels(companionParser.payload(), channel, CHANNEL_COUNT);
+      lastGoodMs = millis();
+      goodFrames++;
+      // Companion mode never falls through to an unrelated raw-RC mixer when
+      // recipes are missing. Explicit MUSHIN OFF still supports a stock RX.
+      if (!mushin) applyChannels();
     }
   }
 
-  if (millis() - lastGoodMs > FAILSAFE_MS) {
-    for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(1500);
+  if (!mushinLinked && millis() - lastGoodMs > FAILSAFE_MS) {
+    for (uint8_t i = 0; i < servoCount; i++)
+      servos[i].writeMicroseconds(mushin && i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
     lastGoodMs = millis();
   }
 }
@@ -1321,13 +1444,44 @@ static void pumpCrsf() {
 // =============================================================================
 
 static void rxPower(bool on) {
+#if RX_PWR_MANUAL
+  // No P-MOSFET — the receiver's power/reset is controlled by hand. We only own
+  // the BOOT line; rxPowered is tracked purely for the STATUS display.
+  rxPowered = on;
+#else
   digitalWrite(RX_PWR_PIN, on ? LOW : HIGH);   // gate LOW = P-MOSFET on
   rxPowered = on;
+#endif
 }
 
 static void bootAssert(bool hold) {
-  digitalWrite(RX_BOOT_PIN, hold ? LOW : HIGH);
+  // Open-drain: we only ever pull LOW (to hold the receiver's GPIO0 in ROM
+  // bootloader) or go high-impedance (INPUT) to release it. We NEVER drive HIGH
+  // — the EP2's internal weak pull-up owns the "HIGH" state. This is electrically
+  // identical for the receiver, but it means an external GPIO0→GND switch (the
+  // classic ESP "FLASH" button) can be added in parallel WITHOUT shorting 3.3V
+  // through the RP2040 pin.
+  if (hold) {
+    pinMode(RX_BOOT_PIN, OUTPUT);
+    digitalWrite(RX_BOOT_PIN, LOW);
+  } else {
+    pinMode(RX_BOOT_PIN, INPUT);   // high-Z: EP2's weak pull-up pulls GPIO0 HIGH
+  }
 }
+
+#if YOSHI_RP2040
+// Flash-backed EEPROM byte 7 = the last stance. Unlike the AON RTC (which dies
+// on power-off), flash survives a power cut — so a shared-rail power-cycle brings
+// the board back where it was (e.g. MEDITATION) instead of the KINCHO default.
+static void nvmPersistStance() {
+  if (stance == STANCE_FLEA) return;       // FLEA is a transient move, never a boot stance
+  EEPROM.begin(16);
+  EEPROM.write(7, (uint8_t)stance);
+  EEPROM.commit();
+}
+#else
+static void nvmPersistStance() {}
+#endif
 
 static void enterStance(Stance next);      // forward — defined in STANCE TRANSITIONS below
 
@@ -1340,8 +1494,20 @@ static uint32_t danceT0       = 0;
 static void danceBegin(bool holdBoot) {
   if (dancePhase != DANCE_IDLE) return;         // one dance at a time
   danceHoldBoot = holdBoot;
+#if RX_PWR_MANUAL
+  // Two-phase MEDITATION — no P-MOSFET, so power/reset is the user's hand. We
+  // steer BOOT only and leave the bridge transparent the whole time.
+  bootAssert(holdBoot);
+  if (holdBoot) {
+    Serial.println("YOSHIMITSU: MEDITATION phase 1 — BOOT held LOW, bridge transparent.");
+    Serial.println("YOSHIMITSU:   now power-cycle the receiver (its own + pad) to drop it into ROM bootloader,");
+    Serial.println("YOSHIMITSU:   then click Flash (esptool --before no_reset).");
+    Serial.println("YOSHIMITSU:   exit via KINCHO to release BOOT, then power-cycle again to run the new soul.");
+  }
+#else
   dancePhase    = DANCE_BOOT_HOLD;
   danceT0       = millis();
+#endif
 }
 
 static void pumpDance() {
@@ -1373,7 +1539,16 @@ static void pumpDance() {
         dancePhase = DANCE_IDLE;
         if (danceHoldBoot) {
           Serial.println("YOSHIMITSU: receiver dropped into ROM bootloader — run esptool with --before no_reset now.");
-          enterStance(STANCE_MEDITATION);       // the lift settles into the sponge-head
+          // The lift has landed: MEDITATION is already the bridged stance. Do NOT
+          // re-enter via enterStance() here — its `previous != STANCE_FLEA` guard
+          // would re-trigger danceBegin() forever, and the dance gate in handleUsb()
+          // keeps esptool's SLIP from ever reaching the receiver ("Failed to
+          // connect"). Land directly instead.
+          stance = STANCE_MEDITATION;
+          medAdmin = true;                       // the sponge-head wakes as the administrator
+          nvmPersistStance();                    // a power cut mid-flash must not forget MEDITATION
+          jigNarrateStance(stance);
+          setStanceLed();
         } else {
           Serial.println("YOSHIMITSU: receiver restarted — the new soul should be running.");
         }
@@ -1406,14 +1581,8 @@ static void pumpBridge() {
 // BACK_TURNED — the deceptive idle: a living UART mirror. It looks dead, but
 // whatever you send on one UART emerges on the other. No state, only reflection.
 static void pumpMirror() {
-  while (CRSF_SERIAL.available() && BRIDGE_SERIAL.availableForWrite()) {
-    BRIDGE_SERIAL.write(CRSF_SERIAL.read());
-    lastBridgeMs = millis();
-  }
-  while (BRIDGE_SERIAL.available() && CRSF_SERIAL.availableForWrite()) {
-    CRSF_SERIAL.write(BRIDGE_SERIAL.read());
-    lastBridgeMs = millis();
-  }
+  // Single-link BACK_TURNED is silent. Echoing this UART into itself would
+  // feed received frames back to the receiver, not bridge another device.
 }
 
 // =============================================================================
@@ -1450,11 +1619,22 @@ static void validatePins() {
       Serial.println((int)SERVO_PIN[i]); bad = true;
     }
   }
+  // Servo slots must be contiguous from 1 — a gap would make the auto counter
+  // mis-wire later slots to -1 and hang the bench. Fail fast instead.
+  for (uint8_t i = 0; i + 1 < SERVO_COUNT_MAX; i++) {
+    if (SERVO_PIN[i] < 0 && SERVO_PIN[i + 1] >= 0) {
+      Serial.print("YOSHIMITSU PIN ERROR: SERVO_PIN_");
+      Serial.print((int)(i + 1));
+      Serial.print(" is empty but SERVO_PIN_");
+      Serial.print((int)(i + 2));
+      Serial.println(" is set — servo slots must be contiguous (fill 1..N, then -1).");
+      bad = true;
+    }
+  }
 
   // pairwise collisions across every active pin
   struct { const char* name; int pin; } pins[] = {
     {"CRSF_TX",   CRSF_TX_PIN}, {"CRSF_RX",   CRSF_RX_PIN},
-    {"BRIDGE_TX", BRIDGE_TX_PIN}, {"BRIDGE_RX", BRIDGE_RX_PIN},
     {"RX_BOOT",   RX_BOOT_PIN}, {"RX_PWR",    RX_PWR_PIN},
 #if YOSHI_GYRO
     {"GYRO_SDA",  GYRO_SDA_PIN}, {"GYRO_SCL",  GYRO_SCL_PIN},
@@ -1498,7 +1678,9 @@ static void validatePins() {
 // =============================================================================
 
 static void printPinMap() {
-  Serial.println("YOSHIMITSU: active pin map (edit in the PIN MAP block)");
+  Serial.print("YOSHIMITSU: board = ");
+  Serial.print(YOSHI_BOARD_NAME);
+  Serial.println(" — active pin map (edit in the config block)");
   Serial.print("  CRSF    UART"); Serial.print(CRSF_UART_DISPLAY);
   Serial.print("  TX=GP"); Serial.print(CRSF_TX_PIN);
   Serial.print("  RX=GP"); Serial.println(CRSF_RX_PIN);
@@ -1518,7 +1700,24 @@ static void printPinMap() {
 #endif
 }
 
+static void printGates() {
+  Serial.println("YOSHIMITSU: compile-time gates");
+  Serial.print("  board = "); Serial.println(YOSHI_BOARD_NAME);
+#if JIGUANG
+  Serial.print("  JIGUANG = 1 · voice level = "); Serial.println((int)jigLevel);
+  Serial.print("  JIGUANG_PROMPT = "); Serial.println(JIGUANG_PROMPT);
+#else
+  Serial.println("  JIGUANG = 0 (hermetically deactivated)");
+#endif
+  Serial.print("  YOSHI_GYRO = "); Serial.println((int)YOSHI_GYRO);
+  Serial.print("  YOSHI_RGB  = "); Serial.println((int)YOSHI_RGB);
+}
+
 static void printStatus() {
+#if YOSHI_MOTION_CORE
+  Serial.print("Motion core: max compute us="); Serial.print(motionMaxComputeUs.load(std::memory_order_acquire));
+  Serial.print(" missed deadlines="); Serial.println(motionDeadlineMisses.load(std::memory_order_acquire));
+#endif
   Serial.print("YOSHIMITSU: stance = ");
   Serial.print(STANCE_NAME[stance]);
 #if YOSHI_GYRO
@@ -1550,11 +1749,12 @@ static void printHelp() {
   Serial.println("  FLEA/JIG     power-cycle jig → bootloader → MEDITATION");
   Serial.println("  MEDITATION   pocket flasher (the sponge-head, ready to be flashed)");
   Serial.println("  NSS/BENCH    No-Sword bench — direct servo, no radio");
-  Serial.println("  BACK/TURN    deceptive idle — the UART mirror, never looks back");
+  Serial.println("  BACK/TURN    receiver off, shared UART silent");
   Serial.println("  POSE <n>     jump to stance 0..5");
   Serial.println("  MUSHIN       muscle-memory mode (無心): the spirit plans, the muscle strikes");
   Serial.println("  MUSHIN ON/OFF/?  arm / disarm / report the no-mind bridge");
   Serial.println("  STATUS       stance + counters + pin map");
+  Serial.println("  GATES        compile-time flags (board, JIGUANG, gyro, RGB)");
   Serial.println("  SERVO i us   (NSS only) drive servo i to microseconds");
   Serial.println("  HELP         this list");
 #if JIGUANG
@@ -1583,7 +1783,7 @@ static void printDocs() {
   jigCmd(); Serial.println("  muscle    MUSHIN ON/OFF/? — the no-mind bridge");
   jigCmd(); Serial.println("  throne    ADMIN · BRIDGE — yield / retake the flasher console");
   jigCmd(); Serial.println("  bench     SERVO i us — direct servo drive (NSS)");
-  jigCmd(); Serial.println("  gates     JIGUANG · YOSHI_GYRO · YOSHI_RGB · JIGUANG_PROMPT · BOARD_CUSTOM");
+  jigCmd(); Serial.println("  gates     board · JIGUANG · YOSHI_GYRO · YOSHI_RGB · JIGUANG_PROMPT");
 }
 
 static void printSetup() {
@@ -1611,12 +1811,28 @@ static void printBootBanner() {
 
 static void enterStance(Stance next) {
   if (next == stance && next != STANCE_FLEA) return;
-
+  const Stance previous = stance;
+  motionCancel();
+  motionActive = false;
+  motionReceiver.reset();
+  // A new stance cancels an unfinished boot dance; it must not later force
+  // runtime back into MEDITATION or power up a receiver in a silent stance.
+  dancePhase = DANCE_IDLE;
+  bootAssert(false);
+  companionParser.reset();
+  msState = MS_IDLE;
+  mushinLinked = false;
+  mushinV1 = 0;
+  mushinParamDirty = 1;
   stance = next;
 
   switch (stance) {
     case STANCE_KINCHO:
     case STANCE_MANJI_DRAGONFLY:
+      crsfSerialBegin();
+      lastGoodMs = millis();
+      bootAssert(false);
+      if (previous == STANCE_MEDITATION || previous == STANCE_FLEA) danceBegin(false);
       rxPower(true);
       attachServos();
 #if YOSHI_GYRO
@@ -1629,6 +1845,7 @@ static void enterStance(Stance next) {
       break;
 
     case STANCE_FLEA:
+      bridgeSerialBegin();
       detachServos();
       rxPower(true);                       // the dance manages power from here
       Serial.println("YOSHIMITSU: FLEA — the lift. Holding BOOT and power-cycling the receiver…");
@@ -1636,8 +1853,10 @@ static void enterStance(Stance next) {
       break;
 
     case STANCE_MEDITATION:
+      bridgeSerialBegin();
       detachServos();                      // energy saving: no servo drive
       rxPower(true);                       // receiver powered so esptool sees it
+      if (previous != STANCE_FLEA) danceBegin(true);
       Serial.println("YOSHIMITSU: MEDITATION — the sponge-head, ready to be flashed.");
       Serial.println("YOSHIMITSU:   the bridge is live. Exit: long-press BOOT (ESP32) or RESET (RP2040).");
 #if JIGUANG
@@ -1657,10 +1876,10 @@ static void enterStance(Stance next) {
     case STANCE_BACK_TURNED:
       detachServos();
       rxPower(false);
-      Serial.println("YOSHIMITSU: BACK_TURNED — the deceptive idle. It looks dead, but the UARTs mirror each other.");
-      Serial.println("YOSHIMITSU:   send bytes on one UART and they emerge on the other. It never looks back.");
+      Serial.println("YOSHIMITSU: BACK_TURNED — receiver off, shared UART silent.");
       break;
   }
+  nvmPersistStance();                  // remember where we stand — survives power-off
   jigNarrateStance(stance);            // 極光 tells the stance change (level 1)
   setStanceLed();
 }
@@ -1774,6 +1993,11 @@ static void runCommand(const char* line) {
     else if (strncmp(a, "OFF", 3) == 0 || *a == '0') v = false;
     else { Serial.println("YOSHIMITSU: MUSHIN ON|OFF|? — 無心 the muscle-memory mode."); return; }
     if (v != mushin) {
+      if(stance==STANCE_KINCHO || stance==STANCE_MANJI_DRAGONFLY) {
+        Serial.println("Change MUSHIN mode in NSS or MEDITATION; no EEPROM writes in flight mode.");
+        return;
+      }
+      motionCancel(); motionActive=false; motionReceiver.reset();
       mushin = v;
 #if YOSHI_RP2040
       EEPROM.begin(16); EEPROM.write(6, mushin ? 1 : 0); EEPROM.commit();
@@ -1788,6 +2012,7 @@ static void runCommand(const char* line) {
       : "MUSHIN 無心 folds — the muscle sleeps until the spirit calls again.");
   }
   else if (strncmp(line, "STATUS", 6) == 0) printStatus();
+  else if (strncmp(line, "GATES",  5) == 0) printGates();
   else if (strncmp(line, "HELP",   4) == 0) printHelp();
   else if (strncmp(line, "SERVO",  5) == 0) handleServoCmd(line + 5);
   else Serial.println("YOSHIMITSU: unknown — type HELP.");
@@ -1823,6 +2048,7 @@ static void handleMeditationUsb() {
     int c = Serial.read();
     if (c == 0xC0) {                          // SLIP END — esptool is calling
       medAdmin = false;
+      while (BRIDGE_SERIAL.available()) (void)BRIDGE_SERIAL.read();  // drop stale bootloader banner
       BRIDGE_SERIAL.write((uint8_t)c);        // hand the frame start onward
       lastBridgeMs = millis();
       return;
@@ -1840,6 +2066,7 @@ static void handleMeditationUsb() {
 #endif
 
 static void handleUsb() {
+  if ((stance == STANCE_MEDITATION || stance == STANCE_FLEA) && dancePhase != DANCE_IDLE) return;
   if (stance == STANCE_MEDITATION) {
 #if JIGUANG
     handleMeditationUsb();
@@ -1961,6 +2188,7 @@ static void applyResetTapStance() {
     EEPROM.write(0, NVM_MAGIC);
     EEPROM.write(1, 0);
     nvmWriteU32(2, now);
+    EEPROM.write(7, STANCE_KINCHO);              // first boot → default stance persisted
     EEPROM.commit();
 #if YOSHI_RTC
     rtc_init();                              // start the AON RTC on first-ever boot
@@ -1977,8 +2205,18 @@ static void applyResetTapStance() {
   EEPROM.commit();
   if (taps > 0) {
     stance = TAP_STANCE[taps];
+    nvmPersistStance();                         // a tapped stance is a real stance — remember it
     Serial.print("YOSHIMITSU: RESET-tap "); Serial.print((int)taps);
     Serial.print(" → "); Serial.println(STANCE_NAME[stance]);
+  } else {
+    // No fresh tap → this is a plain boot (possibly after a power cut). Restore
+    // the last stance from flash, so a shared-rail power-cycle does not yank the
+    // board back to KINCHO mid-flash.
+    uint8_t saved = EEPROM.read(7);
+    if (saved < STANCE_COUNT && saved != STANCE_FLEA) {
+      stance = (Stance)saved;
+      Serial.print("YOSHIMITSU: resume "); Serial.println(STANCE_NAME[stance]);
+    }
   }
 }
 #else
@@ -1990,8 +2228,12 @@ static void applyResetTapStance() { /* ESP32-S3 uses the GPIO0 button */ }
 static bool postDone = false;
 
 void setup() {
+#if RX_PWR_MANUAL
+  pinMode(RX_PWR_PIN, INPUT);          // GPIO6 free — receiver power is the user's hand
+#else
   pinMode(RX_PWR_PIN, OUTPUT);
-  pinMode(RX_BOOT_PIN, OUTPUT);
+#endif
+  pinMode(RX_BOOT_PIN, INPUT);              // BOOT line starts released (high-Z)
 #if YOSHI_ESP32
   pinMode(0, INPUT_PULLUP);
 #endif
@@ -2020,7 +2262,6 @@ void setup() {
   validatePins();                             // boot POST: range + collision
 
   crsfSerialBegin();
-  bridgeSerialBegin();
 
   stance = STANCE_KINCHO;
   applyResetTapStance();          // a RESET-tap streak may override the boot stance
@@ -2028,6 +2269,9 @@ void setup() {
   // Bring the boot stance to life (FLEA is never a boot stance — it is a move).
   if (stance == STANCE_KINCHO || stance == STANCE_MANJI_DRAGONFLY) {
     rxPower(true);
+    // RP2040 RESET does not itself reset an independently powered EP2.
+    // Recover it from ROM bootloader after a flashing session as well.
+    danceBegin(false);
     attachServos();
 #if YOSHI_GYRO
     if (stance == STANCE_MANJI_DRAGONFLY) gyroInit();
@@ -2036,6 +2280,8 @@ void setup() {
     rxPower(false);
     attachServos();
   } else if (stance == STANCE_MEDITATION) {
+    bridgeSerialBegin();
+    danceBegin(true);
     rxPower(true);
   } else {                         // BACK_TURNED (and any future silent pose)
     rxPower(false);
@@ -2045,7 +2291,20 @@ void setup() {
 }
 
 void loop() {
-  if (!postDone && millis() >= BOOT_PRINT_MS) {
+#if YOSHI_MOTION_CORE
+  motionSetupReady.store(true,std::memory_order_release);
+#if YOSHI_GYRO
+  static uint32_t lastMotionGyroUs=0;
+  const uint32_t gyroNow=micros();
+  if(gyroNow-lastMotionGyroUs>=1000) {
+    lastMotionGyroUs=gyroNow;
+    gyroCachedRate=stance==STANCE_MANJI_DRAGONFLY && gyroConnected ? gyroReadZRate() : 0;
+    motionCorrection.store(stance==STANCE_MANJI_DRAGONFLY && gyroConnected
+        ? constrain(-(gyroZRate()*GYRO_GAIN)/GYRO_SCALE_LSB,-200,200) : 0,std::memory_order_release);
+  }
+#endif
+#endif
+  if (!postDone && millis() >= BOOT_PRINT_MS && stance != STANCE_MEDITATION && stance != STANCE_FLEA) {
     postDone = true;
     printBootBanner();
   }
@@ -2069,4 +2328,57 @@ void loop() {
   }
 #endif
 }
+#if YOSHI_MOTION_CORE
+// Only the motion worker uses this state. No I2C, USB, EEPROM, logging or
+// blocking SDK calls on this core. PWM compare updates are hardware buffered.
+void setup1() {}
+void loop1() {
+  if(!motionSetupReady.load(std::memory_order_acquire)) return;
+  static Motion::Intent active;
+  static bool running=false;
+  static uint32_t epoch=0, received=0, lastUs=0, nextUs=0;
+  static float phase=0, cyclesPerUs=0;
+  const uint32_t now=micros();
+  if((int32_t)(now-nextUs)<0) return;
+  if(nextUs && now-nextUs>=1000) motionDeadlineMisses.fetch_add(1,std::memory_order_relaxed);
+  nextUs=now+1000;
+  const uint32_t currentEpoch=motionEpoch.load(std::memory_order_acquire);
+  if(epoch!=currentEpoch) {
+    if(running) for(uint8_t i=0;i<servoCount;++i)
+      servos[i].writeMicroseconds(i<7 && active.kind[i]==6?1000:1500);
+    running=false; epoch=currentEpoch;
+  }
+  if(motionReady.load(std::memory_order_acquire)) {
+    if(motionPendingEpoch==epoch) {
+      active=motionPending; received=motionPendingMs;
+      if(!running) { phase=0; lastUs=now; }
+      cyclesPerUs=active.hz*0.000001f;
+      running=true;
+    }
+    motionReady.store(false,std::memory_order_release);
+  }
+  if(!running) return;
+  uint16_t output[7];
+  const bool stale=millis()-received>100;
+  if(stale) {
+    for(unsigned i=0;i<7;++i) output[i]=active.kind[i]==6?1000:1500;
+    running=false;
+  } else {
+    if(active.flapping) { phase+=(now-lastUs)*cyclesPerUs; phase-=(uint32_t)phase; }
+    else phase=0;
+    Motion::outputs(active,phase,output);
+  }
+  lastUs=now;
+  const int32_t correction=motionCorrection.load(std::memory_order_acquire);
+  for(uint8_t i=0;i<servoCount;++i) {
+    if(motionEpoch.load(std::memory_order_acquire)!=epoch) return;
+    int32_t value=i<7?output[i]:1500;
+    if(!stale && i<7 && active.kind[i]==5) value+=correction;
+    servos[i].writeMicroseconds(Motion::safePulse(value));
+  }
+  const uint32_t elapsed=micros()-now;
+  if(elapsed>motionMaxComputeUs.load(std::memory_order_relaxed))
+    motionMaxComputeUs.store(elapsed,std::memory_order_release);
+}
+#endif
 #endif  // YOSHIMITSU_H

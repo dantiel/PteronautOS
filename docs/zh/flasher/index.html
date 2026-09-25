@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>PteronautOS — 云端构建与烧录</title>
+<title>PteronautOS — Fossil Etcher</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -23,7 +23,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>云端构建与烧录</h1>
+<h1>Fossil Etcher</h1>
 <p class='sub-lead'>在浏览器中构建并烧录固件 — 无需终端，也无需 PlatformIO。</p>
 <section class='flasher-card'>
 <h2>构建配置</h2>
@@ -78,21 +78,10 @@
 <span>Mushin 桥接 (RP2040 肌肉)</span>
 <select id='mushin_enabled'>
 <option selected value='0'>Off — local PWM (wings flap on this board)</option>
-<option value='1'>On — RP2040 muscle owns servos (bridge GPIO9/10)</option>
+<option value='1'>EP2 + RP2040 — single UART0, remote servos and gyro</option>
 </select>
 </label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin RX pin</span>
-<input id='mushin_rx_pin' max='16' min='0' type='number' value='9'>
-</label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin TX pin</span>
-<input id='mushin_tx_pin' max='16' min='0' type='number' value='10'>
-</label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin baud</span>
-<input id='mushin_baud' type='number' value='57600'>
-</label>
+<p class='flasher-conditional'>EP2 RX=GPIO3, TX=GPIO1. Runtime 420000 baud; MEDITATION flashing 115200. No second UART or local I2C.</p>
 <label class='flasher-field'>
 <span>WiFi auto-on interval (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
@@ -178,9 +167,12 @@
 <p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox 不支持 Web Serial。可在此编译固件并下载 .bin，然后用 esptool 烧录 — 或在 Chrome/Edge/Opera 中打开本页通过 USB 烧录。</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>构建固件</button>
+<button class='flasher-secondary' id='load-btn' type='button'>加载 .bin</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>通过 Web Serial 烧录</button>
 <button class='flasher-secondary' disabled id='download-btn' type='button'>下载 .bin</button>
+<button class='flasher-secondary hidden' id='disconnect-btn' type='button'>断开连接</button>
 </div>
+<input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>
 <p class='flasher-hint'>构建会在 GitHub Actions 中编译出单个合并的 .bin（约 3–4 分钟）。</p>
 </section>
 <section class='flasher-card flasher-status hidden' id='status-card'>

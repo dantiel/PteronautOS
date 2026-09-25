@@ -80,7 +80,9 @@
 ///////////////////
 
 device_affinity_t ui_devices[] = {
+#if !defined(MUSHIN_ENABLED)
   {&Serial0_device, 1},
+#endif
 #if defined(PLATFORM_ESP32) && !defined(ORNITHOPTER_MODE)
   {&Serial1_device, 1},
   {&SerialUpdate_device, 1},
@@ -1514,8 +1516,10 @@ static void serialShutdown()
 
 void reconfigureSerial()
 {
+#if !defined(MUSHIN_ENABLED)
     serialShutdown();
     setupSerial();
+#endif
 }
 
 static void setupConfigAndPocCheck()
@@ -2032,8 +2036,10 @@ void setup()
         }
         crsfRouter.addEndpoint(&crsfReceiver);
         crsfRouter.addConnector(&otaConnector);
+#if !defined(MUSHIN_ENABLED)
         setupSerial();
         setupSerial1();
+#endif
 
         devicesRegister(ui_devices, ARRAY_SIZE(ui_devices));
         devicesInit();
@@ -2084,7 +2090,9 @@ void loop()
     devicesUpdate(now);
 
     // read and process any data from serial ports, send any queued non-RC data
+#if !defined(MUSHIN_ENABLED)
     handleSerialIO();
+#endif
 
     checkRebootTime(now);
 

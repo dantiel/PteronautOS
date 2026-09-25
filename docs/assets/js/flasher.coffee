@@ -10,6 +10,9 @@ els =
   buildBtn: $("#build-btn")
   flashBtn: $("#flash-btn")
   downloadBtn: $("#download-btn")
+  loadBtn: $("#load-btn")
+  disconnectBtn: $("#disconnect-btn")
+  fileInput: $("#firmware-file")
   serialWarning: $("#serial-warning")
   statusCard: $("#status-card")
   statusDot: $("#status-dot")
@@ -22,6 +25,9 @@ els =
 currentRunId = null
 firmwareBytes = null
 busy = false
+activePort = null
+activeTransport = null
+builtFingerprint = null
 serialSupported = "serial" of navigator
 
 window.addEventListener "beforeunload", (e) ->
@@ -49,9 +55,6 @@ FIELD_IDS = [
   "#zephyrus_i2c_scl"
   "#zephyrus_board_rotation"
   "#mushin_enabled"
-  "#mushin_rx_pin"
-  "#mushin_tx_pin"
-  "#mushin_baud"
   "#rcvr_uart_baud"
   "#device_name"
   "#home_wifi_ssid"
@@ -116,14 +119,103 @@ collectParams = ->
   zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
   mushin_enabled: $("#mushin_enabled").value
-  mushin_rx_pin: $("#mushin_rx_pin").value
-  mushin_tx_pin: $("#mushin_tx_pin").value
-  mushin_baud: $("#mushin_baud").value
   rcvr_uart_baud: $("#rcvr_uart_baud").value
   device_name: $("#device_name").value.trim()
   home_wifi_ssid: $("#home_wifi_ssid").value.trim()
   home_wifi_password: $("#home_wifi_password").value
   i18n_locales: checked.join(",")
+
+enableFirmware = ->
+  els.downloadBtn.disabled = false
+  els.flashBtn.disabled = false if serialSupported
+
+# Stable fingerprint of the current build config — the IndexedDB cache key.
+hashStr = (s) ->
+  h = 0x811c9dc5
+  for i in [0...s.length]
+    h ^= s.charCodeAt i
+    h = Math.imul(h, 0x01000193) >>> 0
+  h.toString 16
+
+# Browser cache (IndexedDB): a cloud-built image survives reloads — no rebuild.
+DB_NAME = "pteronautos-fossil-etcher"
+DB_VERSION = 1
+STORE = "builds"
+dbPromise = null
+
+openDb = ->
+  return dbPromise if dbPromise
+  dbPromise = new Promise (resolve, reject) ->
+    req = indexedDB.open DB_NAME, DB_VERSION
+    req.onupgradeneeded = ->
+      db = req.result
+      db.createObjectStore STORE unless db.objectStoreNames.contains STORE
+    req.onsuccess = -> resolve req.result
+    req.onerror = -> reject req.error
+  dbPromise
+
+idbPut = (key, value) ->
+  db = await openDb()
+  new Promise (resolve, reject) ->
+    tx = db.transaction STORE, "readwrite"
+    tx.objectStore(STORE).put value, key
+    tx.oncomplete = -> resolve()
+    tx.onerror = -> reject tx.error
+
+idbGet = (key) ->
+  db = await openDb()
+  new Promise (resolve, reject) ->
+    tx = db.transaction STORE, "readonly"
+    req = tx.objectStore(STORE).get key
+    req.onsuccess = -> resolve req.result
+    req.onerror = -> reject req.error
+
+firmwareKey = ->
+  hashStr JSON.stringify collectParams()
+
+cacheFirmware = ->
+  return unless firmwareBytes?
+  try
+    record =
+      name: "pteronautos-firmware.bin"
+      size: firmwareBytes.length
+      ts: Date.now()
+      blob: firmwareBytes.slice().buffer
+    await idbPut firmwareKey(), record
+    log "Saved build in this browser (" + firmwareBytes.length + " bytes) — reload and it's reused."
+  catch err
+    log "Couldn't cache build: " + err.message
+
+restoreCachedBuild = ->
+  return unless "indexedDB" of window
+  try
+    record = await idbGet firmwareKey()
+    if record?.blob?
+      firmwareBytes = new Uint8Array record.blob
+      enableFirmware()
+      log "Reusing saved build (" + record.size + " bytes) — no rebuild needed."
+      setStatus "Saved build loaded — ready to flash or download.", "done"
+  catch
+    # no cache or storage blocked — nothing to load
+
+loadFromDisk = (file) ->
+  buf = await file.arrayBuffer()
+  firmwareBytes = new Uint8Array buf
+  enableFirmware()
+  log "Loaded " + file.name + " (" + firmwareBytes.length + " bytes) from disk."
+  setStatus "Firmware image loaded — ready to flash or download.", "done"
+
+disconnect = ->
+  try
+    await activeTransport?.disconnect()
+  catch
+  try
+    activePort?.close()
+  catch
+  activeTransport = null
+  activePort = null
+  els.disconnectBtn.classList.add "hidden"
+  log "Disconnected."
 
 startBuild = ->
   els.buildBtn.disabled = true
@@ -131,6 +223,7 @@ startBuild = ->
   els.downloadBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
+  builtFingerprint = null
   els.log.textContent = ""
   setStatus "Dispatching build…", "busy"
   els.runLink.classList.add "hidden"
@@ -139,6 +232,7 @@ startBuild = ->
 
   try
     params = collectParams()
+    builtFingerprint = hashStr JSON.stringify params
     delay = Number params.auto_wifi_on_interval
     unless Number.isInteger(delay) and delay >= -1 and delay <= 2147483
       throw new Error "Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds."
@@ -172,12 +266,11 @@ poll = ->
       els.buildBtn.disabled = false
       busy = false
       return
-    els.downloadBtn.disabled = false
-    if serialSupported
-      setStatus "Build complete — ready to flash or download.", "done"
-      els.flashBtn.disabled = false
-    else
-      setStatus "Build complete — ready to download.", "done"
+    setStatus "Build complete — downloading image…", "busy"
+    await downloadFirmware()
+    await cacheFirmware()
+    enableFirmware()
+    setStatus "Build complete — cached in this browser. Ready to flash or download.", "done"
     els.buildBtn.disabled = false
     busy = false
   catch err
@@ -239,16 +332,17 @@ flash = ->
       await downloadFirmware()
 
     setStatus "Connecting to device…", "busy"
-    port = await navigator.serial.requestPort()
+    activePort = await navigator.serial.requestPort()
 
-    transport = new Transport port, true
+    activeTransport = new Transport activePort, true
+    els.disconnectBtn.classList.remove "hidden"
     esploader = new ESPLoader
-      transport: transport
+      transport: activeTransport
       baudrate: 115200
       terminal: terminal()
       debugLogging: false
 
-    chip = await esploader.main()
+    chip = await esploader.main("no_reset")
     log "Connected: " + chip
 
     setStatus "Flashing…", "busy"
@@ -264,15 +358,12 @@ flash = ->
         els.progressBar.style.width = pct + "%"
         els.statusText.textContent = "Flashing… " + pct + "%"
 
-    log "Flashing complete. Resetting…"
-    await esploader.after "hard_reset"
+    log "Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware."
+    await esploader.after "no_reset_stub"
 
-    setStatus "Flashed successfully.", "done"
+    setStatus "Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done"
     els.progressBar.style.width = "100%"
-    try
-      await transport.disconnect()
-    catch
-      log "Note: serial port already released."
+    await disconnect()
   catch err
     setStatus "Flash failed: " + err.message, "fail"
     log err.stack or err.message
@@ -287,6 +378,7 @@ syncMushinFields = ->
 
 restoreConfig()
 syncMushinFields()
+restoreCachedBuild()
 
 for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
@@ -302,5 +394,15 @@ unless serialSupported
   els.flashBtn.classList.add "hidden"
 
 els.buildBtn.addEventListener "click", startBuild
+els.loadBtn.addEventListener "click", -> els.fileInput.click()
+els.disconnectBtn.addEventListener "click", disconnect
+els.fileInput.addEventListener "change", ->
+  file = els.fileInput.files?[0]
+  if file
+    try
+      await loadFromDisk file
+    catch err
+      setStatus "Load failed: " + err.message, "fail"
+  els.fileInput.value = ""
 els.flashBtn.addEventListener "click", flash
 els.downloadBtn.addEventListener "click", saveFirmware

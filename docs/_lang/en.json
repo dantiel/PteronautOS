@@ -232,7 +232,7 @@
   "hw_th_price": "Price",
   "hw_th_notes": "Notes",
   "hw_weight_note": "Stock weight; removing heatshrink, connectors or housing can cut 30–60%.",
-  "hw_esp32_note": "ESP32-based receivers (ESP32-C3/S3) use a different architecture and are not yet supported.",
+  "hw_esp32_note": "ESP32-based receivers (ESP32-C3/S3) are future developments (WiFi/UDP control, RADIO_NONE tick) — see FUTURE_DEVELOPMENTS.md, contributions welcome.",
   "hw_note_crsfonly": "CRSF only — needs converter",
   "hw_note_conv12": "12× PWM via CRSF→PWM converter",
   "tut_card_first_number": "02",
@@ -919,8 +919,8 @@
   "doc_wave_slew": "Slew (rate)",
   "doc_legend_wing_l": "Left wing",
   "doc_legend_wing_r": "Right wing",
-  "flasher_title": "PteronautOS — Cloud Build & Flasher",
-  "flasher_h1": "Cloud Build & Flasher",
+  "flasher_title": "PteronautOS — Fossil Etcher",
+  "flasher_h1": "Fossil Etcher",
   "flasher_lead": "Build and flash your firmware from the browser — no console, no PlatformIO.",
   "flasher_heading_config": "Build configuration",
   "flasher_mixer_profile": "Mixer profile",
@@ -953,5 +953,7 @@
   "flasher_home_wifi_password": "Home WiFi password",
   "flasher_locales_hint": "Select languages to include in the WebUI — none selected bakes in all 11.",
   "flash_online_cta": "Flash online",
-  "flash_online_cta_desc": "Build and flash the firmware straight from the browser — no toolchain, no drivers. Chrome, Edge and Opera flash over USB; other browsers download the .bin."
+  "flash_online_cta_desc": "Build and flash the firmware straight from the browser — no toolchain, no drivers. Chrome, Edge and Opera flash over USB; other browsers download the .bin.",
+  "flasher_load_btn": "Load .bin",
+  "flasher_disconnect_btn": "Disconnect"
 }

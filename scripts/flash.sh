@@ -61,6 +61,7 @@ usage() {
   say "                       omitted → interactive prompt (all / some / skip)"
   say ""
   say "Build control:"
+  say "  --target pwmp7|ep2  receiver hardware (default pwmp7; ep2 needs RP2040)"
   say "  --no-build           skip WebUI+firmware rebuild, flash existing .bin"
   say ""
   say "Flash options:"
@@ -80,6 +81,7 @@ CHECK_ONLY=0
 LIST_LANGS=0
 PORT=""
 BAUD=115200
+TARGET=pwmp7
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -89,10 +91,17 @@ while [[ $# -gt 0 ]]; do
     --list-langs)  LIST_LANGS=1; shift ;;
     --port)        PORT="$2"; shift 2 ;;
     --baud)        BAUD="$2"; shift 2 ;;
+    --target)      TARGET="${2:?--target requires pwmp7 or ep2}"; shift 2 ;;
     --help|-h)     usage; exit 0 ;;
     *) err "Unknown argument: $1"; usage; exit 1 ;;
   esac
 done
+
+case "$TARGET" in
+  pwmp7) TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+  ep2) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
+  *) err "Unknown target: $TARGET (use pwmp7 or ep2)"; exit 1 ;;
+esac
 
 # ---- Info: list languages ---------------------------------------------------
 if [[ "$LIST_LANGS" == "1" ]]; then
@@ -190,7 +199,7 @@ build_firmware() {
   step "Building firmware"
   (
     cd "$PROJECT_ROOT/src" || exit 1
-    pio run -e PteronautOS_ESP8285_2400_RX
+    pio run -e "$TARGET_ENV"
   )
 }
 
@@ -251,12 +260,8 @@ fi
 ok "esptool found: $C_DIM${ESPT#$HOME/}$C_RESET  ($ESPT_VER)"
 
 # ---- 2) Locate firmware -----------------------------------------------------
-FW=""
-for cand in \
-  "src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin" \
-  "$(find src/.pio/build -name firmware.bin 2>/dev/null | head -1)" ; do
-  [[ -n "$cand" && -f "$cand" ]] && { FW="$cand"; break; }
-done
+FW="src/.pio/build/$TARGET_ENV/firmware.bin"
+[[ -f "$FW" ]] || FW=""
 
 # ---- 3) Locate USB port -----------------------------------------------------
 step "Locating USB serial port"
@@ -293,7 +298,7 @@ fi
 # ---- 5) Firmware must exist for flashing ------------------------------------
 step "Locating firmware binary"
 if [[ -z "$FW" ]]; then
-  err "No firmware.bin found. Build first:  ./scripts/flash.sh --lang <code>  (or pio run -e PteronautOS_ESP8285_2400_RX)"
+  err "No firmware.bin for $TARGET_ENV. Build first: ./scripts/flash.sh --target $TARGET --lang <code>"
   exit 1
 fi
 FW_SIZE=$(stat -f%z "$FW" 2>/dev/null || stat -c%s "$FW" 2>/dev/null || echo "?")

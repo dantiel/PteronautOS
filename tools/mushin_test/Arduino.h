@@ -27,14 +27,18 @@ public:
   int id = 0;
   static uint8_t  tx[3][1024];
   static int16_t  txlen[3];
-  void begin(unsigned long baud) { (void)baud; }
-  void begin(unsigned long baud, uint32_t cfg, int rx, int tx) { (void)baud; (void)cfg; (void)rx; (void)tx; }
-  void end() {}
+  inline static uint8_t rx[3][4096] = {};
+  inline static int rxlen[3] = {}, rxpos[3] = {};
+  unsigned long baud = 0;
+  int begins = 0;
+  void begin(unsigned long value) { baud = value; ++begins; }
+  void begin(unsigned long value, uint32_t, int, int) { begin(value); }
+  void end() { rxlen[id] = rxpos[id] = 0; }
   bool setTX(int pin) { (void)pin; return true; }
   bool setRX(int pin) { (void)pin; return true; }
-  int available() { return 0; }
-  int availableForWrite() { return 1; }
-  int read() { return 0; }
+  int available() { return rxlen[id] - rxpos[id]; }
+  int availableForWrite() { return 128; }
+  int read() { return available() ? rx[id][rxpos[id]++] : -1; }
   size_t write(uint8_t b) { if (txlen[id] < 1024) tx[id][txlen[id]++] = b; return 1; }
   size_t write(int b) { return write((uint8_t)b); }
   size_t write(const uint8_t* b, size_t n) { for (size_t i = 0; i < n; i++) write(b[i]); return n; }

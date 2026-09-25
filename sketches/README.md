@@ -23,7 +23,7 @@ deceptive follow-up, never a retreat. Configure once, flash once, never touch ag
 
 | File | Role |
 |---|---|
-| [`yoshimitsu/yoshimitsu.ino`](yoshimitsu/yoshimitsu.ino) | **Config shell only** — pins, flags, the `BOARD_CUSTOM` block. |
+| [`yoshimitsu/yoshimitsu.ino`](yoshimitsu/yoshimitsu.ino) | **Config shell only** — board type + per-pin overrides + feature flags. |
 | [`yoshimitsu/src/Yoshimitsu.h`](yoshimitsu/src/Yoshimitsu.h) | **The whole core** — stances, CRSF, MUSHIN, JIGUANG, the flasher bridge. |
 | [`yoshimitsu/src/Yoshimitsu_Loadout.h`](yoshimitsu/src/Yoshimitsu_Loadout.h) | **The starting loadout** — every default (pins, timings, gate levels) as `*_DEFAULT` values. |
 | [`yoshimitsu/library.properties`](yoshimitsu/library.properties) | Arduino library manifest (v1.0.0, rp2040 + esp32). |
@@ -104,7 +104,7 @@ RP2040-Tiny GND ──► RX GND
 
 Servos:  SERVO_PIN_1 → GP2 · SERVO_PIN_2 → GP3 · SERVO_PIN_3 → GP4
 Gyro:    MPU6050 SDA → GP10 · SCL → GP11   (MANJI_DRAGONFLY, optional)
-RGB:     GP16 (onboard WS2812B — stance colours if Adafruit_NeoPixel present)
+RGB:     GP16 (onboard WS2812B — stance colours, ON by default; `YOSHI_RGB 0` disables)
 ```
 
 ### ESP32-S3 (one permanent harness)
@@ -155,9 +155,10 @@ drag the `.uf2` onto it.
 ## Requirements
 
 - **RP2040-Tiny build**: [arduino-pico](https://github.com/earlephilhower/arduino-pico)
-  core (Board: "Waveshare RP2040 Zero" or any generic RP2040). `Adafruit_NeoPixel` is
-  optional (onboard RGB status). `EEPROM` + AON `hardware/rtc` for the RESET-tap
-  counter ship with the core.
+  core (Board: "Waveshare RP2040 Zero" or any generic RP2040). `Adafruit_NeoPixel`
+  is a declared dependency (onboard RGB status, ON by default on RP2040 — set
+  `YOSHI_RGB 0` to compile it out). `EEPROM` + AON `hardware/rtc` for the
+  RESET-tap counter ship with the core.
 - **ESP32-S3 build**: [arduino-esp32](https://github.com/espressif/arduino-esp32)
   core, plus [ESP32Servo](https://github.com/jkb-git/ESP32Servo).
 - **Gyro (optional)**: any MPU6050 on `GYRO_SDA`/`GYRO_SCL` enables MANJI_DRAGONFLY;

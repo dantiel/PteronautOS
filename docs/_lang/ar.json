@@ -919,8 +919,8 @@
   "doc_wave_slew": "Slew (المعدل)",
   "doc_legend_wing_l": "الجناح الأيسر",
   "doc_legend_wing_r": "الجناح الأيمن",
-  "flasher_title": "PteronautOS — البناء السحابي والوميض",
-  "flasher_h1": "البناء السحابي والوميض",
+  "flasher_title": "PteronautOS — Fossil Etcher",
+  "flasher_h1": "Fossil Etcher",
   "flasher_lead": "ابنِ وامضِ البرنامج الثابت من المتصفح — دون طرفية، ودون PlatformIO.",
   "flasher_heading_config": "إعدادات البناء",
   "flasher_mixer_profile": "ملف تعريف الخلاط",
@@ -953,5 +953,7 @@
   "flasher_home_wifi_password": "كلمة مرور WiFi المنزلية",
   "flasher_locales_hint": "اختر اللغات لتضمينها في WebUI — عدم التحديد يضمّن كل اللغات الإحدى عشرة.",
   "flash_online_cta": "فلاش عبر الإنترنت",
-  "flash_online_cta_desc": "قم ببناء وحرق البرنامج الثابت مباشرة من المتصفح — دون أدوات بناء أو تعريفات. يحرق Chrome, Edge وOpera عبر USB؛ أما بقية المتصفحات فتُنزّل ملف .bin."
+  "flash_online_cta_desc": "قم ببناء وحرق البرنامج الثابت مباشرة من المتصفح — دون أدوات بناء أو تعريفات. يحرق Chrome, Edge وOpera عبر USB؛ أما بقية المتصفحات فتُنزّل ملف .bin.",
+  "flasher_load_btn": "تحميل .bin",
+  "flasher_disconnect_btn": "قطع الاتصال"
 }

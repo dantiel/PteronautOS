@@ -16,12 +16,12 @@ class ImageTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'firmware.bin'
 
-    def image(self, hardware=None, options=None, flash=0x20):
+    def image(self, hardware=None, options=None, flash=0x20, product=b'PteronautOS PWMP7'):
         data = bytearray(0x1020)
         data[:4] = bytes([0xe9, 2, 3, flash])
         data[0x1000:0x1008] = struct.pack('<BBBBI', 0xe9, 1, 3, flash, 0)
         data[0x1008:0x1010] = struct.pack('<II', 0x40100000, 4)
-        data += b'PteronautOS PWMP7'.ljust(128, b'\0') + b'PWMP7 RX'.ljust(16, b'\0')
+        data += product.ljust(128, b'\0') + b'PWMP7 RX'.ljust(16, b'\0')
         data += json.dumps(options if options is not None else {'wifi-on-interval': 30}).encode().ljust(512, b'\0')
         data += json.dumps(hardware if hardware is not None else json.loads(HARDWARE_PATH.read_text())).encode().ljust(2048, b'\0')
         self.path.write_bytes(data)
@@ -41,6 +41,18 @@ class ImageTests(unittest.TestCase):
         hw['pwm_outputs'].append(2)
         with self.assertRaisesRegex(ValueError, 'Hardware differs'):
             verify_image(self.image(hardware=hw))
+
+    def test_ep2_map_and_cross_target_rejection(self):
+        hw = json.loads(HARDWARE_PATH.with_name('pteronautos-ep2.json').read_text())
+        verify_image(self.image(hardware=hw, product=b'PteronautOS EP2'))
+        self.assertEqual(hw['serial_rx'], 3)
+        self.assertEqual(hw['serial_tx'], 1)
+        self.assertEqual(hw['radio_busy'], 5)
+        self.assertFalse(hw.get('pwm_outputs'))
+        with self.assertRaisesRegex(ValueError, 'Hardware differs'):
+            verify_image(self.image(hardware=hw))
+        with self.assertRaisesRegex(ValueError, 'Hardware differs'):
+            verify_image(self.image(product=b'PteronautOS EP2'))
 
     def test_bad_clock_rejected(self):
         with self.assertRaisesRegex(ValueError, '40 MHz'):

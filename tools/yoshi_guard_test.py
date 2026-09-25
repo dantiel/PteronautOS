@@ -17,7 +17,7 @@ CASES = [
     # (key, value, expected #error needle, extra defines)
     ("CRSF_UART_NUM", "7", "CRSF_UART_NUM must be 0 or 1", ["-DARDUINO_ARCH_RP2040"]),
     ("BRIDGE_UART_NUM", "3", "BRIDGE_UART_NUM must be 0 or 1", ["-DARDUINO_ARCH_RP2040"]),
-    ("CRSF_UART_NUM", "1", "CRSF and BRIDGE need two DIFFERENT UARTs", ["-DARDUINO_ARCH_RP2040"]),
+    ("BRIDGE_UART_NUM", "1", "EP2 uses ONE UART: BRIDGE_UART_NUM must equal CRSF_UART_NUM", ["-DARDUINO_ARCH_RP2040"]),
 ]
 
 def run_case(key, value, needle, defines):

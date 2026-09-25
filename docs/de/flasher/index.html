@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>PteronautOS — Cloud-Build &amp; Flasher</title>
+<title>PteronautOS — Fossil Etcher</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -23,7 +23,7 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<h1>Cloud-Build &amp; Flasher</h1>
+<h1>Fossil Etcher</h1>
 <p class='sub-lead'>Firmware direkt im Browser bauen und flashen — keine Konsole, kein PlatformIO.</p>
 <section class='flasher-card'>
 <h2>Build-Konfiguration</h2>
@@ -78,21 +78,10 @@
 <span>Mushin-Brücke (RP2040-Muskel)</span>
 <select id='mushin_enabled'>
 <option selected value='0'>Off — local PWM (wings flap on this board)</option>
-<option value='1'>On — RP2040 muscle owns servos (bridge GPIO9/10)</option>
+<option value='1'>EP2 + RP2040 — single UART0, remote servos and gyro</option>
 </select>
 </label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin RX-Pin</span>
-<input id='mushin_rx_pin' max='16' min='0' type='number' value='9'>
-</label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin TX-Pin</span>
-<input id='mushin_tx_pin' max='16' min='0' type='number' value='10'>
-</label>
-<label class='flasher-field flasher-conditional'>
-<span>Mushin-Baudrate</span>
-<input id='mushin_baud' type='number' value='57600'>
-</label>
+<p class='flasher-conditional'>EP2 RX=GPIO3, TX=GPIO1. Runtime 420000 baud; MEDITATION flashing 115200. No second UART or local I2C.</p>
 <label class='flasher-field'>
 <span>WiFi-Auto-On-Intervall (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
@@ -178,9 +167,12 @@
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial wird in Safari/Firefox nicht unterstützt. Erstelle die Firmware, lade die .bin herunter und flashe sie mit esptool — oder öffne diese Seite in Chrome/Edge/Opera zum Flashen per USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Firmware bauen</button>
+<button class='flasher-secondary' id='load-btn' type='button'>.bin laden</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Via Web Serial flashen</button>
 <button class='flasher-secondary' disabled id='download-btn' type='button'>.bin herunterladen</button>
+<button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Trennen</button>
 </div>
+<input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>
 <p class='flasher-hint'>Der Build erzeugt eine einzelne zusammengeführte .bin in GitHub Actions (~3–4 min).</p>
 </section>
 <section class='flasher-card flasher-status hidden' id='status-card'>

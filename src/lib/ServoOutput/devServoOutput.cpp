@@ -157,52 +157,6 @@ static void servoWrite(uint8_t ch, uint16_t us)
 }
 
 #if defined(MUSHIN_ENABLED)
-// MUSHIN v1: the muscle (RP2040) owns phase + shapeWave; the spirit streams
-// the post-mix wave parameters every tick (throttled by MUSHIN_PARAM_DIVIDER
-// inside the bridge). A v0 muscle — announced version 0 — still gets the old
-// µs intents 1:1, so a mixed-generation link degrades gracefully.
-static void mushinEmitServoIntents()
-{
-    if (mushinMuscleVersion() == 0)
-    {
-        // v0 fallback: unified waveform+gyro result (_f[]) in profile servo
-        // order (funcMap); the muscle truncates to its own servoCount.
-        uint16_t us[MUSHIN_MAX_PAY / 2];
-        uint8_t  n = 0;
-        for (uint8_t ch = 0; ch < 7 && n < (MUSHIN_MAX_PAY / 2); ++ch)
-        {
-            uint8_t func = PROFILE.funcMap[ch];
-            if (func != SF_NONE)
-                us[n++] = ornithopter.funcValue(func);
-        }
-        mushinEmitIntents(us, n);
-        return;
-    }
-
-    MushinIntentV1 p;
-    p.throttle = (uint16_t)constrain((int32_t)(ornithopter.lastThrottlePct * 1000.0f + 0.5f), 0, 1000);
-    p.flapFreq = ornithopter.lastFlapping
-               ? (uint8_t)constrain((int32_t)(ornithopter.lastFlapHz * 10.0f + 0.5f), 10, 200)
-               : 0;   // glide: the muscle decays its local cadence
-    p.ferocity = (uint8_t)constrain((int32_t)(ornithopter.lastStrokeFer * 12.5f + 0.5f), 0, 100);
-    p.skew     = (int8_t)constrain((int32_t)ornithopter.lastStrokeSkew, -100, 100);
-    p.slew     = (uint8_t)constrain((int32_t)ornithopter.servoSpeed, 0, 255);
-    p.stance   = (uint8_t)constrain((int32_t)ornithopter.activeFlightProfile, 0, 5);
-
-    // Stick → rate setpoint (±250 dps), same normalisation the mixer uses
-    // ((raw−172)/819.5−1); deadband so a centred stick commands hold, not
-    // drift (CRSF neutral 992 sits inside the band).
-    float rollNorm  = (float)(ornithopter.voiceAileron  - 172) / 819.5f - 1.0f;
-    float pitchNorm = (float)(ornithopter.voiceElevator - 172) / 819.5f - 1.0f;
-    if (rollNorm > -0.02f && rollNorm < 0.02f) rollNorm = 0.0f;
-    if (pitchNorm > -0.02f && pitchNorm < 0.02f) pitchNorm = 0.0f;
-    if (rollNorm > 1.0f) rollNorm = 1.0f; else if (rollNorm < -1.0f) rollNorm = -1.0f;
-    if (pitchNorm > 1.0f) pitchNorm = 1.0f; else if (pitchNorm < -1.0f) pitchNorm = -1.0f;
-    p.setpointRoll  = (int16_t)(rollNorm * 250.0f);
-    p.setpointPitch = (int16_t)(pitchNorm * 250.0f);
-
-    mushinEmitIntentV1(p);
-}
 #endif
 
 static void servosFailsafe()
@@ -308,6 +262,9 @@ static void servosUpdate(unsigned long now)
         {
             _sweepActive = false;
             _sweepCurrentUs = 1500;
+#if defined(MUSHIN_ENABLED)
+            mushinEmitSweep(_sweepCurrentUs);  // centre the muscle on auto-stop
+#endif
         }
         else
         {
@@ -316,10 +273,16 @@ static void servosUpdate(unsigned long now)
                 _sweepCurrentUs = 1000 + (uint16_t)((phase * 1000UL) / (SWEEP_PERIOD_MS / 2));
             else
                 _sweepCurrentUs = 2000 - (uint16_t)(((phase - SWEEP_PERIOD_MS/2) * 1000UL) / (SWEEP_PERIOD_MS / 2));
+#if defined(MUSHIN_ENABLED)
+            // An EP2 companion has no local PWM pins: stream the raw µs over
+            // MUSHIN so the muscle (RP2040) writes it straight to its servos.
+            mushinEmitSweep(_sweepCurrentUs);
+#else
             // Write sweep value to all PWM channels — raw, bypassing the
             // ornithopter mixer filter (which would override with _f[func]).
             for (int ch = 0; ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
                 servoWriteRaw(ch, _sweepCurrentUs);
+#endif
             return;  // skip ornithopter + ELRS channel processing
         }
     }
@@ -327,21 +290,38 @@ static void servosUpdate(unsigned long now)
 #ifdef ORNITHOPTER_MODE
     // Advance mixer and write servo outputs on every tick (even disconnected — for PWM test)
     ornithopter.benchMode = (connectionState == wifiUpdate);
-    ornithopterUpdate();
 #if defined(MUSHIN_ENABLED)
     mushinUpdate(millis());
+    const bool companionControlValid = ornithopter.enabled && connectionState == connected &&
+        connectionHasModelMatch && teamraceHasModelMatch &&
+        (newChannelsAvailable || (lastUpdate && now - lastUpdate <= 100));
+    if (!ornithopter.enabled || (!companionControlValid && !ornithopter.stickOverride)) {
+        ornithopterOnLinkDown();
+        newChannelsAvailable = false;
+        lastUpdate = 0;
+        // Also discard pending transmission when the announce link is stale;
+        // a later reconnect must not finish an old flying recipe.
+        mushinStop();
+        return;
+    }
+    if (companionControlValid && !ornithopter.linkUp) ornithopterOnLinkUp();
+    // Restore link/arming state before preparing anything: never transmit an
+    // old cached flying recipe on the first fresh packet after a local timeout.
+    ornithopterUpdate();
+    // A linked companion already gets the complete pilot mix in its recipe.
+    // Avoid spending wire time transmitting the same controls a second time.
+    if (companionControlValid && newChannelsAvailable && !mushinIsLinked()) mushinEmitChannels(ChannelData);
     if (mushinIsLinked())
     {
-        // The muscle (RP2040) owns the servos: stream the unified
-        // waveform+gyro result as intents and suppress local PWM. On heartbeat
-        // loss the local write path below reasserts — grace in degradation.
-        mushinEmitServoIntents();
+        // The muscle (RP2040) owns the servos: stream the complete pilot
+        // mix as an intent and suppress local PWM. The RP2040 evaluates the
+        // precomputed waveform from its own clock.
+        mushinEmitIntent(ornithopter.motionIntent, millis());
     }
-    else
-    {
-        orniInitWrite(&servoWrite);
-    }
+    // No local PWM fallback: an EP2 has no servo outputs. A silent companion
+    // must never turn its receiver UART/reset pins into surrogate PWM pins.
 #else
+    ornithopterUpdate();
     orniInitWrite(&servoWrite);
 #endif
     if (ornithopter.stickOverride)
@@ -382,10 +362,12 @@ static void servosUpdate(unsigned long now)
 
 static bool initialize()
 {
+#if !defined(MUSHIN_ENABLED)
     if (!OPT_HAS_SERVO_OUTPUT)
     {
         return false;
     }
+#endif
 
 #if defined(PLATFORM_ESP32)
     uint8_t rmtCH = 0;
@@ -416,11 +398,7 @@ static bool initialize()
         }
 #endif
 #if defined(MUSHIN_ENABLED) && defined(MUSHIN_RX_PIN) && defined(MUSHIN_TX_PIN)
-        // Exclude the MUSHIN bridge pins from PWM (reserved for the RP2040 link).
-        // In a muscle build the RP2040 owns the servos; the bridge serial must
-        // never fight the local wing PWM for GPIO9/GPIO10. This exclusion is the
-        // design guarantee — not just a comment in the target ini. (ESP32 uses
-        // hardware UART1, so these pin macros don't exist and nothing to exclude.)
+        // Reserve UART0 GPIO1/3 for the shared companion link.
         if (pin != UNDEF_PIN && (pin == MUSHIN_RX_PIN || pin == MUSHIN_TX_PIN))
         {
             pin = UNDEF_PIN;
@@ -562,6 +540,9 @@ void stopServoSweep()
 {
     _sweepActive = false;
     _sweepCurrentUs = 1500;
+#if defined(MUSHIN_ENABLED)
+    mushinEmitSweep(1500);  // centre the muscle when the sweep is cancelled
+#endif
     // Also reset all channels back to ornithopter control on next tick
 }
 

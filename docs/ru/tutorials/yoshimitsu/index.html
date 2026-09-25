@@ -29,6 +29,10 @@
 <p class='tutorial-number'>06</p>
 <h1>YOSHIMITSU — полное решение: все чит-коды в одном свитке</h1>
 <p class='sub-lead'>Сказка о чит-кодах, где побеждают все. Один расслабленный скетч, шесть стоек, одна постоянная упряжь: парирование CRSF→PWM (KINCHO), гироскопическая левитация Zephyrus (MANJI_DRAGONFLY), карманный прошивальщик (FLEA · MEDITATION), скамья без меча (NSS), зеркало, которое никогда не оглядывается (BACK_TURNED) — плюс YOSHI, вечно горящее сияние, и JIGUANG (極光), медитирующий администратор, рассказывающий легенду. Подключи один раз, прошей один раз; дальше библиотека обновляется, а трон командует.</p>
+<p>
+EP2 + RP2040 transport update: use ONE UART pair, GP0 → EP2 RX (GPIO3) and GP1 ← EP2 TX (GPIO1), with common ground. CRSF and MUSHIN share 420000 baud; MEDITATION switches the same pair to 115200 for flashing. Separate bridge wiring shown in older material below is superseded.
+<a href='../../../EP2_COMPANION.md'>Current wiring and flashing reference</a>
+</p>
 <h2>Одна плата, шесть стоек</h2>
 <p><p>YOSHIMITSU — <strong>Герметический Синоби</strong> с <strong>шестью стойками</strong> — каждая стойка своя победа, и все носят одну душу. Один расслабленный скетч собирается для обеих плат; стойки переключаются USB-командой, кнопкой GPIO0 (ESP32-S3) или тапами RESET (RP2040-Tiny):</p></p>
 <table>
@@ -196,7 +200,7 @@
 <td>Общая земля (обязательно)</td>
 </tr>
 </table>
-<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO18 ◄── EP2 TX       (U1 RX)&#x000A;S3 GPIO17 ──► EP2 RX       (U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
+<pre><code>S3 3V3   ──► S ── P-MOSFET (AO3401) ── D ──► EP2 3V3&#x000A;S3 GPIO10 ──► gate         (10kΩ pull-up to 3V3; LOW = ON)&#x000A;S3 GPIO9  ──► EP2 BOOT pad (asserted LOW during power-up)&#x000A;S3 GPIO44 ◄── EP2 TX       (shared U1 RX)&#x000A;S3 GPIO43 ──► EP2 RX       (shared U1 TX)&#x000A;S3 GND     ──► EP2 GND&#x000A;</code></pre>
 <aside class='waveform-caution'>
 <strong>Полярность питания &amp; напряжение</strong>
 <p><p>⚠ питай приёмник <strong>только 3,3&nbsp;В</strong>, никогда 5&nbsp;В, пока он на стенде. Проверь MOSFET вольтметром до подключения приёмника: при GPIO10 ВЫСОКИЙ сток должен читать 0&nbsp;В; при GPIO10 НИЗКИЙ — 3,3&nbsp;В.</p></p>
@@ -264,13 +268,13 @@ python3 -m esptool --chip esp8285 \
 </tr>
 <tr>
 <td>Мост RX ← TX приёмника</td>
-<td>GPIO9 (UART1 RX)</td>
-<td>115&nbsp;200&nbsp;бод</td>
+<td>GPIO1 (same UART0 RX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td>Мост TX → RX приёмника</td>
-<td>GPIO8 (UART1 TX)</td>
-<td>Перекрёстно: TX → RX</td>
+<td>GPIO0 (same UART0 TX)</td>
+<td>Shared with CRSF; no additional wire</td>
 </tr>
 <tr>
 <td><p>Серва 1 (<code>SERVO_PIN_1</code>)</p></td>

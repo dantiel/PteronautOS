@@ -7,6 +7,8 @@ public:
   static uint8_t whoami;    // MPU whoami (for gyroInit)
   int read_phase = 0;
   void begin() {}
+  void setClock(uint32_t) {}
+  void setTimeout(uint32_t,bool) {}
   void begin(int, int, uint32_t) {}
   bool setSDA(int) { return true; }
   bool setSCL(int) { return true; }

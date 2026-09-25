@@ -16,6 +16,7 @@ uint8_t  SerialType::rx[512];
 int16_t  SerialType::rxlen = 0;
 int16_t  SerialType::rxpos = 0;
 SerialType Serial1;
+SerialType Serial;
 
 #define MUSHIN_ENABLED 1
 #define PLATFORM_ESP32 1
@@ -29,7 +30,9 @@ static int g_checks = 0, g_fails = 0;
 static void tx_reset() { SerialType::txlen = 0; }
 
 static void feed_bytes(const uint8_t* p, int n) {
-    for (int i = 0; i < n; i++) SerialType::rx[SerialType::rxlen++] = p[i];
+    uint8_t frame[64];
+    int size = Companion::encode(Companion::mushinType, p, n, frame);
+    for (int i = 0; i < size; i++) SerialType::rx[SerialType::rxlen++] = frame[i];
 }
 
 int main() {
@@ -43,7 +46,10 @@ int main() {
     p.slew = 30; p.stance = 1; p.setpointRoll = 120; p.setpointPitch = -80;
     mushin.emitIntentV1(p);
 
-    const uint8_t* T = SerialType::tx;
+    CHECK_EQ(SerialType::tx[0], 0xc8);
+    CHECK_EQ(SerialType::tx[2], Companion::mushinType);
+    CHECK_EQ(SerialType::tx[18], Companion::crc(SerialType::tx + 2, 16));
+    const uint8_t* T = SerialType::tx + 3;
     CHECK_EQ(T[0], 0x9B);       // sync
     CHECK_EQ(T[1], 11);         // len = MUSHIN_INTENT_V1_LEN
     CHECK_EQ(T[2], 0x01);       // type = INTENT
@@ -61,13 +67,13 @@ int main() {
     uint8_t x = 11 ^ 0x01;
     for (int i = 3; i < 14; i++) x ^= T[i];
     CHECK_EQ(T[14], x);          // xor over len+type+payload
-    CHECK_EQ(SerialType::txlen, 15);   // 3 hdr + 11 payload + 1 xor
+    CHECK_EQ(SerialType::txlen, 19);   // inner frame + CRSF envelope
 
     // ── [2] emitIntents (v0 µs) layout + xor ──
     tx_reset();
     uint16_t us[3] = {1400, 1500, 1600};
     mushin.emitIntents(us, 3);
-    T = SerialType::tx;
+    T = SerialType::tx + 3;
     CHECK_EQ(T[0], 0x9B); CHECK_EQ(T[1], 6); CHECK_EQ(T[2], 0x01);
     CHECK_EQ(T[3], 1400 & 0xFF); CHECK_EQ(T[4], (1400 >> 8) & 0xFF);
     CHECK_EQ(T[5], 1500 & 0xFF); CHECK_EQ(T[6], (1500 >> 8) & 0xFF);
@@ -75,7 +81,7 @@ int main() {
     uint8_t x0 = 6 ^ 0x01;
     for (int i = 3; i < 9; i++) x0 ^= T[i];
     CHECK_EQ(T[9], x0);
-    CHECK_EQ(SerialType::txlen, 10);
+    CHECK_EQ(SerialType::txlen, 14);
 
     // ── [3] ANNOUNCE parse → version handshake (muscle v1) ──
     SerialType::rxlen = 0; SerialType::rxpos = 0;
@@ -137,12 +143,12 @@ int main() {
     {
         uint16_t big[10] = {1000,1100,1200,1300,1400,1500,1600,1700,1800,1900};
         mushin.emitIntents(big, 10);
-        T = SerialType::tx;
+        T = SerialType::tx + 3;
         CHECK_EQ(T[0], 0x9B);
         CHECK_EQ(T[1], 16);          // clamped payload length (8 servos × 2)
         CHECK_EQ(T[2], 0x01);
         CHECK_EQ(T[3], 1000 & 0xFF); // first intent still intact
-        CHECK_EQ(SerialType::txlen, 20);   // 3 hdr + 16 payload + 1 xor
+        CHECK_EQ(SerialType::txlen, 24);   // inner frame + CRSF envelope
     }
 
     // ── [8] ANNOUNCE len < 6 ignored; corrupt xor ignored ──
@@ -182,7 +188,7 @@ int main() {
         q.throttle = 1000; q.flapFreq = 200; q.ferocity = 100; q.skew = -128;
         q.slew = 255; q.stance = 5; q.setpointRoll = -250; q.setpointPitch = 250;
         mushin.emitIntentV1(q);
-        T = SerialType::tx;
+        T = SerialType::tx + 3;
         CHECK_EQ(T[1], 11);
         CHECK_EQ(T[3], 1000 & 0xFF);
         CHECK_EQ(T[4], (1000 >> 8) & 0xFF);
@@ -195,9 +201,38 @@ int main() {
         CHECK_EQ(T[11], (uint8_t)(((uint16_t)-250 >> 8) & 0xFF));
         CHECK_EQ(T[12], (uint8_t)((uint16_t)250 & 0xFF));
         CHECK_EQ(T[13], (uint8_t)(((uint16_t)250 >> 8) & 0xFF));
-        CHECK_EQ(SerialType::txlen, 15);
+        CHECK_EQ(SerialType::txlen, 19);
     }
 
+    // Current prepared-motion transport: exact framing, bounded backpressure,
+    // atomic reassembly and no unbounded backlog of stale snapshots.
+    tx_reset();
+    Motion::Recipe recipe;
+    recipe.hz=12;
+    motionPart=Motion::chunks; motionSentMs=0;
+    SerialType::capacity=0;
+    mushinEmitMotion(recipe,100);
+    CHECK_EQ(SerialType::txlen,0);
+    SerialType::capacity=128;
+    recipe.hz=18; // the in-flight snapshot must remain 12 Hz
+    mushinEmitMotion(recipe,101);
+    CHECK_EQ(SerialType::txlen,Motion::wireSize+Motion::chunks*7);
+    Motion::Receiver receiver;
+    Motion::Recipe active; active.hz=3;
+    Companion::Parser parser;
+    int accepted=0;
+    for(int i=0;i<SerialType::txlen;++i) {
+        if(parser.feed(SerialType::tx[i],101)) {
+            CHECK_EQ(parser.type(),Motion::frameType);
+            if(receiver.accept(parser.payload(),parser.length(),101,active)) ++accepted;
+        }
+    }
+    CHECK_EQ(accepted,1); CHECK_EQ(active.hz,12);
+    tx_reset(); mushinEmitMotion(recipe,104); CHECK_EQ(SerialType::txlen,0);
+    SerialType::capacity=0; mushinEmitMotion(recipe,111);
+    CHECK_EQ(motionPart,0);
+    mushinStop(); CHECK_EQ(motionPart,Motion::chunks);
+    SerialType::capacity=128;
     printf("\n%d checks, %d failures\n", g_checks, g_fails);
     return g_fails ? 1 : 0;
 }

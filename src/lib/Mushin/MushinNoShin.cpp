@@ -4,53 +4,73 @@
 
 #include <Arduino.h>
 
-// ── Bridge serial selection ──────────────────────────────────────────
-// The RP2040 muscle speaks MUSHIN on its UART1 (TX=8, RX=9). On the
-// ESP8285 PWMP7 v1.1 the only free full-duplex pins are GPIO9/GPIO10, so the
-// default is a SoftwareSerial there; on ESP32 we use the hardware UART1.
-// Override the pins/baud via build flags in pteronautos-rx.ini.
-#ifndef MUSHIN_BAUD
-  #define MUSHIN_BAUD 57600
-#endif
-
-#if defined(PLATFORM_ESP8266)
-  #include <SoftwareSerial.h>
-  static SoftwareSerial mushinSerial(MUSHIN_RX_PIN, MUSHIN_TX_PIN);
-#else  // PLATFORM_ESP32
-  #define mushinSerial Serial1
-#endif
-
-// Emit cadence divider: hardware UART can push intents at the full 333 Hz
-// servo tick; SoftwareSerial TX is bit-banged and blocking, so it throttles to
-// ~111 Hz (still ~5 samples per 20 Hz wingbeat stroke).
-#ifndef MUSHIN_INTENT_DIVIDER
-  #if defined(PLATFORM_ESP8266)
-    #define MUSHIN_INTENT_DIVIDER 3
-  #else
-    #define MUSHIN_INTENT_DIVIDER 1
-  #endif
-#endif
-
-// v1 parameter-intent cadence divider: the full frame is 15 bytes
-// (3 header + 11 payload + 1 xor) = 150 bits @ 57600 ≈ 2.6 ms bit-banged.
-// The muscle reconstructs phase locally, so the bridge is latency-tolerant
-// by design. The v0 µs divider above stays untouched for the fallback path.
-#ifndef MUSHIN_PARAM_DIVIDER
-  #if defined(PLATFORM_ESP8266)
-    #define MUSHIN_PARAM_DIVIDER 6
-  #else
-    #define MUSHIN_PARAM_DIVIDER 1
-  #endif
+// EP2 companion mode owns the normal receiver/programming UART exclusively.
+#define mushinSerial Serial // sole UART0 owner in companion firmware
+#if defined(DEBUG_LOG) || defined(DEBUG_RCVR_LINKSTATS) || defined(ZEPHYRUS_ENABLED)
+#error "Companion UART0 cannot share pins with receiver debug output or local Zephyrus I2C"
 #endif
 
 static MushinNoShin mushin;
-static uint8_t  mushinDivider = 0;
-static uint8_t  mushinParamDivider = 0;
+static uint8_t motionBytes[Motion::wireSize];
+static uint8_t motionPart = Motion::chunks;
+static uint16_t motionGeneration = 0;
+static uint32_t motionSentMs = 0;
+
+void mushinEmitIntent(const Motion::Intent &intent, uint32_t nowMs)
+{
+    // One immutable in-flight snapshot, no backlog of obsolete commands.
+    // 200 Hz ceiling, <=29.4 kB/s including framing; the 3 ms preparation
+    // cadence normally yields <=167 Hz. No duplicate raw RC stream when linked.
+    if (motionPart == Motion::chunks) {
+        if (nowMs - motionSentMs < 5 || !Motion::valid(intent)) return;
+        Motion::encode(intent, motionBytes);
+        ++motionGeneration;
+        motionPart = 0;
+        motionSentMs = nowMs;
+    }
+    if (nowMs - motionSentMs > 30) { motionPart = Motion::chunks; return; }
+    while (motionPart < Motion::chunks) {
+        const size_t offset = motionPart * Motion::chunkSize;
+        const size_t count = Motion::wireSize-offset < Motion::chunkSize ? Motion::wireSize-offset : Motion::chunkSize;
+        uint8_t payload[59] = {uint8_t(motionGeneration), uint8_t(motionGeneration>>8), motionPart};
+        memcpy(payload+3, motionBytes+offset, count);
+        if (!Companion::send(mushinSerial, Motion::frameType, payload, count+3)) return;
+        ++motionPart;
+    }
+}
 
 void mushinInit()
 {
-    mushinSerial.begin(MUSHIN_BAUD);
+    mushinSerial.begin(Companion::runtimeBaud);
     mushin.begin(mushinSerial);
+}
+
+void mushinEmitChannels(const uint32_t *channels)
+{
+    uint8_t packed[22];
+    Companion::packChannels(channels, packed);
+    Companion::send(mushinSerial, Companion::rcType, packed, sizeof(packed));
+}
+
+void mushinStop()
+{
+    motionPart = Motion::chunks; // never finish an old flying intent after STOP
+    const uint8_t stop[] = {MUSHIN_SYNC, 0, 4, 4};
+    Companion::send(mushinSerial, Companion::mushinType, stop, sizeof(stop));
+}
+
+void mushinEmitSweep(uint16_t us)
+{
+    // Raw bench sweep: a u16 µs payload inside the private 0x80 envelope. The
+    // muscle writes it straight to its servos — no wave core, no mixer.
+    uint8_t p[6];
+    p[0] = MUSHIN_SYNC;
+    p[1] = 2;                          // payload length
+    p[2] = MUSHIN_SWEEP;               // spirit → muscle sweep
+    p[3] = (uint8_t)(us & 0xFF);
+    p[4] = (uint8_t)(us >> 8);
+    p[5] = (uint8_t)(2 ^ MUSHIN_SWEEP ^ p[3] ^ p[4]);
+    Companion::send(mushinSerial, Companion::mushinType, p, sizeof(p));
 }
 
 void mushinUpdate(uint32_t nowMs)
@@ -61,22 +81,6 @@ void mushinUpdate(uint32_t nowMs)
 bool mushinIsLinked()
 {
     return mushin.isLinked();
-}
-
-void mushinEmitIntents(const uint16_t *us, uint8_t count)
-{
-    if (++mushinDivider < MUSHIN_INTENT_DIVIDER)
-        return;
-    mushinDivider = 0;
-    mushin.emitIntents(us, count);
-}
-
-void mushinEmitIntentV1(const MushinIntentV1 &p)
-{
-    if (++mushinParamDivider < MUSHIN_PARAM_DIVIDER)
-        return;
-    mushinParamDivider = 0;
-    mushin.emitIntentV1(p);
 }
 
 uint8_t mushinMuscleVersion()
@@ -99,6 +103,7 @@ void MushinNoShin::begin(Stream &serial)
 {
     _serial = &serial;
     _state = MS_IDLE;
+    _transport.reset();
     _linked = false;
     _lastAnnounceMs = 0;
     _announcedServos = 0;
@@ -111,7 +116,12 @@ void MushinNoShin::update(uint32_t nowMs)
 
     while (_serial->available())
     {
-        uint8_t b = (uint8_t)_serial->read();
+        if (!_transport.feed((uint8_t)_serial->read(), nowMs) ||
+            _transport.type() != Companion::mushinType) continue;
+        // Return-channel payload is isolated inside one CRC-checked envelope.
+        _state = MS_IDLE;
+        for (uint8_t j = 0; j < _transport.length(); ++j) {
+        uint8_t b = _transport.payload()[j];
         switch (_state)
         {
         case MS_IDLE:
@@ -151,6 +161,7 @@ void MushinNoShin::update(uint32_t nowMs)
             }
             break;
         }
+        }
     }
 
     // Heartbeat timeout → the spirit returns to its own muscle.
@@ -161,52 +172,6 @@ void MushinNoShin::update(uint32_t nowMs)
 bool MushinNoShin::isLinked() const
 {
     return _linked;
-}
-
-void MushinNoShin::emitIntentV1(const MushinIntentV1 &p)
-{
-    if (!_serial)
-        return;
-
-    uint8_t hdr[3] = { MUSHIN_SYNC, MUSHIN_INTENT_V1_LEN, MUSHIN_INTENT };
-    uint8_t x = (uint8_t)(MUSHIN_INTENT_V1_LEN ^ MUSHIN_INTENT);
-    _serial->write(hdr, 3);
-
-    uint8_t b[MUSHIN_INTENT_V1_LEN];
-    b[0] = (uint8_t)(p.throttle & 0xFF);
-    b[1] = (uint8_t)((p.throttle >> 8) & 0xFF);
-    b[2] = p.flapFreq;
-    b[3] = p.ferocity;
-    b[4] = (uint8_t)p.skew;
-    b[5] = p.slew;
-    b[6] = p.stance;
-    b[7] = (uint8_t)((uint16_t)p.setpointRoll & 0xFF);
-    b[8] = (uint8_t)(((uint16_t)p.setpointRoll >> 8) & 0xFF);
-    b[9]  = (uint8_t)((uint16_t)p.setpointPitch & 0xFF);
-    b[10] = (uint8_t)(((uint16_t)p.setpointPitch >> 8) & 0xFF);
-    for (uint8_t i = 0; i < MUSHIN_INTENT_V1_LEN; i++) { _serial->write(b[i]); x ^= b[i]; }
-    _serial->write(x);
-}
-
-void MushinNoShin::emitIntents(const uint16_t *us, uint8_t count)
-{
-    if (!_serial)
-        return;
-    if (count > (MUSHIN_MAX_PAY / 2))
-        count = MUSHIN_MAX_PAY / 2;
-
-    uint8_t n = count * 2;
-    uint8_t hdr[3] = { MUSHIN_SYNC, n, MUSHIN_INTENT };
-    uint8_t x = (uint8_t)(n ^ MUSHIN_INTENT);
-    _serial->write(hdr, 3);
-    for (uint8_t i = 0; i < count; i++)
-    {
-        uint8_t lo = (uint8_t)(us[i] & 0xFF);
-        uint8_t hi = (uint8_t)((us[i] >> 8) & 0xFF);
-        _serial->write(lo); x ^= lo;
-        _serial->write(hi); x ^= hi;
-    }
-    _serial->write(x);
 }
 
 #endif  // MUSHIN_ENABLED
