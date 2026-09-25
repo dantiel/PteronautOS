@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge/Opera للكتابة عبر USB.",
   "flasher_heading_progress": "تقدم البناء",
   "flasher_foot_note": "يتطلب Chrome / Edge / Opera لـ Web Serial.",
-  "nav_flasher": "الوميض",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "النظام و WebUI",
   "flasher_device_name": "اسم الجهاز (اسم المضيف)",
   "flasher_locales": "لغات WebUI",

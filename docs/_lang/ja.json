@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Safari/Firefox は Web Serial に対応していません。ここでファームウェアをビルドして .bin をダウンロードし、esptool で書き込むか、Chrome/Edge/Opera でこのページを開いて USB 書き込みしてください。",
   "flasher_heading_progress": "ビルドの進行状況",
   "flasher_foot_note": "Web Serial には Chrome / Edge / Opera が必要です。",
-  "nav_flasher": "フラッシャー",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "システムとWebUI",
   "flasher_device_name": "デバイス名 (ホスト名)",
   "flasher_locales": "WebUI言語",

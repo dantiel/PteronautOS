@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Web Serial isn't supported in Safari or Firefox. Build the firmware here and download the .bin, then flash it with esptool — or open this page in Chrome/Edge/Opera to flash over USB.",
   "flasher_heading_progress": "Build progress",
   "flasher_foot_note": "Requires Chrome / Edge / Opera for Web Serial.",
-  "nav_flasher": "Flasher",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "System & WebUI",
   "flasher_device_name": "Device name (hostname)",
   "flasher_locales": "WebUI languages",

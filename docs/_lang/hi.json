@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Safari/Firefox में Web Serial समर्थित नहीं है. यहाँ फर्मवेयर बनाएँ और .bin डाउनलोड करें, फिर esptool से फ्लैश करें — या USB से फ्लैश करने के लिए इस पेज को Chrome/Edge/Opera में खोलें।",
   "flasher_heading_progress": "बिल्ड प्रगति",
   "flasher_foot_note": "Web Serial के लिए Chrome / Edge / Opera आवश्यक है।",
-  "nav_flasher": "फ्लैशर",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "सिस्टम और WebUI",
   "flasher_device_name": "डिवाइस नाम (होस्टनाम)",
   "flasher_locales": "WebUI भाषाएँ",

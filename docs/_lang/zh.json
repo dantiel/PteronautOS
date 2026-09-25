@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Safari/Firefox 不支持 Web Serial。可在此编译固件并下载 .bin，然后用 esptool 烧录 — 或在 Chrome/Edge/Opera 中打开本页通过 USB 烧录。",
   "flasher_heading_progress": "构建进度",
   "flasher_foot_note": "Web Serial 需要 Chrome / Edge / Opera。",
-  "nav_flasher": "烧录",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "系统与 WebUI",
   "flasher_device_name": "设备名称 (主机名)",
   "flasher_locales": "WebUI 语言",

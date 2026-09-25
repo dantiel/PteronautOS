@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Web Serial no está soportado en Safari/Firefox. Compila el firmware, descarga el .bin y grábalo con esptool — o abre esta página en Chrome/Edge/Opera para grabar por USB.",
   "flasher_heading_progress": "Progreso de compilación",
   "flasher_foot_note": "Requiere Chrome / Edge / Opera para Web Serial.",
-  "nav_flasher": "Flasher",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "Sistema y WebUI",
   "flasher_device_name": "Nombre del dispositivo (hostname)",
   "flasher_locales": "Idiomas de la WebUI",

@@ -943,7 +943,7 @@
   "flasher_serial_warning": "Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge/Opera для прошивки по USB.",
   "flasher_heading_progress": "Прогресс сборки",
   "flasher_foot_note": "Требуется Chrome / Edge / Opera для Web Serial.",
-  "nav_flasher": "Прошивка",
+  "nav_flasher": "Fossil Etcher",
   "flasher_heading_system": "Система и WebUI",
   "flasher_device_name": "Имя устройства (hostname)",
   "flasher_locales": "Языки WebUI",
