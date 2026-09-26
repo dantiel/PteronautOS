@@ -90,6 +90,7 @@ Zephyrus::Zephyrus()
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
     , _lastAhrsUs(0)
+    , _lastProbeUs(0)
     , _slewLPF(0.0f)
     , boardRotation(ZEPHYR_BOARD_ROTATION)
     , slewGain(0.0f)
@@ -239,21 +240,18 @@ void Zephyrus::begin() {
     enabled = false;
 
     if (!gyroEnabled) {
-        // Not initialized yet — leave _begun false so update() re-runs
-        // begin() the moment gyroEnabled is toggled on at runtime (WebUI).
-        // Without this, a boot-time "off" locked _begun=true and the MPU
-        // was never probed after enabling, so the gyro stayed dead.
+        // Toggled off — leave _begun false so update() re-runs begin() the
+        // moment gyroEnabled is turned back on at runtime (WebUI).
         _begun = false;
         return;
     }
-
-    _begun = true;
 
 #if ZEPHYR_I2C_PRE_DETECT && defined(ARDUINO)
     pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
     delay(1);
     if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
         pinMode(ZEPHYR_I2C_SCL, INPUT);
+        _begun = false;   // allow update() to retry (with backoff)
         return;
     }
     pinMode(ZEPHYR_I2C_SCL, INPUT);
@@ -263,10 +261,15 @@ void Zephyrus::begin() {
     Wire.setClock(ZEPHYR_I2C_CLOCK);
 
     if (!_mpuInit()) {
+        // Probe failed. Leave _begun false so update() retries with backoff.
+        // (Setting _begun=true here previously locked the gyro out permanently
+        //  after a single failed probe — the WebUI toggle could not revive it.)
+        _begun = false;
         return;
     }
 
     _mpuPresent = true;
+    _begun = true;
     enabled = true;
 
     // Start auto-calibration
@@ -446,6 +449,18 @@ void Zephyrus::forceCalibrate() {
 void Zephyrus::setBoardRotation(uint8_t rot) {
     if (rot <= 6) {
         boardRotation = rot;
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  Public: reprobe() — force a fresh MPU probe on the next update() tick.
+//  Only resets when the MPU is not currently detected, so re-enabling a
+//  healthy gyro in the WebUI does NOT trigger a redundant 105ms re-init.
+// ---------------------------------------------------------------------------
+void Zephyrus::reprobe() {
+    if (!enabled) {
+        _begun = false;
+        _lastProbeUs = 0;
     }
 }
 
@@ -681,7 +696,13 @@ void Zephyrus::_applyAccelLevelRef(float &ax, float &ay, float &az) {
 // ---------------------------------------------------------------------------
 void Zephyrus::update(uint32_t nowUs) {
     if (!_begun) {
-        begin();
+        // Retry the MPU probe with backoff. begin()→_mpuInit() blocks ~105ms
+        // (device reset + PLL wake), so a bare every-tick retry would stall
+        // the CRSF loop; gate it to once per ZEPHYR_PROBE_RETRY_US.
+        if ((int32_t)(nowUs - _lastProbeUs) >= (int32_t)ZEPHYR_PROBE_RETRY_US) {
+            _lastProbeUs = nowUs;
+            begin();
+        }
     }
     if (!enabled || !gyroEnabled) {
         rudderCorrection = 0.0f;

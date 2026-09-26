@@ -58,6 +58,7 @@ public:
     void onLinkDown();      // Disable stabilization on disarm
     void forceCalibrate();  // Reset bias + restart calibration on demand
     void setBoardRotation(uint8_t rot);  // Runtime orientation change
+    void reprobe();         // Force a fresh MPU probe on the next update() tick
 
     // Calibration progress (readable from WebUI state endpoint)
     int    _calibCount;     // Samples accumulated so far
@@ -84,6 +85,7 @@ private:
     float _q[4];            // Quaternion [w, x, y, z]
     float _integralFB[3];   // Integral feedback for gyro bias
     uint32_t _lastAhrsUs;   // Previous AHRS update timestamp
+    uint32_t _lastProbeUs;  // Last begin() attempt timestamp (retry backoff)
  
     float   _slewLPF; // filtered roll-error rate (°/s) for the slew boost
 

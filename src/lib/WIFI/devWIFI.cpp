@@ -761,6 +761,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
 #if defined(ZEPHYRUS_ENABLED)
     zeph["compiled"]          = true;
     zeph["enabled"]           = zephyrus.gyroEnabled;
+    zeph["connected"]         = zephyrus.enabled;   // WHO_AM_I matched (MPU physically present)
     zeph["calibrated"]        = zephyrus.calibrated;
     zeph["calibrating"]       = zephyrus._calibrating;
     zeph["calib_samples"]     = zephyrus._calibCount;
@@ -1371,7 +1372,10 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.wingPitchGain = (float)wingPitch;
     ornithopter.wingYawGain   = (float)wingYaw;
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
-    if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
+    if (gv >= 0) {
+        zephyrus.gyroEnabled = (gv == 1);
+        if (gv == 1) zephyrus.reprobe();   // force a fresh MPU probe on enable
+    }
     float slewGain = (float)_pteroParamInt(request, "slew_gain", (int)zephyrus.slewGain);
     if (slewGain < 0.0f) slewGain = 0.0f;
     if (slewGain > 100.0f) slewGain = 100.0f;
@@ -2406,6 +2410,7 @@ static void startServices()
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
   server.on("/pteronautos/diag", HTTP_GET, GetPteronautosDiag);
+  server.on("/pteronautos/i2cscan", HTTP_GET, GetPteronautosI2cScan);
   server.on("/pteronautos/config", HTTP_GET, GetPteronautosConfig);
   server.on("/pteronautos/config", HTTP_POST, PostPteronautosConfig);
   server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);

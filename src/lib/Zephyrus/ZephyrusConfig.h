@@ -17,6 +17,12 @@
 #define ZEPHYR_I2C_CLOCK     400000    // 400kHz fast mode
 #define ZEPHYR_I2C_TIMEOUT_US 3000     // 3ms I2C read timeout
 
+// Re-probe backoff for an absent/unready MPU6050. begin()→_mpuInit() blocks
+// ~105ms (device reset + PLL wake), so an every-tick retry would stall the
+// CRSF loop. Retrying once per second keeps the loop responsive while still
+// hot-plug friendly (plug the MPU in, gyro comes up within ~1s).
+#define ZEPHYR_PROBE_RETRY_US 1000000  // 1s between MPU re-probe attempts
+
 // --- GPIO Pre-Detect: probe SCL line before I2C init to avoid boot loop when MPU absent ---
 // When defined, begin() reads SCL as INPUT_PULLUP before calling Wire.begin().
 // MPU breakout's 4.7kΩ pull-up → HIGH (proceed). Float/pull-down → LOW (skip I2C safely).
