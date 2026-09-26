@@ -80,7 +80,7 @@ Zephyrus zephyrus;
 // ---------------------------------------------------------------------------
 Zephyrus::Zephyrus()
     : enabled(false)
-    , gyroEnabled(false)   // OFF by default — enable via WebUI when MPU6050 connected
+    , gyroEnabled(true)    // ON by default — begin() auto-detects MPU; graceful if absent
     , _begun(false)
     , calibrated(false)
     , rollDeg(0.0f), pitchDeg(0.0f), yawRate(0.0f)
