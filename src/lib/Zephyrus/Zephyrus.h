@@ -20,6 +20,16 @@ public:
  
     float slewGain;   // 0–100, 0=off — transient rudder boost on fast attitude change
 
+    // Runtime-tunable PID gains — initialized from ZephyrusConfig.h defaults,
+    // adjustable via the WebUI. Same units as the compile-time constants:
+    //   Kp   → ° correction per ° error (roll/pitch) or per °/s (yaw)
+    //   Ki   → integral accumulation rate
+    //   Kd   → derivative gain
+    //   Imax → integrator anti-windup clamp (° or °/s)
+    float rollKp, rollKi, rollKd, rollImax;
+    float pitchKp, pitchKi, pitchKd, pitchImax;
+    float yawKp, yawKi, yawKd, yawImax;
+
     // AHRS outputs (updated each update() call)
     float rollDeg;          // Roll angle in degrees
     float pitchDeg;         // Pitch angle in degrees

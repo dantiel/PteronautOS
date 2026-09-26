@@ -93,6 +93,9 @@ Zephyrus::Zephyrus()
     , _slewLPF(0.0f)
     , boardRotation(ZEPHYR_BOARD_ROTATION)
     , slewGain(0.0f)
+    , rollKp(ZEPHYR_PID_ROLL_KP), rollKi(ZEPHYR_PID_ROLL_KI), rollKd(ZEPHYR_PID_ROLL_KD), rollImax(ZEPHYR_PID_ROLL_IMAX)
+    , pitchKp(ZEPHYR_PID_PITCH_KP), pitchKi(ZEPHYR_PID_PITCH_KI), pitchKd(ZEPHYR_PID_PITCH_KD), pitchImax(ZEPHYR_PID_PITCH_IMAX)
+    , yawKp(ZEPHYR_PID_YAW_KP), yawKi(ZEPHYR_PID_YAW_KI), yawKd(ZEPHYR_PID_YAW_KD), yawImax(ZEPHYR_PID_YAW_IMAX)
     , _calibrating(false)
     , _calibCount(0), _calibStable(0)
     , _accelRefRoll(0.0f), _accelRefPitch(0.0f)
@@ -228,12 +231,18 @@ bool Zephyrus::_mpuReadSensors() {
 //  Public: begin()
 // ---------------------------------------------------------------------------
 void Zephyrus::begin() {
-    _begun = true;
     enabled = false;
 
     if (!gyroEnabled) {
+        // Not initialized yet — leave _begun false so update() re-runs
+        // begin() the moment gyroEnabled is toggled on at runtime (WebUI).
+        // Without this, a boot-time "off" locked _begun=true and the MPU
+        // was never probed after enabling, so the gyro stayed dead.
+        _begun = false;
         return;
     }
+
+    _begun = true;
 
 #if ZEPHYR_I2C_PRE_DETECT && defined(ARDUINO)
     pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
@@ -718,25 +727,16 @@ void Zephyrus::update(uint32_t nowUs) {
 
     // --- Roll PID (target: 0°, stabilize roll) ---
     rollCorrection = _pidCompute(_pidRoll, -rollDeg, dt,
-                                  ZEPHYR_PID_ROLL_KP,
-                                  ZEPHYR_PID_ROLL_KI,
-                                  ZEPHYR_PID_ROLL_KD,
-                                  ZEPHYR_PID_ROLL_IMAX);
+                                  rollKp, rollKi, rollKd, rollImax);
 
     // --- Yaw PID (target: 0°/s, dampen yaw rate) ---
     yawCorrection = _pidCompute(_pidYaw, -yawRate, dt,
-                                 ZEPHYR_PID_YAW_KP,
-                                 ZEPHYR_PID_YAW_KI,
-                                 ZEPHYR_PID_YAW_KD,
-                                 ZEPHYR_PID_YAW_IMAX);
+                                 yawKp, yawKi, yawKd, yawImax);
 
     // --- Pitch PID (target: 0°, stabilize pitch) ---
     float pitchErr = -pitchDeg;
     pitchCorrection = _pidCompute(_pidPitch, pitchErr, dt,
-                                   ZEPHYR_PID_PITCH_KP,
-                                   ZEPHYR_PID_PITCH_KI,
-                                   ZEPHYR_PID_PITCH_KD,
-                                   ZEPHYR_PID_PITCH_IMAX);
+                                   pitchKp, pitchKi, pitchKd, pitchImax);
 
     // Expose raw P/I/D terms for ornithopter waveform modulation (Nigredo)
     // Validatio: guard against NaN propagation from corrupt MPU6050 data
@@ -746,9 +746,9 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchDTerm    = 0.0f;
         pitchErrorRate = 0.0f;
     } else {
-        pitchPTerm    = ZEPHYR_PID_PITCH_KP * pitchErr;
+        pitchPTerm    = pitchKp * pitchErr;
         pitchITerm    = _pidPitch.integrator;
-        pitchDTerm    = ZEPHYR_PID_PITCH_KD * _pidPitch.lastDerivative;
+        pitchDTerm    = pitchKd * _pidPitch.lastDerivative;
         pitchErrorRate = _pidPitch.lastDerivative;  // already low-pass filtered °/s
     }
 

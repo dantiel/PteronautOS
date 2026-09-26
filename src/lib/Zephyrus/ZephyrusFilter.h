@@ -27,6 +27,12 @@ static inline void zephyrusUpdate() {
     lastUs = now;
     zephyrus.update(now);
     ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;
+    // Bridge raw PID correction outputs for the 2-wing Mesozoic stabilizer
+    // (flapping wings) — unlike gyroAileron/ElevatorCorrection these are NOT
+    // gearbox-only; the waveform kernel consumes them directly.
+    ornithopter.gyroRollCorrection  = zephyrus.rollCorrection;
+    ornithopter.gyroYawCorrection   = zephyrus.yawCorrection;
+    ornithopter.gyroPitchCorrection = zephyrus.pitchCorrection;
     // Bridge raw pitch PID terms for waveform modulation (Nigredo)
     ornithopter.gyroPitchPTerm     = zephyrus.pitchPTerm;
     ornithopter.gyroPitchITerm     = zephyrus.pitchITerm;

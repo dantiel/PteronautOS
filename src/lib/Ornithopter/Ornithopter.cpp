@@ -140,6 +140,9 @@ Ornithopter::Ornithopter()
   , gyroRudderCorrection(0.0f)
   , gyroAileronCorrection(0.0f)
   , gyroElevatorCorrection(0.0f)
+  , gyroRollCorrection(0.0f), gyroYawCorrection(0.0f), gyroPitchCorrection(0.0f)
+  , wingRollGain(ORNI_WING_ROLL_GAIN), wingPitchGain(ORNI_WING_PITCH_GAIN)
+  , wingYawGain(ORNI_WING_YAW_GAIN)
   , gyroPitchPTerm(0.0f), gyroPitchITerm(0.0f)
   , gyroPitchDTerm(0.0f), gyroPitchErrorRate(0.0f)
   , cadenceGain(ORNI_CADENCE_GAIN), ferocityDGain(ORNI_FEROCITY_D_GAIN)
@@ -321,6 +324,27 @@ void Ornithopter::_computeServoMixer() {
     float elevatorCmd = elevatorNorm * elevatorScale * 0.01f * ORNI_STEER_MAX_DEG;
         float glideCmd    = (float)glideAngleDeg;   // static wing angle (glide only)
         float flapCenterCmd = (float)flappingAngleDeg; // flap stroke centre offset
+
+    // Mesozoic 2-wing stabilizer centre terms — declared unconditionally so
+    // the angle formulas below need no #ifdef. Zero when Zephyrus is compiled
+    // out (ZEPHYRUS_ENABLED undefined) or the gains are 0.
+    float gyroPitchCenter = 0.0f;   // symmetric flap centre shift (deg)
+    float gyroRollCenter  = 0.0f;   // glide-only roll self-level centre (deg)
+#ifdef ZEPHYRUS_ENABLED
+    // Pitch stabilizer: gyro pitch correction → symmetric flap CENTRE shift
+    // (both wings bias the same physical direction). Rides the elevator axis
+    // (elevatorCmd above), so a nose-up error commands a nose-down bias.
+    gyroPitchCenter = gyroPitchCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE;
+    if (gyroPitchCenter >  ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_CENTER_CLAMP;
+    if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
+
+    // Roll self-level (glide only — in flap roll rides the amplitude axis).
+    // Maps roll correction to a symmetric aileron-centre offset so the wings
+    // stay level while gliding.
+    gyroRollCenter = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE;
+    if (gyroRollCenter >  ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_CENTER_CLAMP;
+    if (gyroRollCenter < -ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_CENTER_CLAMP;
+#endif
 
     int angleLeft, angleRight;
 
@@ -504,6 +528,18 @@ void Ornithopter::_computeServoMixer() {
         float returnFerL = returnFer + rudderFer;
         float returnFerR = returnFer - rudderFer;
 
+#ifdef ZEPHYRUS_ENABLED
+        // Mesozoic yaw stabilizer: gyro yaw-rate correction → differential
+        // ferocity (asymmetric drag). Rides the same axis as the rudder stick
+        // coupling above, so a yaw disturbance drags one wing harder than the
+        // other to arrest rotation. 0 gain = axis off.
+        float gyroYawFer = gyroYawCorrection * (wingYawGain * 0.01f) * ZEPHYR_WING_YAW_FER_SCALE;
+        if (gyroYawFer >  ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer =  ZEPHYR_WING_YAW_FER_CLAMP;
+        if (gyroYawFer < -ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer = -ZEPHYR_WING_YAW_FER_CLAMP;
+        strokeFerL += gyroYawFer; strokeFerR -= gyroYawFer;
+        returnFerL += gyroYawFer; returnFerR -= gyroYawFer;
+#endif
+
         // Shared reversal threshold computed from the BASE ferocities (before
         // rudder differential), so both wings reverse at the SAME phase even
         // when their per-wing ferocities differ. Faithful to GralhaAzul's
@@ -584,6 +620,17 @@ void Ornithopter::_computeServoMixer() {
         // Roll torque = amplitude differential from rudder (yaw) + aileron
         // (static + slew). Clamped so neither wing's stroke collapses to zero.
         float rollAmpDiff = rudderAmpDiff + aileronRollShift + aileronRateBoost;
+
+#ifdef ZEPHYRUS_ENABLED
+        // Mesozoic roll stabilizer: gyro roll correction → differential flap
+        // amplitude. This is the aerodynamically effective roll axis (a roll
+        // perturbation enlarges one stroke and shrinks the other, producing a
+        // correcting torque). 0 gain = axis off.
+        float gyroRollAmp = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_AMP_SCALE;
+        if (gyroRollAmp >  ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp =  ZEPHYR_WING_ROLL_AMP_CLAMP;
+        if (gyroRollAmp < -ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp = -ZEPHYR_WING_ROLL_AMP_CLAMP;
+        rollAmpDiff += gyroRollAmp;
+#endif
         if (rollAmpDiff > 0.9f) rollAmpDiff = 0.9f;
         if (rollAmpDiff < -0.9f) rollAmpDiff = -0.9f;
         float amplitudeL = amplitude * (1.0f + rollAmpDiff);
@@ -598,8 +645,8 @@ void Ornithopter::_computeServoMixer() {
                         strokeFerR, returnFerR, ferocityShapeMix, strokeSkewEff, returnSkewEff);
         motionIntent.flapping = 1;
         motionIntent.hz = freqHz;
-        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd) * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd + gyroPitchCenter) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd - gyroPitchCenter) * ORNI_ANGULAR_MULTIPLIER;
         motionIntent.amplitude[0] = -amplitudeL * ORNI_ANGULAR_MULTIPLIER;
         motionIntent.amplitude[1] = amplitudeR * ORNI_ANGULAR_MULTIPLIER;
         const float pulseL = 0, pulseR = 0; // local preview centres, not actuator samples
@@ -648,15 +695,15 @@ void Ornithopter::_computeServoMixer() {
                 // (see non-flapping branch below). The flap centre offset
                 // (flappingAngleDeg) IS applied so glide and flap centres are tunable
                 // independently per flight profile.
-                angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd - degL) * ORNI_ANGULAR_MULTIPLIER);
-                angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd + degR) * ORNI_ANGULAR_MULTIPLIER);
+                angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd + gyroPitchCenter - degL) * ORNI_ANGULAR_MULTIPLIER);
+                angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd - gyroPitchCenter + degR) * ORNI_ANGULAR_MULTIPLIER);
     } else {
 #if defined(MUSHIN_ENABLED)
         motionIntent.flapping = 0;
         motionIntent.hz = 0;
         motionIntent.amplitude[0] = motionIntent.amplitude[1] = 0;
-        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd) * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd + gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
+        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd - gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
 #else
         _osc.decay(0.0f);
 #endif
@@ -685,8 +732,8 @@ void Ornithopter::_computeServoMixer() {
         _ferHold = 0.0f;
         _ferHoldVel = 0.0f;
 #endif
-        angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd) * ORNI_ANGULAR_MULTIPLIER);
-        angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd) * ORNI_ANGULAR_MULTIPLIER);
+        angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd + gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER);
+        angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd - gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER);
     }
 
     if (angleLeft  < 0) angleLeft  = 0; else if (angleLeft  > 180) angleLeft  = 180;

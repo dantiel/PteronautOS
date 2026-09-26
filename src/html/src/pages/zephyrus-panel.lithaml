@@ -2,148 +2,181 @@
   %span.panel-icon.icon--symbols.icon--symbols--zephyrus
   = self._t('zephyrus.panel.title')
 
-.mui-panel
-  .badge{style: self._badgeStyle()}
-    = self._statusText()
-  %br
-  %br
-  %table.mui-table.mui-table--bordered
-    %tbody
-      %tr
-        %td
-          %b= self._t('zephyrus.info.sensor')
-        %td= self._t('zephyrus.info.sensor_val')
-      %tr
-        %td
-          %b= self._t('zephyrus.info.bus')
-        %td= self._t('zephyrus.info.bus_val')
-      %tr
-        %td
-          %b= self._t('zephyrus.info.sample_rate')
-        %td= self._t('zephyrus.info.sample_rate_val')
-      %tr
-        %td
-          %b= self._t('zephyrus.info.ahrs')
-        %td= self._t('zephyrus.info.ahrs_val')
-      - if self.gyroEnabled
-        %tr
-          %td
-            %b= self._t('zephyrus.info.uptime')
-          %td= self._uptimeLabel()
-
-- if self.gyroEnabled
+- if self._compiled()
   .mui-panel
-    .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.orientation.title')
-    %select.mui-select{@change: self._setOrientation, style: "width:100%;margin-top:8px;"}
-      - for opt of self._rotationOptions()
-        %option{value: opt.val, ?selected: self._isRotation(opt.val)}
-          = opt.label
-    %small{style: "color:#888; display:block; margin-top:6px;"}
-      = self._t('zephyrus.orientation.hint')
- 
-
-- if self.gyroEnabled
-  .mui-panel
-    .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.slew.title')
+    .badge{style: self._badgeStyle()}
+      = self._statusText()
+    %br
+    %button.mui-btn.mui-btn--primary{@click: self._toggleGyro}
+      = self._toggleLabel()
+    %br
+    %br
     %table.mui-table.mui-table--bordered
       %tbody
         %tr
           %td
-            %b= self._t('zephyrus.slew.gain')
-            %br
-            %small{style: "color:#888;"}= self._t('zephyrus.slew.desc')
+            %b= self._t('zephyrus.info.sensor')
+          %td= self._t('zephyrus.info.sensor_val')
+        %tr
           %td
-            %input{type: "range", min: "0", max: "100", .value: self.slewGain, @input: self._onSlew, style: "width:200px;"}
-            %span.value= self.slewGain
+            %b= self._t('zephyrus.info.bus')
+          %td= self._t('zephyrus.info.bus_val')
+        %tr
+          %td
+            %b= self._t('zephyrus.info.sample_rate')
+          %td= self._t('zephyrus.info.sample_rate_val')
+        %tr
+          %td
+            %b= self._t('zephyrus.info.ahrs')
+          %td= self._t('zephyrus.info.ahrs_val')
+        - if self.gyroEnabled
+          %tr
+            %td
+              %b= self._t('zephyrus.info.uptime')
+            %td= self._uptimeLabel()
 
-- if self.gyroEnabled
-  .mui-panel
-    .mui--text-title= self._t('zephyrus.telemetry.title')
-    %table.mui-table.mui-table--bordered
-      %tbody
-        %tr
-          %td
-            %b= self._t('zephyrus.telemetry.roll')
-          %td= self._fmtDeg self.rollDeg
-          %td
-            %b= self._t('zephyrus.telemetry.roll_corr')
-          %td= self._fmt1 self.rollCorrection
-        %tr
-          %td
-            %b= self._t('zephyrus.telemetry.pitch')
-          %td= self._fmtDeg self.pitchDeg
-          %td
-            %b= self._t('zephyrus.telemetry.pitch_corr')
-          %td= self._fmt1 self.pitchCorrection
-        %tr
-          %td
-            %b= self._t('zephyrus.telemetry.yaw_rate')
-          %td= self._fmtDegPS self.yawRate
-          %td
-            %b= self._t('zephyrus.telemetry.yaw_corr')
-          %td= self._fmt1 self.yawCorrection
-        %tr
-          %td{colspan: "2"}
-            %b= self._t('zephyrus.telemetry.rudder_us')
-          %td{colspan: "2"}= self._fmt1 self.rudderCorrection
-
-- if self.gyroEnabled
-  .mui-panel{style: "text-align:center;"}
-    .attitude-indicator{style: "font-size:12px; color:#888; margin-bottom:8px;"}= self._t('zephyrus.attitude.title')
-    .pteronautos-horizon{style: self._horizonOuterStyle()}
-      .horizon-line{style: self._horizonLineStyle()}
-        .center-dot{style: self._centerDotStyle()}
-    %small{style: "color:#888; display:block; margin-top:8px;"}
-      = self._horizonCaption()
-
-# PID Controllers — Roll / Pitch / Yaw with Feed Forward
-- if self.gyroEnabled
-  - for axis of [ {id:'roll', label: self._t('zephyrus.pid.roll'), p:self.rollP,i:self.rollI,d:self.rollD,max:self.rollMax,ff:self.rollFF}, {id:'pitch', label: self._t('zephyrus.pid.pitch'), p:self.pitchP,i:self.pitchI,d:self.pitchD,max:self.pitchMax,ff:self.pitchFF}, {id:'yaw', label: self._t('zephyrus.pid.yaw'), p:self.yawP,i:self.yawI,d:self.yawD,max:self.yawMax,ff:self.yawFF} ]
+  - if self.gyroEnabled
     .mui-panel
-      .mui--text-title= axis.label
+      .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.orientation.title')
+      %select.mui-select{@change: self._setOrientation, style: "width:100%;margin-top:8px;"}
+        - for opt of self._rotationOptions()
+          %option{value: opt.val, ?selected: self._isRotation(opt.val)}
+            = opt.label
+      %small{style: "color:#888; display:block; margin-top:6px;"}
+        = self._t('zephyrus.orientation.hint')
+
+
+  - if self.gyroEnabled
+    .mui-panel
+      .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.slew.title')
       %table.mui-table.mui-table--bordered
         %tbody
           %tr
             %td
-              %b= self._t('zephyrus.pid.p')
-            %td
-              %input{type: "range", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P"), style: "width:130px;"}
-              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.p, @input: self._onSlider("#{axis.id}P")}
-          %tr
-            %td
-              %b= self._t('zephyrus.pid.i')
-            %td
-              %input{type: "range", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I"), style: "width:130px;"}
-              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.i, @input: self._onSlider("#{axis.id}I")}
-          %tr
-            %td
-              %b= self._t('zephyrus.pid.d')
-            %td
-              %input{type: "range", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D"), style: "width:130px;"}
-              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.d, @input: self._onSlider("#{axis.id}D")}
-          %tr
-            %td
-              %b= self._t('zephyrus.pid.max')
-            %td
-              %input{type: "range", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max"), style: "width:130px;"}
-              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.max, @input: self._onSlider("#{axis.id}Max")}
-              %
-          %tr
-            %td
-              %b= self._t('zephyrus.pid.ff')
+              %b= self._t('zephyrus.slew.gain')
               %br
-              %small{style: "color:#888;"}= self._t('zephyrus.pid.ff_desc')
+              %small{style: "color:#888;"}= self._t('zephyrus.slew.desc')
             %td
-              %input{type: "range", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF"), style: "width:130px;"}
-              %input.zephyrus-pid-num{type: "number", min: "0", max: "100", .value: axis.ff, @input: self._onSlider("#{axis.id}FF")}
-              %
+              %input{type: "range", min: "0", max: "100", .value: self.slewGain, @input: self._onSlew, style: "width:200px;"}
+              %span.value= self.slewGain
 
-.mui-panel{style: "text-align:center;"}
-  %button.mui-btn.mui-btn--primary{?disabled: self._calibDisabled(), @click: self._doCalibrate}
-    = self._calibrateLabel()
-  - if self._calibrating
+  - if self.gyroEnabled
+    .mui-panel
+      .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.wing.title')
+      %small{style: "color:#888; display:block; margin-bottom:8px;"}
+        = self._t('zephyrus.wing.desc')
+      %table.mui-table.mui-table--bordered
+        %tbody
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.roll')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.roll_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingRollGain, @input: self._onWingGainLocal('wingRollGain'), @change: self._onWingGainPost('wing_roll_gain'), style: "width:200px;"}
+              %span.value= self.wingRollGain
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.pitch')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.pitch_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingPitchGain, @input: self._onWingGainLocal('wingPitchGain'), @change: self._onWingGainPost('wing_pitch_gain'), style: "width:200px;"}
+              %span.value= self.wingPitchGain
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.yaw')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.yaw_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingYawGain, @input: self._onWingGainLocal('wingYawGain'), @change: self._onWingGainPost('wing_yaw_gain'), style: "width:200px;"}
+              %span.value= self.wingYawGain
+
+  - if self.gyroEnabled
+    .mui-panel
+      .mui--text-title= self._t('zephyrus.telemetry.title')
+      %table.mui-table.mui-table--bordered
+        %tbody
+          %tr
+            %td
+              %b= self._t('zephyrus.telemetry.roll')
+            %td= self._fmtDeg self.rollDeg
+            %td
+              %b= self._t('zephyrus.telemetry.roll_corr')
+            %td= self._fmt1 self.rollCorrection
+          %tr
+            %td
+              %b= self._t('zephyrus.telemetry.pitch')
+            %td= self._fmtDeg self.pitchDeg
+            %td
+              %b= self._t('zephyrus.telemetry.pitch_corr')
+            %td= self._fmt1 self.pitchCorrection
+          %tr
+            %td
+              %b= self._t('zephyrus.telemetry.yaw_rate')
+            %td= self._fmtDegPS self.yawRate
+            %td
+              %b= self._t('zephyrus.telemetry.yaw_corr')
+            %td= self._fmt1 self.yawCorrection
+          %tr
+            %td{colspan: "2"}
+              %b= self._t('zephyrus.telemetry.rudder_us')
+            %td{colspan: "2"}= self._fmt1 self.rudderCorrection
+
+  - if self.gyroEnabled
+    .mui-panel{style: "text-align:center;"}
+      .attitude-indicator{style: "font-size:12px; color:#888; margin-bottom:8px;"}= self._t('zephyrus.attitude.title')
+      .pteronautos-horizon{style: self._horizonOuterStyle()}
+        .horizon-line{style: self._horizonLineStyle()}
+          .center-dot{style: self._centerDotStyle()}
+      %small{style: "color:#888; display:block; margin-top:8px;"}
+        = self._horizonCaption()
+
+  # PID Controllers — Roll / Pitch / Yaw (runtime-tunable, persisted)
+  - if self.gyroEnabled
+    - for axis of [ {id:'roll', label: self._t('zephyrus.pid.roll'), p:self.rollP,i:self.rollI,d:self.rollD,max:self.rollMax}, {id:'pitch', label: self._t('zephyrus.pid.pitch'), p:self.pitchP,i:self.pitchI,d:self.pitchD,max:self.pitchMax}, {id:'yaw', label: self._t('zephyrus.pid.yaw'), p:self.yawP,i:self.yawI,d:self.yawD,max:self.yawMax} ]
+      .mui-panel
+        .mui--text-title= axis.label
+        %table.mui-table.mui-table--bordered
+          %tbody
+            %tr
+              %td
+                %b= self._t('zephyrus.pid.p')
+              %td
+                %input{type: "range", min: "0", max: "5", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "5", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p")}
+            %tr
+              %td
+                %b= self._t('zephyrus.pid.i')
+              %td
+                %input{type: "range", min: "0", max: "0.5", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "0.5", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i")}
+            %tr
+              %td
+                %b= self._t('zephyrus.pid.d')
+              %td
+                %input{type: "range", min: "0", max: "0.5", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "0.5", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d")}
+            %tr
+              %td
+                %b= self._t('zephyrus.pid.max')
+              %td
+                %input{type: "range", min: "0", max: "60", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "60", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max")}
+
+  .mui-panel{style: "text-align:center;"}
+    %button.mui-btn.mui-btn--primary{?disabled: self._calibDisabled(), @click: self._doCalibrate}
+      = self._calibrateLabel()
+    - if self._calibrating
+      %br
+      %small{style: "color:#da0;"}= self._calibProgress()
     %br
-    %small{style: "color:#da0;"}= self._calibProgress()
-  %br
-  %small{style: "color:#888;"}
-    = self._calibHint()
+    %small{style: "color:#888;"}
+      = self._calibHint()
+
+- else
+  .mui-panel
+    .badge{style: "background:#666;color:#fff;padding:2px 10px;border-radius:12px;"}
+      = self._t('zephyrus.not_compiled.badge')
+    %p{style: "margin-top:10px; color:#888;"}
+      = self._t('zephyrus.not_compiled.desc')

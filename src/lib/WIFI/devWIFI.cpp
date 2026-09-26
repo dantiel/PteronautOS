@@ -759,6 +759,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
 
     JsonObject zeph = root["zephyrus"].to<JsonObject>();
 #if defined(ZEPHYRUS_ENABLED)
+    zeph["compiled"]          = true;
     zeph["enabled"]           = zephyrus.gyroEnabled;
     zeph["calibrated"]        = zephyrus.calibrated;
     zeph["calibrating"]       = zephyrus._calibrating;
@@ -772,7 +773,23 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["rudder_correction"] = zephyrus.rudderCorrection;
     zeph["board_rotation"]    = zephyrus.boardRotation;
     zeph["slew_gain"] = (int)zephyrus.slewGain;
+    zeph["wing_roll_gain"]  = (int)ornithopter.wingRollGain;
+    zeph["wing_pitch_gain"] = (int)ornithopter.wingPitchGain;
+    zeph["wing_yaw_gain"]   = (int)ornithopter.wingYawGain;
+
+    // Runtime-tunable PID gains — read back by the panel sliders
+    JsonObject pid = zeph["pid"].to<JsonObject>();
+    JsonObject roll  = pid["roll"].to<JsonObject>();
+    roll["p"] = zephyrus.rollKp;  roll["i"] = zephyrus.rollKi;
+    roll["d"] = zephyrus.rollKd;  roll["max"] = zephyrus.rollImax;
+    JsonObject pitch = pid["pitch"].to<JsonObject>();
+    pitch["p"] = zephyrus.pitchKp; pitch["i"] = zephyrus.pitchKi;
+    pitch["d"] = zephyrus.pitchKd; pitch["max"] = zephyrus.pitchImax;
+    JsonObject yaw = pid["yaw"].to<JsonObject>();
+    yaw["p"] = zephyrus.yawKp; yaw["i"] = zephyrus.yawKi;
+    yaw["d"] = zephyrus.yawKd; yaw["max"] = zephyrus.yawImax;
 #else
+    zeph["compiled"]          = false;
     zeph["enabled"]           = false;
     zeph["calibrated"]        = false;
     zeph["calibrating"]       = false;
@@ -785,6 +802,9 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["pitch_correction"]  = 0.0f;
     zeph["rudder_correction"] = 0.0f;
     zeph["board_rotation"]    = 0;
+    zeph["wing_roll_gain"]    = 0;
+    zeph["wing_pitch_gain"]   = 0;
+    zeph["wing_yaw_gain"]     = 0;
 #endif
 
     JsonObject sweep = root["sweep"].to<JsonObject>();
@@ -823,6 +843,10 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["ssff_gain"]           = (int)ornithopter.ssffGain;
     orni["aero_glide_coeff"]    = (int)ornithopter.aeroGlideCoeff;
     orni["aero_flap_coeff"]     = (int)ornithopter.aeroFlapCoeff;
+    // Mesozoic 2-wing stabilizer gains
+    orni["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
+    orni["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
+    orni["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
 #endif
 
     // Runtime waveform/mixer config fields
@@ -939,6 +963,17 @@ static int _pteroParamInt(AsyncWebServerRequest *request, const char* key, int d
 {
     if (request->hasParam(key, true))
         return request->getParam(key, true)->value().toInt();
+    return deflt;
+}
+
+// Float form-param reader — used for runtime-tunable PID gains (small floats
+// like Kp/Ki/Kd). NaN is rejected so a malformed POST can't poison the loop.
+static float _pteroParamFloat(AsyncWebServerRequest *request, const char* key, float deflt)
+{
+    if (request->hasParam(key, true)) {
+        float v = request->getParam(key, true)->value().toFloat();
+        if (!isnan(v)) return v;
+    }
     return deflt;
 }
 
@@ -1061,6 +1096,42 @@ static bool SaveOrnithopterConfig()
     f.print((int)activeProfile);
     f.print(",\"model_name\":");
     _pteroPrintJsonString(f, ornithopter.modelName);
+#ifdef ZEPHYRUS_ENABLED
+    f.print(",\"gyro_enabled\":");
+    f.print(zephyrus.gyroEnabled ? "true" : "false");
+    f.print(",\"slew_gain\":");
+    f.print((int)zephyrus.slewGain);
+    f.print(",\"wing_roll_gain\":");
+    f.print((int)ornithopter.wingRollGain);
+    f.print(",\"wing_pitch_gain\":");
+    f.print((int)ornithopter.wingPitchGain);
+    f.print(",\"wing_yaw_gain\":");
+    f.print((int)ornithopter.wingYawGain);
+    f.print(",\"pid_roll_p\":");
+    f.print(zephyrus.rollKp, 3);
+    f.print(",\"pid_roll_i\":");
+    f.print(zephyrus.rollKi, 3);
+    f.print(",\"pid_roll_d\":");
+    f.print(zephyrus.rollKd, 3);
+    f.print(",\"pid_roll_max\":");
+    f.print(zephyrus.rollImax, 1);
+    f.print(",\"pid_pitch_p\":");
+    f.print(zephyrus.pitchKp, 3);
+    f.print(",\"pid_pitch_i\":");
+    f.print(zephyrus.pitchKi, 3);
+    f.print(",\"pid_pitch_d\":");
+    f.print(zephyrus.pitchKd, 3);
+    f.print(",\"pid_pitch_max\":");
+    f.print(zephyrus.pitchImax, 1);
+    f.print(",\"pid_yaw_p\":");
+    f.print(zephyrus.yawKp, 3);
+    f.print(",\"pid_yaw_i\":");
+    f.print(zephyrus.yawKi, 3);
+    f.print(",\"pid_yaw_d\":");
+    f.print(zephyrus.yawKd, 3);
+    f.print(",\"pid_yaw_max\":");
+    f.print(zephyrus.yawImax, 1);
+#endif
     f.print('}');
     return f.commit();
 }
@@ -1209,6 +1280,46 @@ void LoadOrnithopterConfig()
     if (o["profile_id"].is<int>())            setOrnithopterProfile((uint8_t)o["profile_id"].as<int>());
     if (o["model_name"].is<const char*>())
         strlcpy(ornithopter.modelName, o["model_name"].as<const char*>(), sizeof(ornithopter.modelName));
+#ifdef ZEPHYRUS_ENABLED
+    if (o["gyro_enabled"].is<bool>()) {
+        zephyrus.gyroEnabled = o["gyro_enabled"].as<bool>();
+    }
+    if (o["slew_gain"].is<int>()) {
+        float sg = (float)o["slew_gain"].as<int>();
+        if (sg < 0.0f) sg = 0.0f;
+        if (sg > 100.0f) sg = 100.0f;
+        zephyrus.slewGain = sg;
+    }
+    if (o["wing_roll_gain"].is<int>()) {
+        int v = o["wing_roll_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingRollGain = (float)v;
+    }
+    if (o["wing_pitch_gain"].is<int>()) {
+        int v = o["wing_pitch_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingPitchGain = (float)v;
+    }
+    if (o["wing_yaw_gain"].is<int>()) {
+        int v = o["wing_yaw_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingYawGain = (float)v;
+    }
+    // Runtime PID gains — clamped to sane envelopes so a corrupt config can't
+    // destabilize the loop (Kp ≤10, Ki/Kd ≤2, Imax ≤100).
+    if (o["pid_roll_p"].is<float>())  { float v = o["pid_roll_p"].as<float>();  if (v >= 0 && v <= 10) zephyrus.rollKp = v; }
+    if (o["pid_roll_i"].is<float>())  { float v = o["pid_roll_i"].as<float>();  if (v >= 0 && v <= 2)  zephyrus.rollKi = v; }
+    if (o["pid_roll_d"].is<float>())  { float v = o["pid_roll_d"].as<float>();  if (v >= 0 && v <= 2)  zephyrus.rollKd = v; }
+    if (o["pid_roll_max"].is<float>()){ float v = o["pid_roll_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.rollImax = v; }
+    if (o["pid_pitch_p"].is<float>()) { float v = o["pid_pitch_p"].as<float>(); if (v >= 0 && v <= 10) zephyrus.pitchKp = v; }
+    if (o["pid_pitch_i"].is<float>()) { float v = o["pid_pitch_i"].as<float>(); if (v >= 0 && v <= 2)  zephyrus.pitchKi = v; }
+    if (o["pid_pitch_d"].is<float>()) { float v = o["pid_pitch_d"].as<float>(); if (v >= 0 && v <= 2)  zephyrus.pitchKd = v; }
+    if (o["pid_pitch_max"].is<float>()){ float v = o["pid_pitch_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.pitchImax = v; }
+    if (o["pid_yaw_p"].is<float>())   { float v = o["pid_yaw_p"].as<float>();   if (v >= 0 && v <= 10) zephyrus.yawKp = v; }
+    if (o["pid_yaw_i"].is<float>())   { float v = o["pid_yaw_i"].as<float>();   if (v >= 0 && v <= 2)  zephyrus.yawKi = v; }
+    if (o["pid_yaw_d"].is<float>())   { float v = o["pid_yaw_d"].as<float>();   if (v >= 0 && v <= 2)  zephyrus.yawKd = v; }
+    if (o["pid_yaw_max"].is<float>()) { float v = o["pid_yaw_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.yawImax = v; }
+#endif
 
     // Restore active flight profile and apply its params to the mixer.
     if (o["active_flight_profile"].is<int>())
@@ -1249,12 +1360,35 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.ssffGain        = (float)_pteroParamInt(request, "ssff_gain",          (int)ornithopter.ssffGain);
     ornithopter.aeroGlideCoeff  = (float)_pteroParamInt(request, "aero_glide_coeff",   (int)ornithopter.aeroGlideCoeff);
     ornithopter.aeroFlapCoeff   = (float)_pteroParamInt(request, "aero_flap_coeff",    (int)ornithopter.aeroFlapCoeff);
+    // Mesozoic 2-wing stabilizer gains (-100..+100; sign = correction direction)
+    int wingRoll  = _pteroParamInt(request, "wing_roll_gain",  (int)ornithopter.wingRollGain);
+    int wingPitch = _pteroParamInt(request, "wing_pitch_gain", (int)ornithopter.wingPitchGain);
+    int wingYaw   = _pteroParamInt(request, "wing_yaw_gain",   (int)ornithopter.wingYawGain);
+    if (wingRoll  < -100) wingRoll  = -100; else if (wingRoll  > 100) wingRoll  = 100;
+    if (wingPitch < -100) wingPitch = -100; else if (wingPitch > 100) wingPitch = 100;
+    if (wingYaw   < -100) wingYaw   = -100; else if (wingYaw   > 100) wingYaw   = 100;
+    ornithopter.wingRollGain  = (float)wingRoll;
+    ornithopter.wingPitchGain = (float)wingPitch;
+    ornithopter.wingYawGain   = (float)wingYaw;
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) zephyrus.gyroEnabled = (gv == 1);
     float slewGain = (float)_pteroParamInt(request, "slew_gain", (int)zephyrus.slewGain);
     if (slewGain < 0.0f) slewGain = 0.0f;
     if (slewGain > 100.0f) slewGain = 100.0f;
     zephyrus.slewGain = slewGain;
+    // Runtime PID gains — clamped to the same envelopes as LoadOrnithopterConfig
+    float rp  = _pteroParamFloat(request, "pid_roll_p",  zephyrus.rollKp);   if (rp  < 0) rp  = 0; else if (rp  > 10)  rp  = 10;  zephyrus.rollKp  = rp;
+    float ri  = _pteroParamFloat(request, "pid_roll_i",  zephyrus.rollKi);   if (ri  < 0) ri  = 0; else if (ri  > 2)   ri  = 2;   zephyrus.rollKi  = ri;
+    float rd  = _pteroParamFloat(request, "pid_roll_d",  zephyrus.rollKd);   if (rd  < 0) rd  = 0; else if (rd  > 2)   rd  = 2;   zephyrus.rollKd  = rd;
+    float rmx = _pteroParamFloat(request, "pid_roll_max", zephyrus.rollImax); if (rmx < 0) rmx = 0; else if (rmx > 100) rmx = 100; zephyrus.rollImax = rmx;
+    float pp  = _pteroParamFloat(request, "pid_pitch_p", zephyrus.pitchKp);  if (pp  < 0) pp  = 0; else if (pp  > 10)  pp  = 10;  zephyrus.pitchKp  = pp;
+    float pi  = _pteroParamFloat(request, "pid_pitch_i", zephyrus.pitchKi);  if (pi  < 0) pi  = 0; else if (pi  > 2)   pi  = 2;   zephyrus.pitchKi  = pi;
+    float pd  = _pteroParamFloat(request, "pid_pitch_d", zephyrus.pitchKd);  if (pd  < 0) pd  = 0; else if (pd  > 2)   pd  = 2;   zephyrus.pitchKd  = pd;
+    float pmx = _pteroParamFloat(request, "pid_pitch_max", zephyrus.pitchImax); if (pmx < 0) pmx = 0; else if (pmx > 100) pmx = 100; zephyrus.pitchImax = pmx;
+    float yp  = _pteroParamFloat(request, "pid_yaw_p",  zephyrus.yawKp);     if (yp  < 0) yp  = 0; else if (yp  > 10)  yp  = 10;  zephyrus.yawKp   = yp;
+    float yi  = _pteroParamFloat(request, "pid_yaw_i",  zephyrus.yawKi);     if (yi  < 0) yi  = 0; else if (yi  > 2)   yi  = 2;   zephyrus.yawKi   = yi;
+    float yd  = _pteroParamFloat(request, "pid_yaw_d",  zephyrus.yawKd);     if (yd  < 0) yd  = 0; else if (yd  > 2)   yd  = 2;   zephyrus.yawKd   = yd;
+    float ymx = _pteroParamFloat(request, "pid_yaw_max", zephyrus.yawImax);  if (ymx < 0) ymx = 0; else if (ymx > 100) ymx = 100; zephyrus.yawImax = ymx;
 #endif
     // Missing fields in a partial profile save belong to the requested slot,
     // not whichever profile the transmitter happens to have active.

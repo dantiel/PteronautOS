@@ -380,3 +380,14 @@ struct FlightProfileParams {
 // Dynamically scales Zephyrus pitch PID gains based on stroke phase.
 #define ORNI_AERO_GLIDE_COEFF 40      // 0-100, gain modulation during glide
 #define ORNI_AERO_FLAP_COEFF  40      // 0-100, gain modulation during flap
+
+// ─── 2-Wing Mesozoic Stabilizer Runtime Gains (0-100) ──────────────
+// Direct PID → flapping-servo mapping for 2-servo ornithopters (no rudder/
+// tail). 0 disables the axis. Roll → differential amplitude, pitch →
+// symmetric centre, yaw → differential ferocity. Conservative defaults:
+// enough to visibly move wings on the bench, not enough to fight the pilot.
+#ifdef ZEPHYRUS_ENABLED
+#define ORNI_WING_ROLL_GAIN   50
+#define ORNI_WING_PITCH_GAIN  50
+#define ORNI_WING_YAW_GAIN    30
+#endif

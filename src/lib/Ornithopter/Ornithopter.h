@@ -129,6 +129,18 @@ public:
     float gyroAileronCorrection;   // µs offset for roll PID (gearbox only)
     float gyroElevatorCorrection;  // µs offset for pitch PID (gearbox only)
 
+    // Raw PID correction outputs (deg / °/s / deg) for the 2-wing Mesozoic
+    // stabilizer — bridged from Zephyrus in ZephyrusFilter.h (unconditionally,
+    // unlike gyroAileron/ElevatorCorrection which are gearbox-only).
+    float gyroRollCorrection;      // roll PID output (deg)
+    float gyroYawCorrection;       // yaw-rate PID output (°/s)
+    float gyroPitchCorrection;     // pitch PID output (deg)
+
+    // Mesozoic 2-wing stabilizer runtime gains (0–100, 0 disables an axis)
+    float wingRollGain;            // roll  → differential flap amplitude
+    float wingPitchGain;           // pitch → symmetric flap centre shift
+    float wingYawGain;             // yaw   → differential ferocity
+
     // Raw pitch PID terms from Zephyrus (Nigredo — waveform modulation)
     float gyroPitchPTerm;          // Raw P term
     float gyroPitchITerm;          // Raw I term

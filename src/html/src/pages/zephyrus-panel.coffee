@@ -10,6 +10,7 @@ class ZephyrusPanel extends PteroElement
   pollRate: 2000
 
   @properties:
+    compiled:          {state: true}
     gyroEnabled:      {state: true}
     gyroCalibrated:    {state: true}
     _calibrating:      {state: true}
@@ -23,26 +24,27 @@ class ZephyrusPanel extends PteroElement
     rudderCorrection:  {state: true}
     boardRotation:     {state: true}
     slewGain:   {state: true}
+    wingRollGain:  {state: true}
+    wingPitchGain: {state: true}
+    wingYawGain:   {state: true}
     uptimeMs:          {state: true}
     # Roll PID
     rollP:   {state: true}
     rollI:   {state: true}
     rollD:   {state: true}
     rollMax: {state: true}
-    rollFF:  {state: true}
     # Pitch PID
     pitchP:   {state: true}
     pitchI:   {state: true}
     pitchD:   {state: true}
     pitchMax: {state: true}
-    pitchFF:  {state: true}
     # Yaw PID
     yawP:   {state: true}
     yawI:   {state: true}
     yawD:   {state: true}
     yawMax: {state: true}
-    yawFF:  {state: true}
 
+  compiled          = true
   gyroEnabled      = false
   gyroCalibrated    = false
   _calibrating      = false
@@ -56,19 +58,23 @@ class ZephyrusPanel extends PteroElement
   rudderCorrection  = 0
   boardRotation     = 0
   slewGain   = 0
+  wingRollGain  = 0
+  wingPitchGain = 0
+  wingYawGain   = 0
   uptimeMs          = 0
-  # Roll
-  rollP   = 30; rollI   = 5; rollD   = 15; rollMax = 40; rollFF  = 70
+  # Roll — runtime PID gains (units match firmware ZephyrusConfig.h defaults)
+  rollP   = 1.2; rollI   = 0.05; rollD   = 0.15; rollMax = 30
   # Pitch
-  pitchP  = 35; pitchI  = 5; pitchD  = 15; pitchMax = 40; pitchFF = 70
+  pitchP  = 1.0; pitchI  = 0.04; pitchD  = 0.12; pitchMax = 25
   # Yaw
-  yawP    = 25; yawI    = 3; yawD    = 10; yawMax  = 50; yawFF   = 60
+  yawP    = 0.8; yawI    = 0.03; yawD    = 0.10; yawMax  = 20
 
   # Apply polled state
   _applyState: (data) ->
     @uptimeMs = Fmt.f0 data.uptime_ms
     return unless data.zephyrus
     z = data.zephyrus
+    @compiled         = if z.compiled? then !!z.compiled else true
     @gyroEnabled      = !!z.enabled
     @gyroCalibrated    = !!z.calibrated
     @_calibrating      = !!z.calibrating
@@ -82,15 +88,25 @@ class ZephyrusPanel extends PteroElement
     @rudderCorrection  = Fmt.f0 z.rudder_correction
     @boardRotation     = Fmt.f0 z.board_rotation
     @slewGain   = Fmt.f0 z.slew_gain
+    @wingRollGain  = Fmt.f0 z.wing_roll_gain
+    @wingPitchGain = Fmt.f0 z.wing_pitch_gain
+    @wingYawGain   = Fmt.f0 z.wing_yaw_gain
     if z.pid?
-      p = z.pid
-      @rollP = p.roll_p; @rollI = p.roll_i; @rollD = p.roll_d; @rollMax = p.roll_max; @rollFF = p.roll_ff
-      @pitchP = p.pitch_p; @pitchI = p.pitch_i; @pitchD = p.pitch_d; @pitchMax = p.pitch_max; @pitchFF = p.pitch_ff
-      @yawP = p.yaw_p; @yawI = p.yaw_i; @yawD = p.yaw_d; @yawMax = p.yaw_max; @yawFF = p.yaw_ff
+      @rollP  = z.pid.roll.p;   @rollI  = z.pid.roll.i;   @rollD  = z.pid.roll.d;   @rollMax  = z.pid.roll.max
+      @pitchP = z.pid.pitch.p;  @pitchI = z.pid.pitch.i;  @pitchD = z.pid.pitch.d;  @pitchMax = z.pid.pitch.max
+      @yawP   = z.pid.yaw.p;    @yawI   = z.pid.yaw.i;    @yawD   = z.pid.yaw.d;    @yawMax   = z.pid.yaw.max
 
-  # Slider & number input handler — clamps NaN/empty to 0
-  _onSlider: (prop) -> (evt) =>
-    @[prop] = parseInt(evt.target.value) || 0
+  # PID slider — live local echo on drag (no network), persist on release.
+  # Splitting input (cheap, local) from change (one POST) keeps the 80MHz loop
+  # free of LittleFS-write bursts during slider drags.
+  _onPidLocal: (prop) -> (evt) =>
+    v = parseFloat evt.target.value
+    @[prop] = if isNaN(v) or not isFinite(v) then 0 else v
+
+  _onPidPost: (param) -> (evt) =>
+    v = parseFloat evt.target.value
+    v = 0 if isNaN(v) or not isFinite(v)
+    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "#{param}=#{v}"}
 
   # Actions
   _doCalibrate: ->
@@ -110,6 +126,22 @@ class ZephyrusPanel extends PteroElement
     @slewGain = v
     await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "slew_gain=#{v}"}
 
+  # Mesozoic 2-wing stabilizer gain (-100..+100; sign = correction direction).
+  # Local echo on drag (no network), single POST on release — mirrors the PID
+  # sliders so the 80MHz loop never sees a LittleFS-write burst mid-drag.
+  _onWingGainLocal: (prop) -> (evt) =>
+    @[prop] = parseInt(evt.target.value) || 0
+
+  _onWingGainPost: (param) -> (evt) =>
+    v = parseInt(evt.target.value) || 0
+    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "#{param}=#{v}"}
+
+  # Enable/disable the gyro at runtime. Firmware re-probes the MPU on the
+  # false→true edge (see Zephyrus::begin()), so this works without a reboot.
+  _toggleGyro: ->
+    target = if @gyroEnabled then 0 else 1
+    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "gyro_enabled=#{target}"}
+
   render: -> renderFn(this)
 
   # Template Helpers
@@ -117,8 +149,10 @@ class ZephyrusPanel extends PteroElement
   _fmt1:            (v) -> Fmt.f1 v
   _fmtDeg:          (v) -> Fmt.deg v
   _fmtDegPS:        (v) -> Fmt.degPS v
+  _compiled:        -> !!@compiled
   _badgeStyle:      -> Style.badge Status.color @pollError, @gyroEnabled, not @gyroCalibrated
   _statusText:      -> Status.gyroText @pollError, @gyroEnabled, @gyroCalibrated
+  _toggleLabel:     -> if @gyroEnabled then self._t('zephyrus.toggle.disable') else self._t('zephyrus.toggle.enable')
   _uptimeLabel:     -> Fmt.uptime @uptimeMs
   _rotationOptions: -> Zephyrus.rotationOptions
   _isRotation:      (val) -> Zephyrus.isRotation @boardRotation, val

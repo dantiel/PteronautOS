@@ -99,3 +99,24 @@
 #define ZEPHYR_SLEW_GAIN     1.5f   // µs per °/s of filtered roll-error rate at 100%
 #define ZEPHYR_SLEW_CLAMP_US 80     // hard clamp on the boost term (±µs)
 #define ZEPHYR_SLEW_LPF_TAU  0.12f  // transient decay time constant (s)
+
+// ─── 2-Wing Flapping Stabilization (Mesozoic) ─────────────────────────
+// Maps the raw Zephyrus PID outputs DIRECTLY onto the two flapping servos,
+// riding the SAME axes the pilot sticks already use — a primitive, robust
+// stabilizer for a 2-servo ornithopter with no separate control surfaces:
+//   Roll  → differential flap AMPLITUDE   (aileron axis, proven roll torque)
+//   Pitch → symmetric flap CENTRE shift    (elevator axis)
+//   Yaw   → differential FEROCITY          (rudder axis, drag rate-damping)
+// The runtime gains (Ornithopter::wingRollGain / wingPitchGain /
+// wingYawGain, 0–100) scale these: 0 disables an axis, 100 = full authority.
+// Scale constants below are the FULL-STICK authority per PID-output unit at
+// 100% gain. PID outputs are roughly proportional to attitude error, so the
+// clamps bound the maximum wing perturbation regardless of error magnitude.
+#define ZEPHYR_WING_ROLL_AMP_SCALE      0.02f  // amp-fraction per roll-corr unit @100%
+#define ZEPHYR_WING_ROLL_AMP_CLAMP      0.5f   // max differential amplitude fraction
+#define ZEPHYR_WING_ROLL_CENTER_SCALE   0.5f   // deg per roll-corr unit @100% (glide)
+#define ZEPHYR_WING_ROLL_CENTER_CLAMP   15.0f  // max glide self-level centre offset (deg)
+#define ZEPHYR_WING_PITCH_CENTER_SCALE  0.6f   // deg per pitch-corr unit @100%
+#define ZEPHYR_WING_PITCH_CENTER_CLAMP  12.0f  // max symmetric centre shift (deg)
+#define ZEPHYR_WING_YAW_FER_SCALE       0.1f   // ferocity units per yaw-corr unit @100%
+#define ZEPHYR_WING_YAW_FER_CLAMP       2.0f   // max differential ferocity
