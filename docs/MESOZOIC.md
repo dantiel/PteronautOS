@@ -1,22 +1,26 @@
-# MESOZOIC — The Bare Brain (rate → wing-beat, stroke-sampled)
+# MESOZOIC — The Bare Brain (rate → wing-beat, continuously)
 
-> Design for the CPU-economical PteronautOS stabilizer. One primitive PID per
-> axis, sampled **once per flap reversal**, modulating the wing beat directly.
-> No AHRS, no lock-in, no feed-forward — only the haltere reflex.
+> Design for the CPU-economical PteronautOS stabilizer. One primitive integer
+> PID per axis, running **continuously** (every loop tick), folding its output
+> into the wing waveform. No AHRS, no lock-in, no feed-forward, no stroke-gate
+> — only the haltere reflex.
 
 ---
 
 ## 1. The one idea
 
 An ornithopter's wing **is** the actuator. There are no ailerons, no elevator,
-no rudder surface — so a correction can only take effect at the **stroke
-reversal**; between two reversals the wing is committed to its half-stroke. A
-PID that drives the waveform at 250 Hz mostly talks into a wing that is not
-listening, and burns CPU to do it.
+no rudder surface — the wing *is* the surface. But the correction does **not**
+need to wait for a stroke reversal: pitch (centre shift) is a pure offset that
+takes effect instantly, and roll/yaw (amplitude/ferocity) bend the current
+half-stroke toward a new reversal point. There is no hard "commitment" between
+two reversals.
 
-The mesozoic brain inverts this: the PID runs cheaply and continuously, but its
-**output is struck once per half-stroke** — a re-tuning of the next stroke, not
-a continuous deflection.
+The mesozoic brain therefore runs its three PIDs **continuously** (every loop
+tick) and folds the output into the waveform parameters each tick. The CPU
+saving does **not** come from gating the PID to the stroke — that gate is what
+breaks slow flapping and glide — it comes from *dropping Mahony* (§2). A rate
+damper should be *faster* than the plant, not *locked* to it.
 
 ```
    gyro rate (raw)           PID (cheap, continuous)
@@ -24,12 +28,38 @@ a continuous deflection.
    pitch-rate →  PD  →  symmetric flap CENTRE shift
    yaw-rate   →  P   →  differential FEROCITY (drag damping)
                               │
-                              ▼  sampled ONLY at stroke reversal
-                          →  next half-stroke is re-tuned
+                              ▼  applied every tick (folded into waveform)
+                          →  the current half-stroke already bends
 ```
 
 The PID is the **modulation**; the wing beat is the **carrier**. You do not
 fight the beat — you retune it. That is "symphonizing the ancient wing beats."
+
+---
+
+## 1b. Slow flapping & glide — the degenerate regimes
+
+The damper runs **every tick**, so it degrades gracefully, but the *actuator
+mapping* must switch by regime — otherwise the correction pushes into a surface
+that no longer exists:
+
+| Regime | Roll | Pitch | Yaw |
+|---|---|---|---|
+| **Flapping** | diff. **amplitude** | sym. **centre** | diff. **ferocity** |
+| **Glide** | diff. **centre** (aileron) | sym. **centre** (elevator) | *none* (no rudder) |
+
+In glide the wings freeze into a fixed glider: there is no amplitude and no
+ferocity to modulate, so roll must come from **differential incidence** (the
+same channel that was "centre" in flapping, now split left/right) and pitch from
+**symmetric incidence**. Yaw has no actuator in glide — set `wingYawGain = 0`
+there; the pilot's tail/dihedral carries the turn.
+
+The one stroke-*related* problem that *does* remain is **flap-induced body
+rock**: wing inertia shakes the airframe at the flap frequency, polluting the
+gyro *rate* signal (not just the accel attitude — the rate itself). Fix it with
+a **notch/low-pass tracked to flap frequency**, engaged only while flapping. In
+slow flap the notch widens and the floor rate drops naturally; in glide the
+notch is off and the full-rate damper runs on the incidence surfaces.
 
 ---
 
@@ -93,8 +123,8 @@ inline int16_t mesoPid(MesoPid &p, int16_t err,
 ```
 
 Cost per axis per tick: ~4 multiplies + 2 shifts. No `sinf`, no `cosf`, no
-`atan2`, no float division. The output is consumed **once per stroke reversal**,
-not at loop rate.
+`atan2`, no float division. The output is consumed **every loop tick** and
+folded into the waveform parameters — never gated to the stroke.
 
 ---
 
@@ -180,10 +210,11 @@ One canonical fixed-point math, two placements. No duplicated constants.
 4. **CPU budget**: gyro tick is raw-rate + 3× `mesoPid` — target < 2 µs/tick on
    ESP8285 @ 80 MHz (vs. the Mahony + 3-PID + slew path it replaces).
 5. **Correctness probe**: inject a constant rate disturbance → the matching
-   wing perturbation appears **at the next stroke reversal**, not mid-stroke;
-   zero rate → zero perturbation (no wind-up, no drift).
+   wing perturbation appears **within the same loop tick** (no stroke-gate);
+   zero rate → zero perturbation (no wind-up, no drift). A separate probe
+   confirms the flap-frequency notch only engages while flapping.
 6. Native `pio test` target compiles `Mesozoic.h` + a rate-loop unit test
-   (disturbance → reversal-quantised output, wind-up clamp, NaN-free).
+   (disturbance → per-tick output, wind-up clamp, NaN-free).
 7. WebUI gains `wingRollGain / wingPitchGain / wingYawGain` keep working
    unchanged (0 disables an axis) — the pilot surface does not move.
 
@@ -191,5 +222,6 @@ One canonical fixed-point math, two placements. No duplicated constants.
 
 ## 8. The one sentence
 
-*Take the gyro rate, damp it with three integer PIDs, and strike the result
-onto the wing beat at the moment the wing reverses — nothing more.*
+*Take the gyro rate, damp it with three integer PIDs running every tick, and
+fold the result into the wing waveform — the saving is rate-only (dropping
+Mahony), never gating the PID to the stroke.*
