@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include "ZephyrusConfig.h"
+#include "Mesozoic.h"
 
 class Zephyrus {
 public:
@@ -69,6 +70,7 @@ private:
     int16_t _gyroRaw[3];    // X, Y, Z raw
     int16_t _accelRaw[3];   // X, Y, Z raw
     float   _gyroBias[3];   // Calibrated offsets
+    int16_t _gyroBiasLsb[3];// Calibrated offsets in raw LSB (Mesozoic integer path)
     float   _accelScale;    // LSB/g from config
     float   _gyroScale;     // LSB/(°/s) from config
 
@@ -103,6 +105,11 @@ private:
     PidState _pidRoll;
     PidState _pidYaw;
     PidState _pidPitch;
+
+    // Mesozoic rate-damper state (fixed-point, integer-only)
+    MesoPid _mesoRoll;
+    MesoPid _mesoPitch;
+    MesoPid _mesoYaw;
 
     float _pidCompute(PidState &s, float error, float dt,
                       float kp, float ki, float kd, float imax);

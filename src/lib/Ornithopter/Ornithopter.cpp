@@ -334,16 +334,28 @@ void Ornithopter::_computeServoMixer() {
     // Pitch stabilizer: gyro pitch correction → symmetric flap CENTRE shift
     // (both wings bias the same physical direction). Rides the elevator axis
     // (elevatorCmd above), so a nose-up error commands a nose-down bias.
+#ifdef MESOZOIC_ONLY
+    gyroPitchCenter = gyroPitchCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_RATE_CENTER_SCALE;
+    if (gyroPitchCenter >  ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP;
+    if (gyroPitchCenter < -ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP;
+#else
     gyroPitchCenter = gyroPitchCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE;
     if (gyroPitchCenter >  ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_CENTER_CLAMP;
     if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
+#endif
 
     // Roll self-level (glide only — in flap roll rides the amplitude axis).
     // Maps roll correction to a symmetric aileron-centre offset so the wings
     // stay level while gliding.
+#ifdef MESOZOIC_ONLY
+    gyroRollCenter = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_RATE_CENTER_SCALE;
+    if (gyroRollCenter >  ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP;
+    if (gyroRollCenter < -ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP;
+#else
     gyroRollCenter = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE;
     if (gyroRollCenter >  ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_CENTER_CLAMP;
     if (gyroRollCenter < -ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_CENTER_CLAMP;
+#endif
 #endif
 
     int angleLeft, angleRight;
@@ -369,7 +381,7 @@ void Ornithopter::_computeServoMixer() {
         if (dt > 0.1f) dt = 0.1f;
         _lastUpdateUs = nowUs;
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // ── Real Ondas wiring (Nigredo) ──────────────────────────────
         // Zephyrus bridges the raw pitch PID terms at 250 Hz
         // (ZephyrusFilter.h) and NaN-guards them upstream (Validatio),
@@ -384,7 +396,7 @@ void Ornithopter::_computeServoMixer() {
         if (_osc.kGainMod > 2.0f) _osc.kGainMod = 2.0f;
 #endif
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         _osc.anchorGain = anchorGain;
 #else
         _osc.anchorGain = 0.0f;
@@ -394,7 +406,7 @@ void Ornithopter::_computeServoMixer() {
         float rawWave = _osc.advance(dt);
 #endif
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // Resonance uses the oscillator fundamental. SSFF below must instead
         // use the shaped wave's asymmetric reversal boundary.
         float waveSin = sinf(rawWave);
@@ -480,7 +492,7 @@ void Ornithopter::_computeServoMixer() {
         // Ferocity (dwell/shape) = per-profile stroke/return sliders
         // + elevator mix + throttle mix (+ gyro).
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // Ferocity PD-blend: P-term + D-term → dwell ratio (clamped ±0.5).
         float ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f
                               + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
@@ -533,9 +545,15 @@ void Ornithopter::_computeServoMixer() {
         // ferocity (asymmetric drag). Rides the same axis as the rudder stick
         // coupling above, so a yaw disturbance drags one wing harder than the
         // other to arrest rotation. 0 gain = axis off.
+#ifdef MESOZOIC_ONLY
+        float gyroYawFer = gyroYawCorrection * (wingYawGain * 0.01f) * ZEPHYR_WING_YAW_RATE_FER_SCALE;
+        if (gyroYawFer >  ZEPHYR_WING_YAW_RATE_FER_CLAMP) gyroYawFer =  ZEPHYR_WING_YAW_RATE_FER_CLAMP;
+        if (gyroYawFer < -ZEPHYR_WING_YAW_RATE_FER_CLAMP) gyroYawFer = -ZEPHYR_WING_YAW_RATE_FER_CLAMP;
+#else
         float gyroYawFer = gyroYawCorrection * (wingYawGain * 0.01f) * ZEPHYR_WING_YAW_FER_SCALE;
         if (gyroYawFer >  ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer =  ZEPHYR_WING_YAW_FER_CLAMP;
         if (gyroYawFer < -ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer = -ZEPHYR_WING_YAW_FER_CLAMP;
+#endif
         strokeFerL += gyroYawFer; strokeFerR -= gyroYawFer;
         returnFerL += gyroYawFer; returnFerR -= gyroYawFer;
 #endif
@@ -550,7 +568,7 @@ void Ornithopter::_computeServoMixer() {
         float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
         float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // Use exactly the boundary consumed by both shapeWave calls, not π.
         // Updated biases take effect on the NEXT mixer tick: do not recompute
         // this tick's boundary from its own feedback event.
@@ -626,9 +644,15 @@ void Ornithopter::_computeServoMixer() {
         // amplitude. This is the aerodynamically effective roll axis (a roll
         // perturbation enlarges one stroke and shrinks the other, producing a
         // correcting torque). 0 gain = axis off.
+#ifdef MESOZOIC_ONLY
+        float gyroRollAmp = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_RATE_AMP_SCALE;
+        if (gyroRollAmp >  ZEPHYR_WING_ROLL_RATE_AMP_CLAMP) gyroRollAmp =  ZEPHYR_WING_ROLL_RATE_AMP_CLAMP;
+        if (gyroRollAmp < -ZEPHYR_WING_ROLL_RATE_AMP_CLAMP) gyroRollAmp = -ZEPHYR_WING_ROLL_RATE_AMP_CLAMP;
+#else
         float gyroRollAmp = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_AMP_SCALE;
         if (gyroRollAmp >  ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp =  ZEPHYR_WING_ROLL_AMP_CLAMP;
         if (gyroRollAmp < -ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp = -ZEPHYR_WING_ROLL_AMP_CLAMP;
+#endif
         rollAmpDiff += gyroRollAmp;
 #endif
         if (rollAmpDiff > 0.9f) rollAmpDiff = 0.9f;
@@ -671,7 +695,7 @@ void Ornithopter::_computeServoMixer() {
         lastReturnSkew = returnSkewEff;
         lastFlapping = true;
 
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // Resonance — phase-locked lock-in amplifier: accumulate
         // errorRate × sin(phase), leaky τ = 0.15 s, clamped to ±2.0.
         if (resonanceGain > 0.0f) {
@@ -720,7 +744,7 @@ void Ornithopter::_computeServoMixer() {
         _elevFerStroke = 0.0f;
         _elevFerReturn = 0.0f;
         _antiGravGate = 0.0f;
-#ifdef ZEPHYRUS_ENABLED
+#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
         // Glide pause: purge half-stroke accumulators so a fresh flap
         // burst starts clean (no stale SSFF biases / resonance charge).
         _ssffAccumError = 0.0f;

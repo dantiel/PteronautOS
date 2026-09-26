@@ -106,6 +106,7 @@ Zephyrus::Zephyrus()
         _gyroRaw[i] = 0;
         _accelRaw[i] = 0;
         _gyroBias[i] = 0.0f;
+        _gyroBiasLsb[i] = 0;
         _calibSum[i] = 0.0f;
         _calibSumSq[i] = 0.0f;
         _prevGyro[i] = 0.0f;
@@ -113,6 +114,10 @@ Zephyrus::Zephyrus()
     }
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
+    _pidReset(_pidPitch);
+    mesoInit(_mesoRoll);
+    mesoInit(_mesoPitch);
+    mesoInit(_mesoYaw);
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +284,9 @@ void Zephyrus::onLinkUp() {
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
     _pidReset(_pidPitch);
+    mesoInit(_mesoRoll);
+    mesoInit(_mesoPitch);
+    mesoInit(_mesoYaw);
 }
 
 // ---------------------------------------------------------------------------
@@ -293,6 +301,9 @@ void Zephyrus::onLinkDown() {
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
     _pidReset(_pidPitch);
+    mesoInit(_mesoRoll);
+    mesoInit(_mesoPitch);
+    mesoInit(_mesoYaw);
 }
 
 // ---------------------------------------------------------------------------
@@ -377,6 +388,16 @@ void Zephyrus::_finishCalibration(float n) {
     calibrated   = true;
     _lastAhrsUs  = micros();
 
+    // Integer bias for the Mesozoic rate path (±250 dps ⇒ 131 LSB/(°/s), exact).
+    // Bias is MPU-native (subtracted before board rotation), so store it in the
+    // sensor frame to match the raw LSB the integer path reads.
+    for (int i = 0; i < 3; i++) {
+        float b = _gyroBias[i] * _gyroScale;
+        if (b > 32767.0f)       _gyroBiasLsb[i] = 32767;
+        else if (b < -32768.0f) _gyroBiasLsb[i] = -32768;
+        else                    _gyroBiasLsb[i] = (int16_t)(b + (b >= 0.0f ? 0.5f : -0.5f));
+    }
+
     // Compute level reference from mean accel during calibration
     float ax = _accelCalSum[0] / n;
     float ay = _accelCalSum[1] / n;
@@ -404,6 +425,7 @@ void Zephyrus::forceCalibrate() {
     if (!enabled) return;
     for (int i = 0; i < 3; i++) {
         _gyroBias[i]    = 0.0f;
+        _gyroBiasLsb[i] = 0;
         _calibSum[i]    = 0.0f;
         _calibSumSq[i]  = 0.0f;
         _prevGyro[i]    = 0.0f;
@@ -698,8 +720,70 @@ void Zephyrus::update(uint32_t nowUs) {
 
     // Compute dt for AHRS
     if (_lastAhrsUs == 0) { _lastAhrsUs = nowUs; return; }
-    float dt = (float)(nowUs - _lastAhrsUs) * 1e-6f;
+    uint32_t dUs = nowUs - _lastAhrsUs;
+    float dt = (float)dUs * 1e-6f;
     _lastAhrsUs = nowUs;
+
+#ifdef MESOZOIC_ONLY
+    // ── Mesozoic rate-only brain ───────────────────────────────────────────
+    // No Mahony, no accel fusion, no quaternion, no atan2/acos. Raw gyro rate
+    // in integer LSB → three fixed-point PIDs → °/s corrections. The wing
+    // mixer (Ornithopter.cpp) consumes the corrections every tick.
+    {
+        uint8_t dtMs = (dUs > 255000) ? 255 : (uint8_t)(dUs / 1000);
+        if (dtMs == 0) dtMs = 4;   // nominal 250 Hz gate period fallback
+
+        // Bias-correct in raw LSB (sensor frame), then rotate to aircraft frame.
+        int16_t rx = _gyroRaw[0] - _gyroBiasLsb[0];
+        int16_t ry = _gyroRaw[1] - _gyroBiasLsb[1];
+        int16_t rz = _gyroRaw[2] - _gyroBiasLsb[2];
+        if (boardRotation != 0) {
+            int16_t tmp;
+            switch (boardRotation) {
+            case 1: tmp = rx; rx = ry; ry = -tmp; break;   // YAW_90
+            case 2: rx = -rx; ry = -ry; break;             // YAW_180
+            case 3: tmp = rx; rx = -ry; ry = tmp; break;   // YAW_270
+            case 4: ry = -ry; rz = -rz; break;             // UPSIDE_DOWN
+            case 5: tmp = ry; ry = rz; rz = -tmp; break;   // VERT_FWD
+            case 6: tmp = rx; rx = ry; ry = rz; rz = -tmp; break; // VERT_RIGHT
+            default: break;
+            }
+        }
+
+        // Damp each rate toward 0. Sign mirrors the attitude path (a positive
+        // disturbance → negative correction); the wing mixer applies the sense.
+        int16_t rollC  = mesoPid(_mesoRoll,  -rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
+        int16_t pitchC = mesoPid(_mesoPitch, -ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
+        int16_t yawC   = mesoPid(_mesoYaw,   -rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+
+        // LSB → °/s (MPU6050 ±250 dps ⇒ 131 LSB/(°/s)). One multiply, no division.
+        const float lsbToDps = 1.0f / _gyroScale;
+        rollCorrection  = (float)rollC  * lsbToDps;
+        pitchCorrection = (float)pitchC * lsbToDps;
+        yawCorrection   = (float)yawC   * lsbToDps;
+
+        // Telemetry parity (bias-corrected, board-rotated rates in °/s).
+        yawRate   = (float)rz * lsbToDps;
+        rollDeg   = 0.0f;   // no attitude in the mesozoic brain
+        pitchDeg  = 0.0f;
+
+        // ONDAS raw terms are dropped — never feed the stripped layer.
+        pitchPTerm = 0.0f;
+        pitchITerm = 0.0f;
+        pitchDTerm = 0.0f;
+        pitchErrorRate = 0.0f;
+
+#ifdef ORNITHOPTER_GEARBOX
+        rudderCorrection = yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
+#else
+        rudderCorrection = rollCorrection * ZEPHYR_RUDDER_ROLL_GAIN
+                         + yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
+#endif
+        if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = ZEPHYR_RUDDER_CLAMP_US;
+        if (rudderCorrection < -ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = -ZEPHYR_RUDDER_CLAMP_US;
+    }
+    return;
+#endif // MESOZOIC_ONLY
 
     // Convert raw to physical units (MPU-native axes, bias-corrected)
     float gx = (float)_gyroRaw[0] / _gyroScale - _gyroBias[0];  // °/s

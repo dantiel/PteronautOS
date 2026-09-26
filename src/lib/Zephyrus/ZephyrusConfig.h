@@ -120,3 +120,39 @@
 #define ZEPHYR_WING_PITCH_CENTER_CLAMP  12.0f  // max symmetric centre shift (deg)
 #define ZEPHYR_WING_YAW_FER_SCALE       0.1f   // ferocity units per yaw-corr unit @100%
 #define ZEPHYR_WING_YAW_FER_CLAMP       2.0f   // max differential ferocity
+
+// ─── Mesozoic rate-only brain (MESOZOIC_ONLY) ──────────────────────────────
+// Rate damper: corrections are °/s (roll/pitch/yaw angular RATE), not angles.
+// Dropping Mahony means the level reference is gone; the brain only damps the
+// tumble. The pilot + dihedral do the levelling. Integer path assumes the
+// MPU6050 ±250 dps default: 131 LSB/(°/s), so bias→LSB conversion is exact.
+
+// Q12 PID gains (real gain = value / 4096). err is raw gyro LSB; integrator
+// clamp imax is in the same Q12·LSB units as the accumulator. Starting points
+// for the simulator — retune against measured disturbance rates.
+#define MESO_ROLL_KP     3072   // 0.75  P
+#define MESO_ROLL_KI      64    // ~0.016
+#define MESO_ROLL_KD     1024   // 0.25  D
+#define MESO_ROLL_IMAX   5365760 // ≈ 10 °/s max integrator contribution
+
+#define MESO_PITCH_KP    3072
+#define MESO_PITCH_KI     64
+#define MESO_PITCH_KD    1024
+#define MESO_PITCH_IMAX  5365760
+
+#define MESO_YAW_KP      2048   // 0.5
+#define MESO_YAW_KI       48
+#define MESO_YAW_KD       768   // 0.1875
+#define MESO_YAW_IMAX    2682880 // ≈ 5 °/s
+
+// Wing scales for rate (°/s) input — FULL-STICK authority per °/s at 100% gain.
+// (The ONDAS angle-based ZEPHYR_WING_*_SCALE constants above are for the
+// attitude path and are unused under MESOZOIC_ONLY.)
+#define ZEPHYR_WING_ROLL_RATE_AMP_SCALE      0.02f   // amp-fraction per °/s @100%
+#define ZEPHYR_WING_ROLL_RATE_AMP_CLAMP      0.5f
+#define ZEPHYR_WING_ROLL_RATE_CENTER_SCALE   0.12f   // deg per °/s @100% (glide)
+#define ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP   15.0f
+#define ZEPHYR_WING_PITCH_RATE_CENTER_SCALE  0.08f   // deg per °/s @100%
+#define ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP  12.0f
+#define ZEPHYR_WING_YAW_RATE_FER_SCALE       0.02f   // ferocity per °/s @100%
+#define ZEPHYR_WING_YAW_RATE_FER_CLAMP       2.0f
