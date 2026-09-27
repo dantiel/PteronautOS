@@ -94,24 +94,34 @@ frequency — the precondition for a stable attitude estimate.
 New flag `MESOZOIC_HORIZON` layered on top of `MESOZOIC_ONLY`. Without it,
 behaviour is byte-identical to today.
 
-- **T1 — gravity recovery.** New module `MesozoicGravity` (fixed-point where
-  possible): accel LSB → ESPELHO flap-coherent cancellation (reusing the
-  lock-in math) + stroke-reversal gating → clean gravity vector.
-- **T2 — attitude estimator.** Slow complementary blend (gyro-integrated rate +
-  clean gravity), attitude bandwidth ≈ 1–2 Hz, flap-rejection verified.
-- **T3 — attitude PID.** Outer loop producing rate setpoints for the existing
-  `mesoPid` inner loop. HORIZON = attitude setpoint from stick, blended to rate
-  at full deflection.
-- **T4 — verification.** Simulator sweep: pitch-only disturbance, beat-frequency
-  accel injection, confirm attitude holds level with the unstable pitch pole
-  present.
+- **T1 — gravity recovery.** ✅ DONE (`dc78a8ea`). `MesozoicGravity.h`:
+  ESPELHO 4-mixer lock-in bank `{sinθ,cosθ,sin2θ,cos2θ}` (derived, no trig)
+  cancels the flap-coherent self-image + ~1 Hz low-pass → clean gravity.
+- **T2 — attitude estimator.** ✅ DONE. `MesozoicAttitude.h`: slow
+  complementary blend (gyro predict + gravity correct, τ=0.5s) → rollDeg/pitchDeg.
+  Native test 4/4 (gravity direction, tilt recovery, beat rejection, skew).
+- **T3 — attitude PID.** ⏳ NEXT. Outer loop producing rate setpoints for the
+  existing `mesoPid` inner loop. HORIZON = attitude setpoint from stick, blended
+  to rate at full deflection.
+- **T4 — verification.** ⏳ Simulator sweep: pitch-only disturbance,
+  beat-frequency accel injection, confirm attitude holds level with the
+  unstable pitch pole present.
 
-### Decision (chosen: both tools)
+### Physics finding (T1 revision)
 
-The flap-decoupled gravity uses **stroke-reversal gating + ESPELHO lock-in
-port combined** — gating removes the worst-case burst, lock-in removes the
-residual coherent remainder. Either alone leaves a beat-frequency residue that
-would leak into the slow attitude loop.
+The flap-coherent accel has TWO sources in quadrature, both captured by the
+bank: inertial reaction ∝ wing angular accel ∝ sinθ (FUNDAMENTAL), and
+aerodynamic force ∝ wing velocity² ∝ cos²θ = ½(1+cos2θ) (2nd HARMONIC). The
+`gravity·sinθ` term leaks through the finite-τ lock-in as a **~2% uniform
+gravity scale factor** — direction is preserved (atan2 uses ratios), so it is
+harmless for attitude.
+
+The "stroke-reversal gating" from the original decision is **not yet wired**
+into the default path: reversal is where inertial reaction is MAXIMUM (wing
+velocity zero) but aero force is MINIMUM, so the "cleanest" phase is a
+measurement question, not a given. The lock-in + low-pass already removes the
+coherent content; gating is a T4 refinement to determine empirically against
+real accel logs.
 
 ---
 
