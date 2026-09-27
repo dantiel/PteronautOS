@@ -141,6 +141,9 @@ Ornithopter::Ornithopter()
   , gyroAileronCorrection(0.0f)
   , gyroElevatorCorrection(0.0f)
   , gyroRollCorrection(0.0f), gyroYawCorrection(0.0f), gyroPitchCorrection(0.0f)
+#ifdef MESOZOIC_HORIZON
+  , flapSin(0.0f), flapCos(1.0f)
+#endif
   , wingRollGain(ORNI_WING_ROLL_GAIN), wingPitchGain(ORNI_WING_PITCH_GAIN)
   , wingYawGain(ORNI_WING_YAW_GAIN)
   , gyroPitchPTerm(0.0f), gyroPitchITerm(0.0f)
@@ -404,6 +407,12 @@ void Ornithopter::_computeServoMixer() {
 
 #if !defined(MUSHIN_ENABLED)
         float rawWave = _osc.advance(dt);
+#endif
+
+#if defined(MESOZOIC_HORIZON)
+        // Flap phase for the Zephyrus gravity recovery (bridged each tick).
+        flapSin = sinf(rawWave);
+        flapCos = cosf(rawWave);
 #endif
 
 #if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)

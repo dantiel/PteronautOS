@@ -136,6 +136,13 @@ public:
     float gyroYawCorrection;       // yaw-rate PID output (°/s)
     float gyroPitchCorrection;     // pitch PID output (deg)
 
+#ifdef MESOZOIC_HORIZON
+    // Flap phase (sin/cos) for the Zephyrus HORIZON gravity recovery — set in
+    // _computeServoMixer, bridged to zephyrus.flapSin/flapCos each tick.
+    float flapSin;
+    float flapCos;
+#endif
+
     // Mesozoic 2-wing stabilizer runtime gains (0–100, 0 disables an axis)
     float wingRollGain;            // roll  → differential flap amplitude
     float wingPitchGain;           // pitch → symmetric flap centre shift

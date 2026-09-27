@@ -11,6 +11,10 @@
 #include <cstdint>
 #include "ZephyrusConfig.h"
 #include "Mesozoic.h"
+#ifdef MESOZOIC_HORIZON
+#include "MesozoicGravity.h"
+#include "MesozoicAttitude.h"
+#endif
 
 class Zephyrus {
 public:
@@ -35,6 +39,13 @@ public:
     float rollDeg;          // Roll angle in degrees
     float pitchDeg;         // Pitch angle in degrees
     float yawRate;          // Yaw rate in °/s (gyro Z, no magnetometer)
+
+#ifdef MESOZOIC_HORIZON
+    // --- Mesozoic HORIZON attitude layer (flap-decoupled gravity) ---
+    float flapSin;          // flap phase sin — bridged from Ornithopter each tick
+    float flapCos;          // flap phase cos
+    float gravX, gravY, gravZ;  // recovered gravity vector (g), ~1 Hz
+#endif
 
     // PID correction outputs
     float rollCorrection;   // Roll PID output magnitude
@@ -112,6 +123,12 @@ private:
     MesoPid _mesoRoll;
     MesoPid _mesoPitch;
     MesoPid _mesoYaw;
+
+#ifdef MESOZOIC_HORIZON
+    // Mesozoic HORIZON state (float; slow outer loop, off the hot PID path)
+    MesoGravity  _mesoGravity;
+    MesoAttitude _mesoAttitude;
+#endif
 
     float _pidCompute(PidState &s, float error, float dt,
                       float kp, float ki, float kd, float imax);

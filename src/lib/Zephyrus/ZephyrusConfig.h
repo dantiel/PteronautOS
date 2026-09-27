@@ -162,3 +162,11 @@
 #define ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP  12.0f
 #define ZEPHYR_WING_YAW_RATE_FER_SCALE       0.02f   // ferocity per °/s @100%
 #define ZEPHYR_WING_YAW_RATE_FER_CLAMP       2.0f
+
+// ─── Mesozoic HORIZON attitude layer (MESOZOIC_HORIZON, on top of MESOZOIC_ONLY) ───
+// Flap-decoupled gravity recovery (MesozoicGravity) + slow complementary
+// attitude (MesozoicAttitude). Float path; the fast inner rate PID stays
+// fixed-point (Mesozoic.h). Tune the τ values against real gyro/accel logs.
+#define MESO_GRAV_LOCK_TAU   0.4f    // ESPELHO lock-in integrator τ (s) — matches OrniFlight ESPELHO_TAU
+#define MESO_GRAV_TAU        0.15f   // recovered-gravity low-pass τ (s) → ~1 Hz
+#define MESO_ATT_TAU         0.5f    // complementary attitude correction τ (s) → ~0.3 Hz

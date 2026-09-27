@@ -25,6 +25,13 @@ static inline void zephyrusUpdate() {
     uint32_t now = micros();
     if (now - lastUs < 4000) return;  // 250Hz max — more than enough for mechanical rudder
     lastUs = now;
+#ifdef MESOZOIC_HORIZON
+    // Flap phase from Ornithopter → Zephyrus gravity recovery. Ornithopter
+    // updates after us, so this is one tick stale — irrelevant for the slow
+    // (~1 Hz) attitude loop.
+    zephyrus.flapSin = ornithopter.flapSin;
+    zephyrus.flapCos = ornithopter.flapCos;
+#endif
     zephyrus.update(now);
     ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;
     // Bridge raw PID correction outputs for the 2-wing Mesozoic stabilizer

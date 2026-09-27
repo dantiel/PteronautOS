@@ -119,6 +119,13 @@ Zephyrus::Zephyrus()
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+#ifdef MESOZOIC_HORIZON
+    flapSin = 0.0f;
+    flapCos = 1.0f;
+    gravX = gravY = gravZ = 0.0f;
+    mesoGravityInit(_mesoGravity);
+    mesoAttitudeInit(_mesoAttitude);
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -290,6 +297,11 @@ void Zephyrus::onLinkUp() {
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+#ifdef MESOZOIC_HORIZON
+    mesoGravityInit(_mesoGravity);
+    mesoAttitudeInit(_mesoAttitude);
+    gravX = gravY = gravZ = 0.0f;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -307,6 +319,11 @@ void Zephyrus::onLinkDown() {
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+#ifdef MESOZOIC_HORIZON
+    mesoGravityInit(_mesoGravity);
+    mesoAttitudeInit(_mesoAttitude);
+    gravX = gravY = gravZ = 0.0f;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -785,8 +802,39 @@ void Zephyrus::update(uint32_t nowUs) {
 
         // Telemetry parity (bias-corrected, board-rotated rates in °/s).
         yawRate   = (float)rz * lsbToDps;
+#ifdef MESOZOIC_HORIZON
+        // ── flap-decoupled gravity + slow attitude (HORIZON layer) ──
+        // The accelerometer is saturated with beat-frequency self-accel; the
+        // ESPELHO lock-in bank (MesozoicGravity) cancels the flap-coherent
+        // image, the slow complementary filter (MesozoicAttitude) fuses the
+        // clean gravity with the integrated gyro rate. Attitude is exposed on
+        // rollDeg/pitchDeg for telemetry + the T3 outer loop (not yet closed).
+        {
+            float ax = (float)_accelRaw[0] / _accelScale;
+            float ay = (float)_accelRaw[1] / _accelScale;
+            float az = (float)_accelRaw[2] / _accelScale;
+            float gxDummy = 0.0f, gyDummy = 0.0f, gzDummy = 0.0f;
+            _applyBoardRotation(gxDummy, gyDummy, gzDummy, ax, ay, az);
+            _applyAccelLevelRef(ax, ay, az);
+
+            mesoGravityUpdate(_mesoGravity, ax, ay, az, flapSin, flapCos, dt,
+                              MESO_GRAV_LOCK_TAU, MESO_GRAV_TAU);
+            gravX = _mesoGravity.grav[0];
+            gravY = _mesoGravity.grav[1];
+            gravZ = _mesoGravity.grav[2];
+
+            // Gyro rates for integration come from the already board-rotated,
+            // bias-corrected integer path (rx/ry), NOT the dummy gyro above.
+            mesoAttitudeUpdate(_mesoAttitude,
+                               (float)rx * lsbToDps, (float)ry * lsbToDps,
+                               gravX, gravY, gravZ, dt, MESO_ATT_TAU);
+            rollDeg  = _mesoAttitude.roll;
+            pitchDeg = _mesoAttitude.pitch;
+        }
+#else
         rollDeg   = 0.0f;   // no attitude in the mesozoic brain
         pitchDeg  = 0.0f;
+#endif
 
         // ONDAS raw terms are dropped — never feed the stripped layer.
         pitchPTerm = 0.0f;
