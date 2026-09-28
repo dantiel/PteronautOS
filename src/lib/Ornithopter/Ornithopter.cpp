@@ -145,6 +145,7 @@ Ornithopter::Ornithopter()
   , flapSin(0.0f), flapCos(1.0f)
 #endif
   , wingRollGain(ORNI_WING_ROLL_GAIN), wingPitchGain(ORNI_WING_PITCH_GAIN)
+  , wingPitchFerGain(ORNI_WING_PITCH_FER_GAIN)
   , wingYawGain(ORNI_WING_YAW_GAIN)
   , gyroPitchPTerm(0.0f), gyroPitchITerm(0.0f)
   , gyroPitchDTerm(0.0f), gyroPitchErrorRate(0.0f)
@@ -535,6 +536,23 @@ void Ornithopter::_computeServoMixer() {
 #else
         float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + elevFerRateUp + thrust.dwellBoost;
         float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + elevFerRateDown + thrust.dwellBoost;
+#endif
+#ifdef ZEPHYRUS_ENABLED
+#ifdef MESOZOIC_ONLY
+        // Mesozoic pitch stabilizer → ferocity (primary pitch channel):
+        // symmetric downstroke/upstroke dwell split. Both wings share the SAME
+        // half-stroke boost (common mode), producing pitch torque — the
+        // flapping analogue of the elevator, no discrete surface. Sign mirrors
+        // the elevator stick: positive correction (nose-up command) → downstroke
+        // dwell (climb), negative → upstroke dwell (dive).
+        {
+            float gyroPitchFer = gyroPitchCorrection * (wingPitchFerGain * 0.01f) * ZEPHYR_WING_PITCH_RATE_FER_SCALE;
+            if (gyroPitchFer >  ZEPHYR_WING_PITCH_RATE_FER_CLAMP) gyroPitchFer =  ZEPHYR_WING_PITCH_RATE_FER_CLAMP;
+            if (gyroPitchFer < -ZEPHYR_WING_PITCH_RATE_FER_CLAMP) gyroPitchFer = -ZEPHYR_WING_PITCH_RATE_FER_CLAMP;
+            strokeFer += fmaxf( gyroPitchFer, 0.0f);  // climb → downstroke dwell
+            returnFer += fmaxf(-gyroPitchFer, 0.0f);  // dive  → upstroke dwell
+        }
+#endif
 #endif
         // Yaw stick → L/R wing differential, scaled by rudder_ferocity_range (0–100)
         float rudderFer = _crsfToNorm(voiceRudder) * rudderFerocityRange * 0.01f * ORNI_DIFFERENTIAL_MAX;

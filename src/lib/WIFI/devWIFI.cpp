@@ -774,9 +774,10 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["rudder_correction"] = zephyrus.rudderCorrection;
     zeph["board_rotation"]    = zephyrus.boardRotation;
     zeph["slew_gain"] = (int)zephyrus.slewGain;
-    zeph["wing_roll_gain"]  = (int)ornithopter.wingRollGain;
-    zeph["wing_pitch_gain"] = (int)ornithopter.wingPitchGain;
-    zeph["wing_yaw_gain"]   = (int)ornithopter.wingYawGain;
+    zeph["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
+    zeph["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
+    zeph["wing_pitch_fer_gain"] = (int)ornithopter.wingPitchFerGain;
+    zeph["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
 
     // Runtime-tunable PID gains — read back by the panel sliders
     JsonObject pid = zeph["pid"].to<JsonObject>();
@@ -847,6 +848,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     // Mesozoic 2-wing stabilizer gains
     orni["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
     orni["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
+    orni["wing_pitch_fer_gain"] = (int)ornithopter.wingPitchFerGain;
     orni["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
 #endif
 
@@ -1106,6 +1108,8 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.wingRollGain);
     f.print(",\"wing_pitch_gain\":");
     f.print((int)ornithopter.wingPitchGain);
+    f.print(",\"wing_pitch_fer_gain\":");
+    f.print((int)ornithopter.wingPitchFerGain);
     f.print(",\"wing_yaw_gain\":");
     f.print((int)ornithopter.wingYawGain);
     f.print(",\"pid_roll_p\":");
@@ -1301,6 +1305,11 @@ void LoadOrnithopterConfig()
         if (v < -100) v = -100; else if (v > 100) v = 100;
         ornithopter.wingPitchGain = (float)v;
     }
+    if (o["wing_pitch_fer_gain"].is<int>()) {
+        int v = o["wing_pitch_fer_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingPitchFerGain = (float)v;
+    }
     if (o["wing_yaw_gain"].is<int>()) {
         int v = o["wing_yaw_gain"].as<int>();
         if (v < -100) v = -100; else if (v > 100) v = 100;
@@ -1362,15 +1371,18 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.aeroGlideCoeff  = (float)_pteroParamInt(request, "aero_glide_coeff",   (int)ornithopter.aeroGlideCoeff);
     ornithopter.aeroFlapCoeff   = (float)_pteroParamInt(request, "aero_flap_coeff",    (int)ornithopter.aeroFlapCoeff);
     // Mesozoic 2-wing stabilizer gains (-100..+100; sign = correction direction)
-    int wingRoll  = _pteroParamInt(request, "wing_roll_gain",  (int)ornithopter.wingRollGain);
-    int wingPitch = _pteroParamInt(request, "wing_pitch_gain", (int)ornithopter.wingPitchGain);
-    int wingYaw   = _pteroParamInt(request, "wing_yaw_gain",   (int)ornithopter.wingYawGain);
-    if (wingRoll  < -100) wingRoll  = -100; else if (wingRoll  > 100) wingRoll  = 100;
-    if (wingPitch < -100) wingPitch = -100; else if (wingPitch > 100) wingPitch = 100;
-    if (wingYaw   < -100) wingYaw   = -100; else if (wingYaw   > 100) wingYaw   = 100;
-    ornithopter.wingRollGain  = (float)wingRoll;
-    ornithopter.wingPitchGain = (float)wingPitch;
-    ornithopter.wingYawGain   = (float)wingYaw;
+    int wingRoll      = _pteroParamInt(request, "wing_roll_gain",      (int)ornithopter.wingRollGain);
+    int wingPitch     = _pteroParamInt(request, "wing_pitch_gain",     (int)ornithopter.wingPitchGain);
+    int wingPitchFer  = _pteroParamInt(request, "wing_pitch_fer_gain", (int)ornithopter.wingPitchFerGain);
+    int wingYaw       = _pteroParamInt(request, "wing_yaw_gain",       (int)ornithopter.wingYawGain);
+    if (wingRoll     < -100) wingRoll     = -100; else if (wingRoll     > 100) wingRoll     = 100;
+    if (wingPitch    < -100) wingPitch    = -100; else if (wingPitch    > 100) wingPitch    = 100;
+    if (wingPitchFer < -100) wingPitchFer = -100; else if (wingPitchFer > 100) wingPitchFer = 100;
+    if (wingYaw      < -100) wingYaw      = -100; else if (wingYaw      > 100) wingYaw      = 100;
+    ornithopter.wingRollGain      = (float)wingRoll;
+    ornithopter.wingPitchGain     = (float)wingPitch;
+    ornithopter.wingPitchFerGain  = (float)wingPitchFer;
+    ornithopter.wingYawGain       = (float)wingYaw;
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) {
         zephyrus.gyroEnabled = (gv == 1);

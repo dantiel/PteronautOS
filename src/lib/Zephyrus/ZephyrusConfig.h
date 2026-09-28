@@ -162,6 +162,8 @@
 #define ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP  12.0f
 #define ZEPHYR_WING_YAW_RATE_FER_SCALE       0.02f   // ferocity per °/s @100%
 #define ZEPHYR_WING_YAW_RATE_FER_CLAMP       2.0f
+#define ZEPHYR_WING_PITCH_RATE_FER_SCALE     0.02f   // ferocity per °/s @100% (dwell split)
+#define ZEPHYR_WING_PITCH_RATE_FER_CLAMP     2.0f   // max symmetric pitch dwell ferocity
 
 // ─── Mesozoic HORIZON attitude layer (MESOZOIC_HORIZON, on top of MESOZOIC_ONLY) ───
 // Flap-decoupled gravity recovery (MesozoicGravity) + slow complementary

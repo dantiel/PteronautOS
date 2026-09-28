@@ -145,7 +145,8 @@ public:
 
     // Mesozoic 2-wing stabilizer runtime gains (0–100, 0 disables an axis)
     float wingRollGain;            // roll  → differential flap amplitude
-    float wingPitchGain;           // pitch → symmetric flap centre shift
+    float wingPitchGain;           // pitch → symmetric flap centre shift (trim)
+    float wingPitchFerGain;        // pitch → symmetric downstroke/upstroke ferocity dwell (primary)
     float wingYawGain;             // yaw   → differential ferocity
 
     // Raw pitch PID terms from Zephyrus (Nigredo — waveform modulation)
