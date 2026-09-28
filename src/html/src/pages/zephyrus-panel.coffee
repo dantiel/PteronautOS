@@ -12,6 +12,7 @@ class ZephyrusPanel extends PteroElement
   @properties:
     compiled:          {state: true}
     gyroEnabled:      {state: true}
+    gyroConnected:    {state: true}
     gyroCalibrated:    {state: true}
     _calibrating:      {state: true}
     calibSamples:      {state: true}
@@ -26,6 +27,7 @@ class ZephyrusPanel extends PteroElement
     slewGain:   {state: true}
     wingRollGain:  {state: true}
     wingPitchGain: {state: true}
+    wingPitchFerGain: {state: true}
     wingYawGain:   {state: true}
     uptimeMs:          {state: true}
     # Roll PID
@@ -46,6 +48,7 @@ class ZephyrusPanel extends PteroElement
 
   compiled          = true
   gyroEnabled      = false
+  gyroConnected    = false
   gyroCalibrated    = false
   _calibrating      = false
   calibSamples      = 0
@@ -60,6 +63,7 @@ class ZephyrusPanel extends PteroElement
   slewGain   = 0
   wingRollGain  = 0
   wingPitchGain = 0
+  wingPitchFerGain = 0
   wingYawGain   = 0
   uptimeMs          = 0
   # Roll — runtime PID gains (units match firmware ZephyrusConfig.h defaults)
@@ -76,6 +80,7 @@ class ZephyrusPanel extends PteroElement
     z = data.zephyrus
     @compiled         = if z.compiled? then !!z.compiled else true
     @gyroEnabled      = !!z.enabled
+    @gyroConnected    = !!z.connected
     @gyroCalibrated    = !!z.calibrated
     @_calibrating      = !!z.calibrating
     @calibSamples      = Fmt.f0 z.calib_samples
@@ -90,6 +95,7 @@ class ZephyrusPanel extends PteroElement
     @slewGain   = Fmt.f0 z.slew_gain
     @wingRollGain  = Fmt.f0 z.wing_roll_gain
     @wingPitchGain = Fmt.f0 z.wing_pitch_gain
+    @wingPitchFerGain = Fmt.f0 z.wing_pitch_fer_gain
     @wingYawGain   = Fmt.f0 z.wing_yaw_gain
     if z.pid?
       @rollP  = z.pid.roll.p;   @rollI  = z.pid.roll.i;   @rollD  = z.pid.roll.d;   @rollMax  = z.pid.roll.max
@@ -150,17 +156,20 @@ class ZephyrusPanel extends PteroElement
   _fmtDeg:          (v) -> Fmt.deg v
   _fmtDegPS:        (v) -> Fmt.degPS v
   _compiled:        -> !!@compiled
-  _badgeStyle:      -> Style.badge Status.color @pollError, @gyroEnabled, not @gyroCalibrated
-  _statusText:      -> Status.gyroText @pollError, @gyroEnabled, @gyroCalibrated
+  _badgeStyle:      ->
+    online = @gyroConnected and @gyroCalibrated
+    warn   = (@gyroEnabled and not @gyroConnected) or (@gyroConnected and not @gyroCalibrated)
+    Style.badge Status.color @pollError, online, warn
+  _statusText:      -> Status.gyroText @pollError, @gyroEnabled, @gyroConnected, @gyroCalibrated
   _toggleLabel:     -> if @gyroEnabled then self._t('zephyrus.toggle.disable') else self._t('zephyrus.toggle.enable')
   _uptimeLabel:     -> Fmt.uptime @uptimeMs
   _rotationOptions: -> Zephyrus.rotationOptions
   _isRotation:      (val) -> Zephyrus.isRotation @boardRotation, val
   _calibrateLabel:  -> Status.calibLabel @_calibrating
-  _calibDisabled:   -> not @gyroEnabled or @_calibrating
+  _calibDisabled:   -> not @gyroConnected or @_calibrating
   _calibProgress:   -> Status.calibProgress @calibSamples
-  _calibHint:       -> Status.calibHint @gyroEnabled, @_calibrating
-  _horizonCaption:  -> Status.horizonCaption @gyroEnabled
+  _calibHint:       -> Status.calibHint @gyroConnected, @_calibrating
+  _horizonCaption:  -> Status.horizonCaption @gyroConnected
 
   _horizonOuterStyle: -> Style.horizon()
   _horizonLineStyle:  -> Style.horizonLine @rollDeg, @pitchDeg

@@ -85,6 +85,14 @@
               %span.value= self.wingPitchGain
           %tr
             %td
+              %b= self._t('zephyrus.wing.pitch_fer')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.pitch_fer_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingPitchFerGain, @input: self._onWingGainLocal('wingPitchFerGain'), @change: self._onWingGainPost('wing_pitch_fer_gain'), style: "width:200px;"}
+              %span.value= self.wingPitchFerGain
+          %tr
+            %td
               %b= self._t('zephyrus.wing.yaw')
               %br
               %small{style: "color:#888;"}= self._t('zephyrus.wing.yaw_desc')

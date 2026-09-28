@@ -116,7 +116,9 @@ export default {
     'zephyrus.wing.roll': 'Roll',
     'zephyrus.wing.roll_desc': 'Roll error → differential flap amplitude',
     'zephyrus.wing.pitch': 'Pitch',
-    'zephyrus.wing.pitch_desc': 'Pitch error → symmetric flap centre shift',
+    'zephyrus.wing.pitch_desc': 'Pitch error → symmetric flap centre shift (trim)',
+    'zephyrus.wing.pitch_fer': 'Pitch Ferocity',
+    'zephyrus.wing.pitch_fer_desc': 'Pitch error → down/upstroke dwell split (primary)',
     'zephyrus.wing.yaw': 'Yaw',
     'zephyrus.wing.yaw_desc': 'Yaw rate → differential ferocity (drag)',
     'zephyrus.not_compiled.badge': 'Not compiled',
@@ -195,7 +197,8 @@ export default {
     'status.gyro.api_offline': 'API OFFLINE — Check firmware',
     'status.gyro.active': 'MPU6050 ACTIVE',
     'status.gyro.detected': 'MPU6050 DETECTED — Not calibrated',
-    'status.gyro.disabled': 'GYRO DISABLED — Connect MPU6050',
+    'status.gyro.no_connection': 'NO GYRO CONNECTED — Check MPU6050 wiring',
+    'status.gyro.disabled': 'GYRO DISABLED',
 
     // ── Debug Console ─────────────────────────────────────────────
     'debug.panel.title': 'Debug Console',

@@ -141,10 +141,11 @@ Status =
     i18n.t 'status.orni.need_link'
 
   # Gyro status text (uses i18n keys)
-  gyroText: λ (pollErr, enabled, calibrated) ->
+  gyroText: λ (pollErr, enabled, connected, calibrated) ->
     return i18n.t 'status.gyro.api_offline' if pollErr
-    return i18n.t 'status.gyro.active' if enabled and calibrated
-    return i18n.t 'status.gyro.detected' if enabled
+    return i18n.t 'status.gyro.active' if connected and calibrated
+    return i18n.t 'status.gyro.detected' if connected
+    return i18n.t 'status.gyro.no_connection' if enabled
     i18n.t 'status.gyro.disabled'
 
   # Calibration label (uses i18n keys)
