@@ -100,12 +100,18 @@ behaviour is byte-identical to today.
 - **T2 — attitude estimator.** ✅ DONE. `MesozoicAttitude.h`: slow
   complementary blend (gyro predict + gravity correct, τ=0.5s) → rollDeg/pitchDeg.
   Native test 4/4 (gravity direction, tilt recovery, beat rejection, skew).
-- **T3 — attitude PID.** ⏳ NEXT. Outer loop producing rate setpoints for the
-  existing `mesoPid` inner loop. HORIZON = attitude setpoint from stick, blended
-  to rate at full deflection.
-- **T4 — verification.** ⏳ Simulator sweep: pitch-only disturbance,
+- **T3 — attitude PID.** ✅ DONE. Outer loop producing rate setpoints for the
+  existing `mesoPid` inner loop. `mesoHorizonRateSetpoint` (MesozoicAttitude.h)
+  is a classic HORIZON blend: self-level strength fades with |stick|, direct
+  rate command fades in. Stick centre = level hold; full deflection = pure rate
+  (flips). Yaw stays rate-only (no magnetometer heading). Inner `mesoPid` error
+  is now `setpoint − rate` (was `−rate`); MESOZOIC_ONLY path unchanged. Native
+  test 5/5 (rate-setpoint map, HORIZON blend, inner sign, closed-loop level
+  hold, rate-damper-diverges proof).
+- **T4 — verification.** ⏳ NEXT. Real-world sweep: pitch-only disturbance,
   beat-frequency accel injection, confirm attitude holds level with the
-  unstable pitch pole present.
+  unstable pitch pole present. Stroke-reversal gating also lands here (empirical
+  against accel logs).
 
 ### Physics finding (T1 revision)
 

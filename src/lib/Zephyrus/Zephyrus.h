@@ -45,6 +45,12 @@ public:
     float flapSin;          // flap phase sin — bridged from Ornithopter each tick
     float flapCos;          // flap phase cos
     float gravX, gravY, gravZ;  // recovered gravity vector (g), ~1 Hz
+    // --- HORIZON stick commands (T3 outer loop), normalized -1..1 ---
+    // Bridged from Ornithopter's aileron/elevator/rudder. Stick centre → level
+    // hold; full deflection → pure rate command (classic Betaflight HORIZON).
+    float stickRollNorm;
+    float stickPitchNorm;
+    float stickYawNorm;
 #endif
 
     // PID correction outputs

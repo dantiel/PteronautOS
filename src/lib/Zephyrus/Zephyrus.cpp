@@ -123,6 +123,9 @@ Zephyrus::Zephyrus()
     flapSin = 0.0f;
     flapCos = 1.0f;
     gravX = gravY = gravZ = 0.0f;
+    stickRollNorm = 0.0f;
+    stickPitchNorm = 0.0f;
+    stickYawNorm = 0.0f;
     mesoGravityInit(_mesoGravity);
     mesoAttitudeInit(_mesoAttitude);
 #endif
@@ -788,27 +791,20 @@ void Zephyrus::update(uint32_t nowUs) {
             }
         }
 
-        // Damp each rate toward 0. Sign mirrors the attitude path (a positive
-        // disturbance → negative correction); the wing mixer applies the sense.
-        int16_t rollC  = mesoPid(_mesoRoll,  -rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
-        int16_t pitchC = mesoPid(_mesoPitch, -ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
-        int16_t yawC   = mesoPid(_mesoYaw,   -rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
-
         // LSB → °/s (MPU6050 ±250 dps ⇒ 131 LSB/(°/s)). One multiply, no division.
         const float lsbToDps = 1.0f / _gyroScale;
-        rollCorrection  = (float)rollC  * lsbToDps;
-        pitchCorrection = (float)pitchC * lsbToDps;
-        yawCorrection   = (float)yawC   * lsbToDps;
 
-        // Telemetry parity (bias-corrected, board-rotated rates in °/s).
-        yawRate   = (float)rz * lsbToDps;
-#ifdef MESOZOIC_HORIZON
-        // ── flap-decoupled gravity + slow attitude (HORIZON layer) ──
+        // ── HORIZON attitude layer (flap-decoupled gravity → slow attitude) ──
         // The accelerometer is saturated with beat-frequency self-accel; the
         // ESPELHO lock-in bank (MesozoicGravity) cancels the flap-coherent
         // image, the slow complementary filter (MesozoicAttitude) fuses the
-        // clean gravity with the integrated gyro rate. Attitude is exposed on
-        // rollDeg/pitchDeg for telemetry + the T3 outer loop (not yet closed).
+        // clean gravity with the integrated gyro rate. T3 closes the cascade:
+        // the outer attitude loop turns attitude error into a RATE SETPOINT for
+        // the inner mesoPid — level hold against an unstable pitch pole.
+        float rollRateSetpoint  = 0.0f;
+        float pitchRateSetpoint = 0.0f;
+        float yawRateSetpoint   = 0.0f;
+#ifdef MESOZOIC_HORIZON
         {
             float ax = (float)_accelRaw[0] / _accelScale;
             float ay = (float)_accelRaw[1] / _accelScale;
@@ -830,11 +826,48 @@ void Zephyrus::update(uint32_t nowUs) {
                                gravX, gravY, gravZ, dt, MESO_ATT_TAU);
             rollDeg  = _mesoAttitude.roll;
             pitchDeg = _mesoAttitude.pitch;
+
+            // Outer attitude loop (HORIZON blend): attitude error → rate
+            // setpoint, self-level strength fading as |stick| grows and the
+            // direct rate command fading in. Centre = level hold, full
+            // deflection = pure rate (classic HORIZON). Yaw stays rate-only.
+            rollRateSetpoint  = mesoHorizonRateSetpoint(-rollDeg,  stickRollNorm,
+                                                         MESO_ATT_ROLL_KP, MESO_ATT_MAX_RATE);
+            pitchRateSetpoint = mesoHorizonRateSetpoint(-pitchDeg, stickPitchNorm,
+                                                         MESO_ATT_PITCH_KP, MESO_ATT_MAX_RATE);
+            yawRateSetpoint   = stickYawNorm * MESO_ATT_MAX_RATE;
         }
 #else
         rollDeg   = 0.0f;   // no attitude in the mesozoic brain
         pitchDeg  = 0.0f;
 #endif
+
+        // Damp each rate toward the setpoint (0 under MESOZOIC_ONLY, attitude-
+        // derived under MESOZOIC_HORIZON). Sign mirrors the attitude path (a
+        // positive disturbance → negative correction); the wing mixer applies
+        // the sense.
+        int16_t rollC, pitchC, yawC;
+#ifdef MESOZOIC_HORIZON
+        {
+            int16_t rollSpLsb  = (int16_t)(rollRateSetpoint  * _gyroScale);
+            int16_t pitchSpLsb = (int16_t)(pitchRateSetpoint * _gyroScale);
+            int16_t yawSpLsb   = (int16_t)(yawRateSetpoint   * _gyroScale);
+            rollC  = mesoPid(_mesoRoll,  rollSpLsb  - rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
+            pitchC = mesoPid(_mesoPitch, pitchSpLsb - ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
+            yawC   = mesoPid(_mesoYaw,   yawSpLsb   - rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+        }
+#else
+        rollC  = mesoPid(_mesoRoll,  -rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
+        pitchC = mesoPid(_mesoPitch, -ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
+        yawC   = mesoPid(_mesoYaw,   -rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+#endif
+
+        rollCorrection  = (float)rollC  * lsbToDps;
+        pitchCorrection = (float)pitchC * lsbToDps;
+        yawCorrection   = (float)yawC   * lsbToDps;
+
+        // Telemetry parity (bias-corrected, board-rotated rates in °/s).
+        yawRate   = (float)rz * lsbToDps;
 
         // ONDAS raw terms are dropped — never feed the stripped layer.
         pitchPTerm = 0.0f;

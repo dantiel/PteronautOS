@@ -170,3 +170,12 @@
 #define MESO_GRAV_LOCK_TAU   0.4f    // ESPELHO lock-in integrator τ (s) — matches OrniFlight ESPELHO_TAU
 #define MESO_GRAV_TAU        0.15f   // recovered-gravity low-pass τ (s) → ~1 Hz
 #define MESO_ATT_TAU         0.5f    // complementary attitude correction τ (s) → ~0.3 Hz
+
+// --- HORIZON attitude outer loop (T3): attitude error → rate setpoint ---
+// Pure-P outer gain (deg/s per deg error); the inner mesoPid carries the rate
+// I/D. Kept slow (≤ ~2 Hz closed loop) so no residual flap content can excite
+// the attitude. MESO_ATT_MAX_RATE slew-clamps a hard stick throw. Pitch is
+// hotter: it is the deliberately unstable axis that must hold level.
+#define MESO_ATT_ROLL_KP      2.0f     // °/s per deg roll error (~0.32 Hz)
+#define MESO_ATT_PITCH_KP     2.5f     // °/s per deg pitch error (~0.40 Hz)
+#define MESO_ATT_MAX_RATE     45.0f    // rate-setpoint slew clamp + full-stick rate cmd (°/s)

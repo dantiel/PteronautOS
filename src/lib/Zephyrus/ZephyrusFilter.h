@@ -31,6 +31,20 @@ static inline void zephyrusUpdate() {
     // (~1 Hz) attitude loop.
     zephyrus.flapSin = ornithopter.flapSin;
     zephyrus.flapCos = ornithopter.flapCos;
+
+    // HORIZON stick → attitude setpoint (T3 outer loop). CRSF raw 172–1811 →
+    // -1..1, scaled to the max horizon angle (roll/pitch) / max yaw rate. Sign
+    // follows the mixer convention: +aileron = roll right, +elevator = nose-up,
+    // +rudder = yaw right.
+    {
+        const float crsfInv = 1.0f / (1811.0f - 172.0f);
+        float ailNorm = ((float)ornithopter.voiceAileron  - 172.0f) * crsfInv * 2.0f - 1.0f;
+        float eleNorm = ((float)ornithopter.voiceElevator - 172.0f) * crsfInv * 2.0f - 1.0f;
+        float rudNorm = ((float)ornithopter.voiceRudder   - 172.0f) * crsfInv * 2.0f - 1.0f;
+        zephyrus.stickRollNorm  = ailNorm;
+        zephyrus.stickPitchNorm = eleNorm;
+        zephyrus.stickYawNorm   = rudNorm;
+    }
 #endif
     zephyrus.update(now);
     ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;

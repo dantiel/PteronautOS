@@ -52,3 +52,26 @@ inline void mesoAttitudeUpdate(MesoAttitude &a,
     a.roll  += (r - a.roll)  * alpha;
     a.pitch += (p - a.pitch) * alpha;
 }
+
+// Attitude outer loop (T3): attitude error (deg) → rate setpoint (°/s).
+// Pure P — the inner mesoPid already carries the rate loop's I/D terms, so
+// adding an outer integrator would fight it. Slew-clamped so a hard stick
+// throw commands a bounded rate. Header-only so the cascade is natively
+// testable against a synthetic attitude error.
+inline float mesoAttitudeRateSetpoint(float attErrDeg, float kp, float maxRateDps) {
+    float sp = attErrDeg * kp;
+    if (sp >  maxRateDps) sp =  maxRateDps;
+    if (sp < -maxRateDps) sp = -maxRateDps;
+    return sp;
+}
+
+// HORIZON blend (T3): self-level strength fades with |stick|, the direct rate
+// command fades in. Stick centre → pure level hold (attErr → rate setpoint);
+// full deflection → pure rate command (stick·maxRate). Classic Betaflight
+// HORIZON — self-leveling when you let go, rate authority when you push.
+inline float mesoHorizonRateSetpoint(float attErrDeg, float stickNorm,
+                                     float kp, float maxRateDps) {
+    const float level = mesoAttitudeRateSetpoint(attErrDeg, kp, maxRateDps);
+    const float hz = 1.0f - fabsf(stickNorm);
+    return level * hz + stickNorm * maxRateDps;
+}
