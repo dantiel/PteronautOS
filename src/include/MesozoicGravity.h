@@ -84,14 +84,25 @@ inline void mesoGravityInit(MesoGravity &g) {
 inline void mesoGravityUpdate(MesoGravity &g,
                               float ax, float ay, float az,
                               float sinT, float cosT,
-                              float dt, float tauLock, float tauGrav)
+                              float dt, float tauLock, float tauGrav,
+                              bool flapping)
 {
-    // 1. flap-coherent cancellation, continuous (fundamental + skew)
-    const float clean[3] = {
-        ax - mesoEspelhoStep(g.bank[0], ax, sinT, cosT, dt, tauLock),
-        ay - mesoEspelhoStep(g.bank[1], ay, sinT, cosT, dt, tauLock),
-        az - mesoEspelhoStep(g.bank[2], az, sinT, cosT, dt, tauLock),
-    };
+    // 1. flap-coherent cancellation, continuous (fundamental + skew). Only run
+    // the lock-in while the wings actually flap: a frozen flap phase makes the
+    // ESPELHO bank learn the DC sample as "flap interference", ×2 it, and
+    // subtract it back — converging an upright, stationary +1 g reading to −3 g.
+    // When idle there is no flap-coherent image to cancel, so pass the raw
+    // accel straight through to the slow gravity LPF below.
+    float clean[3];
+    if (flapping) {
+        clean[0] = ax - mesoEspelhoStep(g.bank[0], ax, sinT, cosT, dt, tauLock);
+        clean[1] = ay - mesoEspelhoStep(g.bank[1], ay, sinT, cosT, dt, tauLock);
+        clean[2] = az - mesoEspelhoStep(g.bank[2], az, sinT, cosT, dt, tauLock);
+    } else {
+        clean[0] = ax;
+        clean[1] = ay;
+        clean[2] = az;
+    }
 
     // 2. slow low-pass → gravity. Seed directly, then converge.
     if (!g.seeded) {

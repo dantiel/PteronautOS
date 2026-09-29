@@ -31,6 +31,7 @@ static inline void zephyrusUpdate() {
     // (~1 Hz) attitude loop.
     zephyrus.flapSin = ornithopter.flapSin;
     zephyrus.flapCos = ornithopter.flapCos;
+    zephyrus.flapping = ornithopter.lastFlapping;
 
     // HORIZON stick → attitude setpoint (T3 outer loop). CRSF raw 172–1811 →
     // -1..1, scaled to the max horizon angle (roll/pitch) / max yaw rate. Sign
@@ -54,6 +55,8 @@ static inline void zephyrusUpdate() {
     ornithopter.gyroRollCorrection  = zephyrus.rollCorrection;
     ornithopter.gyroYawCorrection   = zephyrus.yawCorrection;
     ornithopter.gyroPitchCorrection = zephyrus.pitchCorrection;
+    ornithopter.gyroRollAttitudeCorrection  = zephyrus.rollAttitudeCorrection;
+    ornithopter.gyroPitchAttitudeCorrection = zephyrus.pitchAttitudeCorrection;
     // Bridge raw pitch PID terms for waveform modulation (Nigredo)
     ornithopter.gyroPitchPTerm     = zephyrus.pitchPTerm;
     ornithopter.gyroPitchITerm     = zephyrus.pitchITerm;

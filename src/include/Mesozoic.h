@@ -39,6 +39,17 @@ inline void mesoInit(MesoPid &p) {
     p.lastD = 0;
 }
 
+// Saturate a rate error (int32 LSB) into the int16 mesoPid() contract. The
+// measured gyro is ±32750 LSB full-scale and the HORIZON rate setpoint adds up
+// to ±5895 LSB, so the raw (setpoint − measured) difference can exceed ±32767.
+// Passing it unclamped would truncate through the int16 parameter and reverse
+// the correction sign at full scale (the "overflow reversal" fault).
+inline int32_t mesoClampRateErr(int32_t e) {
+    if (e >  32767) return  32767;
+    if (e < -32767) return -32767;
+    return e;
+}
+
 // err: rate error LSB (target = 0). kp/kd/ki: Q12. imax: integrator clamp.
 // dtMs: loop period. Returns Q12 correction (rate-demand LSB).
 inline int16_t mesoPid(MesoPid &p, int16_t err,
@@ -47,10 +58,12 @@ inline int16_t mesoPid(MesoPid &p, int16_t err,
 {
     if (dtMs == 0) dtMs = 1;
 
-    // Derivative-on-measurement with a one-pole LPF (α ≈ 1/8 per tick → τ ≈ 8·dt).
-    // d is in LSB/ms; the low-pass keeps the D term bounded against gyro noise.
+    // Derivative-on-measurement with a one-pole LPF (α = 1/8 per tick → τ ≈ 8·dt,
+    // DC gain 1). d is in LSB/ms; the low-pass keeps the D term bounded against
+    // gyro noise. new = old + (d − old)/8 = (7·old + d)/8. (The old (d*8 +
+    // 5*old)>>3 form was d + 0.625·old — DC gain 2.67×, no noise attenuation.)
     int32_t d  = (int32_t)(err - p.lastErr) / dtMs;
-    int32_t lp = (d * 8 + (int32_t)p.lastD * 5);
+    int32_t lp = (int32_t)p.lastD * 7 + d;
     p.lastD    = (int16_t)(lp >> 3);
 
     // Integrator with anti-windup clamp.

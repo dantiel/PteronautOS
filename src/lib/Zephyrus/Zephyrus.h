@@ -44,6 +44,7 @@ public:
     // --- Mesozoic HORIZON attitude layer (flap-decoupled gravity) ---
     float flapSin;          // flap phase sin — bridged from Ornithopter each tick
     float flapCos;          // flap phase cos
+    bool  flapping;         // flap active — gates the gravity ESPELHO lock-in
     float gravX, gravY, gravZ;  // recovered gravity vector (g), ~1 Hz
     // --- HORIZON stick commands (T3 outer loop), normalized -1..1 ---
     // Bridged from Ornithopter's aileron/elevator/rudder. Stick centre → level
@@ -54,10 +55,16 @@ public:
 #endif
 
     // PID correction outputs
-    float rollCorrection;   // Roll PID output magnitude
-    float yawCorrection;    // Yaw rate PID output magnitude
-    float pitchCorrection;  // Pitch PID output magnitude
+    float rollCorrection;   // Roll RATE correction (°/s) → wing amplitude (fast)
+    float yawCorrection;    // Yaw RATE correction (°/s) → differential ferocity
+    float pitchCorrection;  // Pitch RATE correction (°/s) → ferocity dwell (fast)
     float rudderCorrection; // Combined rudder offset in µs (clamped)
+
+    // Attitude error (deg) for the wing CENTRE axis (slow level hold). Under
+    // MESOZOIC_HORIZON this is the accelerometer-derived attitude error faded
+    // by |stick|; 0 in the rate-only brain (no level reference).
+    float rollAttitudeCorrection;
+    float pitchAttitudeCorrection;
 
     // Raw pitch PID terms — exposed for ornithopter waveform modulation
     // (Ondas: P→Phase Advance, D→Ferocity, I→Asymmetry; SSFF uses errorRate)

@@ -132,9 +132,11 @@ public:
     // Raw PID correction outputs (deg / °/s / deg) for the 2-wing Mesozoic
     // stabilizer — bridged from Zephyrus in ZephyrusFilter.h (unconditionally,
     // unlike gyroAileron/ElevatorCorrection which are gearbox-only).
-    float gyroRollCorrection;      // roll PID output (deg)
-    float gyroYawCorrection;       // yaw-rate PID output (°/s)
-    float gyroPitchCorrection;     // pitch PID output (deg)
+    float gyroRollCorrection;      // roll RATE correction (°/s) → amplitude (Mesozoic)
+    float gyroYawCorrection;       // yaw-rate correction (°/s) → differential ferocity
+    float gyroPitchCorrection;     // pitch RATE correction (°/s) → ferocity dwell (Mesozoic)
+    float gyroRollAttitudeCorrection;   // roll attitude error (deg) → centre (slow level)
+    float gyroPitchAttitudeCorrection;  // pitch attitude error (deg) → centre (slow level)
 
 #ifdef MESOZOIC_HORIZON
     // Flap phase (sin/cos) for the Zephyrus HORIZON gravity recovery — set in
@@ -147,6 +149,9 @@ public:
     float wingRollGain;            // roll  → differential flap amplitude
     float wingPitchGain;           // pitch → symmetric flap centre shift (trim)
     float wingPitchFerGain;        // pitch → symmetric downstroke/upstroke ferocity dwell (primary)
+    float wingPitchSkewGain;       // pitch attitude → symmetric stroke/return skew (skew bridge)
+    float wingRollSkewGain;        // roll attitude → differential L/R stroke/return skew (skew bridge)
+    float wingYawSkewGain;         // yaw rate    → differential L/R stroke/return skew (skew bridge)
     float wingYawGain;             // yaw   → differential ferocity
 
     // Raw pitch PID terms from Zephyrus (Nigredo — waveform modulation)

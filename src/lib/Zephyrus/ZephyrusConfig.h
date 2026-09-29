@@ -45,8 +45,13 @@
 #define ZEPHYR_SMPLRT_DIV    0         // 1kHz sample rate
 
 // --- Mahony AHRS Complementary Filter Gains ---
+// KP/KI are in rad/s (the filter converts the °/s gyro to rad/s first). The
+// old code added them to the °/s gyro instead, which made the accelerometer
+// correction ~57× too weak (2 rad/s ≈ 114.6 °/s) and let the attitude latch
+// onto a wrong value after a fast rotation past ±90°.
 #define ZEPHYR_MAHONY_KP     2.0f      // Proportional gain (accel correction strength)
 #define ZEPHYR_MAHONY_KI     0.005f    // Integral gain (slow gyro bias drift correction)
+#define ZEPHYR_MAHONY_KI_MAX 0.5f      // Integral feedback anti-windup clamp (rad/s ≈ ±28.6°/s)
 
 // --- PID: Roll Axis (stabilizes roll angle to 0°) ---
 #define ZEPHYR_PID_ROLL_KP   1.2f
@@ -164,6 +169,18 @@
 #define ZEPHYR_WING_YAW_RATE_FER_CLAMP       2.0f
 #define ZEPHYR_WING_PITCH_RATE_FER_SCALE     0.02f   // ferocity per °/s @100% (dwell split)
 #define ZEPHYR_WING_PITCH_RATE_FER_CLAMP     2.0f   // max symmetric pitch dwell ferocity
+
+// Skew bridge: pitch attitude error (deg) → differential stroke/return skew
+// (±100 timing axis). Front-loads the downstroke while back-loading the
+// upstroke (phase-aware attitude delivery) — the "local" per-half-stroke
+// complement to the static CENTRE shift, and the accel-side counterpart to the
+// gyro-driven ferocity dwell above. Sign is tunable via wing_pitch_skew_gain.
+#define ZEPHYR_WING_PITCH_ATT_SKEW_SCALE     0.4f   // skew units per deg attitude error @100%
+#define ZEPHYR_WING_ROLL_ATT_SKEW_SCALE      0.4f   // skew units per deg roll attitude @100%
+#define ZEPHYR_WING_ROLL_ATT_SKEW_CLAMP      40.0f  // max differential roll skew
+#define ZEPHYR_WING_YAW_SKEW_SCALE           0.1f   // skew units per deg/s yaw rate @100%
+#define ZEPHYR_WING_YAW_SKEW_CLAMP           30.0f  // max differential yaw skew
+#define ZEPHYR_WING_PITCH_ATT_SKEW_CLAMP     40.0f  // max differential skew (axis spans ±100)
 
 // ─── Mesozoic HORIZON attitude layer (MESOZOIC_HORIZON, on top of MESOZOIC_ONLY) ───
 // Flap-decoupled gravity recovery (MesozoicGravity) + slow complementary

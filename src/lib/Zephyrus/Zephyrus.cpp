@@ -85,6 +85,7 @@ Zephyrus::Zephyrus()
     , calibrated(false)
     , rollDeg(0.0f), pitchDeg(0.0f), yawRate(0.0f)
     , rollCorrection(0.0f), yawCorrection(0.0f), pitchCorrection(0.0f), rudderCorrection(0.0f)
+    , rollAttitudeCorrection(0.0f), pitchAttitudeCorrection(0.0f)
     , pitchPTerm(0.0f), pitchITerm(0.0f), pitchDTerm(0.0f), pitchErrorRate(0.0f)
     , _mpuPresent(false)
     , _accelScale(ACCEL_LSB_PER_G[0])
@@ -122,6 +123,7 @@ Zephyrus::Zephyrus()
 #ifdef MESOZOIC_HORIZON
     flapSin = 0.0f;
     flapCos = 1.0f;
+    flapping = false;
     gravX = gravY = gravZ = 0.0f;
     stickRollNorm = 0.0f;
     stickPitchNorm = 0.0f;
@@ -532,10 +534,27 @@ void Zephyrus::_mahonyUpdate(float gx, float gy, float gz,
     // Clamp dt to prevent integration blowup
     if (dt <= 0.0f || dt > 0.1f) dt = 0.01f;
 
+    // NaN guard: a corrupt quaternion is unrecoverable. NaN comparisons are
+    // always false, so the `norm < 1e-6f` check below cannot see it — reset to
+    // identity BEFORE it poisons every subsequent tick. This is the "stuck in
+    // NaN state" that followed a rotation past ±90°.
+    if (isnan(_q[0]) || isnan(_q[1]) || isnan(_q[2]) || isnan(_q[3])) {
+        _mahonyReset();
+    }
+
     float q0 = _q[0], q1 = _q[1], q2 = _q[2], q3 = _q[3];
     float recipNorm;
     float halfvx, halfvy, halfvz;
     float halfex, halfey, halfez;
+
+    // Convert gyro to rad/s FIRST. The Mahony gains (KP/KI) are specified in
+    // rad/s; the previous code added KP·halfe directly to the °/s gyro and only
+    // converted afterwards, making the accel correction ~57× too weak. The
+    // estimate then latched onto a wrong attitude and could not recover after
+    // gyro saturation during a fast rotation past ±90°.
+    float gxR = gx * 0.0174533f;  // deg→rad
+    float gyR = gy * 0.0174533f;
+    float gzR = gz * 0.0174533f;
 
     // Compute feedback only if accelerometer data is valid (non-zero)
     // Normalize accel
@@ -556,31 +575,35 @@ void Zephyrus::_mahonyUpdate(float gx, float gy, float gz,
         halfey = (az * halfvx - ax * halfvz);
         halfez = (ax * halfvy - ay * halfvx);
 
-        // Apply integral feedback (if Ki > 0)
+        // Apply integral feedback (if Ki > 0), anti-windup clamped in rad/s.
+        // Without the clamp a prolonged attitude error winded the integrator
+        // up without bound and could overflow the quaternion into NaN.
         if (ZEPHYR_MAHONY_KI > 0.0f) {
             _integralFB[0] += ZEPHYR_MAHONY_KI * halfex * dt;
             _integralFB[1] += ZEPHYR_MAHONY_KI * halfey * dt;
             _integralFB[2] += ZEPHYR_MAHONY_KI * halfez * dt;
 
-            // Apply integral to gyro
-            gx += _integralFB[0];
-            gy += _integralFB[1];
-            gz += _integralFB[2];
+            if (_integralFB[0] >  ZEPHYR_MAHONY_KI_MAX) _integralFB[0] =  ZEPHYR_MAHONY_KI_MAX;
+            if (_integralFB[0] < -ZEPHYR_MAHONY_KI_MAX) _integralFB[0] = -ZEPHYR_MAHONY_KI_MAX;
+            if (_integralFB[1] >  ZEPHYR_MAHONY_KI_MAX) _integralFB[1] =  ZEPHYR_MAHONY_KI_MAX;
+            if (_integralFB[1] < -ZEPHYR_MAHONY_KI_MAX) _integralFB[1] = -ZEPHYR_MAHONY_KI_MAX;
+            if (_integralFB[2] >  ZEPHYR_MAHONY_KI_MAX) _integralFB[2] =  ZEPHYR_MAHONY_KI_MAX;
+            if (_integralFB[2] < -ZEPHYR_MAHONY_KI_MAX) _integralFB[2] = -ZEPHYR_MAHONY_KI_MAX;
+
+            // Apply integral to gyro (rad/s)
+            gxR += _integralFB[0];
+            gyR += _integralFB[1];
+            gzR += _integralFB[2];
         }
 
-        // Apply proportional feedback to gyro
-        gx += ZEPHYR_MAHONY_KP * halfex;
-        gy += ZEPHYR_MAHONY_KP * halfey;
-        gz += ZEPHYR_MAHONY_KP * halfez;
+        // Apply proportional feedback to gyro (rad/s)
+        gxR += ZEPHYR_MAHONY_KP * halfex;
+        gyR += ZEPHYR_MAHONY_KP * halfey;
+        gzR += ZEPHYR_MAHONY_KP * halfez;
     }
 
     // Integrate rate of change of quaternion
-    // qDot = 0.5 * q ⊗ ω  where ω = [0, gx, gy, gz]
-    // (All gyro values in rad/s — convert from °/s)
-    float gxR = gx * 0.0174533f;  // deg→rad
-    float gyR = gy * 0.0174533f;
-    float gzR = gz * 0.0174533f;
-
+    // qDot = 0.5 * q ⊗ ω  where ω = [0, gxR, gyR, gzR] in rad/s
     float qDot0 = 0.5f * (-q1 * gxR - q2 * gyR - q3 * gzR);
     float qDot1 = 0.5f * ( q0 * gxR + q2 * gzR - q3 * gyR);
     float qDot2 = 0.5f * ( q0 * gyR - q1 * gzR + q3 * gxR);
@@ -591,9 +614,10 @@ void Zephyrus::_mahonyUpdate(float gx, float gy, float gz,
     q2 += qDot2 * dt;
     q3 += qDot3 * dt;
 
-    // Normalize quaternion — guard against numerical instability
+    // Normalize quaternion — guard against numerical instability. isnan()
+    // catches a corrupted quaternion that the `< 1e-6f` comparison would miss.
     float norm = q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3;
-    if (norm < 1e-6f) {
+    if (isnan(norm) || norm < 1e-6f) {
         _mahonyReset();
         return;
     }
@@ -729,6 +753,8 @@ void Zephyrus::update(uint32_t nowUs) {
         rollCorrection = 0.0f;
         yawCorrection = 0.0f;
         pitchCorrection = 0.0f;
+        rollAttitudeCorrection = 0.0f;
+        pitchAttitudeCorrection = 0.0f;
         pitchPTerm = 0.0f;
         pitchITerm = 0.0f;
         pitchDTerm = 0.0f;
@@ -752,6 +778,8 @@ void Zephyrus::update(uint32_t nowUs) {
         yawCorrection *= 0.9f;
         rudderCorrection *= 0.9f;
         pitchCorrection *= 0.9f;
+        rollAttitudeCorrection *= 0.9f;
+        pitchAttitudeCorrection *= 0.9f;
         pitchPTerm = 0.0f;
         pitchITerm = 0.0f;
         pitchDTerm = 0.0f;
@@ -814,7 +842,7 @@ void Zephyrus::update(uint32_t nowUs) {
             _applyAccelLevelRef(ax, ay, az);
 
             mesoGravityUpdate(_mesoGravity, ax, ay, az, flapSin, flapCos, dt,
-                              MESO_GRAV_LOCK_TAU, MESO_GRAV_TAU);
+                              MESO_GRAV_LOCK_TAU, MESO_GRAV_TAU, flapping);
             gravX = _mesoGravity.grav[0];
             gravY = _mesoGravity.grav[1];
             gravZ = _mesoGravity.grav[2];
@@ -826,6 +854,14 @@ void Zephyrus::update(uint32_t nowUs) {
                                gravX, gravY, gravZ, dt, MESO_ATT_TAU);
             rollDeg  = _mesoAttitude.roll;
             pitchDeg = _mesoAttitude.pitch;
+
+            // Channel split: the accelerometer-derived attitude error (deg)
+            // drives the wing CENTRE axis (slow level hold); the inner rate PID
+            // below drives the FEROCITY/amplitude axis (fast damping). Fade the
+            // level demand as |stick| grows (classic HORIZON: full deflection →
+            // pure rate command).
+            rollAttitudeCorrection  = -rollDeg  * (1.0f - fabsf(stickRollNorm));
+            pitchAttitudeCorrection = -pitchDeg * (1.0f - fabsf(stickPitchNorm));
 
             // Outer attitude loop (HORIZON blend): attitude error → rate
             // setpoint, self-level strength fading as |stick| grows and the
@@ -840,6 +876,8 @@ void Zephyrus::update(uint32_t nowUs) {
 #else
         rollDeg   = 0.0f;   // no attitude in the mesozoic brain
         pitchDeg  = 0.0f;
+        rollAttitudeCorrection  = 0.0f;
+        pitchAttitudeCorrection = 0.0f;
 #endif
 
         // Damp each rate toward the setpoint (0 under MESOZOIC_ONLY, attitude-
@@ -852,9 +890,13 @@ void Zephyrus::update(uint32_t nowUs) {
             int16_t rollSpLsb  = (int16_t)(rollRateSetpoint  * _gyroScale);
             int16_t pitchSpLsb = (int16_t)(pitchRateSetpoint * _gyroScale);
             int16_t yawSpLsb   = (int16_t)(yawRateSetpoint   * _gyroScale);
-            rollC  = mesoPid(_mesoRoll,  rollSpLsb  - rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
-            pitchC = mesoPid(_mesoPitch, pitchSpLsb - ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
-            yawC   = mesoPid(_mesoYaw,   yawSpLsb   - rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+            // Rate error computed in int32 then saturated to int16: the raw
+            // (setpoint − measured) difference can exceed ±32767 LSB, and an
+            // unclamped int16 truncation wraps it (sign reversal). mesoClampRateErr
+            // preserves the full-scale error magnitude without the wraparound.
+            rollC  = mesoPid(_mesoRoll,  (int16_t)mesoClampRateErr((int32_t)rollSpLsb  - rx), MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
+            pitchC = mesoPid(_mesoPitch, (int16_t)mesoClampRateErr((int32_t)pitchSpLsb - ry), MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
+            yawC   = mesoPid(_mesoYaw,   (int16_t)mesoClampRateErr((int32_t)yawSpLsb   - rz), MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
         }
 #else
         rollC  = mesoPid(_mesoRoll,  -rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);

@@ -758,6 +758,14 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     orni["servo_count"] = PROFILE.servoCount;
 
     JsonObject zeph = root["zephyrus"].to<JsonObject>();
+    // Compile-time AHRS mode — replaces the old hardcoded "Mahony" panel label.
+#if defined(MESOZOIC_HORIZON)
+    zeph["ahrs"] = "Mesozoic HORIZON";
+#elif defined(MESOZOIC_ONLY)
+    zeph["ahrs"] = "Mesozoic rate-only";
+#else
+    zeph["ahrs"] = "Mahony AHRS";
+#endif
 #if defined(ZEPHYRUS_ENABLED)
     zeph["compiled"]          = true;
     zeph["enabled"]           = zephyrus.gyroEnabled;
@@ -777,7 +785,12 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
     zeph["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
     zeph["wing_pitch_fer_gain"] = (int)ornithopter.wingPitchFerGain;
+    zeph["wing_pitch_skew_gain"] = (int)ornithopter.wingPitchSkewGain;
+    zeph["wing_roll_skew_gain"]  = (int)ornithopter.wingRollSkewGain;
+    zeph["wing_yaw_skew_gain"]   = (int)ornithopter.wingYawSkewGain;
     zeph["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
+    zeph["roll_attitude_correction"]  = zephyrus.rollAttitudeCorrection;
+    zeph["pitch_attitude_correction"] = zephyrus.pitchAttitudeCorrection;
 
     // Runtime-tunable PID gains — read back by the panel sliders
     JsonObject pid = zeph["pid"].to<JsonObject>();
@@ -849,6 +862,9 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
     orni["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
     orni["wing_pitch_fer_gain"] = (int)ornithopter.wingPitchFerGain;
+    orni["wing_pitch_skew_gain"] = (int)ornithopter.wingPitchSkewGain;
+    orni["wing_roll_skew_gain"]  = (int)ornithopter.wingRollSkewGain;
+    orni["wing_yaw_skew_gain"]   = (int)ornithopter.wingYawSkewGain;
     orni["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
 #endif
 
@@ -1110,6 +1126,12 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.wingPitchGain);
     f.print(",\"wing_pitch_fer_gain\":");
     f.print((int)ornithopter.wingPitchFerGain);
+    f.print(",\"wing_pitch_skew_gain\":");
+    f.print((int)ornithopter.wingPitchSkewGain);
+    f.print(",\"wing_roll_skew_gain\":");
+    f.print((int)ornithopter.wingRollSkewGain);
+    f.print(",\"wing_yaw_skew_gain\":");
+    f.print((int)ornithopter.wingYawSkewGain);
     f.print(",\"wing_yaw_gain\":");
     f.print((int)ornithopter.wingYawGain);
     f.print(",\"pid_roll_p\":");
@@ -1310,6 +1332,21 @@ void LoadOrnithopterConfig()
         if (v < -100) v = -100; else if (v > 100) v = 100;
         ornithopter.wingPitchFerGain = (float)v;
     }
+    if (o["wing_pitch_skew_gain"].is<int>()) {
+        int v = o["wing_pitch_skew_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingPitchSkewGain = (float)v;
+    }
+    if (o["wing_roll_skew_gain"].is<int>()) {
+        int v = o["wing_roll_skew_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingRollSkewGain = (float)v;
+    }
+    if (o["wing_yaw_skew_gain"].is<int>()) {
+        int v = o["wing_yaw_skew_gain"].as<int>();
+        if (v < -100) v = -100; else if (v > 100) v = 100;
+        ornithopter.wingYawSkewGain = (float)v;
+    }
     if (o["wing_yaw_gain"].is<int>()) {
         int v = o["wing_yaw_gain"].as<int>();
         if (v < -100) v = -100; else if (v > 100) v = 100;
@@ -1374,14 +1411,23 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     int wingRoll      = _pteroParamInt(request, "wing_roll_gain",      (int)ornithopter.wingRollGain);
     int wingPitch     = _pteroParamInt(request, "wing_pitch_gain",     (int)ornithopter.wingPitchGain);
     int wingPitchFer  = _pteroParamInt(request, "wing_pitch_fer_gain", (int)ornithopter.wingPitchFerGain);
+    int wingPitchSkew = _pteroParamInt(request, "wing_pitch_skew_gain", (int)ornithopter.wingPitchSkewGain);
+    int wingRollSkew  = _pteroParamInt(request, "wing_roll_skew_gain",  (int)ornithopter.wingRollSkewGain);
+    int wingYawSkew   = _pteroParamInt(request, "wing_yaw_skew_gain",   (int)ornithopter.wingYawSkewGain);
     int wingYaw       = _pteroParamInt(request, "wing_yaw_gain",       (int)ornithopter.wingYawGain);
-    if (wingRoll     < -100) wingRoll     = -100; else if (wingRoll     > 100) wingRoll     = 100;
-    if (wingPitch    < -100) wingPitch    = -100; else if (wingPitch    > 100) wingPitch    = 100;
-    if (wingPitchFer < -100) wingPitchFer = -100; else if (wingPitchFer > 100) wingPitchFer = 100;
-    if (wingYaw      < -100) wingYaw      = -100; else if (wingYaw      > 100) wingYaw      = 100;
+    if (wingRoll      < -100) wingRoll      = -100; else if (wingRoll      > 100) wingRoll      = 100;
+    if (wingPitch     < -100) wingPitch     = -100; else if (wingPitch     > 100) wingPitch     = 100;
+    if (wingPitchFer  < -100) wingPitchFer  = -100; else if (wingPitchFer  > 100) wingPitchFer  = 100;
+    if (wingPitchSkew < -100) wingPitchSkew = -100; else if (wingPitchSkew > 100) wingPitchSkew = 100;
+    if (wingRollSkew  < -100) wingRollSkew  = -100; else if (wingRollSkew  > 100) wingRollSkew  = 100;
+    if (wingYawSkew   < -100) wingYawSkew   = -100; else if (wingYawSkew   > 100) wingYawSkew   = 100;
+    if (wingYaw       < -100) wingYaw       = -100; else if (wingYaw       > 100) wingYaw       = 100;
     ornithopter.wingRollGain      = (float)wingRoll;
     ornithopter.wingPitchGain     = (float)wingPitch;
     ornithopter.wingPitchFerGain  = (float)wingPitchFer;
+    ornithopter.wingPitchSkewGain = (float)wingPitchSkew;
+    ornithopter.wingRollSkewGain  = (float)wingRollSkew;
+    ornithopter.wingYawSkewGain   = (float)wingYawSkew;
     ornithopter.wingYawGain       = (float)wingYaw;
     int gv = _pteroParamInt(request, "gyro_enabled", -1);
     if (gv >= 0) {

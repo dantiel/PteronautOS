@@ -392,4 +392,7 @@ struct FlightProfileParams {
 #define ORNI_WING_PITCH_GAIN       50
 #define ORNI_WING_PITCH_FER_GAIN   50
 #define ORNI_WING_YAW_GAIN         30
+#define ORNI_WING_PITCH_SKEW_GAIN  0    // 0 = off by default (sign unvalidated; tune on bench)
+#define ORNI_WING_ROLL_SKEW_GAIN   0    // 0 = off by default (sign unvalidated; tune on bench)
+#define ORNI_WING_YAW_SKEW_GAIN    0    // 0 = off by default (sign unvalidated; tune on bench)
 #endif
