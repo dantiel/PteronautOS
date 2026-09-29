@@ -24,6 +24,8 @@ button
   left: 0
   z-index: 2
   transition: left 0.2s
+  // Clear the iPhone notch / Dynamic Island so the header bar sits below the camera.
+  padding-top: env(safe-area-inset-top, 0px)
 
 :root
   --drawer-width: 250px
@@ -50,6 +52,9 @@ button
   box-sizing: border-box
   margin-bottom: calc(-1 * var(--footer-height))
   padding-bottom: var(--footer-height)
+  // Offset #main by the same notch inset as the fixed header, keeping the
+  // spacer + header bar aligned below the camera.
+  padding-top: env(safe-area-inset-top, 0px)
 
 #footer
   box-sizing: border-box
@@ -60,10 +65,11 @@ button
   position: fixed
   z-index: 2
   width: 100%
-  top: calc(100% - var(--footer-height))
+  top: calc(100% - var(--footer-height) - env(safe-area-inset-bottom, 0px))
   // Track the *visual* viewport on iOS Safari (bottom address bar) so the
   // footer stays pinned above the dynamic toolbar instead of hiding behind it.
-  top: calc(100dvh - var(--footer-height))
+  // The safe-area-inset-bottom term lifts it clear of the home indicator.
+  top: calc(100dvh - var(--footer-height) - env(safe-area-inset-bottom, 0px))
 
 body.hide-sidedrawer #footer
   width: 100% !important
@@ -245,6 +251,8 @@ body.hide-sidedrawer #footer
 
 .main-progressive-blur--top
   top: 0
+  // Extend up into the notch ears so content scrolling beside the camera is blurred.
+  height: calc(144px + env(safe-area-inset-top, 0px))
 
 .main-progressive-blur--top span:nth-child(1)
   -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.72) 44%, transparent 100%)
@@ -264,7 +272,8 @@ body.hide-sidedrawer #footer
 
 .main-progressive-blur--bottom
   bottom: 0
-  height: 88px
+  // Extend down over the home indicator area.
+  height: calc(88px + env(safe-area-inset-bottom, 0px))
 
 .main-progressive-blur--bottom span:nth-child(1)
   -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.68) 40%, transparent 100%)
@@ -357,4 +366,4 @@ body.hide-sidedrawer #footer
 //
 @supports (-webkit-touch-callout: none)
   .main-progressive-blur--bottom
-    height: calc(88px + 100% - 100dvh)
+    height: calc(88px + env(safe-area-inset-bottom, 0px) + 100% - 100dvh)

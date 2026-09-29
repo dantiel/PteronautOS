@@ -28,7 +28,7 @@
         %tr
           %td
             %b= self._t('zephyrus.info.ahrs')
-          %td= self._t('zephyrus.info.ahrs_val')
+          %td= self._ahrsLabel()
         - if self.gyroEnabled
           %tr
             %td
@@ -91,6 +91,30 @@
             %td
               %input{type: "range", min: "-100", max: "100", .value: self.wingPitchFerGain, @input: self._onWingGainLocal('wingPitchFerGain'), @change: self._onWingGainPost('wing_pitch_fer_gain'), style: "width:200px;"}
               %span.value= self.wingPitchFerGain
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.pitch_skew')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.pitch_skew_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingPitchSkewGain, @input: self._onWingGainLocal('wingPitchSkewGain'), @change: self._onWingGainPost('wing_pitch_skew_gain'), style: "width:200px;"}
+              %span.value= self.wingPitchSkewGain
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.roll_skew')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.roll_skew_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingRollSkewGain, @input: self._onWingGainLocal('wingRollSkewGain'), @change: self._onWingGainPost('wing_roll_skew_gain'), style: "width:200px;"}
+              %span.value= self.wingRollSkewGain
+          %tr
+            %td
+              %b= self._t('zephyrus.wing.yaw_skew')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.wing.yaw_skew_desc')
+            %td
+              %input{type: "range", min: "-100", max: "100", .value: self.wingYawSkewGain, @input: self._onWingGainLocal('wingYawSkewGain'), @change: self._onWingGainPost('wing_yaw_skew_gain'), style: "width:200px;"}
+              %span.value= self.wingYawSkewGain
           %tr
             %td
               %b= self._t('zephyrus.wing.yaw')

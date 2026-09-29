@@ -28,7 +28,11 @@ class ZephyrusPanel extends PteroElement
     wingRollGain:  {state: true}
     wingPitchGain: {state: true}
     wingPitchFerGain: {state: true}
+    wingPitchSkewGain: {state: true}
+    wingRollSkewGain: {state: true}
+    wingYawSkewGain: {state: true}
     wingYawGain:   {state: true}
+    ahrs:              {state: true}
     uptimeMs:          {state: true}
     # Roll PID
     rollP:   {state: true}
@@ -64,7 +68,11 @@ class ZephyrusPanel extends PteroElement
   wingRollGain  = 0
   wingPitchGain = 0
   wingPitchFerGain = 0
+  wingPitchSkewGain = 0
+  wingRollSkewGain = 0
+  wingYawSkewGain = 0
   wingYawGain   = 0
+  ahrs              = ""
   uptimeMs          = 0
   # Roll — runtime PID gains (units match firmware ZephyrusConfig.h defaults)
   rollP   = 1.2; rollI   = 0.05; rollD   = 0.15; rollMax = 30
@@ -96,7 +104,11 @@ class ZephyrusPanel extends PteroElement
     @wingRollGain  = Fmt.f0 z.wing_roll_gain
     @wingPitchGain = Fmt.f0 z.wing_pitch_gain
     @wingPitchFerGain = Fmt.f0 z.wing_pitch_fer_gain
+    @wingPitchSkewGain = Fmt.f0 z.wing_pitch_skew_gain
+    @wingRollSkewGain = Fmt.f0 z.wing_roll_skew_gain
+    @wingYawSkewGain = Fmt.f0 z.wing_yaw_skew_gain
     @wingYawGain   = Fmt.f0 z.wing_yaw_gain
+    @ahrs          = z.ahrs or ""
     if z.pid?
       @rollP  = z.pid.roll.p;   @rollI  = z.pid.roll.i;   @rollD  = z.pid.roll.d;   @rollMax  = z.pid.roll.max
       @pitchP = z.pid.pitch.p;  @pitchI = z.pid.pitch.i;  @pitchD = z.pid.pitch.d;  @pitchMax = z.pid.pitch.max
@@ -163,6 +175,7 @@ class ZephyrusPanel extends PteroElement
   _statusText:      -> Status.gyroText @pollError, @gyroEnabled, @gyroConnected, @gyroCalibrated
   _toggleLabel:     -> if @gyroEnabled then self._t('zephyrus.toggle.disable') else self._t('zephyrus.toggle.enable')
   _uptimeLabel:     -> Fmt.uptime @uptimeMs
+  _ahrsLabel:       -> @ahrs or "—"
   _rotationOptions: -> Zephyrus.rotationOptions
   _isRotation:      (val) -> Zephyrus.isRotation @boardRotation, val
   _calibrateLabel:  -> Status.calibLabel @_calibrating
