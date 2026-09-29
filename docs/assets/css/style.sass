@@ -1640,6 +1640,88 @@ footer .lang-switch
     background: var(--bg)
     color: var(--text)
 
+.flasher-field.flasher-toggle
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: .9rem
+  padding: .6rem .75rem
+  border: 1px solid var(--dim)
+  border-radius: 8px
+  cursor: pointer
+  user-select: none
+  transition: border-color .18s ease, background .18s ease
+
+  &:hover
+    border-color: var(--accent)
+
+  .flasher-toggle-text
+    margin: 0
+    font-family: $turret
+    font-weight: 500
+    font-size: .76rem
+    letter-spacing: .04em
+    text-transform: uppercase
+    color: var(--text)
+
+  .flasher-switch
+    position: relative
+    flex: 0 0 auto
+    width: 46px
+    height: 26px
+    margin: 0
+
+    .flasher-switch-input
+      position: absolute
+      inset: 0
+      width: 100%
+      height: 100%
+      margin: 0
+      padding: 0
+      border: 0
+      opacity: 0
+      cursor: pointer
+      z-index: 2
+
+    .flasher-switch-track
+      position: absolute
+      inset: 0
+      background: var(--dim)
+      border-radius: 999px
+      transition: background .18s ease
+
+    .flasher-switch-knob
+      position: absolute
+      top: 3px
+      left: 3px
+      width: 20px
+      height: 20px
+      background: #fff
+      border: 1px solid rgba(0, 0, 0, .18)
+      border-radius: 50%
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .45), 0 0 0 1px rgba(0, 0, 0, .04)
+      transition: transform .18s ease
+
+    .flasher-switch-input:checked + .flasher-switch-track
+      background: var(--accent)
+
+    .flasher-switch-input:checked + .flasher-switch-track .flasher-switch-knob
+      transform: translateX(20px)
+
+    .flasher-switch-input:focus-visible + .flasher-switch-track
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent)
+
+    .flasher-switch-input:disabled + .flasher-switch-track
+      opacity: .5
+
+  &.is-disabled
+    opacity: .45
+    cursor: not-allowed
+    pointer-events: none
+
+#zephyrus-fields.is-greyed
+  opacity: .45
+
 .flasher-suffix
   display: flex
   align-items: stretch
@@ -1849,6 +1931,104 @@ footer .lang-switch
   font-size: .72rem
   color: var(--mut)
   letter-spacing: .02em
+
+.flasher-specimens
+  .flasher-specimens-head
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: 1rem
+    margin-bottom: 1.5rem
+
+    h2
+      margin: 0
+
+    .flasher-secondary
+      flex: 0 0 auto
+      display: inline-flex
+      align-items: center
+      gap: .4rem
+      font-size: .7rem
+      padding: .45rem .8rem
+
+      &:disabled
+        opacity: .4
+        cursor: not-allowed
+
+.flasher-specimens-list
+  list-style: none
+  margin: 1rem 0 0
+  padding: 0
+  display: flex
+  flex-direction: column
+  gap: .5rem
+
+.flasher-specimen-empty
+  font-family: $turret
+  font-weight: 300
+  font-size: .74rem
+  color: var(--mut)
+  letter-spacing: .02em
+
+.flasher-specimen
+  display: flex
+  align-items: stretch
+  gap: .3rem
+
+  &.selected .flasher-specimen-select
+    border-color: var(--accent)
+    background: rgba(0, 0, 0, 0.12)
+
+.flasher-specimen-select
+  flex: 1
+  display: flex
+  flex-direction: column
+  gap: .25rem
+  text-align: left
+  padding: .6rem .75rem
+  font-family: $turret
+  background: transparent
+  color: var(--text)
+  border: 1px solid var(--dim)
+  border-radius: 4px
+  cursor: pointer
+  transition: border-color .15s ease, background .15s ease
+
+  &:hover
+    border-color: var(--accent)
+
+.flasher-specimen-name
+  font-family: $turret
+  font-weight: 700
+  font-size: .78rem
+  letter-spacing: .05em
+  text-transform: uppercase
+  color: var(--text)
+
+.flasher-specimen-meta
+  font-family: $turret
+  font-weight: 300
+  font-size: .68rem
+  letter-spacing: .02em
+  color: var(--mut)
+  line-height: 1.4
+
+.flasher-specimen-dismiss
+  flex: 0 0 auto
+  width: 2.4rem
+  font-family: $turret
+  font-size: 1.1rem
+  line-height: 1
+  color: var(--mut)
+  background: transparent
+  border: 1px solid var(--dim)
+  border-radius: 4px
+  cursor: pointer
+  transition: color .15s ease, border-color .15s ease
+
+  &:hover
+    color: var(--text)
+    border-color: var(--accent)
 
 .hidden
   display: none !important

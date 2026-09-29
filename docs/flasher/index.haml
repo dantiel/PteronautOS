@@ -53,29 +53,52 @@
 
           %details.flasher-advanced
             %summary!= flasher_advanced
-            .flasher-grid
-              %label.flasher-field
-                %span!= flasher_i2c_sda
-                %input#zephyrus_i2c_sda{type: "number", value: "1", min: "0", max: "16"}
-              %label.flasher-field
-                %span!= flasher_i2c_scl
-                %input#zephyrus_i2c_scl{type: "number", value: "3", min: "0", max: "16"}
-              %label.flasher-field
-                %span!= flasher_board_rotation
-                %select#zephyrus_board_rotation
-                  %option{value: "0", selected: true} 0 — flat, pins forward
-                  %option{value: "1"} 1 — yaw 90° CW
-                  %option{value: "2"} 2 — yaw 180°
-                  %option{value: "3"} 3 — yaw 270°
-                  %option{value: "4"} 4 — upside down
-                  %option{value: "5"} 5 — vertical, pins forward
-                  %option{value: "6"} 6 — vertical, pins right
-              %label.flasher-field
-                %span!= flasher_mushin_enabled
-                %select#mushin_enabled
-                  %option{value: "0", selected: true} Off — local PWM (wings flap on this board)
-                  %option{value: "1"} EP2 + RP2040 — single UART0, remote servos and gyro
-              %p.flasher-conditional EP2 RX=GPIO3, TX=GPIO1. Runtime 420000 baud; MEDITATION flashing 115200. No second UART or local I2C.
+            .flasher-grid.flasher-toggles
+              %label.flasher-field.flasher-toggle
+                %span.flasher-toggle-text!= flasher_mushin_enabled
+                %span.flasher-switch
+                  %input.flasher-switch-input#mushin_enabled{type: "checkbox"}
+                  %span.flasher-switch-track
+                    %span.flasher-switch-knob
+              %label.flasher-field.flasher-toggle
+                %span.flasher-toggle-text!= flasher_zephyrus_enabled
+                %span.flasher-switch
+                  %input.flasher-switch-input#zephyrus_enabled{type: "checkbox", checked: "checked"}
+                  %span.flasher-switch-track
+                    %span.flasher-switch-knob
+            %p.flasher-conditional#mushin-note.hidden!= flasher_mushin_hint
+            #zephyrus-fields
+              .flasher-grid
+                %label.flasher-field
+                  %span!= flasher_i2c_sda
+                  %input#zephyrus_i2c_sda{type: "number", value: "1", min: "0", max: "16"}
+                %label.flasher-field
+                  %span!= flasher_i2c_scl
+                  %input#zephyrus_i2c_scl{type: "number", value: "3", min: "0", max: "16"}
+              .flasher-grid
+                %label.flasher-field
+                  %span!= flasher_board_rotation
+                  %select#zephyrus_board_rotation
+                    %option{value: "0", selected: true} 0 — flat, pins forward
+                    %option{value: "1"} 1 — yaw 90° CW
+                    %option{value: "2"} 2 — yaw 180°
+                    %option{value: "3"} 3 — yaw 270°
+                    %option{value: "4"} 4 — upside down
+                    %option{value: "5"} 5 — vertical, pins forward
+                    %option{value: "6"} 6 — vertical, pins right
+                %label.flasher-field
+                  %span!= flasher_zephyrus_mode
+                  %select#zephyrus_mode
+                    %option{value: "1", selected: true} Rate-only damper (Mesozoic) — recommended
+                    %option{value: "0"} Self-level (Mahony AHRS)
+              %label.flasher-field.flasher-toggle
+                %span.flasher-toggle-text!= flasher_pre_detect
+                %span.flasher-switch
+                  %input.flasher-switch-input#zephyrus_i2c_pre_detect{type: "checkbox", checked: "checked"}
+                  %span.flasher-switch-track
+                    %span.flasher-switch-knob
+              %p.flasher-hint!= flasher_pre_detect_hint
+              %p.flasher-hint#zephyrus-hint.hidden!= flasher_zephyrus_hint
               %label.flasher-field
                 %span!= flasher_wifi_interval
                 %input#auto_wifi_on_interval{type: "number", value: "30", min: "-1"}
@@ -148,6 +171,15 @@
           %input#firmware-file{type: "file", accept: ".bin,application/octet-stream", class: "hidden"}
 
           %p.flasher-hint!= flasher_build_hint
+
+        %section.flasher-card.flasher-specimens
+          .flasher-specimens-head
+            %h2!= flasher_specimens
+            %button.flasher-secondary#clear-specimens-btn{type: "button", title: flasher_specimens_clear}
+              %span{"aria-hidden": "true"} 🗑
+              %span!= flasher_specimens_clear
+          %p.flasher-hint!= flasher_specimens_hint
+          %ul.flasher-specimens-list#specimens-list{"data-empty" => flasher_specimens_empty}
 
         %section.flasher-card.flasher-status.hidden#status-card
           %h2!= flasher_heading_progress

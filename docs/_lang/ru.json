@@ -935,7 +935,7 @@
   "flasher_mushin_rx": "Mushin RX pin",
   "flasher_mushin_tx": "Mushin TX pin",
   "flasher_mushin_baud": "Mushin baud",
-  "flasher_mushin_enabled": "Мост Mushin (мышца RP2040)",
+  "flasher_mushin_enabled": "Mushin (EP2 → RP2040)",
   "flasher_wifi_interval": "WiFi auto-on interval (s)",
   "flasher_build_btn": "Собрать прошивку",
   "flasher_flash_btn": "Прошить через Web Serial",
@@ -956,5 +956,15 @@
   "flash_online_cta": "Прошить онлайн",
   "flash_online_cta_desc": "Соберите и прошейте прошивку прямо из браузера — без тулчейна и драйверов. Chrome, Edge и Opera прошивают по USB; остальные браузеры скачивают .bin.",
   "flasher_load_btn": "Загрузить .bin",
-  "flasher_disconnect_btn": "Отключить"
+  "flasher_disconnect_btn": "Отключить",
+  "flasher_zephyrus_enabled": "Zephyrus gyro (MPU6050)",
+  "flasher_zephyrus_mode": "Stabilizer mode",
+  "flasher_zephyrus_hint": "Gyro is off — enable Zephyrus to use the MPU6050. Disabled while MUSHIN is on.",
+  "flasher_mushin_hint": "MUSHIN moves servos + gyro to the RP2040 — no local PWM, no local gyro on this board.",
+  "flasher_pre_detect": "MPU I2C pre-detect",
+  "flasher_pre_detect_hint": "Probes SCL before I2C init so a missing MPU6050 boots cleanly. Disable for non-standard pull-ups.",
+  "flasher_specimens": "Firmware Fossils",
+  "flasher_specimens_hint": "Every cloud build is kept here as a firmware fossil with its settings and date. Click a fossil to load it, × to dismiss it.",
+  "flasher_specimens_empty": "No firmware fossils yet — build a firmware to unearth one.",
+  "flasher_specimens_clear": "Dismiss all fossils"
 }

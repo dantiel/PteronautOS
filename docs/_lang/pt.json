@@ -935,7 +935,7 @@
   "flasher_mushin_rx": "Pino RX Mushin",
   "flasher_mushin_tx": "Pino TX Mushin",
   "flasher_mushin_baud": "Baud Mushin",
-  "flasher_mushin_enabled": "Ponte Mushin (músculo RP2040)",
+  "flasher_mushin_enabled": "Mushin (EP2 → RP2040)",
   "flasher_wifi_interval": "Intervalo WiFi auto-on (s)",
   "flasher_build_btn": "Compilar firmware",
   "flasher_flash_btn": "Gravar via Web Serial",
@@ -956,5 +956,15 @@
   "flash_online_cta": "Flashear online",
   "flash_online_cta_desc": "Compile e grave o firmware direto do navegador — sem toolchain, sem drivers. Chrome, Edge e Opera gravam por USB; os outros navegadores baixam o .bin.",
   "flasher_load_btn": "Carregar .bin",
-  "flasher_disconnect_btn": "Desconectar"
+  "flasher_disconnect_btn": "Desconectar",
+  "flasher_zephyrus_enabled": "Giro Zephyrus (MPU6050)",
+  "flasher_zephyrus_mode": "Modo de estabilização",
+  "flasher_zephyrus_hint": "Giro desligado — ative o Zephyrus para usar o MPU6050. Desativado com o MUSHIN ligado.",
+  "flasher_mushin_hint": "O MUSHIN move servos + giro para o RP2040 — sem PWM local, sem giro local nesta placa.",
+  "flasher_pre_detect": "Pré-detecção I2C do MPU",
+  "flasher_pre_detect_hint": "Verifica SCL antes da inicialização I2C para que um MPU6050 ausente inicie normalmente. Desative para pull-ups fora do padrão.",
+  "flasher_specimens": "Fósseis de firmware",
+  "flasher_specimens_hint": "Cada build fica guardado aqui como fóssil de firmware com as definições e a data. Clique para carregar, × para descartar.",
+  "flasher_specimens_empty": "Ainda sem fósseis de firmware — compile um firmware para descobrir um.",
+  "flasher_specimens_clear": "Descartar todos os fósseis"
 }

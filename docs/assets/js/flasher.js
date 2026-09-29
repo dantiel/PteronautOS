@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, STORE, activePort, activeTransport, apiFetch, builtFingerprint, busy, cacheFirmware, collectParams, currentRunId, dbPromise, disconnect, downloadFirmware, els, enableFirmware, firmwareBytes, firmwareKey, flash, hashStr, id, idbGet, idbPut, j, k, l, len, len1, loadFromDisk, log, openDb, poll, restoreCachedBuild, restoreConfig, saveConfig, saveFirmware, serialSupported, setStatus, sleep, startBuild, syncMushinFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -28,7 +28,9 @@ els = {
   runLink: $("#run-link"),
   progressWrap: $("#progress-wrap"),
   progressBar: $("#progress-bar"),
-  log: $("#log")
+  log: $("#log"),
+  specimensList: $("#specimens-list"),
+  clearSpecimensBtn: $("#clear-specimens-btn")
 };
 
 currentRunId = null;
@@ -40,8 +42,6 @@ busy = false;
 activePort = null;
 
 activeTransport = null;
-
-builtFingerprint = null;
 
 serialSupported = "serial" in navigator;
 
@@ -64,7 +64,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -91,12 +91,13 @@ apiFetch = async function(path, init = {}) {
 };
 
 saveConfig = function() {
-  var cfg, id, j, len;
+  var cfg, el, i, id, len;
   try {
     cfg = {};
-    for (j = 0, len = FIELD_IDS.length; j < len; j++) {
-      id = FIELD_IDS[j];
-      cfg[id] = $(id).value;
+    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+      id = FIELD_IDS[i];
+      el = $(id);
+      cfg[id] = el.type === "checkbox" ? el.checked : el.value;
     }
     cfg.locales = LOCALES.filter(function(l) {
       return $(`#locale-${l}`).checked;
@@ -108,29 +109,36 @@ saveConfig = function() {
 };
 
 restoreConfig = function() {
-  var cfg, id, j, k, l, len, len1, len2, m, results, results1;
+  var cfg, el, i, id, j, k, l, len, len1, len2, results, results1;
   try {
     cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
     if (!cfg) {
       return;
     }
-    for (j = 0, len = FIELD_IDS.length; j < len; j++) {
-      id = FIELD_IDS[j];
-      if (cfg[id] != null) {
-        $(id).value = cfg[id];
+    for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+      id = FIELD_IDS[i];
+      el = $(id);
+      if (el.type === "checkbox") {
+        if (cfg[id] != null) {
+          el.checked = cfg[id];
+        }
+      } else {
+        if (cfg[id] != null) {
+          el.value = cfg[id];
+        }
       }
     }
     if (cfg.locales != null) {
       results = [];
-      for (k = 0, len1 = LOCALES.length; k < len1; k++) {
-        l = LOCALES[k];
+      for (j = 0, len1 = LOCALES.length; j < len1; j++) {
+        l = LOCALES[j];
         results.push($(`#locale-${l}`).checked = indexOf.call(cfg.locales, l) >= 0);
       }
       return results;
     } else {
       results1 = [];
-      for (m = 0, len2 = LOCALES.length; m < len2; m++) {
-        l = LOCALES[m];
+      for (k = 0, len2 = LOCALES.length; k < len2; k++) {
+        l = LOCALES[k];
         results1.push($(`#locale-${l}`).checked = false);
       }
       return results1;
@@ -170,7 +178,10 @@ collectParams = function() {
     zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value,
     zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
-    mushin_enabled: $("#mushin_enabled").value,
+    mushin_enabled: ($("#mushin_enabled").checked ? "1" : "0"),
+    zephyrus_enabled: ($("#zephyrus_enabled").checked ? "1" : "0"),
+    zephyrus_mode: $("#zephyrus_mode").value,
+    zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
     rcvr_uart_baud: $("#rcvr_uart_baud").value,
     device_name: $("#device_name").value.trim(),
     home_wifi_ssid: $("#home_wifi_ssid").value.trim(),
@@ -186,23 +197,15 @@ enableFirmware = function() {
   }
 };
 
-// Stable fingerprint of the current build config — the IndexedDB cache key.
-hashStr = function(s) {
-  var h, i, j, ref;
-  h = 0x811c9dc5;
-  for (i = j = 0, ref = s.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16);
-};
-
-// Browser cache (IndexedDB): a cloud-built image survives reloads — no rebuild.
+// Firmware fossil storage (IndexedDB): every cloud build is kept with its full
+// config snapshot + timestamp, so it can be re-selected, flashed or dismissed.
 DB_NAME = "pteronautos-fossil-etcher";
 
-DB_VERSION = 1;
+DB_VERSION = 2;
 
-STORE = "builds";
+BUILD_STORE = "builds"; // legacy cache store (kept for schema upgrades)
+
+SPECIMEN_STORE = "specimens"; // user-facing firmware fossils (keyPath: "id")
 
 dbPromise = null;
 
@@ -216,8 +219,13 @@ openDb = function() {
     req.onupgradeneeded = function() {
       var db;
       db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        return db.createObjectStore(STORE);
+      if (!db.objectStoreNames.contains(BUILD_STORE)) {
+        db.createObjectStore(BUILD_STORE);
+      }
+      if (!db.objectStoreNames.contains(SPECIMEN_STORE)) {
+        return db.createObjectStore(SPECIMEN_STORE, {
+          keyPath: "id"
+        });
       }
     };
     req.onsuccess = function() {
@@ -230,13 +238,13 @@ openDb = function() {
   return dbPromise;
 };
 
-idbPut = async function(key, value) {
+idbPutSpecimen = async function(rec) {
   var db;
   db = (await openDb());
   return new Promise(function(resolve, reject) {
     var tx;
-    tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(value, key);
+    tx = db.transaction(SPECIMEN_STORE, "readwrite");
+    tx.objectStore(SPECIMEN_STORE).put(rec);
     tx.oncomplete = function() {
       return resolve();
     };
@@ -246,15 +254,15 @@ idbPut = async function(key, value) {
   });
 };
 
-idbGet = async function(key) {
+idbAllSpecimens = async function() {
   var db;
   db = (await openDb());
   return new Promise(function(resolve, reject) {
     var req, tx;
-    tx = db.transaction(STORE, "readonly");
-    req = tx.objectStore(STORE).get(key);
+    tx = db.transaction(SPECIMEN_STORE, "readonly");
+    req = tx.objectStore(SPECIMEN_STORE).getAll();
     req.onsuccess = function() {
-      return resolve(req.result);
+      return resolve(req.result || []);
     };
     return req.onerror = function() {
       return reject(req.error);
@@ -262,49 +270,253 @@ idbGet = async function(key) {
   });
 };
 
-firmwareKey = function() {
-  return hashStr(JSON.stringify(collectParams()));
+idbDeleteSpecimen = async function(id) {
+  var db;
+  db = (await openDb());
+  return new Promise(function(resolve, reject) {
+    var tx;
+    tx = db.transaction(SPECIMEN_STORE, "readwrite");
+    tx.objectStore(SPECIMEN_STORE).delete(id);
+    tx.oncomplete = function() {
+      return resolve();
+    };
+    return tx.onerror = function() {
+      return reject(tx.error);
+    };
+  });
 };
 
-cacheFirmware = async function() {
-  var err, record;
+idbClearSpecimens = async function() {
+  var db;
+  db = (await openDb());
+  return new Promise(function(resolve, reject) {
+    var tx;
+    tx = db.transaction(SPECIMEN_STORE, "readwrite");
+    tx.objectStore(SPECIMEN_STORE).clear();
+    tx.oncomplete = function() {
+      return resolve();
+    };
+    return tx.onerror = function() {
+      return reject(tx.error);
+    };
+  });
+};
+
+SPECIMEN_KEY = "pteronautos-selected-specimen";
+
+selectedSpecimenId = null;
+
+MIXER_LABELS = {
+  "0": "2 wings",
+  "1": "2 wings + rudder",
+  "2": "4 wings",
+  "3": "V-tail + rudder",
+  "4": "motor + V-tail",
+  "5": "motor + V-tail + rudder",
+  "6": "elevator + rudder",
+  "7": "motor + elevator + rudder"
+};
+
+fmtSize = function(n) {
+  if (n >= 1048576) {
+    return (n / 1048576).toFixed(1) + " MB";
+  } else {
+    return Math.round(n / 1024) + " KB";
+  }
+};
+
+fmtWhen = function(ts) {
+  return new Date(ts).toLocaleString();
+};
+
+specimenMeta = function(rec) {
+  var p, parts;
+  p = rec.params || {};
+  parts = [fmtWhen(rec.ts)];
+  parts.push(MIXER_LABELS[p.mixer_profile] || "mixer " + p.mixer_profile);
+  parts.push((p.regulatory_domain === "EU_CE_2400" ? "EU CE" : "ISM"));
+  parts.push((p.mushin_enabled === "1" ? "MUSHIN" : "local PWM"));
+  parts.push((p.zephyrus_enabled === "1" ? "Zephyrus" : "no gyro"));
+  if (p.device_name) {
+    parts.push(p.device_name);
+  }
+  parts.push(fmtSize(rec.size));
+  return parts.join(" · ");
+};
+
+saveSpecimen = async function() {
+  var err, rec;
   if (firmwareBytes == null) {
     return;
   }
   try {
-    record = {
+    rec = {
+      id: "s" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+      ts: Date.now(),
       name: "pteronautos-firmware.bin",
       size: firmwareBytes.length,
-      ts: Date.now(),
+      params: collectParams(),
       blob: firmwareBytes.slice().buffer
     };
-    await idbPut(firmwareKey(), record);
-    return log("Saved build in this browser (" + firmwareBytes.length + " bytes) — reload and it's reused.");
+    await idbPutSpecimen(rec);
+    selectedSpecimenId = rec.id;
+    localStorage.setItem(SPECIMEN_KEY, selectedSpecimenId);
+    await renderSpecimens();
+    return log("Uncovered firmware fossil (" + fmtSize(rec.size) + ") — saved in this browser.");
   } catch (error) {
     err = error;
-    return log("Couldn't cache build: " + err.message);
+    return log("Couldn't save firmware fossil: " + err.message);
   }
 };
 
-restoreCachedBuild = async function() {
-  var record;
-  if (!("indexedDB" in window)) {
+selectSpecimen = async function(id) {
+  var err, rec, recs;
+  try {
+    recs = (await idbAllSpecimens());
+    rec = recs.find(function(r) {
+      return r.id === id;
+    });
+    if ((rec != null ? rec.blob : void 0) == null) {
+      return;
+    }
+    firmwareBytes = new Uint8Array(rec.blob);
+    selectedSpecimenId = id;
+    localStorage.setItem(SPECIMEN_KEY, id);
+    enableFirmware();
+    await renderSpecimens();
+    log("Selected firmware fossil (" + fmtSize(rec.size) + ") — ready to flash or download.");
+    return setStatus("Firmware fossil loaded — ready to flash or download.", "done");
+  } catch (error) {
+    err = error;
+    return setStatus("Couldn't load firmware fossil: " + err.message, "fail");
+  }
+};
+
+dismissSpecimen = async function(id) {
+  if (!window.confirm("Dismiss this firmware fossil? It will be removed from this browser.")) {
     return;
   }
-  try {
-    record = (await idbGet(firmwareKey()));
-    if ((record != null ? record.blob : void 0) != null) {
-      firmwareBytes = new Uint8Array(record.blob);
-      enableFirmware();
-      log("Reusing saved build (" + record.size + " bytes) — no rebuild needed.");
-      return setStatus("Saved build loaded — ready to flash or download.", "done");
+  await idbDeleteSpecimen(id);
+  if (selectedSpecimenId === id) {
+    selectedSpecimenId = null;
+    localStorage.removeItem(SPECIMEN_KEY);
+    firmwareBytes = null;
+    els.downloadBtn.disabled = true;
+    if (serialSupported) {
+      els.flashBtn.disabled = true;
     }
-  } catch (error) {
-
   }
+  await renderSpecimens();
+  return log("Dismissed firmware fossil.");
 };
 
-// no cache or storage blocked — nothing to load
+clearSpecimens = async function() {
+  if (!window.confirm("Dismiss all firmware fossils? This cannot be undone.")) {
+    return;
+  }
+  await idbClearSpecimens();
+  selectedSpecimenId = null;
+  localStorage.removeItem(SPECIMEN_KEY);
+  firmwareBytes = null;
+  els.downloadBtn.disabled = true;
+  if (serialSupported) {
+    els.flashBtn.disabled = true;
+  }
+  await renderSpecimens();
+  return log("Dismissed all firmware fossils.");
+};
+
+specimenNode = function(rec) {
+  var dismiss, li, meta, name, selectBtn;
+  li = document.createElement("li");
+  li.className = "flasher-specimen";
+  if (rec.id === selectedSpecimenId) {
+    li.classList.add("selected");
+  }
+  selectBtn = document.createElement("button");
+  selectBtn.type = "button";
+  selectBtn.className = "flasher-specimen-select";
+  selectBtn.title = "Load this firmware fossil";
+  name = document.createElement("span");
+  name.className = "flasher-specimen-name";
+  name.textContent = "Firmware fossil";
+  meta = document.createElement("span");
+  meta.className = "flasher-specimen-meta";
+  meta.textContent = specimenMeta(rec);
+  selectBtn.appendChild(name);
+  selectBtn.appendChild(meta);
+  selectBtn.addEventListener("click", function() {
+    return selectSpecimen(rec.id);
+  });
+  dismiss = document.createElement("button");
+  dismiss.type = "button";
+  dismiss.className = "flasher-specimen-dismiss";
+  dismiss.title = "Dismiss";
+  dismiss.setAttribute("aria-label", "Dismiss this firmware fossil");
+  dismiss.textContent = "×";
+  dismiss.addEventListener("click", function() {
+    return dismissSpecimen(rec.id);
+  });
+  li.appendChild(selectBtn);
+  li.appendChild(dismiss);
+  return li;
+};
+
+renderSpecimens = async function() {
+  var i, len, li, rec, recs, results;
+  try {
+    recs = (await idbAllSpecimens());
+  } catch (error) {
+    return;
+  }
+  recs.sort(function(a, b) {
+    return (b.ts || 0) - (a.ts || 0);
+  });
+  els.specimensList.textContent = "";
+  els.clearSpecimensBtn.disabled = recs.length === 0;
+  if (recs.length === 0) {
+    els.specimensList.classList.add("empty");
+    li = document.createElement("li");
+    li.className = "flasher-specimen-empty";
+    li.textContent = els.specimensList.dataset.empty || "No firmware fossils uncovered yet.";
+    els.specimensList.appendChild(li);
+    return;
+  }
+  els.specimensList.classList.remove("empty");
+  results = [];
+  for (i = 0, len = recs.length; i < len; i++) {
+    rec = recs[i];
+    results.push(els.specimensList.appendChild(specimenNode(rec)));
+  }
+  return results;
+};
+
+restoreSpecimens = async function() {
+  var recs, stored, target;
+  if ("indexedDB" in window) {
+    try {
+      recs = (await idbAllSpecimens());
+      if (recs.length) {
+        stored = localStorage.getItem(SPECIMEN_KEY);
+        target = recs.find(function(r) {
+          return r.id === stored;
+        }) || recs[0];
+        if ((target != null ? target.blob : void 0) != null) {
+          firmwareBytes = new Uint8Array(target.blob);
+          selectedSpecimenId = target.id;
+          enableFirmware();
+          log("Restored firmware fossil (" + fmtSize(target.size) + ") — ready to flash or download.");
+          setStatus("Firmware fossil loaded — ready to flash or download.", "done");
+        }
+      }
+    } catch (error) {
+
+    }
+  }
+  // no storage or blocked — nothing to load
+  return renderSpecimens();
+};
+
 loadFromDisk = async function(file) {
   var buf;
   buf = (await file.arrayBuffer());
@@ -314,21 +526,26 @@ loadFromDisk = async function(file) {
   return setStatus("Firmware image loaded — ready to flash or download.", "done");
 };
 
-disconnect = async function() {
-  try {
-    await (activeTransport != null ? activeTransport.disconnect() : void 0);
-  } catch (error) {
-
-  }
-  try {
-    if (activePort != null) {
-      activePort.close();
-    }
-  } catch (error) {
-
-  }
+closeSerial = async function() {
+  var p, t;
+  t = activeTransport;
+  p = activePort;
   activeTransport = null;
   activePort = null;
+  try {
+    await (t != null ? t.disconnect() : void 0);
+  } catch (error) {
+
+  }
+  try {
+    return (await (p != null ? p.close() : void 0));
+  } catch (error) {
+
+  }
+};
+
+disconnect = async function() {
+  await closeSerial();
   els.disconnectBtn.classList.add("hidden");
   return log("Disconnected.");
 };
@@ -340,7 +557,6 @@ startBuild = async function() {
   els.downloadBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
-  builtFingerprint = null;
   els.log.textContent = "";
   setStatus("Dispatching build…", "busy");
   els.runLink.classList.add("hidden");
@@ -348,7 +564,6 @@ startBuild = async function() {
   busy = true;
   try {
     params = collectParams();
-    builtFingerprint = hashStr(JSON.stringify(params));
     delay = Number(params.auto_wifi_on_interval);
     if (!(Number.isInteger(delay) && delay >= -1 && delay <= 2147483)) {
       throw new Error("Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds.");
@@ -397,9 +612,9 @@ poll = async function() {
     }
     setStatus("Build complete — downloading image…", "busy");
     await downloadFirmware();
-    await cacheFirmware();
+    await saveSpecimen();
     enableFirmware();
-    setStatus("Build complete — cached in this browser. Ready to flash or download.", "done");
+    setStatus("Build complete — firmware fossil saved. Ready to flash or download.", "done");
     els.buildBtn.disabled = false;
     return busy = false;
   } catch (error) {
@@ -465,8 +680,39 @@ terminal = function() {
   };
 };
 
+// Fresh ESPLoader per connect attempt. esptool-js connect() opens the WebSerial
+// port, then throws on a failed ROM sync WITHOUT closing it — so reusing one
+// loader across retries hits "port is already open" on the second main() call.
+// A new Transport on the same port + disconnect() on failure releases the port.
+attemptConnect = async function(resetArg = null) {
+  var chip, err, loader, transport;
+  transport = new Transport(activePort, true);
+  loader = new ESPLoader({
+    transport: transport,
+    baudrate: 115200,
+    terminal: terminal(),
+    debugLogging: false
+  });
+  try {
+    chip = (await loader.main(resetArg));
+    return {
+      chip: chip,
+      loader: loader,
+      transport: transport
+    };
+  } catch (error) {
+    err = error;
+    try {
+      await transport.disconnect();
+    } catch (error) {
+
+    }
+    throw err;
+  }
+};
+
 flash = async function() {
-  var chip, err, esploader;
+  var attempt, chip, conn, err, esploader, i, lastErr, mushin;
   if (!("serial" in navigator)) {
     setStatus("Web Serial is not supported in this browser — use Chrome, Edge or Opera.", "fail");
     return;
@@ -480,17 +726,48 @@ flash = async function() {
       await downloadFirmware();
     }
     setStatus("Connecting to device…", "busy");
+    await closeSerial();
     activePort = (await navigator.serial.requestPort());
-    activeTransport = new Transport(activePort, true);
     els.disconnectBtn.classList.remove("hidden");
-    esploader = new ESPLoader({
-      transport: activeTransport,
-      baudrate: 115200,
-      terminal: terminal(),
-      debugLogging: false
-    });
-    chip = (await esploader.main("no_reset"));
-    log("Connected: " + chip);
+    // Manual bootloader entry matches HARDWARE.md: hold BOOT (GPIO0 / CH1),
+    // power-cycle, keep holding ~1 s, then release. Try a manual sync first
+    // (no DTR/RTS disturbance), then fall back to an auto-reset attempt for
+    // adapters that wire DTR/RTS to EN/GPIO0.
+    log("Bootloader: hold BOOT (GPIO0 / CH1 button), power-cycle the board, keep holding ~1 s, then release.");
+    chip = null;
+    lastErr = null;
+    for (attempt = i = 1; i <= 2; attempt = ++i) {
+      try {
+        conn = (await attemptConnect("no_reset"));
+        chip = conn.chip;
+        esploader = conn.loader;
+        activeTransport = conn.transport;
+        log("Connected: " + chip);
+        break;
+      } catch (error) {
+        err = error;
+        lastErr = err;
+        if (attempt === 1) {
+          log("No bootloader response on manual sync — retrying…");
+          await sleep(400);
+        }
+      }
+    }
+    if (chip == null) {
+      try {
+        conn = (await attemptConnect());
+        chip = conn.chip;
+        esploader = conn.loader;
+        activeTransport = conn.transport;
+        log("Connected (auto-reset): " + chip);
+      } catch (error) {
+        err = error;
+        lastErr = err;
+      }
+    }
+    if (chip == null) {
+      throw lastErr || new Error("Could not reach the ROM bootloader. Hold BOOT (GPIO0), power-cycle, and retry.");
+    }
     setStatus("Flashing…", "busy");
     await esploader.writeFlash({
       fileArray: [
@@ -511,13 +788,23 @@ flash = async function() {
         return els.statusText.textContent = "Flashing… " + pct + "%";
       }
     });
-    log("Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware.");
+    mushin = $("#mushin_enabled").checked;
+    if (mushin) {
+      log("Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware.");
+    } else {
+      log("Flashing complete. The receiver stays in the ROM bootloader — power-cycle (re-plug without BOOT held) to boot the new firmware.");
+    }
     await esploader.after("no_reset_stub");
-    setStatus("Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done");
+    if (mushin) {
+      setStatus("Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done");
+    } else {
+      setStatus("Flashed successfully — power-cycle to boot the new firmware.", "done");
+    }
     els.progressBar.style.width = "100%";
     return (await disconnect());
   } catch (error) {
     err = error;
+    await closeSerial();
     setStatus("Flash failed: " + err.message, "fail");
     return log(err.stack || err.message);
   } finally {
@@ -526,34 +813,50 @@ flash = async function() {
   }
 };
 
-syncMushinFields = function() {
-  var el, enabled, j, len, ref, results;
-  enabled = $("#mushin_enabled").value === "1";
-  ref = document.querySelectorAll(".flasher-conditional");
-  results = [];
-  for (j = 0, len = ref.length; j < len; j++) {
-    el = ref[j];
-    results.push(el.classList.toggle("hidden", !enabled));
+syncGyroFields = function() {
+  var el, enabled, i, len, mushin, ref, wrap, zeph, zephRow;
+  mushin = $("#mushin_enabled").checked;
+  zeph = $("#zephyrus_enabled");
+  zephRow = zeph.closest(".flasher-toggle");
+  // MUSHIN owns servos + gyro on the RP2040 — local Zephyrus is meaningless.
+  if (mushin) {
+    zeph.checked = false;
+    zeph.disabled = true;
+    zephRow.classList.add("is-disabled");
+  } else {
+    zeph.disabled = false;
+    zephRow.classList.remove("is-disabled");
   }
-  return results;
+  enabled = zeph.checked && !mushin;
+  wrap = $("#zephyrus-fields");
+  wrap.classList.toggle("is-greyed", !enabled);
+  ref = wrap.querySelectorAll("input, select");
+  for (i = 0, len = ref.length; i < len; i++) {
+    el = ref[i];
+    el.disabled = !enabled;
+  }
+  $("#zephyrus-hint").classList.toggle("hidden", enabled);
+  return $("#mushin-note").classList.toggle("hidden", !mushin);
 };
 
 restoreConfig();
 
-syncMushinFields();
+syncGyroFields();
 
-restoreCachedBuild();
+restoreSpecimens();
 
-for (j = 0, len = FIELD_IDS.length; j < len; j++) {
-  id = FIELD_IDS[j];
+for (i = 0, len = FIELD_IDS.length; i < len; i++) {
+  id = FIELD_IDS[i];
   $(id).addEventListener("input", saveConfig);
   $(id).addEventListener("change", saveConfig);
 }
 
-$("#mushin_enabled").addEventListener("change", syncMushinFields);
+$("#mushin_enabled").addEventListener("change", syncGyroFields);
 
-for (k = 0, len1 = LOCALES.length; k < len1; k++) {
-  l = LOCALES[k];
+$("#zephyrus_enabled").addEventListener("change", syncGyroFields);
+
+for (j = 0, len1 = LOCALES.length; j < len1; j++) {
+  l = LOCALES[j];
   $(`#locale-${l}`).addEventListener("change", saveConfig);
 }
 
@@ -569,6 +872,8 @@ els.loadBtn.addEventListener("click", function() {
 });
 
 els.disconnectBtn.addEventListener("click", disconnect);
+
+els.clearSpecimensBtn.addEventListener("click", clearSpecimens);
 
 els.fileInput.addEventListener("change", async function() {
   var err, file, ref;

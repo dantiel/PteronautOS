@@ -21,13 +21,14 @@ els =
   progressWrap: $("#progress-wrap")
   progressBar: $("#progress-bar")
   log: $("#log")
+  specimensList: $("#specimens-list")
+  clearSpecimensBtn: $("#clear-specimens-btn")
 
 currentRunId = null
 firmwareBytes = null
 busy = false
 activePort = null
 activeTransport = null
-builtFingerprint = null
 serialSupported = "serial" of navigator
 
 window.addEventListener "beforeunload", (e) ->
@@ -55,6 +56,9 @@ FIELD_IDS = [
   "#zephyrus_i2c_scl"
   "#zephyrus_board_rotation"
   "#mushin_enabled"
+  "#zephyrus_enabled"
+  "#zephyrus_mode"
+  "#zephyrus_i2c_pre_detect"
   "#rcvr_uart_baud"
   "#device_name"
   "#home_wifi_ssid"
@@ -79,7 +83,9 @@ apiFetch = (path, init = {}) ->
 saveConfig = ->
   try
     cfg = {}
-    cfg[id] = $(id).value for id in FIELD_IDS
+    for id in FIELD_IDS
+      el = $(id)
+      cfg[id] = if el.type is "checkbox" then el.checked else el.value
     cfg.locales = LOCALES.filter (l) -> $("#locale-#{l}").checked
     localStorage.setItem CONFIG_KEY, JSON.stringify cfg
   catch
@@ -89,7 +95,11 @@ restoreConfig = ->
     cfg = JSON.parse localStorage.getItem CONFIG_KEY
     return unless cfg
     for id in FIELD_IDS
-      $(id).value = cfg[id] if cfg[id]?
+      el = $(id)
+      if el.type is "checkbox"
+        el.checked = cfg[id] if cfg[id]?
+      else
+        el.value = cfg[id] if cfg[id]?
     if cfg.locales?
       for l in LOCALES
         $("#locale-#{l}").checked = l in cfg.locales
@@ -118,7 +128,10 @@ collectParams = ->
   zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
   zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
-  mushin_enabled: $("#mushin_enabled").value
+  mushin_enabled: (if $("#mushin_enabled").checked then "1" else "0")
+  zephyrus_enabled: (if $("#zephyrus_enabled").checked then "1" else "0")
+  zephyrus_mode: $("#zephyrus_mode").value
+  zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
   rcvr_uart_baud: $("#rcvr_uart_baud").value
   device_name: $("#device_name").value.trim()
   home_wifi_ssid: $("#home_wifi_ssid").value.trim()
@@ -129,18 +142,12 @@ enableFirmware = ->
   els.downloadBtn.disabled = false
   els.flashBtn.disabled = false if serialSupported
 
-# Stable fingerprint of the current build config — the IndexedDB cache key.
-hashStr = (s) ->
-  h = 0x811c9dc5
-  for i in [0...s.length]
-    h ^= s.charCodeAt i
-    h = Math.imul(h, 0x01000193) >>> 0
-  h.toString 16
-
-# Browser cache (IndexedDB): a cloud-built image survives reloads — no rebuild.
+# Firmware fossil storage (IndexedDB): every cloud build is kept with its full
+# config snapshot + timestamp, so it can be re-selected, flashed or dismissed.
 DB_NAME = "pteronautos-fossil-etcher"
-DB_VERSION = 1
-STORE = "builds"
+DB_VERSION = 2
+BUILD_STORE = "builds"          # legacy cache store (kept for schema upgrades)
+SPECIMEN_STORE = "specimens"    # user-facing firmware fossils (keyPath: "id")
 dbPromise = null
 
 openDb = ->
@@ -149,54 +156,200 @@ openDb = ->
     req = indexedDB.open DB_NAME, DB_VERSION
     req.onupgradeneeded = ->
       db = req.result
-      db.createObjectStore STORE unless db.objectStoreNames.contains STORE
+      db.createObjectStore BUILD_STORE unless db.objectStoreNames.contains BUILD_STORE
+      unless db.objectStoreNames.contains SPECIMEN_STORE
+        db.createObjectStore SPECIMEN_STORE, keyPath: "id"
     req.onsuccess = -> resolve req.result
     req.onerror = -> reject req.error
   dbPromise
 
-idbPut = (key, value) ->
+idbPutSpecimen = (rec) ->
   db = await openDb()
   new Promise (resolve, reject) ->
-    tx = db.transaction STORE, "readwrite"
-    tx.objectStore(STORE).put value, key
+    tx = db.transaction SPECIMEN_STORE, "readwrite"
+    tx.objectStore(SPECIMEN_STORE).put rec
     tx.oncomplete = -> resolve()
     tx.onerror = -> reject tx.error
 
-idbGet = (key) ->
+idbAllSpecimens = ->
   db = await openDb()
   new Promise (resolve, reject) ->
-    tx = db.transaction STORE, "readonly"
-    req = tx.objectStore(STORE).get key
-    req.onsuccess = -> resolve req.result
+    tx = db.transaction SPECIMEN_STORE, "readonly"
+    req = tx.objectStore(SPECIMEN_STORE).getAll()
+    req.onsuccess = -> resolve req.result or []
     req.onerror = -> reject req.error
 
-firmwareKey = ->
-  hashStr JSON.stringify collectParams()
+idbDeleteSpecimen = (id) ->
+  db = await openDb()
+  new Promise (resolve, reject) ->
+    tx = db.transaction SPECIMEN_STORE, "readwrite"
+    tx.objectStore(SPECIMEN_STORE).delete id
+    tx.oncomplete = -> resolve()
+    tx.onerror = -> reject tx.error
 
-cacheFirmware = ->
+idbClearSpecimens = ->
+  db = await openDb()
+  new Promise (resolve, reject) ->
+    tx = db.transaction SPECIMEN_STORE, "readwrite"
+    tx.objectStore(SPECIMEN_STORE).clear()
+    tx.oncomplete = -> resolve()
+    tx.onerror = -> reject tx.error
+
+SPECIMEN_KEY = "pteronautos-selected-specimen"
+selectedSpecimenId = null
+
+MIXER_LABELS =
+  "0": "2 wings"
+  "1": "2 wings + rudder"
+  "2": "4 wings"
+  "3": "V-tail + rudder"
+  "4": "motor + V-tail"
+  "5": "motor + V-tail + rudder"
+  "6": "elevator + rudder"
+  "7": "motor + elevator + rudder"
+
+fmtSize = (n) ->
+  if n >= 1048576 then (n / 1048576).toFixed(1) + " MB" else Math.round(n / 1024) + " KB"
+
+fmtWhen = (ts) ->
+  new Date(ts).toLocaleString()
+
+specimenMeta = (rec) ->
+  p = rec.params or {}
+  parts = [fmtWhen rec.ts]
+  parts.push (MIXER_LABELS[p.mixer_profile] or "mixer " + p.mixer_profile)
+  parts.push (if p.regulatory_domain is "EU_CE_2400" then "EU CE" else "ISM")
+  parts.push (if p.mushin_enabled is "1" then "MUSHIN" else "local PWM")
+  parts.push (if p.zephyrus_enabled is "1" then "Zephyrus" else "no gyro")
+  parts.push p.device_name if p.device_name
+  parts.push fmtSize rec.size
+  parts.join " · "
+
+saveSpecimen = ->
   return unless firmwareBytes?
   try
-    record =
+    rec =
+      id: "s" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7)
+      ts: Date.now()
       name: "pteronautos-firmware.bin"
       size: firmwareBytes.length
-      ts: Date.now()
+      params: collectParams()
       blob: firmwareBytes.slice().buffer
-    await idbPut firmwareKey(), record
-    log "Saved build in this browser (" + firmwareBytes.length + " bytes) — reload and it's reused."
+    await idbPutSpecimen rec
+    selectedSpecimenId = rec.id
+    localStorage.setItem SPECIMEN_KEY, selectedSpecimenId
+    await renderSpecimens()
+    log "Uncovered firmware fossil (" + fmtSize(rec.size) + ") — saved in this browser."
   catch err
-    log "Couldn't cache build: " + err.message
+    log "Couldn't save firmware fossil: " + err.message
 
-restoreCachedBuild = ->
-  return unless "indexedDB" of window
+selectSpecimen = (id) ->
   try
-    record = await idbGet firmwareKey()
-    if record?.blob?
-      firmwareBytes = new Uint8Array record.blob
-      enableFirmware()
-      log "Reusing saved build (" + record.size + " bytes) — no rebuild needed."
-      setStatus "Saved build loaded — ready to flash or download.", "done"
+    recs = await idbAllSpecimens()
+    rec = recs.find (r) -> r.id is id
+    return unless rec?.blob?
+    firmwareBytes = new Uint8Array rec.blob
+    selectedSpecimenId = id
+    localStorage.setItem SPECIMEN_KEY, id
+    enableFirmware()
+    await renderSpecimens()
+    log "Selected firmware fossil (" + fmtSize(rec.size) + ") — ready to flash or download."
+    setStatus "Firmware fossil loaded — ready to flash or download.", "done"
+  catch err
+    setStatus "Couldn't load firmware fossil: " + err.message, "fail"
+
+dismissSpecimen = (id) ->
+  return unless window.confirm "Dismiss this firmware fossil? It will be removed from this browser."
+  await idbDeleteSpecimen id
+  if selectedSpecimenId is id
+    selectedSpecimenId = null
+    localStorage.removeItem SPECIMEN_KEY
+    firmwareBytes = null
+    els.downloadBtn.disabled = true
+    els.flashBtn.disabled = true if serialSupported
+  await renderSpecimens()
+  log "Dismissed firmware fossil."
+
+clearSpecimens = ->
+  return unless window.confirm "Dismiss all firmware fossils? This cannot be undone."
+  await idbClearSpecimens()
+  selectedSpecimenId = null
+  localStorage.removeItem SPECIMEN_KEY
+  firmwareBytes = null
+  els.downloadBtn.disabled = true
+  els.flashBtn.disabled = true if serialSupported
+  await renderSpecimens()
+  log "Dismissed all firmware fossils."
+
+specimenNode = (rec) ->
+  li = document.createElement "li"
+  li.className = "flasher-specimen"
+  li.classList.add "selected" if rec.id is selectedSpecimenId
+
+  selectBtn = document.createElement "button"
+  selectBtn.type = "button"
+  selectBtn.className = "flasher-specimen-select"
+  selectBtn.title = "Load this firmware fossil"
+
+  name = document.createElement "span"
+  name.className = "flasher-specimen-name"
+  name.textContent = "Firmware fossil"
+
+  meta = document.createElement "span"
+  meta.className = "flasher-specimen-meta"
+  meta.textContent = specimenMeta rec
+
+  selectBtn.appendChild name
+  selectBtn.appendChild meta
+  selectBtn.addEventListener "click", -> selectSpecimen rec.id
+
+  dismiss = document.createElement "button"
+  dismiss.type = "button"
+  dismiss.className = "flasher-specimen-dismiss"
+  dismiss.title = "Dismiss"
+  dismiss.setAttribute "aria-label", "Dismiss this firmware fossil"
+  dismiss.textContent = "×"
+  dismiss.addEventListener "click", -> dismissSpecimen rec.id
+
+  li.appendChild selectBtn
+  li.appendChild dismiss
+  li
+
+renderSpecimens = ->
+  try
+    recs = await idbAllSpecimens()
   catch
-    # no cache or storage blocked — nothing to load
+    return
+  recs.sort (a, b) -> (b.ts or 0) - (a.ts or 0)
+  els.specimensList.textContent = ""
+  els.clearSpecimensBtn.disabled = recs.length is 0
+  if recs.length is 0
+    els.specimensList.classList.add "empty"
+    li = document.createElement "li"
+    li.className = "flasher-specimen-empty"
+    li.textContent = els.specimensList.dataset.empty or "No firmware fossils uncovered yet."
+    els.specimensList.appendChild li
+    return
+  els.specimensList.classList.remove "empty"
+  for rec in recs
+    els.specimensList.appendChild specimenNode rec
+
+restoreSpecimens = ->
+  if "indexedDB" of window
+    try
+      recs = await idbAllSpecimens()
+      if recs.length
+        stored = localStorage.getItem SPECIMEN_KEY
+        target = recs.find((r) -> r.id is stored) or recs[0]
+        if target?.blob?
+          firmwareBytes = new Uint8Array target.blob
+          selectedSpecimenId = target.id
+          enableFirmware()
+          log "Restored firmware fossil (" + fmtSize(target.size) + ") — ready to flash or download."
+          setStatus "Firmware fossil loaded — ready to flash or download.", "done"
+    catch
+      # no storage or blocked — nothing to load
+  renderSpecimens()
 
 loadFromDisk = (file) ->
   buf = await file.arrayBuffer()
@@ -205,15 +358,20 @@ loadFromDisk = (file) ->
   log "Loaded " + file.name + " (" + firmwareBytes.length + " bytes) from disk."
   setStatus "Firmware image loaded — ready to flash or download.", "done"
 
-disconnect = ->
-  try
-    await activeTransport?.disconnect()
-  catch
-  try
-    activePort?.close()
-  catch
+closeSerial = ->
+  t = activeTransport
+  p = activePort
   activeTransport = null
   activePort = null
+  try
+    await t?.disconnect()
+  catch
+  try
+    await p?.close()
+  catch
+
+disconnect = ->
+  await closeSerial()
   els.disconnectBtn.classList.add "hidden"
   log "Disconnected."
 
@@ -223,7 +381,6 @@ startBuild = ->
   els.downloadBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
-  builtFingerprint = null
   els.log.textContent = ""
   setStatus "Dispatching build…", "busy"
   els.runLink.classList.add "hidden"
@@ -232,7 +389,6 @@ startBuild = ->
 
   try
     params = collectParams()
-    builtFingerprint = hashStr JSON.stringify params
     delay = Number params.auto_wifi_on_interval
     unless Number.isInteger(delay) and delay >= -1 and delay <= 2147483
       throw new Error "Wi-Fi auto-on interval must be -1 (disabled) or a nonnegative number of seconds."
@@ -268,9 +424,9 @@ poll = ->
       return
     setStatus "Build complete — downloading image…", "busy"
     await downloadFirmware()
-    await cacheFirmware()
+    await saveSpecimen()
     enableFirmware()
-    setStatus "Build complete — cached in this browser. Ready to flash or download.", "done"
+    setStatus "Build complete — firmware fossil saved. Ready to flash or download.", "done"
     els.buildBtn.disabled = false
     busy = false
   catch err
@@ -317,6 +473,26 @@ terminal = ->
   write: (d) ->
     els.log.textContent += d
 
+# Fresh ESPLoader per connect attempt. esptool-js connect() opens the WebSerial
+# port, then throws on a failed ROM sync WITHOUT closing it — so reusing one
+# loader across retries hits "port is already open" on the second main() call.
+# A new Transport on the same port + disconnect() on failure releases the port.
+attemptConnect = (resetArg = null) ->
+  transport = new Transport activePort, true
+  loader = new ESPLoader
+    transport: transport
+    baudrate: 115200
+    terminal: terminal()
+    debugLogging: false
+  try
+    chip = await loader.main resetArg
+    return { chip: chip, loader: loader, transport: transport }
+  catch err
+    try
+      await transport.disconnect()
+    catch
+    throw err
+
 flash = ->
   unless "serial" of navigator
     setStatus "Web Serial is not supported in this browser — use Chrome, Edge or Opera.", "fail"
@@ -332,18 +508,41 @@ flash = ->
       await downloadFirmware()
 
     setStatus "Connecting to device…", "busy"
+    await closeSerial()
     activePort = await navigator.serial.requestPort()
-
-    activeTransport = new Transport activePort, true
     els.disconnectBtn.classList.remove "hidden"
-    esploader = new ESPLoader
-      transport: activeTransport
-      baudrate: 115200
-      terminal: terminal()
-      debugLogging: false
 
-    chip = await esploader.main("no_reset")
-    log "Connected: " + chip
+    # Manual bootloader entry matches HARDWARE.md: hold BOOT (GPIO0 / CH1),
+    # power-cycle, keep holding ~1 s, then release. Try a manual sync first
+    # (no DTR/RTS disturbance), then fall back to an auto-reset attempt for
+    # adapters that wire DTR/RTS to EN/GPIO0.
+    log "Bootloader: hold BOOT (GPIO0 / CH1 button), power-cycle the board, keep holding ~1 s, then release."
+    chip = null
+    lastErr = null
+    for attempt in [1..2]
+      try
+        conn = await attemptConnect "no_reset"
+        chip = conn.chip
+        esploader = conn.loader
+        activeTransport = conn.transport
+        log "Connected: " + chip
+        break
+      catch err
+        lastErr = err
+        if attempt is 1
+          log "No bootloader response on manual sync — retrying…"
+          await sleep 400
+    unless chip?
+      try
+        conn = await attemptConnect()
+        chip = conn.chip
+        esploader = conn.loader
+        activeTransport = conn.transport
+        log "Connected (auto-reset): " + chip
+      catch err
+        lastErr = err
+    unless chip?
+      throw lastErr or new Error "Could not reach the ROM bootloader. Hold BOOT (GPIO0), power-cycle, and retry."
 
     setStatus "Flashing…", "busy"
     await esploader.writeFlash
@@ -358,33 +557,57 @@ flash = ->
         els.progressBar.style.width = pct + "%"
         els.statusText.textContent = "Flashing… " + pct + "%"
 
-    log "Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware."
+    mushin = $("#mushin_enabled").checked
+    if mushin
+      log "Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware."
+    else
+      log "Flashing complete. The receiver stays in the ROM bootloader — power-cycle (re-plug without BOOT held) to boot the new firmware."
     await esploader.after "no_reset_stub"
 
-    setStatus "Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done"
+    if mushin
+      setStatus "Flashed successfully — exit MEDITATION (long-press BOOT / tap RESET) to boot.", "done"
+    else
+      setStatus "Flashed successfully — power-cycle to boot the new firmware.", "done"
     els.progressBar.style.width = "100%"
     await disconnect()
   catch err
+    await closeSerial()
     setStatus "Flash failed: " + err.message, "fail"
     log err.stack or err.message
   finally
     els.flashBtn.disabled = false
     busy = false
 
-syncMushinFields = ->
-  enabled = $("#mushin_enabled").value is "1"
-  for el in document.querySelectorAll ".flasher-conditional"
-    el.classList.toggle "hidden", not enabled
+syncGyroFields = ->
+  mushin = $("#mushin_enabled").checked
+  zeph = $("#zephyrus_enabled")
+  zephRow = zeph.closest ".flasher-toggle"
+  # MUSHIN owns servos + gyro on the RP2040 — local Zephyrus is meaningless.
+  if mushin
+    zeph.checked = false
+    zeph.disabled = true
+    zephRow.classList.add "is-disabled"
+  else
+    zeph.disabled = false
+    zephRow.classList.remove "is-disabled"
+  enabled = zeph.checked and not mushin
+  wrap = $("#zephyrus-fields")
+  wrap.classList.toggle "is-greyed", not enabled
+  for el in wrap.querySelectorAll "input, select"
+    el.disabled = not enabled
+  $("#zephyrus-hint").classList.toggle "hidden", enabled
+  $("#mushin-note").classList.toggle "hidden", not mushin
 
 restoreConfig()
-syncMushinFields()
-restoreCachedBuild()
+syncGyroFields()
+restoreSpecimens()
 
 for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
 
-$("#mushin_enabled").addEventListener "change", syncMushinFields
+$("#mushin_enabled").addEventListener "change", syncGyroFields
+$("#zephyrus_enabled").addEventListener "change", syncGyroFields
 
 for l in LOCALES
   $("#locale-#{l}").addEventListener "change", saveConfig
@@ -396,6 +619,7 @@ unless serialSupported
 els.buildBtn.addEventListener "click", startBuild
 els.loadBtn.addEventListener "click", -> els.fileInput.click()
 els.disconnectBtn.addEventListener "click", disconnect
+els.clearSpecimensBtn.addEventListener "click", clearSpecimens
 els.fileInput.addEventListener "change", ->
   file = els.fileInput.files?[0]
   if file

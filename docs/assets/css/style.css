@@ -1696,6 +1696,90 @@ footer .lang-switch {
   color: var(--text);
 }
 
+.flasher-field.flasher-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--dim);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.flasher-field.flasher-toggle:hover {
+  border-color: var(--accent);
+}
+.flasher-field.flasher-toggle .flasher-toggle-text {
+  margin: 0;
+  font-family: "Turret Road", monospace;
+  font-weight: 500;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.flasher-field.flasher-toggle .flasher-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  margin: 0;
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-track {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+  border-radius: 999px;
+  transition: background 0.18s ease;
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition: transform 0.18s ease;
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-input:checked + .flasher-switch-track {
+  background: var(--accent);
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-input:checked + .flasher-switch-track .flasher-switch-knob {
+  transform: translateX(20px);
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-input:focus-visible + .flasher-switch-track {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+.flasher-field.flasher-toggle .flasher-switch .flasher-switch-input:disabled + .flasher-switch-track {
+  opacity: 0.5;
+}
+.flasher-field.flasher-toggle.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+#zephyrus-fields.is-greyed {
+  opacity: 0.45;
+}
+
 .flasher-suffix {
   display: flex;
   align-items: stretch;
@@ -1920,6 +2004,111 @@ footer .lang-switch {
   font-size: 0.72rem;
   color: var(--mut);
   letter-spacing: 0.02em;
+}
+
+.flasher-specimens .flasher-specimens-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.flasher-specimens .flasher-specimens-head h2 {
+  margin: 0;
+}
+.flasher-specimens .flasher-specimens-head .flasher-secondary {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  padding: 0.45rem 0.8rem;
+}
+.flasher-specimens .flasher-specimens-head .flasher-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flasher-specimens-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.flasher-specimen-empty {
+  font-family: "Turret Road", monospace;
+  font-weight: 300;
+  font-size: 0.74rem;
+  color: var(--mut);
+  letter-spacing: 0.02em;
+}
+
+.flasher-specimen {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+.flasher-specimen.selected .flasher-specimen-select {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.flasher-specimen-select {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-family: "Turret Road", monospace;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--dim);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.flasher-specimen-select:hover {
+  border-color: var(--accent);
+}
+
+.flasher-specimen-name {
+  font-family: "Turret Road", monospace;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.flasher-specimen-meta {
+  font-family: "Turret Road", monospace;
+  font-weight: 300;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--mut);
+  line-height: 1.4;
+}
+
+.flasher-specimen-dismiss {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  font-family: "Turret Road", monospace;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--mut);
+  background: transparent;
+  border: 1px solid var(--dim);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.flasher-specimen-dismiss:hover {
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .hidden {

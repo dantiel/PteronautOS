@@ -56,13 +56,37 @@ on:
         default: '0'
         options: ['0', '1', '2', '3', '4', '5', '6']
       mushin_enabled:
-        description: 'Enable the MUSHIN bridge (RP2040 muscle link)'
+        description: 'Enable the MUSHIN bridge (EP2 → RP2040 muscle link)'
         required: false
         type: choice
         default: '0'
         options:
           - '0'   # off — standalone PWM receiver, wings flap locally
           - '1'   # EP2 + RP2040, shared UART0 on GPIO1/3
+      zephyrus_enabled:
+        description: 'Zephyrus gyro stabilization (MPU6050)'
+        required: false
+        type: choice
+        default: '1'
+        options:
+          - '0'   # no gyro — ZEPHYRUS_ENABLED removed
+          - '1'   # MPU6050 + AHRS/PID compiled in
+      zephyrus_mode:
+        description: 'Stabilizer mode (1=rate-only Mesozoic, 0=AHRS self-level)'
+        required: false
+        type: choice
+        default: '1'
+        options:
+          - '0'   # full Mahony AHRS attitude self-level
+          - '1'   # rate-only damper (MESOZOIC_ONLY)
+      zephyrus_i2c_pre_detect:
+        description: 'Probe SCL before I2C init to skip a missing MPU (1=on, 0=off)'
+        required: false
+        type: choice
+        default: '1'
+        options:
+          - '0'   # off — always attempt I2C init
+          - '1'   # on — skip I2C cleanly when MPU absent
       mushin_rx_pin:
         description: 'Deprecated / ignored: EP2 RX is GPIO3'
         required: false
@@ -147,6 +171,15 @@ jobs:
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
             # Companion UART pins/baud belong to the EP2 target, not user overrides.
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
+            if [ "${{ inputs.zephyrus_enabled }}" = "0" ]; then
+              echo "!-D ZEPHYRUS_ENABLED=1"
+            fi
+            if [ "${{ inputs.zephyrus_mode }}" = "0" ]; then
+              echo "!-D MESOZOIC_ONLY=1"
+            fi
+            if [ "${{ inputs.zephyrus_i2c_pre_detect }}" = "0" ]; then
+              echo "-DZEPHYR_I2C_PRE_DETECT=0"
+            fi
             if [ -n "${{ inputs.device_name }}" ]; then
               echo "-DDEVICE_NAME=\"${{ inputs.device_name }}\""
             fi
@@ -207,6 +240,9 @@ jobs:
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
             "mushin_enabled": "${{ inputs.mushin_enabled }}",
+            "zephyrus_enabled": "${{ inputs.zephyrus_enabled }}",
+            "zephyrus_mode": "${{ inputs.zephyrus_mode }}",
+            "zephyrus_i2c_pre_detect": "${{ inputs.zephyrus_i2c_pre_detect }}",
             "target": "${{ env.TARGET_ENV }}",
             "rcvr_uart_baud": "${{ inputs.rcvr_uart_baud }}",
             "device_name": "${{ inputs.device_name }}",

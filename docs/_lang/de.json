@@ -935,7 +935,7 @@
   "flasher_mushin_rx": "Mushin RX-Pin",
   "flasher_mushin_tx": "Mushin TX-Pin",
   "flasher_mushin_baud": "Mushin-Baudrate",
-  "flasher_mushin_enabled": "Mushin-Brücke (RP2040-Muskel)",
+  "flasher_mushin_enabled": "Mushin (EP2 → RP2040)",
   "flasher_wifi_interval": "WiFi-Auto-On-Intervall (s)",
   "flasher_build_btn": "Firmware bauen",
   "flasher_flash_btn": "Via Web Serial flashen",
@@ -956,5 +956,15 @@
   "flash_online_cta": "Online flashen",
   "flash_online_cta_desc": "Firmware direkt im Browser bauen und flashen — ohne Toolchain, ohne Treiber. Chrome, Edge und Opera flashen per USB; andere Browser laden die .bin herunter.",
   "flasher_load_btn": ".bin laden",
-  "flasher_disconnect_btn": "Trennen"
+  "flasher_disconnect_btn": "Trennen",
+  "flasher_zephyrus_enabled": "Zephyrus-Gyro (MPU6050)",
+  "flasher_zephyrus_mode": "Stabilisierungsmodus",
+  "flasher_zephyrus_hint": "Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Bei aktivem MUSHIN deaktiviert.",
+  "flasher_mushin_hint": "MUSHIN verlagert Servos + Gyro auf den RP2040 — kein lokales PWM, kein lokaler Gyro auf dieser Platine.",
+  "flasher_pre_detect": "MPU-I2C-Vorerkennung",
+  "flasher_pre_detect_hint": "Prüft SCL vor der I2C-Initialisierung, damit ein fehlender MPU6050 sauber bootet. Bei ungewöhnlichen Pull-ups deaktivieren.",
+  "flasher_specimens": "Firmware-Fossilien",
+  "flasher_specimens_hint": "Jeder Cloud-Build wird hier als Firmware-Fossil mit Einstellungen und Datum aufbewahrt. Klicken zum Laden, × zum Verwerfen.",
+  "flasher_specimens_empty": "Noch keine Firmware-Fossilien — baue eine Firmware, um eines freizulegen.",
+  "flasher_specimens_clear": "Alle Fossilien verwerfen"
 }

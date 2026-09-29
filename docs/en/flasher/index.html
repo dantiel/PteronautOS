@@ -53,6 +53,28 @@
 </label>
 <details class='flasher-advanced'>
 <summary>Advanced — I2C, Mushin, WiFi</summary>
+<div class='flasher-grid flasher-toggles'>
+<label class='flasher-field flasher-toggle'>
+<span class='flasher-toggle-text'>Mushin (EP2 → RP2040)</span>
+<span class='flasher-switch'>
+<input class='flasher-switch-input' id='mushin_enabled' type='checkbox'>
+<span class='flasher-switch-track'>
+<span class='flasher-switch-knob'></span>
+</span>
+</span>
+</label>
+<label class='flasher-field flasher-toggle'>
+<span class='flasher-toggle-text'>Zephyrus gyro (MPU6050)</span>
+<span class='flasher-switch'>
+<input checked='checked' class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
+<span class='flasher-switch-track'>
+<span class='flasher-switch-knob'></span>
+</span>
+</span>
+</label>
+</div>
+<p class='flasher-conditional hidden' id='mushin-note'>MUSHIN moves servos + gyro to the RP2040 — no local PWM, no local gyro on this board.</p>
+<div id='zephyrus-fields'>
 <div class='flasher-grid'>
 <label class='flasher-field'>
 <span>MPU6050 I2C SDA pin</span>
@@ -62,6 +84,8 @@
 <span>MPU6050 I2C SCL pin</span>
 <input id='zephyrus_i2c_scl' max='16' min='0' type='number' value='3'>
 </label>
+</div>
+<div class='flasher-grid'>
 <label class='flasher-field'>
 <span>MPU6050 mounting</span>
 <select id='zephyrus_board_rotation'>
@@ -75,13 +99,24 @@
 </select>
 </label>
 <label class='flasher-field'>
-<span>Mushin bridge (RP2040 muscle)</span>
-<select id='mushin_enabled'>
-<option selected value='0'>Off — local PWM (wings flap on this board)</option>
-<option value='1'>EP2 + RP2040 — single UART0, remote servos and gyro</option>
+<span>Stabilizer mode</span>
+<select id='zephyrus_mode'>
+<option selected value='1'>Rate-only damper (Mesozoic) — recommended</option>
+<option value='0'>Self-level (Mahony AHRS)</option>
 </select>
 </label>
-<p class='flasher-conditional'>EP2 RX=GPIO3, TX=GPIO1. Runtime 420000 baud; MEDITATION flashing 115200. No second UART or local I2C.</p>
+</div>
+<label class='flasher-field flasher-toggle'>
+<span class='flasher-toggle-text'>MPU I2C pre-detect</span>
+<span class='flasher-switch'>
+<input checked='checked' class='flasher-switch-input' id='zephyrus_i2c_pre_detect' type='checkbox'>
+<span class='flasher-switch-track'>
+<span class='flasher-switch-knob'></span>
+</span>
+</span>
+</label>
+<p class='flasher-hint'>Probes SCL before I2C init so a missing MPU6050 boots cleanly. Disable for non-standard pull-ups.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro is off — enable Zephyrus to use the MPU6050. Disabled while MUSHIN is on.</p>
 <label class='flasher-field'>
 <span>WiFi auto-on interval (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
@@ -174,6 +209,17 @@
 </div>
 <input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>
 <p class='flasher-hint'>Building compiles a single merged .bin in GitHub Actions (~3–4 min).</p>
+</section>
+<section class='flasher-card flasher-specimens'>
+<div class='flasher-specimens-head'>
+<h2>Firmware Fossils</h2>
+<button class='flasher-secondary' id='clear-specimens-btn' title='Dismiss all fossils' type='button'>
+<span aria-hidden='true'>🗑</span>
+<span>Dismiss all fossils</span>
+</button>
+</div>
+<p class='flasher-hint'>Every cloud build is kept here as a firmware fossil with its settings and date. Click a fossil to load it, × to dismiss it.</p>
+<ul class='flasher-specimens-list' data-empty='No firmware fossils yet — build a firmware to unearth one.' id='specimens-list'></ul>
 </section>
 <section class='flasher-card flasher-status hidden' id='status-card'>
 <h2>Build progress</h2>
