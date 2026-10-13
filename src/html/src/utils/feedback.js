@@ -58,18 +58,24 @@ export async function loadJSON(url, errorMessage = 'Failed to load data', header
   for (let attempt = 0; attempt < attempts; attempt++) {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 8000)
+    let permanentError = false
     try {
       const response = await fetch(url, {headers, signal: ctrl.signal})
       if (response.ok) {
         return await response.json()
       }
       if (response.status === 503 || response.status === 429) {
+        // Drain even an error body before issuing another request. Leaving it
+        // unread can retain a TCP response on the memory-constrained receiver.
+        await response.text()
         lastError = new Error(`HTTP ${response.status}`)
       } else {
         const text = await response.text()
+        permanentError = true
         throw new Error(text || errorMessage)
       }
     } catch (e) {
+      if (permanentError) throw e
       lastError = e
     } finally {
       clearTimeout(timer)

@@ -13,11 +13,15 @@ typedef enum {
     COUNT
 } datatype_t;
 
-static const struct {
-    const nameType position;
-    const char *name;
-    const datatype_t type;
-} fields[] = {
+// This boot-time schema used to occupy DRAM permanently: both the pointer
+// table and all field-name strings. Keep names inline in flash and copy just
+// one entry to the stack when needed (ESP8266 flash is not byte-addressable).
+struct HardwareField {
+    nameType position;
+    char name[24];
+    datatype_t type;
+};
+static const HardwareField fields[] PROGMEM = {
     {HARDWARE_customised, "customised", BOOL},
     {HARDWARE_serial_rx, "serial_rx", INT},
     {HARDWARE_serial_tx, "serial_tx", INT},
@@ -178,7 +182,9 @@ String& getHardware()
 
 static void hardware_ClearAllFields()
 {
-    for (auto field : fields) {
+    for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); ++i) {
+        HardwareField field;
+        memcpy_P(&field, &fields[i], sizeof(field));
         switch (field.type) {
             case INT:
                 hardware[field.position].int_value = -1;
@@ -201,7 +207,9 @@ static void hardware_ClearAllFields()
 
 static void hardware_LoadFieldsFromDoc(JsonDocument &doc)
 {
-    for (auto field : fields) {
+    for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); ++i) {
+        HardwareField field;
+        memcpy_P(&field, &fields[i], sizeof(field));
         if (doc[field.name].is<JsonVariant>()) {
             switch (field.type) {
                 case INT:

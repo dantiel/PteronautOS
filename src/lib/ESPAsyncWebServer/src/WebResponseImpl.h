@@ -19,6 +19,10 @@
 class AsyncBasicResponse : public AsyncWebServerResponse {
 private:
   String _content;
+#ifdef ESP8266
+  String _smallHead;
+  size_t _smallHeadOffset{0};
+#endif
 
 public:
   explicit AsyncBasicResponse(int code, const char *contentType = asyncsrv::empty, const char *content = asyncsrv::empty);
@@ -33,6 +37,15 @@ public:
 
 class AsyncAbstractResponse : public AsyncWebServerResponse {
 private:
+#ifdef ESP8266
+  // Keep an unsent body slice until TCP has actually accepted every byte.
+  // A failed tcp_write must not advance a file/PROGMEM/template source twice.
+  uint8_t *_pending{nullptr};
+  size_t _pendingLength{0}, _pendingOffset{0}, _pendingContentLength{0};
+  size_t _headOffset{0};
+  bool _pendingFinal{false};
+  size_t _ackSmall(AsyncWebServerRequest *request, size_t len);
+#endif
 #if ASYNCWEBSERVER_USE_CHUNK_INFLIGHT
   // amount of response data in-flight, i.e. sent, but not acked yet
   size_t _in_flight{0};
@@ -53,7 +66,11 @@ protected:
 
 public:
   AsyncAbstractResponse(AwsTemplateProcessor callback = nullptr);
-  virtual ~AsyncAbstractResponse() {}
+  virtual ~AsyncAbstractResponse() {
+#ifdef ESP8266
+    free(_pending);
+#endif
+  }
   void _respond(AsyncWebServerRequest *request) override final;
   size_t _ack(AsyncWebServerRequest *request, size_t len, uint32_t time) override final;
   virtual bool _sourceValid() const {

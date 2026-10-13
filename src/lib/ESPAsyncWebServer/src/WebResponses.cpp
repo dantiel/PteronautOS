@@ -193,7 +193,11 @@ void AsyncWebServerResponse::_assembleHead(String &buffer, uint8_t version) {
   }
 
   // prepare buffer
-  buffer.reserve(len);
+  if (!buffer.reserve(len)) {
+    buffer = emptyString;
+    _headLength = 0;
+    return;
+  }
 
   // HTTP header
 #ifdef ESP8266
@@ -265,6 +269,15 @@ AsyncBasicResponse::AsyncBasicResponse(int code, const char *contentType, const 
 
 void AsyncBasicResponse::_respond(AsyncWebServerRequest *request) {
   _state = RESPONSE_HEADERS;
+#ifdef ESP8266
+  _assembleHead(_smallHead, request->version());
+  if (!_headLength) {
+    _state = RESPONSE_FAILED;
+    request->client()->close(true);
+    return;
+  }
+  _ack(request, 0, 0);
+#else
   String out;
   _assembleHead(out, request->version());
   size_t outLen = out.length();
@@ -296,11 +309,47 @@ void AsyncBasicResponse::_respond(AsyncWebServerRequest *request) {
     _contentLength += outLen;
     _state = RESPONSE_CONTENT;
   }
+#endif
 }
 
 size_t AsyncBasicResponse::_ack(AsyncWebServerRequest *request, size_t len, uint32_t time) {
   (void)time;
   _ackedLength += len;
+#ifdef ESP8266
+  // Small/error/redirect responses need the same TCP backpressure semantics
+  // as flash assets: never discard bytes that add() could not queue.
+  if (_state == RESPONSE_WAIT_ACK) {
+    if (_ackedLength >= _writtenLength) _state = RESPONSE_END;
+    return 0;
+  }
+  if (_writtenLength > _ackedLength) {
+    request->client()->send();
+    return 0;
+  }
+  const size_t room = std::min(size_t(512), request->client()->space());
+  if (!room) return 0;
+  size_t accepted = 0;
+  if (_state == RESPONSE_HEADERS) {
+    accepted = request->client()->add(_smallHead.c_str() + _smallHeadOffset,
+      std::min(room, _smallHead.length() - _smallHeadOffset), ASYNC_WRITE_FLAG_COPY);
+    _smallHeadOffset += accepted;
+    if (_smallHeadOffset == _smallHead.length()) {
+      _smallHead = emptyString;
+      _state = _contentLength ? RESPONSE_CONTENT : RESPONSE_WAIT_ACK;
+    }
+  } else if (_state == RESPONSE_CONTENT) {
+    accepted = request->client()->add(_content.c_str() + _sentLength,
+      std::min(room, _contentLength - _sentLength), ASYNC_WRITE_FLAG_COPY);
+    _sentLength += accepted;
+    if (_sentLength == _contentLength) {
+      _content = emptyString;
+      _state = RESPONSE_WAIT_ACK;
+    }
+  }
+  _writtenLength += accepted;
+  if (accepted) request->client()->send();
+  return accepted;
+#else
   if (_state == RESPONSE_CONTENT) {
     size_t available = _contentLength - _sentLength;
     size_t space = request->client()->space();
@@ -323,6 +372,7 @@ size_t AsyncBasicResponse::_ack(AsyncWebServerRequest *request, size_t len, uint
     }
   }
   return 0;
+#endif
 }
 
 /*
@@ -341,12 +391,20 @@ AsyncAbstractResponse::AsyncAbstractResponse(AwsTemplateProcessor callback) : _c
 void AsyncAbstractResponse::_respond(AsyncWebServerRequest *request) {
   addHeader(T_Connection, T_close, false);
   _assembleHead(_head, request->version());
+  if (!_headLength) {
+    _state = RESPONSE_FAILED;
+    request->client()->close(true);
+    return;
+  }
   _state = RESPONSE_HEADERS;
   _ack(request, 0, 0);
 }
 
 size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, uint32_t time) {
   (void)time;
+#ifdef ESP8266
+  return _ackSmall(request, len);
+#else
   if (!_sourceValid()) {
     _state = RESPONSE_FAILED;
     request->client()->close();
@@ -487,7 +545,103 @@ size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, u
     }
   }
   return 0;
+#endif
 }
+
+#ifdef ESP8266
+size_t AsyncAbstractResponse::_ackSmall(AsyncWebServerRequest *request, size_t len) {
+  // ESP8266 has a small shared Wi-Fi heap. TCP send-window space is NOT a
+  // memory budget. At most one 512-byte slice may be queued, and malloc/TCP
+  // failures yield to the next poll/ACK instead of spinning or losing bytes.
+  constexpr size_t slice = 512;
+  if (!_sourceValid()) {
+    _state = RESPONSE_FAILED;
+    request->client()->close();
+    return 0;
+  }
+  _ackedLength += len;
+  if (_state == RESPONSE_WAIT_ACK) {
+    if (_ackedLength >= _writtenLength) {
+      _state = RESPONSE_END;
+      if (!_sendContentLength && !_chunked) request->client()->close(true);
+    }
+    return 0;
+  }
+  // Drain queued data before allocating another slice. This also gives the
+  // SDK time/heap to receive ACKs and service other connections.
+  if (_writtenLength > _ackedLength) {
+    request->client()->send();
+    return 0;
+  }
+  const size_t room = std::min(slice, request->client()->space());
+  if (!room) return 0;
+  if (_state == RESPONSE_HEADERS) {
+    const size_t count = std::min(room, _head.length() - _headOffset);
+    const size_t accepted = request->client()->add(_head.c_str() + _headOffset, count, ASYNC_WRITE_FLAG_COPY);
+    _headOffset += accepted;
+    _writtenLength += accepted;
+    if (_headOffset == _head.length()) {
+      _head = emptyString;
+      _state = (!_chunked && _sendContentLength && !_contentLength) ? RESPONSE_WAIT_ACK : RESPONSE_CONTENT;
+    }
+    // add() reports bytes queued; send() may fail AFTER they were queued.
+    // Using write() here would confuse that with accepting zero bytes.
+    if (accepted) request->client()->send();
+    return accepted;
+  }
+  if (_state != RESPONSE_CONTENT) return 0;
+
+  if (!_pending) {
+    _pending = static_cast<uint8_t *>(malloc(slice));
+    if (!_pending) return 0;  // no abort/new response allocation under OOM
+    const size_t capacity = _chunked ? slice - 8 :
+      (_sendContentLength ? std::min(slice, _contentLength - _sentLength) : slice);
+    const size_t read = _fillBufferAndProcessTemplates(_pending + (_chunked ? 6 : 0), capacity);
+    if (read == RESPONSE_TRY_AGAIN) {
+      free(_pending);
+      _pending = nullptr;
+      return 0;
+    }
+    if (read > capacity || (!_chunked && _sendContentLength && capacity && !read)) {
+      free(_pending);
+      _pending = nullptr;
+      _state = RESPONSE_FAILED;
+      request->client()->close(true);
+      return 0;
+    }
+    _pendingContentLength = read;
+    _pendingOffset = 0;
+    _pendingFinal = _chunked ? read == 0 :
+      (_sendContentLength ? _sentLength + read == _contentLength : read == 0);
+    if (_chunked) {
+      for (unsigned i = 0; i < 4; ++i) {
+        const unsigned digit = (read >> ((3 - i) * 4)) & 15;
+        _pending[i] = digit < 10 ? '0' + digit : 'a' + digit - 10;
+      }
+      _pending[4] = '\r';
+      _pending[5] = '\n';
+      _pending[read + 6] = '\r';
+      _pending[read + 7] = '\n';
+      _pendingLength = read + 8;
+    } else {
+      _pendingLength = read;
+    }
+  }
+  const size_t count = std::min(room, _pendingLength - _pendingOffset);
+  const size_t accepted = count ? request->client()->add(
+    reinterpret_cast<const char *>(_pending + _pendingOffset), count, ASYNC_WRITE_FLAG_COPY) : 0;
+  _pendingOffset += accepted;
+  _writtenLength += accepted;
+  if (_pendingOffset == _pendingLength) {
+    _sentLength += _pendingContentLength;
+    free(_pending);
+    _pending = nullptr;
+    if (_pendingFinal) _state = RESPONSE_WAIT_ACK;
+  }
+  if (accepted) request->client()->send();
+  return accepted;
+}
+#endif
 
 size_t AsyncAbstractResponse::_readDataFromCacheOrContent(uint8_t *data, const size_t len) {
   // If we have something in cache, copy it to buffer

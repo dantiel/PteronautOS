@@ -94,6 +94,10 @@ static bool scanComplete = false;
 
 static AsyncWebServer server(80);
 static bool servicesStarted = false;
+#if defined(PLATFORM_ESP8266)
+static uint32_t heapBeforeWifi = 0;
+static uint32_t heapAfterServices = 0;
+#endif
 static constexpr uint32_t STALE_WIFI_SCAN = 20000;
 static uint32_t lastScanTimeMS = 0;
 
@@ -156,10 +160,8 @@ static bool captivePortal(AsyncWebServerRequest *request)
 // fragmented heap can push a malloc over the edge and reboot the radio
 // ("load too much at once" crash). Degrade gracefully instead: serve a 503
 // and let the WebUI (fetchJsonWithRetry) back off and retry.
-// Only the largest contiguous block matters: an ArduinoJson build needs one
-// ~4KB block. Total free heap can legitimately dip below 8KB while a 5KB block
-// is still available, so a total-heap threshold only causes false 503s during
-// normal load. Guard only when no single block can satisfy the JSON alloc.
+// JSON needs a contiguous allocation AND enough total memory left for its
+// response headers/send slice and the SDK's TCP/Wi-Fi buffers.
 static const uint32_t HEAP_MAX_BLOCK_WATER = 4000; // largest contiguous block
 #if !defined(PTERONAUTOS)
 // Legacy /config water mark. PteronautOS orphans /config entirely (GetConfiguration
@@ -169,7 +171,7 @@ static const uint32_t HEAP_MAX_BLOCK_WATER_CONFIG = 6000;
 #if defined(PLATFORM_ESP8266)
 static bool heapCriticallyLow(uint32_t water = HEAP_MAX_BLOCK_WATER)
 {
-    return ESP.getMaxFreeBlockSize() < water;
+    return ESP.getMaxFreeBlockSize() < water || ESP.getFreeHeap() < water + 2048;
 }
 #else
 static bool heapCriticallyLow(uint32_t water = HEAP_MAX_BLOCK_WATER)
@@ -196,18 +198,33 @@ static void serveHeapBusy(AsyncWebServerRequest *request)
     request->send(503, "application/json", buf);
 }
 
+static void sendJsonResponse(AsyncWebServerRequest *request, AsyncJsonResponse *response)
+{
+    // ArduinoJson can survive an allocation failure with an incomplete tree.
+    // Never report that partial configuration as a successful HTTP 200.
+    if (response->overflowed()) {
+        delete response;
+        serveHeapBusy(request);
+        return;
+    }
+    response->setLength();
+    request->send(response);
+}
+
 static void WebUpdateSendContent(AsyncWebServerRequest *request)
 {
-  // Assets stream straight from PROGMEM (AsyncProgmemResponse) with no heap
-  // copy of the payload — the response object is ~100 bytes, no larger than the
-  // 503 fallback itself. A 503 here is *fatal*: <script src>/<link> tags have no
-  // retry path, so a 503'd app.js means the UI never boots. The heap-heavy path
-  // is the JSON endpoints, and those already 503+retry via fetchJsonWithRetry.
-  // Never guard assets — this guard caused app.js to load as a bare 503 and
-  // brick the panel while the device was otherwise healthy.
+  // Flash-backed assets still require response headers, a bounded send slice
+  // and TCP buffers. The ESP8266 response pump retries temporary memory/TCP
+  // pressure without dropping source bytes. Do not send JSON's heap-busy 503
+  // here: script/link resources have no application-level retry mechanism.
   for (size_t i=0 ; i<WEB_ASSETS_COUNT ; i++) {
     if (request->url().equals(WEB_ASSETS[i].path)) {
       AsyncWebServerResponse *response = request->beginResponse(200, WEB_ASSETS[i].content_type, WEB_ASSETS[i].data, WEB_ASSETS[i].size);
+      if (!response) {
+        // Do not allocate a second response while already out of memory.
+        request->client()->close(true);
+        return;
+      }
       response->addHeader("Content-Encoding", "gzip");
       if (request->url().equals("/index.html")) {
         response->addHeader("Cache-Control", "no-cache");
@@ -394,7 +411,8 @@ static void SampleVoltageSources(AsyncWebServerRequest *request, JsonVariant &js
     return;
   }
 
-  auto *response = new AsyncJsonResponse();
+  auto *response = new (std::nothrow) AsyncJsonResponse();
+  if (!response) { request->client()->close(true); return; }
   JsonObject root = response->getRoot().to<JsonObject>();
   JsonObject samplesRoot = root["samples"].to<JsonObject>();
 
@@ -429,8 +447,7 @@ static void SampleVoltageSources(AsyncWebServerRequest *request, JsonVariant &js
     return;
   }
 
-  response->setLength();
-  request->send(response);
+  sendJsonResponse(request, response);
 }
 #endif
 
@@ -527,17 +544,18 @@ static void populateSettingsJson(JsonObject settings, const JsonObject json)
 static void GetPteronautosSettings(AsyncWebServerRequest *request)
 {
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
-    auto *response = new AsyncJsonResponse(false);
+    auto *response = new (std::nothrow) AsyncJsonResponse(false);
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().as<JsonObject>();
     populateSettingsJson(root["settings"].to<JsonObject>(), root);
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 static void GetPteronautosRxConfig(AsyncWebServerRequest *request)
 {
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
-    auto *response = new AsyncJsonResponse(false);
+    auto *response = new (std::nothrow) AsyncJsonResponse(false);
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().as<JsonObject>();
     JsonObject cfg = root["config"].to<JsonObject>();
     const auto uid = cfg["uid"].to<JsonArray>();
@@ -545,8 +563,7 @@ static void GetPteronautosRxConfig(AsyncWebServerRequest *request)
 #if defined(TARGET_RX)
     populateRxConfigJson(cfg);
 #endif
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 #if !defined(PTERONAUTOS)
@@ -563,7 +580,8 @@ static void GetConfiguration(AsyncWebServerRequest *request)
   // dialog instead of a "load too much at once" reboot.
   if (heapCriticallyLow(HEAP_MAX_BLOCK_WATER_CONFIG)) { serveHeapBusy(request); return; }
   const bool exportMode = request->hasArg("export");
-  auto *response = new AsyncJsonResponse();
+  auto *response = new (std::nothrow) AsyncJsonResponse();
+  if (!response) { request->client()->close(true); return; }
   const auto json = response->getRoot();
 
   if (!exportMode)
@@ -649,19 +667,18 @@ static void GetConfiguration(AsyncWebServerRequest *request)
     populateSettingsJson(json["settings"].to<JsonObject>(), json);
   }
 
-  response->setLength();
-  request->send(response);
+  sendJsonResponse(request, response);
 }
 #endif // !defined(PTERONAUTOS)
 
 static void GetPteronautosDebug(AsyncWebServerRequest *request)
 {
-    auto *response = new AsyncJsonResponse();
+    auto *response = new (std::nothrow) AsyncJsonResponse();
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().to<JsonObject>();
     root["firmware"] = "PteronautOS";
 
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 #ifdef ZEPHYRUS_ENABLED
@@ -670,7 +687,8 @@ static void GetPteronautosDebug(AsyncWebServerRequest *request)
 
 static void GetPteronautosI2cScan(AsyncWebServerRequest *request)
 {
-    auto *response = new AsyncJsonResponse();
+    auto *response = new (std::nothrow) AsyncJsonResponse();
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().to<JsonObject>();
 
     root["firmware"] = "PteronautOS";
@@ -740,14 +758,14 @@ static void GetPteronautosI2cScan(AsyncWebServerRequest *request)
     root["error"] = "Zephyrus not compiled (ZEPHYRUS_ENABLED=0)";
 #endif
 
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 static void GetPteronautosSystem(AsyncWebServerRequest *request)
 {
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
-    auto *response = new AsyncJsonResponse();
+    auto *response = new (std::nothrow) AsyncJsonResponse();
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().to<JsonObject>();
 
     root["firmware"] = "PteronautOS";
@@ -775,8 +793,7 @@ static void GetPteronautosSystem(AsyncWebServerRequest *request)
     root["flash_speed_mhz"] = ESP.getFlashChipSpeed() / 1000000;
 #endif
 
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 // ── Blackbox dump ──────────────────────────────────────────────────────────
 // GET /pteronautos/blackbox → JSON: always-on fault register + (under
@@ -852,7 +869,8 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     // Telemetry only. The ~90-field static config moved to GetPteronautosConfig
     // (fetched once per panel mount) so the 2s poll no longer rebuilds it.
-    auto *response = new AsyncJsonResponse(false);
+    auto *response = new (std::nothrow) AsyncJsonResponse(false);
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().as<JsonObject>();
 
     // System diagnostics (cheap; no float formatting).
@@ -955,8 +973,7 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     sweep["active"] = isServoSweepActive();
     sweep["us"]     = getServoSweepUs();
 
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 static void GetPteronautosConfig(AsyncWebServerRequest *request)
@@ -964,7 +981,8 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
     // Static config — only changes via POST /pteronautos/config. Fetched once
     // per panel mount, not polled. Keeps the 2s state poll lean on the heap.
-    auto *response = new AsyncJsonResponse(false);
+    auto *response = new (std::nothrow) AsyncJsonResponse(false);
+    if (!response) { request->client()->close(true); return; }
     JsonObject root = response->getRoot().as<JsonObject>();
     JsonObject orni = root["ornithopter"].to<JsonObject>();
 
@@ -1079,8 +1097,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["ferocity_shape_mix"] = (int)ornithopter.flightProfiles[i].ferocityShapeMix;
     }
 
-    response->setLength();
-    request->send(response);
+    sendJsonResponse(request, response);
 }
 
 static void GetPteronautosPing(AsyncWebServerRequest *request)
@@ -1091,16 +1108,17 @@ static void GetPteronautosPing(AsyncWebServerRequest *request)
 // ── Unguarded diagnostic endpoint ─────────────────────────────────
 // Served even when the heap guard is firing on the heavy JSON handlers, so a
 // crash/reboot loop can be diagnosed without ever reaching a "healthy" state.
-// Static stack buffer + snprintf: zero heap allocation, cannot OOM.
+// Bounded formatting; request->send still allocates an HTTP response.
 static void GetPteronautosDiag(AsyncWebServerRequest *request)
 {
-    char buf[256];
+    char buf[384];
 #if defined(PLATFORM_ESP8266)
-    snprintf(buf, sizeof(buf),
-        "{\"ok\":true,\"heap_low\":%d,\"free_heap\":%d,\"max_free_block\":%d,\"uptime_ms\":%u,\"reset_reason\":\"%s\"}",
+    snprintf_P(buf, sizeof(buf),
+        PSTR("{\"ok\":true,\"heap_low\":%d,\"free_heap\":%d,\"max_free_block\":%d,\"uptime_ms\":%u,\"reset_reason\":\"%s\",\"heap_before_wifi\":%u,\"heap_after_services\":%u,\"http_slice_bytes\":512}"),
         heapCriticallyLow() ? 1 : 0,
         (int)ESP.getFreeHeap(), (int)ESP.getMaxFreeBlockSize(),
-        (unsigned)millis(), ESP.getResetReason().c_str());
+        (unsigned)millis(), ESP.getResetReason().c_str(),
+        (unsigned)heapBeforeWifi, (unsigned)heapAfterServices);
 #else
     snprintf(buf, sizeof(buf),
         "{\"ok\":true,\"heap_low\":0,\"free_heap\":%d,\"uptime_ms\":%u,\"reset_reason\":\"%s\"}",
@@ -1182,7 +1200,7 @@ static void _pteroPrintJsonString(Print &f, const char *s)
             char c = *p;
             if ((uint8_t)c < 0x20) {
                 const char hex[] = "0123456789abcdef";
-                f.print("\\u00");
+                f.print(F("\\u00"));
                 f.print(hex[((uint8_t)c) >> 4]);
                 f.print(hex[((uint8_t)c) & 15]);
                 continue;
@@ -1203,140 +1221,140 @@ static bool SaveOrnithopterConfig()
     PteroConfigWriter f(LittleFS, "/pteronautos.conf", "/pteronautos.conf.tmp");
     if (!f) return false;
 
-    f.print("{\"flight_profiles\":[");
+    f.print(F("{\"flight_profiles\":["));
     for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
         if (i) f.print(',');
-        f.print("{\"stroke_ferocity\":");
+        f.print(F("{\"stroke_ferocity\":"));
         f.print((int)ornithopter.flightProfiles[i].strokeFerocity);
-        f.print(",\"return_ferocity\":");
+        f.print(F(",\"return_ferocity\":"));
         f.print((int)ornithopter.flightProfiles[i].returnFerocity);
-        f.print(",\"stroke_skew\":");
+        f.print(F(",\"stroke_skew\":"));
         f.print((int)ornithopter.flightProfiles[i].strokeSkew);
-        f.print(",\"return_skew\":");
+        f.print(F(",\"return_skew\":"));
         f.print((int)ornithopter.flightProfiles[i].returnSkew);
-        f.print(",\"throttle_thrust_shape_mix\":");
+        f.print(F(",\"throttle_thrust_shape_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].throttleThrustShapeMix);
-        f.print(",\"throttle_thrust_expo\":");
+        f.print(F(",\"throttle_thrust_expo\":"));
         f.print((int)ornithopter.flightProfiles[i].throttleThrustExpo);
-        f.print(",\"aileron_skew_mix\":");
+        f.print(F(",\"aileron_skew_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].aileronSkewMix);
-        f.print(",\"throttle_skew_rate_mix\":");
+        f.print(F(",\"throttle_skew_rate_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].throttleSkewRateMix);
-        f.print(",\"aileron_skew_rate_mix\":");
+        f.print(F(",\"aileron_skew_rate_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].aileronSkewRateMix);
-        f.print(",\"glide_angle_deg\":");
+        f.print(F(",\"glide_angle_deg\":"));
         f.print((int)ornithopter.flightProfiles[i].glideAngleDeg);
-        f.print(",\"flapping_angle_deg\":");
+        f.print(F(",\"flapping_angle_deg\":"));
         f.print((int)ornithopter.flightProfiles[i].flappingAngleDeg);
-        f.print(",\"aileron_scale\":");
+        f.print(F(",\"aileron_scale\":"));
         f.print((int)ornithopter.flightProfiles[i].aileronScale);
-        f.print(",\"elevator_scale\":");
+        f.print(F(",\"elevator_scale\":"));
         f.print((int)ornithopter.flightProfiles[i].elevatorScale);
-        f.print(",\"rudder_ferocity_range\":");
+        f.print(F(",\"rudder_ferocity_range\":"));
         f.print((int)ornithopter.flightProfiles[i].rudderFerocityRange);
-        f.print(",\"rudder_amplitude_differential\":");
+        f.print(F(",\"rudder_amplitude_differential\":"));
         f.print((int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential);
-        f.print(",\"elevator_ferocity_mix\":");
+        f.print(F(",\"elevator_ferocity_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].elevatorFerocityMix);
-        f.print(",\"elevator_ferocity_rate_mix\":");
+        f.print(F(",\"elevator_ferocity_rate_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].elevatorFerocityRateMix);
-        f.print(",\"elevator_antigravity_mix\":");
+        f.print(F(",\"elevator_antigravity_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].elevatorAntigravityMix);
-        f.print(",\"throttle_frequency_mix\":");
+        f.print(F(",\"throttle_frequency_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].throttleFrequencyMix);
-        f.print(",\"ferocity_shape_mix\":");
+        f.print(F(",\"ferocity_shape_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].ferocityShapeMix);
         f.print('}');
     }
-    f.print("],\"active_flight_profile\":");
+    f.print(F("],\"active_flight_profile\":"));
     f.print((int)ornithopter.activeFlightProfile);
-    f.print(",\"rudder_yaw_weight\":");
+    f.print(F(",\"rudder_yaw_weight\":"));
     f.print((int)ornithopter.rudderYawWeight);
-    f.print(",\"rudder_roll_weight\":");
+    f.print(F(",\"rudder_roll_weight\":"));
     f.print((int)ornithopter.rudderRollWeight);
-    f.print(",\"elevon_scale\":");
+    f.print(F(",\"elevon_scale\":"));
     f.print((int)ornithopter.elevonScale);
-    f.print(",\"motor_min_us\":");
+    f.print(F(",\"motor_min_us\":"));
     f.print((int)ornithopter.motorMinUs);
-    f.print(",\"motor_max_us\":");
+    f.print(F(",\"motor_max_us\":"));
     f.print((int)ornithopter.motorMaxUs);
-    f.print(",\"glide_mode\":");
+    f.print(F(",\"glide_mode\":"));
     f.print(ornithopter.glideMode ? "true" : "false");
-    f.print(",\"hall_sensor_pin\":");
+    f.print(F(",\"hall_sensor_pin\":"));
     f.print((int)ornithopter.hallSensorPin);
-    f.print(",\"ratchet_throttle_pct\":");
+    f.print(F(",\"ratchet_throttle_pct\":"));
     f.print((int)ornithopter.ratchetThrottlePct);
-    f.print(",\"ratchet_timeout_ms\":");
+    f.print(F(",\"ratchet_timeout_ms\":"));
     f.print((int)ornithopter.ratchetTimeoutMs);
-    f.print(",\"servo_speed\":");
+    f.print(F(",\"servo_speed\":"));
     f.print((int)ornithopter.servoSpeed);
-    f.print(",\"flap_base_freq\":");
+    f.print(F(",\"flap_base_freq\":"));
     f.print((int)ornithopter.flapBaseFreq);
-    f.print(",\"servo_min_us\":");
+    f.print(F(",\"servo_min_us\":"));
     f.print((int)ornithopter.servoMinUs);
-    f.print(",\"servo_max_us\":");
+    f.print(F(",\"servo_max_us\":"));
     f.print((int)ornithopter.servoMaxUs);
-    f.print(",\"servo_trim\":[");
+    f.print(F(",\"servo_trim\":["));
     for (int i = 0; i < SF_COUNT; ++i) {
         if (i) f.print(',');
         f.print((int)ornithopter.servoTrimUs[i]);
     }
-    f.print("],\"profile_id\":");
+    f.print(F("],\"profile_id\":"));
     f.print((int)activeProfile);
-    f.print(",\"model_name\":");
+    f.print(F(",\"model_name\":"));
     _pteroPrintJsonString(f, ornithopter.modelName);
-    f.print(",\"guardiao_active\":");
+    f.print(F(",\"guardiao_active\":"));
     f.print(ornithopter.guardiaoAtivo ? "true" : "false");
-    f.print(",\"guardiao_delta_max\":");
+    f.print(F(",\"guardiao_delta_max\":"));
     f.print((int)ornithopter.guardiaoDeltaMax);
-    f.print(",\"guardiao_delta_arm\":");
+    f.print(F(",\"guardiao_delta_arm\":"));
     f.print((int)ornithopter.guardiaoDeltaMaxArm);
-    f.print(",\"guardiao_delta_persist\":");
+    f.print(F(",\"guardiao_delta_persist\":"));
     f.print((int)ornithopter.guardiaoDeltaPersistencia);
-    f.print(",\"guardiao_limiar_simult\":");
+    f.print(F(",\"guardiao_limiar_simult\":"));
     f.print((int)ornithopter.guardiaoLimiarSimultaneidade);
 #ifdef ZEPHYRUS_ENABLED
-    f.print(",\"gyro_enabled\":");
+    f.print(F(",\"gyro_enabled\":"));
     f.print(zephyrus.gyroEnabled ? "true" : "false");
-    f.print(",\"slew_gain\":");
+    f.print(F(",\"slew_gain\":"));
     f.print((int)zephyrus.slewGain);
-    f.print(",\"wing_roll_gain\":");
+    f.print(F(",\"wing_roll_gain\":"));
     f.print((int)ornithopter.wingRollGain);
-    f.print(",\"wing_pitch_gain\":");
+    f.print(F(",\"wing_pitch_gain\":"));
     f.print((int)ornithopter.wingPitchGain);
-    f.print(",\"wing_pitch_fer_gain\":");
+    f.print(F(",\"wing_pitch_fer_gain\":"));
     f.print((int)ornithopter.wingPitchFerGain);
-    f.print(",\"wing_pitch_skew_gain\":");
+    f.print(F(",\"wing_pitch_skew_gain\":"));
     f.print((int)ornithopter.wingPitchSkewGain);
-    f.print(",\"wing_roll_skew_gain\":");
+    f.print(F(",\"wing_roll_skew_gain\":"));
     f.print((int)ornithopter.wingRollSkewGain);
-    f.print(",\"wing_yaw_skew_gain\":");
+    f.print(F(",\"wing_yaw_skew_gain\":"));
     f.print((int)ornithopter.wingYawSkewGain);
-    f.print(",\"wing_yaw_gain\":");
+    f.print(F(",\"wing_yaw_gain\":"));
     f.print((int)ornithopter.wingYawGain);
-    f.print(",\"pid_roll_p\":");
+    f.print(F(",\"pid_roll_p\":"));
     f.print(zephyrus.rollKp, 3);
-    f.print(",\"pid_roll_i\":");
+    f.print(F(",\"pid_roll_i\":"));
     f.print(zephyrus.rollKi, 3);
-    f.print(",\"pid_roll_d\":");
+    f.print(F(",\"pid_roll_d\":"));
     f.print(zephyrus.rollKd, 3);
-    f.print(",\"pid_roll_max\":");
+    f.print(F(",\"pid_roll_max\":"));
     f.print(zephyrus.rollImax, 1);
-    f.print(",\"pid_pitch_p\":");
+    f.print(F(",\"pid_pitch_p\":"));
     f.print(zephyrus.pitchKp, 3);
-    f.print(",\"pid_pitch_i\":");
+    f.print(F(",\"pid_pitch_i\":"));
     f.print(zephyrus.pitchKi, 3);
-    f.print(",\"pid_pitch_d\":");
+    f.print(F(",\"pid_pitch_d\":"));
     f.print(zephyrus.pitchKd, 3);
-    f.print(",\"pid_pitch_max\":");
+    f.print(F(",\"pid_pitch_max\":"));
     f.print(zephyrus.pitchImax, 1);
-    f.print(",\"pid_yaw_p\":");
+    f.print(F(",\"pid_yaw_p\":"));
     f.print(zephyrus.yawKp, 3);
-    f.print(",\"pid_yaw_i\":");
+    f.print(F(",\"pid_yaw_i\":"));
     f.print(zephyrus.yawKi, 3);
-    f.print(",\"pid_yaw_d\":");
+    f.print(F(",\"pid_yaw_d\":"));
     f.print(zephyrus.yawKd, 3);
-    f.print(",\"pid_yaw_max\":");
+    f.print(F(",\"pid_yaw_max\":"));
     f.print(zephyrus.yawImax, 1);
 #endif
     f.print('}');
@@ -2496,6 +2514,9 @@ static void startWiFi(unsigned long now)
   if (wifiStarted) {
     return;
   }
+#if defined(PLATFORM_ESP8266)
+  heapBeforeWifi = ESP.getFreeHeap();
+#endif
 
   if (connectionState < FAILURE_STATES) {
     hwTimer::stop();
@@ -2749,6 +2770,9 @@ static void startServices()
   #if defined(TARGET_RX)
   wifi2tcp.begin();
   #endif
+#if defined(PLATFORM_ESP8266)
+  heapAfterServices = ESP.getFreeHeap();
+#endif
 }
 
 static void HandleWebUpdate()

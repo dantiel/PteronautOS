@@ -262,10 +262,10 @@ class App extends LitElement
     # builds the full ELRS tree on every load and OOMs the ESP8285's ~23KB heap).
     # options.json is fetched lazily per-route (see ensureLoadedForRoute) — no panel
     # needs it at boot.
-    [settings, config] = await Promise.all [
-      loadJSON '/pteronautos/settings', 'Failed to load settings'
-      loadJSON '/pteronautos/rx-config', 'Failed to load config'
-    ]
+    # Do not retain two ArduinoJson documents/TCP responses on the receiver
+    # at once during initial load. Await the complete first response body.
+    settings = await loadJSON '/pteronautos/settings', 'Failed to load settings'
+    config = await loadJSON '/pteronautos/rx-config', 'Failed to load config'
     elrsState.settings = settings.settings or {}
     elrsState.config = config.config or {}
     document.title = 'PteronautOS ' + (elrsState.settings['module-type'] or 'RX') + ' WebUI'

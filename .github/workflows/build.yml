@@ -75,6 +75,11 @@ jobs:
         path: ~/.platformio
         key: ${{ runner.os }}-platformio
 
+    - name: Test ESP8266 HTTP backpressure and WebUI retries
+      run: |
+        python tools/test_http_response.py
+        node tools/test_webui_retry.mjs
+
     - name: Run PlatformIO Tests
       run: |
         cd src
