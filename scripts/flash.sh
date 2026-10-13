@@ -13,6 +13,7 @@
 #     ./scripts/flash.sh --lang de             # bake German only, build + flash
 #     ./scripts/flash.sh -l de,en              # German + English
 #     ./scripts/flash.sh -l all                # all 11 languages
+#     ./scripts/flash.sh --mode horizon        # Mesozoic HORIZON (accel level-hold)
 #     ./scripts/flash.sh --no-build            # skip rebuild, flash existing .bin
 #     ./scripts/flash.sh --check               # check bootloader only
 #     ./scripts/flash.sh --port /dev/cu.usbserial-XXX
@@ -62,6 +63,8 @@ usage() {
   say ""
   say "Build control:"
   say "  --target pwmp7|ep2  receiver hardware (default pwmp7; ep2 needs RP2040)"
+  say "  --mode rate|horizon  gyro mode (default rate). horizon = accel level-hold"
+  say "                       (maps to the Fossil Etcher zephyrus_mode + HORIZON flag)"
   say "  --no-build           skip WebUI+firmware rebuild, flash existing .bin"
   say ""
   say "Flash options:"
@@ -82,6 +85,7 @@ LIST_LANGS=0
 PORT=""
 BAUD=115200
 TARGET=pwmp7
+MODE=rate           # gyro mode: rate (MESOZOIC_ONLY) or horizon (+ accel level-hold)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -92,13 +96,19 @@ while [[ $# -gt 0 ]]; do
     --port)        PORT="$2"; shift 2 ;;
     --baud)        BAUD="$2"; shift 2 ;;
     --target)      TARGET="${2:?--target requires pwmp7 or ep2}"; shift 2 ;;
+    --mode)        MODE="${2:?--mode requires rate or horizon}"; shift 2 ;;
     --help|-h)     usage; exit 0 ;;
     *) err "Unknown argument: $1"; usage; exit 1 ;;
   esac
 done
 
 case "$TARGET" in
-  pwmp7) TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+  pwmp7)
+    case "$MODE" in
+      rate)    TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+      horizon) TARGET_ENV=PteronautOS_ESP8285_2400_RX_HORIZON ;;
+      *) err "Unknown mode for pwmp7: $MODE (use rate or horizon)"; exit 1 ;;
+    esac ;;
   ep2) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
   *) err "Unknown target: $TARGET (use pwmp7 or ep2)"; exit 1 ;;
 esac
@@ -139,35 +149,86 @@ normalize_langs() {
   echo "$out"
 }
 
+# ---- Arrow-key single-select menu -------------------------------------------
+# choose <prompt> <opt1> <opt2> ... → prints the 1-based index of the choice.
+# Navigation: ↑/↓ + Enter. Also accepts typing a number as a fallback.
+# Non-TTY (piped) stdin → returns 1 (defaults to the first option).
+choose() {
+  local prompt="$1"; shift
+  local -a opts=("$@")
+  local n=${#opts[@]}
+  local idx=0 key kseq i drawn=0
+
+  if [[ ! -t 0 ]]; then
+    echo 1
+    return 0
+  fi
+
+  printf '%s\n' "$prompt" >&2
+  printf '\033[?25l' >&2    # hide cursor
+
+  while true; do
+    if [[ $drawn -eq 1 ]]; then
+      printf '\033[%dA' "$((n+1))" >&2   # rewind over options + status line
+    fi
+    for ((i=0; i<n; i++)); do
+      if [[ $i -eq $idx ]]; then
+        printf '\033[7m  %-44s\033[0m\033[K\n' "${opts[$i]}" >&2
+      else
+        printf '   %-44s\033[K\n' "${opts[$i]}" >&2
+      fi
+    done
+    printf '\033[K  ↑/↓ move · Enter confirm · or type 1-%d > ' "$n" >&2
+    drawn=1
+
+    IFS= read -rsn1 key || { printf '\033[?25h\n' >&2; echo 1; return 0; }
+    case "$key" in
+      $'\x1b')
+        IFS= read -rsn2 -t 0.1 kseq || true
+        case "$kseq" in
+          '[A') [[ $idx -gt 0 ]] && ((idx--)) ;;
+          '[B') [[ $idx -lt $((n-1)) ]] && ((idx++)) ;;
+        esac
+        ;;
+      ''|$'\r'|$'\n')
+        printf '\033[?25h\n' >&2
+        echo $((idx+1))
+        return 0
+        ;;
+      [0-9])
+        if [[ $key -ge 1 && $key -le $n ]]; then
+          printf '\033[?25h\n' >&2
+          echo "$key"
+          return 0
+        fi
+        ;;
+    esac
+  done
+}
+
 # ---- Interactive language selection -----------------------------------------
 prompt_languages() {
   say "" >&2
-  say "${C_BOLD}No language selected.${C_RESET} How should the WebUI be baked in?" >&2
-  say "" >&2
-  say "  ${C_BOLD}1${C_RESET}  All ${#ALL_LANGS[@]} languages  (biggest payload — default)" >&2
-  say "  ${C_BOLD}2${C_RESET}  A selection  (comma-separated codes, e.g. de,en)" >&2
-  say "  ${C_BOLD}3${C_RESET}  Skip rebuild   (flash existing firmware.bin as-is)" >&2
-  say "" >&2
   local choice
-  while true; do
-    printf 'Choose [1/2/3] (default: 1) > ' >&2
-    read -r choice || { say "" >&2; echo "all"; return 0; }   # EOF → default
-    choice="${choice:-1}"
-    case "$choice" in
-      1) echo "all"; return 0 ;;
-      3) echo "__SKIP__"; return 0 ;;
-      2)
-        local sel
-        printf 'Languages (e.g. de,en) > ' >&2
-        read -r sel || { echo "all"; return 0; }
-        if [[ -z "${sel//[[:space:]]/}" ]]; then
-          warn "Empty selection — using all languages." >&2
-          echo "all"; return 0
-        fi
-        echo "$sel"; return 0 ;;
-      *) warn "Please enter 1, 2 or 3." >&2 ;;
-    esac
-  done
+  choice="$(choose "How should the WebUI be baked in?" \
+    "All ${#ALL_LANGS[@]} languages  (biggest payload — default)" \
+    "A selection  (comma-separated codes, e.g. de,en)" \
+    "Skip rebuild   (flash existing firmware.bin as-is)")" || { echo "all"; return 0; }
+
+  case "$choice" in
+    1) echo "all"; return 0 ;;
+    3) echo "__SKIP__"; return 0 ;;
+    2)
+      local sel
+      printf 'Languages (e.g. de,en) > ' >&2
+      read -r sel || { echo "all"; return 0; }
+      if [[ -z "${sel//[[:space:]]/}" ]]; then
+        warn "Empty selection — using all languages." >&2
+        echo "all"; return 0
+      fi
+      echo "$sel"; return 0 ;;
+    *) echo "all"; return 0 ;;
+  esac
 }
 
 # ---- Build pipeline ---------------------------------------------------------
@@ -185,8 +246,11 @@ build_webui() {
     fi
     say "${C_DIM}Using Node $(node --version 2>/dev/null || echo '?') for the WebUI build.${C_RESET}" >&2
 
-    if [[ "$list" == "all" || -z "$list" ]]; then
-      ok "Baking in all ${#ALL_LANGS[@]} languages (I18N_LOCALES unset)."
+    if [[ "$list" == "all" ]]; then
+      ok "Baking in all ${#ALL_LANGS[@]} languages."
+      I18N_LOCALES=all npm run build:pteronautos
+    elif [[ -z "$list" ]]; then
+      ok "Baking in English only (smallest bundle)."
       npm run build:pteronautos
     else
       ok "Baking in languages: ${list}."

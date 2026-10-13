@@ -19,9 +19,13 @@ export function i18nLocalesPlugin(env) {
   const resolvedId = '\0' + virtualId
   const localesDir = path.resolve(process.cwd(), 'src/locales')
 
-  let selected = ALL_LOCALES
-  const flag = (env.I18N_LOCALES || '').trim()
-  if (flag) {
+  // Smallest default (single locale) for the fastest first load on the
+  // ESP8285's slow WiFi. 'all' bakes every locale; otherwise a comma list.
+  let selected = ['en']
+  const flag = (env.I18N_LOCALES || '').trim().toLowerCase()
+  if (flag === 'all') {
+    selected = ALL_LOCALES
+  } else if (flag) {
     const requested = flag.split(',').map((s) => s.trim()).filter(Boolean)
     const known = [...new Set(requested.filter((code) => ALL_LOCALES.includes(code)))]
     if (known.length > 0) selected = known

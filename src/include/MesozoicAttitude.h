@@ -36,13 +36,28 @@ inline void mesoAttitudeUpdate(MesoAttitude &a,
                                float gravX, float gravY, float gravZ,
                                float dt, float tau)
 {
+    // dt clamp: a loop stall can spike dt into the hundreds of ms, and the
+    // gyro-integration step a.roll += gx*dt would leap tens of degrees — the
+    // same blowup the Mahony path clamps (dt > 0.1 → 0.01).
+    if (dt <= 0.0f || dt > 0.1f) dt = 0.01f;
+
+    // NaN/overflow guard: a corrupt attitude or a saturated-gyro garbage rate
+    // is unrecoverable (NaN comparisons are always false, so the norm check
+    // below cannot see it). Reset to level BEFORE it poisons every later tick.
+    if (std::isnan(a.roll) || std::isnan(a.pitch) ||
+        std::isnan(gx) || std::isnan(gy)) {
+        a.roll = 0.0f;
+        a.pitch = 0.0f;
+        return;
+    }
+
     // predict — integrate gyro (small-angle: rollDot≈gx, pitchDot≈gy)
     a.roll  += gx * dt;
     a.pitch += gy * dt;
 
     // measure — gravity → Euler, guarded against a null/absent gravity vector
     const float norm = sqrtf(gravX * gravX + gravY * gravY + gravZ * gravZ);
-    if (norm < 0.05f) return;   // no valid gravity — trust the gyro
+    if (std::isnan(norm) || norm < 0.05f) return;   // no valid gravity — trust the gyro
 
     const float r = atan2f(gravY, gravZ) * 57.29578f;
     const float p = atan2f(-gravX, sqrtf(gravY * gravY + gravZ * gravZ)) * 57.29578f;

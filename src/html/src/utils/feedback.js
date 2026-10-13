@@ -46,12 +46,39 @@ export function showConfirm(title, message, confirmText = 'OK', cancelText = 'Ca
 }
 
 export async function loadJSON(url, errorMessage = 'Failed to load data', headers = {}) {
-  const response = await fetch(url, {headers})
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(text || errorMessage)
+  // The ESP8285 has ~23KB heap. On boot the /pteronautos/settings, rx-config
+  // and /hardware.json fetches can race the still-draining asset stream
+  // (index.html/app.js) and hit a
+  // transient 503 (heap-busy) or 429. Retry those with backoff so the UI
+  // self-heals instead of throwing straight into the "Settings Load Failed"
+  // dialog on the very first attempt. Permanent errors (4xx other than
+  // 429/503, or 5xx other than 503) still throw immediately.
+  const attempts = 6
+  let lastError = null
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 8000)
+    try {
+      const response = await fetch(url, {headers, signal: ctrl.signal})
+      if (response.ok) {
+        return await response.json()
+      }
+      if (response.status === 503 || response.status === 429) {
+        lastError = new Error(`HTTP ${response.status}`)
+      } else {
+        const text = await response.text()
+        throw new Error(text || errorMessage)
+      }
+    } catch (e) {
+      lastError = e
+    } finally {
+      clearTimeout(timer)
+    }
+    if (attempt + 1 < attempts) {
+      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)))
+    }
   }
-  return await response.json()
+  throw new Error(lastError?.message || errorMessage)
 }
 
 // Generic POST helper that can send JSON, FormData, or file uploads (no UI side-effects)

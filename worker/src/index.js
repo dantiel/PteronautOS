@@ -18,6 +18,7 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Expose-Headers": "X-Pteronautos-Version",
 };
 
 function json(data, status = 200) {
@@ -182,6 +183,7 @@ async function handleStatus(id, env) {
     conclusion: run.conclusion, // success | failure | cancelled | null
     html_url: run.html_url,
     head_sha: run.head_sha,
+    head_branch: run.head_branch,
     ready: run.status === "completed",
   };
 
@@ -248,15 +250,25 @@ async function handleDownload(id, env) {
     return json({ error: "No .bin found inside the artifact zip." }, 502);
   }
 
-  return new Response(files[binName], {
-    status: 200,
-    headers: {
-      "Content-Type": "application/octet-stream",
-      "Content-Disposition": 'attachment; filename="pteronautos.bin"',
-      "Content-Length": String(files[binName].length),
-      ...CORS,
-    },
-  });
+  // Surface the semver baked by the workflow (git describe --tags --always)
+  // so the flasher can label the fossil with the real firmware version.
+  let version = null;
+  const manifestName = Object.keys(files).find((n) => n.endsWith("manifest.json"));
+  if (manifestName) {
+    try {
+      version = JSON.parse(new TextDecoder().decode(files[manifestName])).version || null;
+    } catch (_) {}
+  }
+
+  const headers = {
+    "Content-Type": "application/octet-stream",
+    "Content-Disposition": 'attachment; filename="pteronautos.bin"',
+    "Content-Length": String(files[binName].length),
+    ...CORS,
+  };
+  if (version) headers["X-Pteronautos-Version"] = version;
+
+  return new Response(files[binName], { status: 200, headers });
 }
 
 export default {

@@ -14,8 +14,37 @@
 #ifndef ZEPHYR_I2C_SCL
 #define ZEPHYR_I2C_SCL       5
 #endif
-#define ZEPHYR_I2C_CLOCK     400000    // 400kHz fast mode
+#define ZEPHYR_I2C_CLOCK     100000    // 100kHz standard mode — far more robust against servo EMI on long leads
 #define ZEPHYR_I2C_TIMEOUT_US 3000     // 3ms I2C read timeout
+
+// Max per-bit I2C clock-stretch wait. The ESP8266 software I2C (Twi) default is
+// 150ms/bit — a stuck MPU holding SCL low then blocks the main loop for up to
+// 150ms × 9 bits × 16 bytes ≈ 21s, starving the hardware watchdog (6s) and
+// rebooting. The MPU6050 never legitimately stretches the clock; 2ms is 200× a
+// 100kHz bit time and fails fast so the bus-recovery path can revive the gyro.
+#define ZEPHYR_I2C_CLOCK_STRETCH_US 2000
+
+// Consecutive failed I2C reads before declaring the bus stuck and forcing a
+// clock-out + MPU re-init. 5 ticks ≈ 15ms (SERVO_TICK_MS=3) — long enough to
+// ignore a single noise glitch, short enough to revive a locked MPU fast.
+#define ZEPHYR_I2C_FAIL_RESET 5
+
+// --- Blackbox (debug data recorder) ------------------------------------------
+// Compile with -D ZEPHYR_BLACKBOX=1 (HORIZON debug build) to enable the RAM
+// ring buffer. It captures the last ~0.77s (256 × 3ms) of the stabilizer's
+// inputs/outputs + fault flags, dumped as JSON via GET /pteronautos/blackbox.
+// The fault register below is ALWAYS compiled (a few uint16 — negligible cost)
+// so even a release build reports WHY the gyro stalled.
+#ifdef ZEPHYR_BLACKBOX
+#define ZEPHYR_BB_SAMPLES      128      // 128 × 3ms ≈ 0.38s pre-freeze history
+#endif
+
+// Always-on fault register — why did the stabilizer last stall?
+#define ZEPHYR_FAULT_NONE      0
+#define ZEPHYR_FAULT_NAN       1
+#define ZEPHYR_FAULT_I2C_FAIL  2
+#define ZEPHYR_FAULT_BUS_REC   3
+#define ZEPHYR_FAULT_REINIT    4
 
 // Re-probe backoff for an absent/unready MPU6050. begin()→_mpuInit() blocks
 // ~105ms (device reset + PLL wake), so an every-tick retry would stall the
@@ -53,23 +82,27 @@
 #define ZEPHYR_MAHONY_KI     0.005f    // Integral gain (slow gyro bias drift correction)
 #define ZEPHYR_MAHONY_KI_MAX 0.5f      // Integral feedback anti-windup clamp (rad/s ≈ ±28.6°/s)
 
-// --- PID: Roll Axis (stabilizes roll angle to 0°) ---
-#define ZEPHYR_PID_ROLL_KP   1.2f
-#define ZEPHYR_PID_ROLL_KI   0.05f
-#define ZEPHYR_PID_ROLL_KD   0.15f
-#define ZEPHYR_PID_ROLL_IMAX 30.0f     // Integrator anti-windup clamp (°)
+// --- PID: Roll Axis (rate damper, °/s in → correction out) ---
+// These are the runtime-tunable float gains (WebUI zephyrus.pid.*). Under
+// MESOZOIC_ONLY they are converted to Q12 fixed-point and drive the mesoPid
+// rate damper directly; Imax is the integrator anti-windup clamp in °/s.
+// Defaults mirror the MESO_*_* Q12 constants below (real gain = value/4096).
+#define ZEPHYR_PID_ROLL_KP   0.75f
+#define ZEPHYR_PID_ROLL_KI   0.016f
+#define ZEPHYR_PID_ROLL_KD   0.25f
+#define ZEPHYR_PID_ROLL_IMAX 10.0f     // Integrator anti-windup clamp (°/s)
 
-// --- PID: Yaw Axis (dampens yaw rate to 0°/s) ---
-#define ZEPHYR_PID_YAW_KP    0.8f
-#define ZEPHYR_PID_YAW_KI    0.03f
-#define ZEPHYR_PID_YAW_KD    0.10f
-#define ZEPHYR_PID_YAW_IMAX  20.0f     // Integrator anti-windup clamp (°/s)
+// --- PID: Yaw Axis (rate damper, °/s in → correction out) ---
+#define ZEPHYR_PID_YAW_KP    0.5f
+#define ZEPHYR_PID_YAW_KI    0.012f
+#define ZEPHYR_PID_YAW_KD    0.19f
+#define ZEPHYR_PID_YAW_IMAX  5.0f      // Integrator anti-windup clamp (°/s)
 
-// --- PID: Pitch Axis (stabilizes pitch angle to 0°) ---
-#define ZEPHYR_PID_PITCH_KP   1.0f
-#define ZEPHYR_PID_PITCH_KI   0.04f
-#define ZEPHYR_PID_PITCH_KD   0.12f
-#define ZEPHYR_PID_PITCH_IMAX 25.0f    // Integrator anti-windup clamp (°)
+// --- PID: Pitch Axis (rate damper, °/s in → correction out) ---
+#define ZEPHYR_PID_PITCH_KP   0.75f
+#define ZEPHYR_PID_PITCH_KI   0.016f
+#define ZEPHYR_PID_PITCH_KD   0.25f
+#define ZEPHYR_PID_PITCH_IMAX 10.0f    // Integrator anti-windup clamp (°/s)
 
 // --- Crest Rudder Mix: maps PID corrections to µs offset ---
 #define ZEPHYR_RUDDER_ROLL_GAIN  2.5f  // µs per degree of roll correction
@@ -126,9 +159,9 @@
 #define ZEPHYR_WING_ROLL_AMP_SCALE      0.02f  // amp-fraction per roll-corr unit @100%
 #define ZEPHYR_WING_ROLL_AMP_CLAMP      0.5f   // max differential amplitude fraction
 #define ZEPHYR_WING_ROLL_CENTER_SCALE   0.5f   // deg per roll-corr unit @100% (glide)
-#define ZEPHYR_WING_ROLL_CENTER_CLAMP   15.0f  // max glide self-level centre offset (deg)
+#define ZEPHYR_WING_ROLL_CENTER_CLAMP   20.0f  // max glide self-level centre offset (deg)
 #define ZEPHYR_WING_PITCH_CENTER_SCALE  0.6f   // deg per pitch-corr unit @100%
-#define ZEPHYR_WING_PITCH_CENTER_CLAMP  12.0f  // max symmetric centre shift (deg)
+#define ZEPHYR_WING_PITCH_CENTER_CLAMP  16.0f  // max symmetric centre shift (deg)
 #define ZEPHYR_WING_YAW_FER_SCALE       0.1f   // ferocity units per yaw-corr unit @100%
 #define ZEPHYR_WING_YAW_FER_CLAMP       2.0f   // max differential ferocity
 
@@ -161,10 +194,10 @@
 // attitude path and are unused under MESOZOIC_ONLY.)
 #define ZEPHYR_WING_ROLL_RATE_AMP_SCALE      0.02f   // amp-fraction per °/s @100%
 #define ZEPHYR_WING_ROLL_RATE_AMP_CLAMP      0.5f
-#define ZEPHYR_WING_ROLL_RATE_CENTER_SCALE   0.12f   // deg per °/s @100% (glide)
-#define ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP   15.0f
-#define ZEPHYR_WING_PITCH_RATE_CENTER_SCALE  0.08f   // deg per °/s @100%
-#define ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP  12.0f
+#define ZEPHYR_WING_ROLL_RATE_CENTER_SCALE   0.30f   // deg per °/s @100% (glide)
+#define ZEPHYR_WING_ROLL_RATE_CENTER_CLAMP   20.0f
+#define ZEPHYR_WING_PITCH_RATE_CENTER_SCALE  0.22f   // deg per °/s @100%
+#define ZEPHYR_WING_PITCH_RATE_CENTER_CLAMP  16.0f
 #define ZEPHYR_WING_YAW_RATE_FER_SCALE       0.02f   // ferocity per °/s @100%
 #define ZEPHYR_WING_YAW_RATE_FER_CLAMP       2.0f
 #define ZEPHYR_WING_PITCH_RATE_FER_SCALE     0.02f   // ferocity per °/s @100% (dwell split)
@@ -188,7 +221,7 @@
 // fixed-point (Mesozoic.h). Tune the τ values against real gyro/accel logs.
 #define MESO_GRAV_LOCK_TAU   0.4f    // ESPELHO lock-in integrator τ (s) — matches OrniFlight ESPELHO_TAU
 #define MESO_GRAV_TAU        0.15f   // recovered-gravity low-pass τ (s) → ~1 Hz
-#define MESO_ATT_TAU         0.5f    // complementary attitude correction τ (s) → ~0.3 Hz
+#define MESO_ATT_TAU         0.30f   // complementary attitude correction τ (s) → ~0.5 Hz
 
 // --- HORIZON attitude outer loop (T3): attitude error → rate setpoint ---
 // Pure-P outer gain (deg/s per deg error); the inner mesoPid carries the rate

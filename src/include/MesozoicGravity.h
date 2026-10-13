@@ -87,6 +87,11 @@ inline void mesoGravityUpdate(MesoGravity &g,
                               float dt, float tauLock, float tauGrav,
                               bool flapping)
 {
+    // NaN/overflow guard: corrupt accel (I2C glitch on a hard shock) would
+    // poison the ESPELHO bank and the gravity vector unrecoverably. Drop the
+    // tick rather than learn a garbage image.
+    if (std::isnan(ax) || std::isnan(ay) || std::isnan(az)) return;
+
     // 1. flap-coherent cancellation, continuous (fundamental + skew). Only run
     // the lock-in while the wings actually flap: a frozen flap phase makes the
     // ESPELHO bank learn the DC sample as "flap interference", ×2 it, and

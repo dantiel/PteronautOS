@@ -49,6 +49,11 @@ class ZephyrusPanel extends PteroElement
     yawI:   {state: true}
     yawD:   {state: true}
     yawMax: {state: true}
+    # Fault register (always-on, read from /pteronautos/state)
+    faultNan:        {state: true}
+    faultI2cFail:    {state: true}
+    faultBusRecover: {state: true}
+    faultReinit:     {state: true}
 
   compiled          = true
   gyroEnabled      = false
@@ -80,6 +85,19 @@ class ZephyrusPanel extends PteroElement
   pitchP  = 1.0; pitchI  = 0.04; pitchD  = 0.12; pitchMax = 25
   # Yaw
   yawP    = 0.8; yawI    = 0.03; yawD    = 0.10; yawMax  = 20
+  # Fault register (lifetime counters, from firmware)
+  faultNan        = 0
+  faultI2cFail    = 0
+  faultBusRecover = 0
+  faultReinit     = 0
+  # Non-reactive previous-fault baselines + transient stall state
+  _faultBaseline = false
+  _prevNan       = 0
+  _prevI2c       = 0
+  _prevBus       = 0
+  _prevReinit    = 0
+  _stallKind     = ''
+  _stallAt       = 0
 
   # Apply polled state
   _applyState: (data) ->
@@ -109,6 +127,27 @@ class ZephyrusPanel extends PteroElement
     @wingYawSkewGain = Fmt.f0 z.wing_yaw_skew_gain
     @wingYawGain   = Fmt.f0 z.wing_yaw_gain
     @ahrs          = z.ahrs or ""
+    # Fault register — a counter delta vs the previous poll = a NEW event.
+    nan    = Number(z.fault_nan)         or 0
+    i2c    = Number(z.fault_i2c_fail)    or 0
+    bus    = Number(z.fault_bus_recover) or 0
+    reinit = Number(z.fault_reinit)      or 0
+    if @_faultBaseline
+      if bus > @_prevBus
+        @_stallKind = 'bus'; @_stallAt = Date.now()
+      else if reinit > @_prevReinit
+        @_stallKind = 'reinit'; @_stallAt = Date.now()
+      else if nan > @_prevNan
+        @_stallKind = 'nan'; @_stallAt = Date.now()
+    @faultNan        = nan
+    @faultI2cFail    = i2c
+    @faultBusRecover = bus
+    @faultReinit     = reinit
+    @_prevNan        = nan
+    @_prevI2c        = i2c
+    @_prevBus        = bus
+    @_prevReinit     = reinit
+    @_faultBaseline  = true
     if z.pid?
       @rollP  = z.pid.roll.p;   @rollI  = z.pid.roll.i;   @rollD  = z.pid.roll.d;   @rollMax  = z.pid.roll.max
       @pitchP = z.pid.pitch.p;  @pitchI = z.pid.pitch.i;  @pitchD = z.pid.pitch.d;  @pitchMax = z.pid.pitch.max
@@ -183,6 +222,21 @@ class ZephyrusPanel extends PteroElement
   _calibProgress:   -> Status.calibProgress @calibSamples
   _calibHint:       -> Status.calibHint @gyroConnected, @_calibrating
   _horizonCaption:  -> Status.horizonCaption @gyroConnected
+
+  # --- Fault register / MPU-lost live indicators ---
+  _mpuLost:      -> @gyroEnabled and not @gyroConnected
+  _stallActive:  -> !!@_stallAt and (Date.now() - @_stallAt) < 5000
+  _stallLabel:   ->
+    switch @_stallKind
+      when 'nan'    then @_t 'zephyrus.stall.nan'
+      when 'bus'    then @_t 'zephyrus.stall.bus'
+      when 'reinit' then @_t 'zephyrus.stall.reinit'
+      else               @_t 'zephyrus.stall.i2c'
+  _stallColor:   -> if @_stallKind is 'nan' then '#8e44ad' else '#e67e22'
+  _lostStyle:    -> "background:#c0392b;color:#fff;padding:10px 12px;border-radius:4px;margin-top:8px;font-weight:700;"
+  _stallStyle:   -> "background:#{@_stallColor()};color:#fff;padding:10px 12px;border-radius:4px;margin-top:8px;font-weight:700;"
+  _faultSummaryVisible: -> (@faultI2cFail + @faultBusRecover + @faultReinit + @faultNan) > 0
+  _faultSummary: -> @_t 'zephyrus.fault.summary', {i2c: @faultI2cFail, bus: @faultBusRecover, reinit: @faultReinit, nan: @faultNan}
 
   _horizonOuterStyle: -> Style.horizon()
   _horizonLineStyle:  -> Style.horizonLine @rollDeg, @pitchDeg

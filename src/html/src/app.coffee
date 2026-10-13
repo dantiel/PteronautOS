@@ -2,7 +2,8 @@ import {LitElement} from 'lit'
 import renderFn from './app.lithaml'
 import {initRipple} from './utils/ripple'
 import {initMuiSelect} from './utils/select'
-import {elrsState, formatBand} from './utils/state'
+import {initKeyboardSelect} from './utils/keyboard-select'
+import {elrsState, formatBand, loadOptions} from './utils/state'
 import {overlay} from './utils/overlay'
 import './components/elrs-footer'
 import {i18n} from './utils/i18n-loader'
@@ -219,6 +220,7 @@ class App extends LitElement
   firstUpdated: ->
     @removeRippleListeners = initRipple()
     @removeSelectListeners = initMuiSelect()
+    @removeKeyboardSelectListeners = initKeyboardSelect()
     @sideDrawer = _ 'sidedrawer'
     @mainEl = @querySelector '#main'
     window.addEventListener 'hashchange', @renderRoute
@@ -232,6 +234,8 @@ class App extends LitElement
     @removeRippleListeners = null
     @removeSelectListeners?()
     @removeSelectListeners = null
+    @removeKeyboardSelectListeners?()
+    @removeKeyboardSelectListeners = null
     window.removeEventListener 'hashchange', @renderRoute
     super.disconnectedCallback()
 
@@ -253,11 +257,18 @@ class App extends LitElement
         hideLoadingOverlay()
 
   loadInitialData: ->
-    data = await loadJSON '/config', 'Failed to load config'
-    elrsState.settings = data.settings or {}
-    elrsState.options = data.options or {}
-    elrsState.config = data.config or {}
-    document.title = 'PteronautOS ' + (data.settings['module-type'] or 'RX') + ' WebUI'
+    # Topic-based boot: fetch the lean /pteronautos/settings + /pteronautos/rx-config
+    # endpoints instead of the legacy /config monolith (which parses options.json +
+    # builds the full ELRS tree on every load and OOMs the ESP8285's ~23KB heap).
+    # options.json is fetched lazily per-route (see ensureLoadedForRoute) — no panel
+    # needs it at boot.
+    [settings, config] = await Promise.all [
+      loadJSON '/pteronautos/settings', 'Failed to load settings'
+      loadJSON '/pteronautos/rx-config', 'Failed to load config'
+    ]
+    elrsState.settings = settings.settings or {}
+    elrsState.config = config.config or {}
+    document.title = 'PteronautOS ' + (elrsState.settings['module-type'] or 'RX') + ' WebUI'
     @requestUpdate()
     true
 
@@ -290,9 +301,13 @@ class App extends LitElement
   loadAdvancedGroup: -> Promise.resolve()
 
   ensureLoadedForRoute: (route) ->
-    # PteronautOS: all panels are statically imported and bundled into app.js.
-    # No runtime chunk loading — avoids ESP heap pressure and extra HTTP round-trips.
-    Promise.resolve()
+    # Topic-based lazy load: options.json (the heavy ELRS options blob) is fetched
+    # only when a route whose panel reads elrsState.options is opened. Panels are
+    # statically imported (bundled into app.js) — no runtime chunk HTTP.
+    if route in ['options', 'serial', 'wifi', 'connections']
+      loadOptions().then => null
+    else
+      Promise.resolve()
 
   # — Transition/animation timing helpers —
   waitForElementTransition: (element, mutate, fallbackMs = 220) ->

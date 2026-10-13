@@ -30,7 +30,10 @@
 struct MesoPid {
     int32_t i;       // integrator accumulator (Q12·LSB)
     int16_t lastErr; // previous rate error (LSB)
-    int16_t lastD;   // low-passed derivative (LSB/ms)
+    int32_t lastD;   // low-passed derivative (LSB/ms) — int32: a large err step
+                     // (saturated gyro reversal) at the 250 Hz gate can push
+                     // lastD*7+d past int16 before the >>3; the narrow type
+                     // wrapped the derivative sign and latched the damper.
 };
 
 inline void mesoInit(MesoPid &p) {
@@ -63,14 +66,28 @@ inline int16_t mesoPid(MesoPid &p, int16_t err,
     // gyro noise. new = old + (d − old)/8 = (7·old + d)/8. (The old (d*8 +
     // 5*old)>>3 form was d + 0.625·old — DC gain 2.67×, no noise attenuation.)
     int32_t d  = (int32_t)(err - p.lastErr) / dtMs;
-    int32_t lp = (int32_t)p.lastD * 7 + d;
-    p.lastD    = (int16_t)(lp >> 3);
+    int32_t lp = p.lastD * 7 + d;
+    p.lastD    = lp >> 3;
 
-    // Integrator with anti-windup clamp.
-    p.i += (int32_t)err * ki;
-    if (p.i >  imax) p.i =  imax;
-    if (p.i < -imax) p.i = -imax;
+    // Integrator with anti-windup clamp. Saturation guard: when the rate error
+    // is pegged at the ±32767 rail the gyro is saturated and the measured
+    // magnitude is clipped/untrustworthy — integrating it would wind the
+    // accumulator up and latch the damper after a hard flick. Skip the tick.
+    if (err > -32767 && err < 32767) {
+        p.i += (int32_t)err * ki;
+        if (p.i >  imax) p.i =  imax;
+        if (p.i < -imax) p.i = -imax;
+    }
     p.lastErr = err;
 
-    return (int16_t)(((int32_t)err * kp + p.i + (int32_t)p.lastD * kd) >> 12);
+    // Output clamp: the Q12 sum can exceed int16 at full-scale error × high gain
+    // (err*kp at Kp=7.5 is ~1e9; >>12 → ~286000), and an unclamped int16 cast
+    // wraps the sign — the damper would command WITH the disturbance (positive
+    // feedback, the "freeze after a hard flick" fault). Saturate to the ±32767
+    // LSB rail BEFORE the shift so the result always fits and never reverses.
+    int32_t out = (int32_t)err * kp + p.i + p.lastD * kd;
+    const int32_t outMax = 32767 << 12;   // 134,213,632
+    if (out >  outMax) out =  outMax;
+    if (out < -outMax) out = -outMax;
+    return (int16_t)(out >> 12);
 }

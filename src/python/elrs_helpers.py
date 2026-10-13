@@ -1,5 +1,4 @@
 import os
-import re
 import subprocess
 
 def git_cmd(*args):
@@ -9,8 +8,10 @@ def git_cmd(*args):
 def get_git_version():
     """
     Return a dict with keys
-    version: The version tag if HEAD is a version, or branch otherwise
-    sha: the 6 character short sha for the current HEAD revison, falling back to
+    version: the semver tag if HEAD is exactly tagged ("0.2.0"), a monotonic
+        describe otherwise ("0.2.0-3-g7edeab6"), or the branch name as final
+        fallback when no tags exist
+    sha: the 6 character short sha for the current HEAD revision, falling back to
         VERSION file if not in a git repo
     """
     ver = "ver.unknown"
@@ -18,14 +19,12 @@ def get_git_version():
 
     try:
         sha = git_cmd("rev-parse", "HEAD")
-        ver = git_cmd("rev-parse", "--abbrev-ref", "HEAD")
-        # failure here is acceptable, unnamed commits might not have a branch
-        # associated
+        # Prefer a semver description (tag or tag-N-gSHA); --always keeps a
+        # usable value even in a shallow/untagged checkout.
         try:
-            ver = re.sub(r".*/", "", git_cmd("describe",
-                         "--all", "--exact-match"))
+            ver = git_cmd("describe", "--tags", "--always")
         except:
-            pass
+            ver = git_cmd("rev-parse", "--abbrev-ref", "HEAD")
     except:
         if os.path.exists("VERSION"):
             with open("VERSION") as _f:

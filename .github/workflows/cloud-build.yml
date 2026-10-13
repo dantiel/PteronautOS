@@ -226,6 +226,9 @@ jobs:
           cd src
           PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e "$TARGET_ENV"
 
+      - name: Resolve firmware version
+        run: echo "FW_VERSION=$(git describe --tags --always)" >> "$GITHUB_ENV"
+
       - name: Stage firmware artifact
         run: |
           python src/python/verify_pteronautos_image.py "src/.pio/build/$TARGET_ENV/firmware.bin"
@@ -246,7 +249,8 @@ jobs:
             "target": "${{ env.TARGET_ENV }}",
             "rcvr_uart_baud": "${{ inputs.rcvr_uart_baud }}",
             "device_name": "${{ inputs.device_name }}",
-            "i18n_locales": "${{ inputs.i18n_locales }}"
+            "i18n_locales": "${{ inputs.i18n_locales }}",
+            "version": "${{ env.FW_VERSION }}"
           }
           JSON
 

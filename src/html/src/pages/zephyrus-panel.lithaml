@@ -6,6 +6,16 @@
   .mui-panel
     .badge{style: self._badgeStyle()}
       = self._statusText()
+    - if self._mpuLost()
+      %div{style: self._lostStyle()}
+        = self._t('zephyrus.lost.banner')
+    - else
+      - if self._stallActive()
+        %div{style: self._stallStyle()}
+          = self._stallLabel()
+    - if self._faultSummaryVisible()
+      %div{style: "font-size:11px;color:#888;margin-top:8px;"}
+        = self._faultSummary()
     %br
     %button.mui-btn.mui-btn--primary{@click: self._toggleGyro}
       = self._toggleLabel()

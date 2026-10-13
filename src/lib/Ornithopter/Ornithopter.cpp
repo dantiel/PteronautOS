@@ -136,6 +136,11 @@ Ornithopter::Ornithopter()
     , hallSensorPin(12)
   , ratchetThrottlePct(15)
   , ratchetTimeoutMs(500)
+  , guardiaoAtivo(true)
+  , guardiaoDeltaMax(160)
+  , guardiaoDeltaMaxArm(800)
+  , guardiaoDeltaPersistencia(320)
+  , guardiaoLimiarSimultaneidade(4)
 #ifdef ZEPHYRUS_ENABLED
   , gyroRudderCorrection(0.0f)
   , gyroAileronCorrection(0.0f)
@@ -179,8 +184,15 @@ Ornithopter::Ornithopter()
   , _elevFerStroke(0.0f)
   , _elevFerReturn(0.0f)
   , _antiGravGate(0.0f)
+  , _guardiaoInicializado(false)
 {
     modelName[0] = '\0';
+    for (uint8_t i = 0; i < STK_COUNT; ++i) {
+        _guardiaoRef[i]         = 992;
+        _guardiaoCandidato[i]   = 992;
+        _guardiaoPersistencia[i] = 0;
+        _guardiaoLastRaw[i]     = 992;
+    }
     for (uint8_t i = 0; i < STK_COUNT; ++i) stickChannels[i] = 992; // center (CRSF neutral)
         stickChannels[STK_THROTTLE] = 172;  // glide (below flap threshold) so channel test starts at rest
     stickChannels[STK_ARM]      = 1811; // armed (CRSF full)
@@ -198,6 +210,7 @@ Ornithopter::Ornithopter()
 
 void Ornithopter::onLinkUp() {
     linkUp = true;
+    _guardiaoInicializado = false;  // re-baseline Guardião on fresh link
     _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale slew kick
     _throttleRateLPF = 0.0f;
     _prevAileronNorm = -2.0f;   // seed on next flap tick — no stale roll slew kick
@@ -223,6 +236,7 @@ void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }
 
 void Ornithopter::enterFailsafe() {
     _armedState = false;  // disarm — require fresh throttle-zero + arm cycle
+    _guardiaoInicializado = false;  // re-baseline Guardião on next link
     for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
@@ -265,13 +279,7 @@ void Ornithopter::_readChannels() {
         voiceFreq     = stickChannels[STK_FREQ];
         voiceProfile  = stickChannels[STK_PROFILE];
     } else {
-        voiceAileron  = ChannelData[ORNI_CH_AILERON];
-        voiceElevator = ChannelData[ORNI_CH_ELEVATOR];
-        voiceThrottle = ChannelData[ORNI_CH_THROTTLE];
-        voiceRudder   = ChannelData[ORNI_CH_RUDDER];
-        voiceArm      = ChannelData[ORNI_CH_ARM];
-        voiceFreq     = ChannelData[ORNI_CH_FREQ];
-        voiceProfile  = ChannelData[ORNI_CH_PROFILE];
+        _applyGuardiaoFilter();
     }
 
     // Flight profile selector (multi-position): map CRSF raw → 0..2.
@@ -280,6 +288,105 @@ void Ornithopter::_readChannels() {
     else if (voiceProfile < 1500) prof = 1;
     else                          prof = 2;
     if (prof != activeFlightProfile) applyFlightProfile(prof);
+}
+
+// ─── Guardião dos Ventos — CRSF channel glitch filter ──────────────
+// Rejects single-frame channel corruptions (slow-decode / RF glitch) that would
+// otherwise slam a wing servo. Per-channel delta + 2-frame persistence + collective
+// ghost detection (≥N channels anomalous = whole frame rejected). Ported from
+// Gralha Azul's verificarCanal, adapted to PteronautOS's decoupled mixer/CRSF
+// cadence (the mixer ticks at 333Hz while CRSF arrives at 150–500Hz).
+void Ornithopter::_applyGuardiaoFilter() {
+    const uint16_t raw[STK_COUNT] = {
+        (uint16_t)ChannelData[ORNI_CH_AILERON],
+        (uint16_t)ChannelData[ORNI_CH_ELEVATOR],
+        (uint16_t)ChannelData[ORNI_CH_THROTTLE],
+        (uint16_t)ChannelData[ORNI_CH_RUDDER],
+        (uint16_t)ChannelData[ORNI_CH_ARM],
+        (uint16_t)ChannelData[ORNI_CH_FREQ],
+        (uint16_t)ChannelData[ORNI_CH_PROFILE],
+    };
+    uint16_t* out[STK_COUNT] = {
+        &voiceAileron, &voiceElevator, &voiceThrottle, &voiceRudder,
+        &voiceArm, &voiceFreq, &voiceProfile,
+    };
+    // Arm + profile are switched channels that legitimately jump full-range
+    // (172↔1811); everything else is a stick/pot that moves smoothly.
+    const uint16_t deltaMaxCanal[STK_COUNT] = {
+        guardiaoDeltaMax, guardiaoDeltaMax, guardiaoDeltaMax, guardiaoDeltaMax,
+        guardiaoDeltaMaxArm, guardiaoDeltaMax, guardiaoDeltaMaxArm,
+    };
+
+    if (!guardiaoAtivo) {
+        for (uint8_t i = 0; i < STK_COUNT; i++) {
+            *out[i] = raw[i];
+            _guardiaoLastRaw[i] = raw[i];
+        }
+        _guardiaoInicializado = false;   // re-baseline on re-enable
+        return;
+    }
+
+    if (!_guardiaoInicializado) {
+        _guardiaoInicializado = true;
+        for (uint8_t i = 0; i < STK_COUNT; i++) {
+            _guardiaoRef[i]          = raw[i];
+            _guardiaoCandidato[i]    = raw[i];
+            _guardiaoPersistencia[i] = 0;
+            _guardiaoLastRaw[i]      = raw[i];
+            *out[i]                  = raw[i];
+        }
+        return;
+    }
+
+    // Detect a genuinely new CRSF frame. Without this gate, the same frame is
+    // re-read 2–3× per CRSF packet (333Hz mixer vs 150Hz link) and the 2-frame
+    // persistence would "confirm" a glitch within one frame — the exact bug the
+    // original Gralha Azul library had to fix.
+    bool novoFrame = false;
+    for (uint8_t i = 0; i < STK_COUNT; i++) {
+        if (raw[i] != _guardiaoLastRaw[i]) { novoFrame = true; break; }
+    }
+    for (uint8_t i = 0; i < STK_COUNT; i++) _guardiaoLastRaw[i] = raw[i];
+    if (!novoFrame) return;   // same frame re-read — voice* already holds accepted values
+
+    // Pass 1: count channels exceeding their per-frame delta (simultaneity).
+    uint8_t canaisAnomalos = 0;
+    for (uint8_t i = 0; i < STK_COUNT; i++) {
+        uint16_t d = (raw[i] > _guardiaoRef[i]) ? (uint16_t)(raw[i] - _guardiaoRef[i])
+                                                : (uint16_t)(_guardiaoRef[i] - raw[i]);
+        if (d > deltaMaxCanal[i]) canaisAnomalos++;
+    }
+
+    if (canaisAnomalos >= guardiaoLimiarSimultaneidade) {
+        // Collective ghost — reject the whole frame, keep last accepted values.
+        for (uint8_t i = 0; i < STK_COUNT; i++) _guardiaoPersistencia[i] = 0;
+        return;
+    }
+
+    // Pass 2: per-channel delta + 2-frame persistence confirmation.
+    for (uint8_t i = 0; i < STK_COUNT; i++) {
+        uint16_t d = (raw[i] > _guardiaoRef[i]) ? (uint16_t)(raw[i] - _guardiaoRef[i])
+                                                : (uint16_t)(_guardiaoRef[i] - raw[i]);
+        if (d <= deltaMaxCanal[i]) {
+            *out[i]                   = raw[i];
+            _guardiaoRef[i]           = raw[i];
+            _guardiaoPersistencia[i]  = 0;
+        } else if (_guardiaoPersistencia[i] == 0) {
+            _guardiaoCandidato[i]     = raw[i];
+            _guardiaoPersistencia[i]  = 1;   // frozen this frame — await confirmation
+        } else {
+            uint16_t dc = (raw[i] > _guardiaoCandidato[i]) ? (uint16_t)(raw[i] - _guardiaoCandidato[i])
+                                                           : (uint16_t)(_guardiaoCandidato[i] - raw[i]);
+            if (dc <= guardiaoDeltaPersistencia) {
+                *out[i]                   = raw[i];   // confirmed (2 consecutive frames)
+                _guardiaoRef[i]           = raw[i];
+                _guardiaoPersistencia[i]  = 0;
+            } else {
+                _guardiaoCandidato[i]     = raw[i];   // inconsistent — new candidate, still frozen
+                _guardiaoPersistencia[i]  = 1;
+            }
+        }
+    }
 }
 
 // ─── Arming latch ──────────────────────────────────────────────────
@@ -339,13 +446,15 @@ void Ornithopter::_computeServoMixer() {
     float gyroPitchCenter = 0.0f;   // symmetric flap centre shift (deg)
     float gyroRollCenter  = 0.0f;   // roll self-level centre (deg, flap + glide)
 #ifdef ZEPHYRUS_ENABLED
-    // Attitude→centre channel (slow level hold). The accelerometer-derived
-    // attitude error (deg) biases the flap CENTRE; the rate error drives the
-    // FEROCITY/amplitude axis below (fast damping). Under MESOZOIC_ONLY the
-    // attitude error comes from the HORIZON layer (0 in the rate-only brain);
-    // the Mahony path keeps its legacy deg correction on the same centre axis.
+    // Centre channel = ATTITUDE (accel, slow level hold) + RATE (gyro, fast
+    // damping) summed on the SAME axis. Both terms shift the wing CENTRE, so
+    // they work in glide AND flap (the flap-only amplitude/ferocity axes below
+    // get their own rate bridges). Under MESOZOIC_ONLY the attitude error comes
+    // from the HORIZON layer (0 in the rate-only brain) and the rate error from
+    // the inner mesoPid; the Mahony path keeps its legacy deg correction alone.
 #ifdef MESOZOIC_ONLY
-    gyroPitchCenter = gyroPitchAttitudeCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE;
+    gyroPitchCenter = gyroPitchAttitudeCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE
+                    + gyroPitchCorrection       * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_RATE_CENTER_SCALE;
     if (gyroPitchCenter >  ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_CENTER_CLAMP;
     if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
 #else
@@ -354,13 +463,14 @@ void Ornithopter::_computeServoMixer() {
     if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
 #endif
 
-    // Roll self-level centre (deg): a symmetric aileron-centre offset that
-    // levels the wings. Works in flap AND glide — the slow attitude→centre
-    // axis complements the fast rate→amplitude roll damping below (the same
-    // two-actuator roll the pilot already gets from aileronCmd + aileron
-    // amplitude differential).
+    // Roll centre (deg): symmetric aileron-centre offset. ATTITUDE term levels
+    // the wings (slow), RATE term damps the tumble (fast). Both work in flap
+    // AND glide — the flap-only roll amplitude axis below is a third, separate
+    // bridge. This is the same two-actuator roll the pilot gets from aileronCmd
+    // + aileron amplitude differential.
 #ifdef MESOZOIC_ONLY
-    gyroRollCenter = gyroRollAttitudeCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE;
+    gyroRollCenter = gyroRollAttitudeCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE
+                   + gyroRollCorrection       * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_RATE_CENTER_SCALE;
     if (gyroRollCenter >  ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_CENTER_CLAMP;
     if (gyroRollCenter < -ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_CENTER_CLAMP;
 #else

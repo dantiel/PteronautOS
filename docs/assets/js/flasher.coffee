@@ -25,6 +25,7 @@ els =
   clearSpecimensBtn: $("#clear-specimens-btn")
 
 currentRunId = null
+currentBuildInfo = null
 firmwareBytes = null
 busy = false
 activePort = null
@@ -222,6 +223,7 @@ specimenMeta = (rec) ->
   parts.push (if p.mushin_enabled is "1" then "MUSHIN" else "local PWM")
   parts.push (if p.zephyrus_enabled is "1" then "Zephyrus" else "no gyro")
   parts.push p.device_name if p.device_name
+  parts.push rec.version if rec.version
   parts.push fmtSize rec.size
   parts.join " · "
 
@@ -234,6 +236,7 @@ saveSpecimen = ->
       name: "pteronautos-firmware.bin"
       size: firmwareBytes.length
       params: collectParams()
+      version: currentBuildInfo?.version
       blob: firmwareBytes.slice().buffer
     await idbPutSpecimen rec
     selectedSpecimenId = rec.id
@@ -381,6 +384,7 @@ startBuild = ->
   els.downloadBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
+  currentBuildInfo = null
   els.log.textContent = ""
   setStatus "Dispatching build…", "busy"
   els.runLink.classList.add "hidden"
@@ -422,6 +426,9 @@ poll = ->
       els.buildBtn.disabled = false
       busy = false
       return
+    sha = data.head_sha?.slice 0, 7
+    branch = data.head_branch or "pteronautos"
+    currentBuildInfo = { version: branch + (if sha then " @" + sha else "") }
     setStatus "Build complete — downloading image…", "busy"
     await downloadFirmware()
     await saveSpecimen()
@@ -440,6 +447,8 @@ downloadFirmware = ->
   unless resp.ok
     text = await resp.text()
     throw new Error "Download failed (HTTP " + resp.status + "): " + text
+  ver = resp.headers.get "X-Pteronautos-Version"
+  currentBuildInfo.version = ver if ver
   firmwareBytes = new Uint8Array await resp.arrayBuffer()
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
 

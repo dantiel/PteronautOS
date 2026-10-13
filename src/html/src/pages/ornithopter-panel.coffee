@@ -47,6 +47,12 @@ class OrnithopterPanel extends PteroElement
     ratchetThrottlePct: {state: true}
     ratchetTimeoutMs:   {state: true}
     modelName:          {state: true}
+    # Guardião — CRSF channel glitch filter
+    guardiaoAtivo:        {state: true}
+    guardiaoDeltaMax:     {state: true}
+    guardiaoDeltaArm:     {state: true}
+    guardiaoDeltaPersist: {state: true}
+    guardiaoLimiarSimult: {state: true}
 
   constructor: ->
     super()
@@ -75,6 +81,11 @@ class OrnithopterPanel extends PteroElement
     @ratchetThrottlePct   = 15
     @ratchetTimeoutMs     = 500
     @modelName            = ''
+    @guardiaoAtivo        = true
+    @guardiaoDeltaMax     = 160
+    @guardiaoDeltaArm     = 800
+    @guardiaoDeltaPersist = 320
+    @guardiaoLimiarSimult = 4
     @_pollInFlight        = false
     @_saveInFlight        = false
     @_fieldFocused        = false
@@ -145,6 +156,11 @@ class OrnithopterPanel extends PteroElement
       @hallSensorPin      = o.hall_sensor_pin      if o.hall_sensor_pin?
       @ratchetThrottlePct = o.ratchet_throttle_pct if o.ratchet_throttle_pct?
       @ratchetTimeoutMs   = o.ratchet_timeout_ms   if o.ratchet_timeout_ms?
+      @guardiaoAtivo        = o.guardiao_active == true   if o.guardiao_active?
+      @guardiaoDeltaMax     = o.guardiao_delta_max        if o.guardiao_delta_max?
+      @guardiaoDeltaArm     = o.guardiao_delta_arm        if o.guardiao_delta_arm?
+      @guardiaoDeltaPersist = o.guardiao_delta_persist    if o.guardiao_delta_persist?
+      @guardiaoLimiarSimult = o.guardiao_limiar_simult    if o.guardiao_limiar_simult?
 
   render: -> renderFn(this)
 
@@ -278,6 +294,10 @@ class OrnithopterPanel extends PteroElement
       when 'servoSpeed'  then [25, 250]
       when 'servoMinUs'  then [500, 1490]
       when 'servoMaxUs'  then [1510, 2500]
+      when 'guardiaoDeltaMax'     then [20, 500]
+      when 'guardiaoDeltaArm'     then [100, 1639]
+      when 'guardiaoDeltaPersist' then [20, 1000]
+      when 'guardiaoLimiarSimult' then [2, 7]
       else null
 
   _clamp: (prop, v) ->
@@ -316,6 +336,11 @@ class OrnithopterPanel extends PteroElement
     body.append 'ratchet_throttle_pct', parseInt(@ratchetThrottlePct)
     body.append 'ratchet_timeout_ms',   parseInt(@ratchetTimeoutMs)
     body.append 'model_name',           @modelName or ''
+    body.append 'guardiao_active',        if @guardiaoAtivo then '1' else '0'
+    body.append 'guardiao_delta_max',     parseInt(@guardiaoDeltaMax)
+    body.append 'guardiao_delta_arm',     parseInt(@guardiaoDeltaArm)
+    body.append 'guardiao_delta_persist', parseInt(@guardiaoDeltaPersist)
+    body.append 'guardiao_limiar_simult', parseInt(@guardiaoLimiarSimult)
     try
       res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
       if res and res.ok

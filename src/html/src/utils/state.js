@@ -26,6 +26,25 @@ export async function loadHardware(force = false) {
     return hardware
 }
 
+// options.json is the heavy ELRS options blob (~10-20KB). It is no longer parsed
+// server-side into the /config monolith; instead it is streamed raw and loaded
+// lazily here, only when a panel that reads elrsState.options is opened.
+let _optionsPromise = null
+export function loadOptions(force = false) {
+    if (!force && Object.keys(elrsState.options || {}).length > 0) {
+        return Promise.resolve(elrsState.options)
+    }
+    if (!_optionsPromise) {
+        _optionsPromise = loadJSON('/options.json', 'Failed to load options')
+            .then((options) => {
+                elrsState.options = options || {}
+                return elrsState.options
+            })
+            .finally(() => { _optionsPromise = null })
+    }
+    return _optionsPromise
+}
+
 export function formatBand() {
     if (elrsState.settings) {
         if (elrsState.settings.has_low_band && elrsState.settings.has_high_band) {
@@ -82,7 +101,7 @@ export function saveConfig(changes, successCB) {
         }
     }
     const newConfig = {...elrsState.config, ...changes}
-    saveJSONWithReboot('Configuration Update Succeeded', 'Configuration Update Failed', '/config', newConfig, () => {
+    saveJSONWithReboot('Configuration Update Succeeded', 'Configuration Update Failed', '/pteronautos/rx-config', newConfig, () => {
         elrsState.config = {...newConfig, pwm: currentPWM}
         if (successCB) successCB()
     })

@@ -16,6 +16,20 @@
 #include "MesozoicAttitude.h"
 #endif
 
+// --- Blackbox frame (12 bytes) -----------------------------------------------
+// Compact per-tick record of the stabilizer's hot path. The ring buffer is
+// compiled only under ZEPHYR_BLACKBOX; the fault register (Zephyrus members
+// below) is always present. See ZephyrusConfig.h for the reason codes.
+struct ZephyrBbFrame {
+    uint16_t tMs;         // millis() low 16 — wraps 65.5s, fine for the window
+    int16_t  rxLsb;       // measured roll rate (bias-corrected, board-rotated)
+    int16_t  ryLsb;       // measured pitch rate
+    int16_t  rollCorrLsb; // roll damper output (LSB)
+    int16_t  pitchCorrLsb;// pitch damper output (LSB)
+    uint8_t  flags;       // bit0 I2C-fail, bit1 calibrating, bit2 disabled, bit3 bus-recover
+    uint8_t  i2cFail;     // consecutive I2C failure counter (0..ZEPHYR_I2C_FAIL_RESET)
+};
+
 class Zephyrus {
 public:
     bool enabled;           // True if MPU6050 WHO_AM_I matched
@@ -26,11 +40,13 @@ public:
     float slewGain;   // 0–100, 0=off — transient rudder boost on fast attitude change
 
     // Runtime-tunable PID gains — initialized from ZephyrusConfig.h defaults,
-    // adjustable via the WebUI. Same units as the compile-time constants:
-    //   Kp   → ° correction per ° error (roll/pitch) or per °/s (yaw)
-    //   Ki   → integral accumulation rate
-    //   Kd   → derivative gain
-    //   Imax → integrator anti-windup clamp (° or °/s)
+    // adjustable via the WebUI. Under MESOZOIC_ONLY these are the RATE-damper
+    // gains (all three axes): the Mesozoic path converts them to Q12 fixed-point
+    // (real gain = value/4096) each tick and feeds mesoPid directly.
+    //   Kp   → rate P (dimensionless; °/s correction per °/s rate error)
+    //   Ki   → rate integral accumulation rate
+    //   Kd   → rate derivative gain
+    //   Imax → integrator anti-windup clamp (°/s)
     float rollKp, rollKi, rollKd, rollImax;
     float pitchKp, pitchKi, pitchKd, pitchImax;
     float yawKp, yawKi, yawKd, yawImax;
@@ -88,10 +104,25 @@ public:
     int    _calibCount;     // Samples accumulated so far
     bool   _calibrating;    // True during calibration phase
 
+    // --- Always-on fault register (why did the gyro stall?) ---
+    uint16_t faultNan;
+    uint16_t faultI2cFail;
+    uint16_t faultBusRecover;
+    uint16_t faultReinit;
+    uint8_t  lastFaultReason;
+
+#ifdef ZEPHYR_BLACKBOX
+    ZephyrBbFrame bbRing[ZEPHYR_BB_SAMPLES];
+    uint16_t bbHead;      // next write index
+    uint16_t bbCount;     // number of valid frames (0..ZEPHYR_BB_SAMPLES)
+#endif
+
 private:
     // --- MPU6050 Register-Level Driver ---
     bool    _begun;
     bool    _mpuPresent;
+    bool    _fullResetDone; // MPU6050 device-reset + settle performed (once per boot)
+    bool    _wireBegun;     // Wire.begin() performed once per boot — never re-run
     int16_t _gyroRaw[3];    // X, Y, Z raw
     int16_t _accelRaw[3];   // X, Y, Z raw
     float   _gyroBias[3];   // Calibrated offsets
@@ -102,6 +133,7 @@ private:
     void _mpuWrite(uint8_t reg, uint8_t val);
     uint8_t _mpuRead(uint8_t reg);
     bool _mpuBurstRead(uint8_t reg, uint8_t *buf, uint8_t len);
+    void _i2cBusRecover();
     bool _mpuInit();
     bool _mpuReadSensors();
 
@@ -110,6 +142,9 @@ private:
     float _integralFB[3];   // Integral feedback for gyro bias
     uint32_t _lastAhrsUs;   // Previous AHRS update timestamp
     uint32_t _lastProbeUs;  // Last begin() attempt timestamp (retry backoff)
+    uint8_t  _i2cFailCount; // Consecutive I2C read failures (stuck-bus recovery)
+    int16_t  _lastRxLsb;    // last bias-corrected roll rate (blackbox)
+    int16_t  _lastRyLsb;    // last bias-corrected pitch rate (blackbox)
  
     float   _slewLPF; // filtered roll-error rate (°/s) for the slew boost
 
@@ -160,4 +195,7 @@ private:
 
     void _calibrationStep();
     void _finishCalibration(float n);
+
+    void _bbFault(uint8_t reason);              // always-on fault register
+    void _bbTick(uint32_t nowUs, uint8_t flags); // ring-buffer frame (ZEPHYR_BLACKBOX)
 };

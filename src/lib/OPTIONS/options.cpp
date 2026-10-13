@@ -33,6 +33,8 @@ firmware_options_t firmwareOptions;
 #if defined(PLATFORM_ESP32)
 #include <esp_partition.h>
 #include "esp_ota_ops.h"
+#elif defined(PTERONAUTOS)
+#include <user_interface.h> // system_set_os_print
 #endif
 
 char product_name[ELRSOPTS_PRODUCTNAME_SIZE+1];
@@ -297,6 +299,16 @@ static uint32_t findFirmwareEnd()
 bool options_init()
 {
     debugCreateInitLogger();
+
+#if defined(PLATFORM_ESP8266) && defined(PTERONAUTOS)
+    // Silence the WiFi PHY/MAC debug printers (phy_debug_print, lmacProcessTxError,
+    // ... -> os_printf -> ROM ets_vprintf). Under webui traffic load their string
+    // args can point at flash past the firmware image end (garbage region on the
+    // 1MB 8285), and the ROM formatter's wide string copy faults with
+    // LoadStoreError (cause 3, epc inside ets_vprintf) -> reboot on webui access.
+    // PteronautOS logs via NullStream (no UART0), so nothing of value is lost.
+    system_set_os_print(0);
+#endif
 
     uint32_t baseAddr = 0;
 #if defined(PLATFORM_ESP32)

@@ -198,6 +198,49 @@
               %span.value= self.ratchetTimeoutMs
               |  ms
 
+.mui-panel
+  .mui--text-title
+    = self._t('ornithopter.guardiao.title')
+    %label{style: "cursor:pointer;"}
+      %input{type: "checkbox", checked: self.guardiaoAtivo, @change: self._onCheck('guardiaoAtivo'), .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#ccc;margin-left:12px;vertical-align:middle;"}
+      %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.guardiaoAtivo ? self._t('ornithopter.guardiao.enabled') : self._t('ornithopter.guardiao.disabled')
+  %small{style: "color:#888;"}= self._t('ornithopter.guardiao.desc')
+  - if self.guardiaoAtivo
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.guardiao.delta_max')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_max_desc')
+          %td
+            %input{type: "range", min: "20", max: "500", .value: self.guardiaoDeltaMax, @input: self._onSlider('guardiaoDeltaMax'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.guardiaoDeltaMax
+        %tr
+          %td
+            %b= self._t('ornithopter.guardiao.delta_arm')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_arm_desc')
+          %td
+            %input{type: "range", min: "100", max: "1639", .value: self.guardiaoDeltaArm, @input: self._onSlider('guardiaoDeltaArm'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.guardiaoDeltaArm
+        %tr
+          %td
+            %b= self._t('ornithopter.guardiao.delta_persist')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_persist_desc')
+          %td
+            %input{type: "range", min: "20", max: "1000", .value: self.guardiaoDeltaPersist, @input: self._onSlider('guardiaoDeltaPersist'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.guardiaoDeltaPersist
+        %tr
+          %td
+            %b= self._t('ornithopter.guardiao.limiar_simult')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.limiar_simult_desc')
+          %td
+            %input{type: "range", min: "2", max: "7", .value: self.guardiaoLimiarSimult, @input: self._onSlider('guardiaoLimiarSimult'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.guardiaoLimiarSimult
+
 .mui-panel.ptero-centered
   %button.ptero-btn{@click: self._saveConfig, .disabled: self._uiLocked()}= self._t('ornithopter.save')
   - if self._saveStateText().length

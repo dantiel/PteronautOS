@@ -160,6 +160,12 @@ export default {
     'zephyrus.calibrate.hint_available': 'Available when gyro is detected',
     'zephyrus.calibrate.hint_hold': 'Hold aircraft still — auto-completes in ~5s',
     'zephyrus.calibrate.hint_ready': 'Place aircraft level and press to calibrate',
+    'zephyrus.lost.banner': '⚠️ MPU LOST — check the gyro connector / wiring',
+    'zephyrus.stall.bus': '⚠️ MPU STALL — I²C stuck bus (recovered)',
+    'zephyrus.stall.reinit': '⚠️ MPU RE-INIT — gyro re-initialized',
+    'zephyrus.stall.nan': '⚠️ NaN FAULT — math overflow in stabilizer',
+    'zephyrus.stall.i2c': '⚠️ I²C GLITCH — MPU read failed',
+    'zephyrus.fault.summary': 'I²C fails: {{i2c}} · bus rec: {{bus}} · reinit: {{reinit}} · NaN: {{nan}}',
 
     // ── Servo Panel ───────────────────────────────────────────────
     'servo.panel.title': '🔧 Servo Output',
@@ -690,5 +696,17 @@ export default {
     'ornithopter.mixer_output.override': 'Override',
     'ornithopter.mixer_output.left_wing': 'Left Wing',
     'ornithopter.mixer_output.right_wing': 'Right Wing',
+    'ornithopter.guardiao.title': 'Guardião — CRSF Glitch Filter',
+    'ornithopter.guardiao.enabled': 'Enabled',
+    'ornithopter.guardiao.disabled': 'Disabled',
+    'ornithopter.guardiao.desc': 'Rejects single-frame channel corruptions (slow-decode / RF glitch) before they slam a wing servo. Values in CRSF raw units (172=988µs, 1811=2012µs). Disable for raw passthrough.',
+    'ornithopter.guardiao.delta_max': 'Stick Δ Max',
+    'ornithopter.guardiao.delta_max_desc': 'Per-frame jump tolerated on stick/pot channels before a frame is frozen (higher = looser).',
+    'ornithopter.guardiao.delta_arm': 'Switch Δ Max',
+    'ornithopter.guardiao.delta_arm_desc': 'Per-frame jump tolerated on switched channels (arm / flight profile) which legitimately swing full-range.',
+    'ornithopter.guardiao.delta_persist': 'Confirmation Window',
+    'ornithopter.guardiao.delta_persist_desc': 'Δ between two candidate frames required to accept a jump as a real stick move (2-frame persistence).',
+    'ornithopter.guardiao.limiar_simult': 'Ghost Threshold',
+    'ornithopter.guardiao.limiar_simult_desc': 'If ≥N channels jump in one frame, reject the whole frame as a collective electrical ghost.',
   }
 };

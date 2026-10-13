@@ -18,6 +18,7 @@
 #else
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <user_interface.h>   // struct rst_info + REASON_* for the heap-safe crash endpoint
 #define wifi_mode_t WiFiMode_t
 #endif
 #include <DNSServer.h>
@@ -155,18 +156,27 @@ static bool captivePortal(AsyncWebServerRequest *request)
 // fragmented heap can push a malloc over the edge and reboot the radio
 // ("load too much at once" crash). Degrade gracefully instead: serve a 503
 // and let the WebUI (fetchJsonWithRetry) back off and retry.
-#if defined(PLATFORM_ESP8266)
 // Only the largest contiguous block matters: an ArduinoJson build needs one
 // ~4KB block. Total free heap can legitimately dip below 8KB while a 5KB block
 // is still available, so a total-heap threshold only causes false 503s during
 // normal load. Guard only when no single block can satisfy the JSON alloc.
 static const uint32_t HEAP_MAX_BLOCK_WATER = 4000; // largest contiguous block
-static bool heapCriticallyLow()
+#if !defined(PTERONAUTOS)
+// Legacy /config water mark. PteronautOS orphans /config entirely (GetConfiguration
+// is compiled out), so this is only used by stock ELRS TX/RX targets.
+static const uint32_t HEAP_MAX_BLOCK_WATER_CONFIG = 6000;
+#endif
+#if defined(PLATFORM_ESP8266)
+static bool heapCriticallyLow(uint32_t water = HEAP_MAX_BLOCK_WATER)
 {
-    return ESP.getMaxFreeBlockSize() < HEAP_MAX_BLOCK_WATER;
+    return ESP.getMaxFreeBlockSize() < water;
 }
 #else
-static bool heapCriticallyLow() { return false; }
+static bool heapCriticallyLow(uint32_t water = HEAP_MAX_BLOCK_WATER)
+{
+    (void)water;
+    return false;
+}
 #endif
 
 static void serveHeapBusy(AsyncWebServerRequest *request)
@@ -424,17 +434,146 @@ static void SampleVoltageSources(AsyncWebServerRequest *request, JsonVariant &js
 }
 #endif
 
+// ── Topic-split config endpoints ──────────────────────────────────────────
+// PteronautOS orphans the legacy /config monolith: GetConfiguration and the
+// POST /config handler are compiled out via #if !defined(PTERONAUTOS). The app
+// shell (settings) and RX panels (rx-config) fetch only what they need, and
+// options.json stays a raw file route (streamed, no ArduinoJson parse on the
+// server side). Only the ELRS over-the-air protocol remains compatible.
+#if defined(TARGET_RX)
+static void populateRxConfigJson(JsonObject cfg)
+{
+    cfg["serial-protocol"] = config.GetSerialProtocol();
+#if defined(PLATFORM_ESP32)
+    if ((GPIO_PIN_SERIAL1_RX != UNDEF_PIN && GPIO_PIN_SERIAL1_TX != UNDEF_PIN) || GPIO_PIN_PWM_OUTPUTS_COUNT > 0)
+    {
+      cfg["serial1-protocol"] = config.GetSerial1Protocol();
+    }
+#endif
+    cfg["sbus-failsafe"] = config.GetFailsafeMode();
+    cfg["modelid"] = config.GetModelId();
+    cfg["force-tlm"] = config.GetForceTlmOff();
+    cfg["vbind"] = config.GetBindStorage();
+    for (int ch=0; ch<GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
+    {
+      const auto channel = cfg["pwm"][ch].to<JsonObject>();
+      channel["config"] = config.GetPwmChannel(ch)->raw;
+      channel["pin"] = GPIO_PIN_PWM_OUTPUTS[ch];
+      uint8_t features = 0;
+      auto pin = GPIO_PIN_PWM_OUTPUTS[ch];
+      if (!OPT_PWM_OUT_ONLY)
+      {
+        if (pin == U0TXD_GPIO_NUM) features |= 1;  // SerialTX supported
+        else if (pin == U0RXD_GPIO_NUM) features |= 2;  // SerialRX supported
+        else if (pin == GPIO_PIN_SCL) features |= 4;  // I2C SCL supported (only on this pin)
+        else if (pin == GPIO_PIN_SDA) features |= 8;  // I2C SDA supported (only on this pin)
+        else if (GPIO_PIN_SCL == UNDEF_PIN || GPIO_PIN_SDA == UNDEF_PIN) features |= 12; // Both I2C SCL/SDA supported (on any pin)
+      }
+      #if defined(PLATFORM_ESP32)
+      if (pin != 0) features |= 16; // DShot supported on all pins but GPIO0
+      if (!OPT_PWM_OUT_ONLY)
+      {
+        if (pin == GPIO_PIN_SERIAL1_RX) features |= 32;  // SERIAL1 RX supported (only on this pin)
+        else if (pin == GPIO_PIN_SERIAL1_TX) features |= 64;  // SERIAL1 TX supported (only on this pin)
+        else if ((GPIO_PIN_SERIAL1_RX == UNDEF_PIN || GPIO_PIN_SERIAL1_TX == UNDEF_PIN) &&
+                 (!(features & 1) && !(features & 2))) features |= 96; // Both Serial1 RX/TX supported (on any pin if not already featured for Serial 1)
+      }
+      #endif
+      channel["features"] = features;
+    }
+}
+#endif
+
+static void populateSettingsJson(JsonObject settings, const JsonObject json)
+{
+    settings["product_name"] = product_name;
+    settings["lua_name"] = device_name;
+    settings["uidtype"] = GetConfigUidType(json);
+    settings["ssid"] = station_ssid;
+    settings["mode"] = wifiMode == WIFI_STA ? "STA" : "AP";
+    settings["wifi_dbm"] = wifi_GetClientRssi();
+    settings["custom_hardware"] = hardware_flag(HARDWARE_customised);
+    settings["target"] = &target_name[4];
+    settings["version"] = VERSION;
+    settings["git-commit"] = commit;
+#if defined(TARGET_TX)
+    settings["module-type"] = "TX";
+#endif
+#if defined(TARGET_RX)
+    settings["module-type"] = "RX";
+    settings["voltage_source_count"] = getDefinedVoltageSourceCount();
+    if (GPIO_PIN_RCSIGNAL_RX != UNDEF_PIN && GPIO_PIN_RCSIGNAL_TX != UNDEF_PIN)
+        settings["has_serial_pins"] = true;
+#endif
+#if defined(RADIO_SX128X)
+    settings["radio-type"] = "SX128X";
+    settings["has_low_band"] = false;
+    settings["has_high_band"] = true;
+    settings["reg_domain_high"] = FHSSconfig->domain;
+#elif defined(RADIO_SX127X)
+    settings["radio-type"] = "SX127X";
+    settings["has_low_band"] = true;
+    settings["has_high_band"] = false;
+    settings["reg_domain_low"] = FHSSconfig->domain;
+#elif defined(RADIO_LR1121)
+    settings["radio-type"] = "LR1121";
+    settings["has_low_band"] = POWER_OUTPUT_VALUES_COUNT != 0;
+    settings["has_high_band"] = POWER_OUTPUT_VALUES_DUAL_COUNT != 0;
+    settings["reg_domain_low"] = FHSSconfig->domain;
+    settings["reg_domain_high"] = FHSSconfigDualBand->domain;
+#endif
+}
+
+static void GetPteronautosSettings(AsyncWebServerRequest *request)
+{
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
+    auto *response = new AsyncJsonResponse(false);
+    JsonObject root = response->getRoot().as<JsonObject>();
+    populateSettingsJson(root["settings"].to<JsonObject>(), root);
+    response->setLength();
+    request->send(response);
+}
+
+static void GetPteronautosRxConfig(AsyncWebServerRequest *request)
+{
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
+    auto *response = new AsyncJsonResponse(false);
+    JsonObject root = response->getRoot().as<JsonObject>();
+    JsonObject cfg = root["config"].to<JsonObject>();
+    const auto uid = cfg["uid"].to<JsonArray>();
+    copyArray(UID, UID_LEN, uid);
+#if defined(TARGET_RX)
+    populateRxConfigJson(cfg);
+#endif
+    response->setLength();
+    request->send(response);
+}
+
+#if !defined(PTERONAUTOS)
+// Legacy ELRS Configurator endpoint. PteronautOS orphans /config entirely: its
+// WebUI reads via /pteronautos/settings + /pteronautos/rx-config and writes via
+// POST /pteronautos/rx-config. Kept only so the stock ELRS TX/RX targets in this
+// fork still compile and serve the official configurator.
 static void GetConfiguration(AsyncWebServerRequest *request)
 {
+  // The ELRS /config endpoint deserializes options.json + builds the whole
+  // config tree on EVERY page load, before any pteronautos endpoint runs. It
+  // was the one unguarded heavy JSON builder on the boot path — guard it like
+  // the others so a tight heap degrades to the "Settings Load Failed → Retry"
+  // dialog instead of a "load too much at once" reboot.
+  if (heapCriticallyLow(HEAP_MAX_BLOCK_WATER_CONFIG)) { serveHeapBusy(request); return; }
   const bool exportMode = request->hasArg("export");
   auto *response = new AsyncJsonResponse();
   const auto json = response->getRoot();
 
   if (!exportMode)
   {
-    JsonDocument options;
-    deserializeJson(options, getOptions());
-    json["options"] = options;
+    // Deserialize options.json straight into the response document. The old
+    // path parsed into a throwaway `JsonDocument options` and then deep-copied
+    // with `json["options"] = options`, holding TWO full copies of options.json
+    // in heap at once. On the ESP8285's ~23KB heap that doubled allocation is
+    // the exception-on-boot path — parse once, in place, instead.
+    deserializeJson(json["options"], getOptions());
   }
 
   const auto cfg = json["config"].to<JsonObject>();
@@ -504,90 +643,16 @@ static void GetConfiguration(AsyncWebServerRequest *request)
 
   if (!exportMode)
   {
-    const auto settings = json["settings"].to<JsonObject>();
-    #if defined(TARGET_RX)
-    cfg["serial-protocol"] = config.GetSerialProtocol();
-    #if defined(PLATFORM_ESP32)
-    if ((GPIO_PIN_SERIAL1_RX != UNDEF_PIN && GPIO_PIN_SERIAL1_TX != UNDEF_PIN) || GPIO_PIN_PWM_OUTPUTS_COUNT > 0)
-    {
-      cfg["serial1-protocol"] = config.GetSerial1Protocol();
-    }
-    #endif
-    cfg["sbus-failsafe"] = config.GetFailsafeMode();
-    cfg["modelid"] = config.GetModelId();
-    cfg["force-tlm"] = config.GetForceTlmOff();
-    cfg["vbind"] = config.GetBindStorage();
-    for (int ch=0; ch<GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
-    {
-      const auto channel = cfg["pwm"][ch].to<JsonObject>();
-      channel["config"] = config.GetPwmChannel(ch)->raw;
-      channel["pin"] = GPIO_PIN_PWM_OUTPUTS[ch];
-      uint8_t features = 0;
-      auto pin = GPIO_PIN_PWM_OUTPUTS[ch];
-      if (!OPT_PWM_OUT_ONLY)
-      {
-        if (pin == U0TXD_GPIO_NUM) features |= 1;  // SerialTX supported
-        else if (pin == U0RXD_GPIO_NUM) features |= 2;  // SerialRX supported
-        else if (pin == GPIO_PIN_SCL) features |= 4;  // I2C SCL supported (only on this pin)
-        else if (pin == GPIO_PIN_SDA) features |= 8;  // I2C SDA supported (only on this pin)
-        else if (GPIO_PIN_SCL == UNDEF_PIN || GPIO_PIN_SDA == UNDEF_PIN) features |= 12; // Both I2C SCL/SDA supported (on any pin)
-      }
-      #if defined(PLATFORM_ESP32)
-      if (pin != 0) features |= 16; // DShot supported on all pins but GPIO0
-      if (!OPT_PWM_OUT_ONLY)
-      {
-        if (pin == GPIO_PIN_SERIAL1_RX) features |= 32;  // SERIAL1 RX supported (only on this pin)
-        else if (pin == GPIO_PIN_SERIAL1_TX) features |= 64;  // SERIAL1 TX supported (only on this pin)
-        else if ((GPIO_PIN_SERIAL1_RX == UNDEF_PIN || GPIO_PIN_SERIAL1_TX == UNDEF_PIN) &&
-                 (!(features & 1) && !(features & 2))) features |= 96; // Both Serial1 RX/TX supported (on any pin if not already featured for Serial 1)
-      }
-      #endif
-      channel["features"] = features;
-    }
-    if (GPIO_PIN_RCSIGNAL_RX != UNDEF_PIN && GPIO_PIN_RCSIGNAL_TX != UNDEF_PIN)
-    {
-        settings["has_serial_pins"] = true;
-    }
-    #endif
-    settings["product_name"] = product_name;
-    settings["lua_name"] = device_name;
-    settings["uidtype"] = GetConfigUidType(json);
-    settings["ssid"] = station_ssid;
-    settings["mode"] = wifiMode == WIFI_STA ? "STA" : "AP";
-    settings["wifi_dbm"] = wifi_GetClientRssi();
-    settings["custom_hardware"] = hardware_flag(HARDWARE_customised);
-    settings["target"] = &target_name[4];
-    settings["version"] = VERSION;
-    settings["git-commit"] = commit;
-#if defined(TARGET_TX)
-    settings["module-type"] = "TX";
-#endif
 #if defined(TARGET_RX)
-    settings["module-type"] = "RX";
-    settings["voltage_source_count"] = getDefinedVoltageSourceCount();
+    populateRxConfigJson(cfg);
 #endif
-#if defined(RADIO_SX128X)
-    settings["radio-type"] = "SX128X";
-    settings["has_low_band"] = false;
-    settings["has_high_band"] = true;
-    settings["reg_domain_high"] = FHSSconfig->domain;
-#elif defined(RADIO_SX127X)
-    settings["radio-type"] = "SX127X";
-    settings["has_low_band"] = true;
-    settings["has_high_band"] = false;
-    settings["reg_domain_low"] = FHSSconfig->domain;
-#elif defined(RADIO_LR1121)
-    settings["radio-type"] = "LR1121";
-    settings["has_low_band"] = POWER_OUTPUT_VALUES_COUNT != 0;
-    settings["has_high_band"] = POWER_OUTPUT_VALUES_DUAL_COUNT != 0;
-    settings["reg_domain_low"] = FHSSconfig->domain;
-    settings["reg_domain_high"] = FHSSconfigDualBand->domain;
-#endif
+    populateSettingsJson(json["settings"].to<JsonObject>(), json);
   }
 
   response->setLength();
   request->send(response);
 }
+#endif // !defined(PTERONAUTOS)
 
 static void GetPteronautosDebug(AsyncWebServerRequest *request)
 {
@@ -686,7 +751,8 @@ static void GetPteronautosSystem(AsyncWebServerRequest *request)
     JsonObject root = response->getRoot().to<JsonObject>();
 
     root["firmware"] = "PteronautOS";
-    root["version"] = "0.1.0";
+    root["version"] = VERSION;
+    root["git_commit"] = commit;
     root["build_date"] = __DATE__;
     root["build_time"] = __TIME__;
     root["uptime_ms"] = millis();
@@ -712,6 +778,64 @@ static void GetPteronautosSystem(AsyncWebServerRequest *request)
     response->setLength();
     request->send(response);
 }
+// ── Blackbox dump ──────────────────────────────────────────────────────────
+// GET /pteronautos/blackbox → JSON: always-on fault register + (under
+// ZEPHYR_BLACKBOX) the last ~0.77s ring buffer of the stabilizer hot path.
+// Fetched on-demand only (never polled), so a manual String build is lighter
+// on the fragmented heap than an AsyncJsonResponse tree.
+static void GetPteronautosBlackbox(AsyncWebServerRequest *request)
+{
+    if (heapCriticallyLow()) { serveHeapBusy(request); return; }
+    String out;
+#ifdef ZEPHYR_BLACKBOX
+    out.reserve(4096);
+    out += "{\"ok\":true,\"compiled\":true,\"period_ms\":3,\"samples\":";
+    out += String((int)ZEPHYR_BB_SAMPLES);
+    out += ",\"count\":";
+    out += String((int)zephyrus.bbCount);
+    out += ",\"faults\":{\"nan\":";
+    out += String((int)zephyrus.faultNan);
+    out += ",\"i2c_fail\":";
+    out += String((int)zephyrus.faultI2cFail);
+    out += ",\"bus_recover\":";
+    out += String((int)zephyrus.faultBusRecover);
+    out += ",\"reinit\":";
+    out += String((int)zephyrus.faultReinit);
+    out += ",\"last_reason\":";
+    out += String((int)zephyrus.lastFaultReason);
+    out += "},\"frames\":[";
+    uint16_t n = zephyrus.bbCount;
+    uint16_t start = (n < ZEPHYR_BB_SAMPLES) ? 0 : zephyrus.bbHead;
+    for (uint16_t i = 0; i < n; i++) {
+        const ZephyrBbFrame &f = zephyrus.bbRing[(start + i) % ZEPHYR_BB_SAMPLES];
+        if (i) out += ',';
+        out += '[';
+        out += String((int)f.tMs); out += ',';
+        out += String((int)f.rxLsb); out += ',';
+        out += String((int)f.ryLsb); out += ',';
+        out += String((int)f.rollCorrLsb); out += ',';
+        out += String((int)f.pitchCorrLsb); out += ',';
+        out += String((int)f.flags); out += ',';
+        out += String((int)f.i2cFail);
+        out += ']';
+    }
+    out += "]}";
+#else
+    out = "{\"ok\":true,\"compiled\":false,\"faults\":{\"nan\":";
+    out += String((int)zephyrus.faultNan);
+    out += ",\"i2c_fail\":";
+    out += String((int)zephyrus.faultI2cFail);
+    out += ",\"bus_recover\":";
+    out += String((int)zephyrus.faultBusRecover);
+    out += ",\"reinit\":";
+    out += String((int)zephyrus.faultReinit);
+    out += ",\"last_reason\":";
+    out += String((int)zephyrus.lastFaultReason);
+    out += "}}";
+#endif
+    request->send(200, "application/json", out);
+}
+
 // ── Servo sweep externs (defined in devServoOutput.cpp) ──────────
 extern void startServoSweep();
 extern void stopServoSweep();
@@ -791,6 +915,11 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["wing_yaw_gain"]       = (int)ornithopter.wingYawGain;
     zeph["roll_attitude_correction"]  = zephyrus.rollAttitudeCorrection;
     zeph["pitch_attitude_correction"] = zephyrus.pitchAttitudeCorrection;
+    zeph["fault_nan"]          = zephyrus.faultNan;
+    zeph["fault_i2c_fail"]     = zephyrus.faultI2cFail;
+    zeph["fault_bus_recover"]  = zephyrus.faultBusRecover;
+    zeph["fault_reinit"]       = zephyrus.faultReinit;
+    zeph["fault_last_reason"]  = zephyrus.lastFaultReason;
 
     // Runtime-tunable PID gains — read back by the panel sliders
     JsonObject pid = zeph["pid"].to<JsonObject>();
@@ -917,6 +1046,13 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     JsonArray stickArr = orni["stick_channels"].to<JsonArray>();
     for (int i = 0; i < STK_COUNT; ++i) stickArr.add(ornithopter.stickChannels[i]);
 
+    // Guardião — CRSF channel glitch filter (values in CRSF raw 172–1811)
+    orni["guardiao_active"]        = ornithopter.guardiaoAtivo;
+    orni["guardiao_delta_max"]     = (int)ornithopter.guardiaoDeltaMax;
+    orni["guardiao_delta_arm"]     = (int)ornithopter.guardiaoDeltaMaxArm;
+    orni["guardiao_delta_persist"] = (int)ornithopter.guardiaoDeltaPersistencia;
+    orni["guardiao_limiar_simult"] = (int)ornithopter.guardiaoLimiarSimultaneidade;
+
     // Flight profiles (3 × tuning param sets)
     JsonArray fpArr = orni["flight_profiles"].to<JsonArray>();
     for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
@@ -971,6 +1107,40 @@ static void GetPteronautosDiag(AsyncWebServerRequest *request)
         (int)ESP.getFreeHeap(), (unsigned)millis(), ESP.getResetReason().c_str());
 #endif
     request->send(200, "application/json", buf);
+}
+
+// ── Crash-context dump (raw text) ─────────────────────────────────
+// Reads the SDK rst_info struct DIRECTLY into a stack buffer — zero heap
+// allocation. The old path called ESP.getResetInfo() (returns a String) and
+// request->send(..., String) deep-copied it a second time: the ONE endpoint
+// that must keep working while the heap is critically low was doing the most
+// allocation of any handler. Read the struct, snprintf into buf, send buf —
+// same heap profile as GetPteronautosDiag (which never crashes).
+static void GetPteronautosCrash(AsyncWebServerRequest *request)
+{
+#if defined(PLATFORM_ESP8266)
+    const struct rst_info *ri = ESP.getResetInfoPtr();
+    const char *reason;
+    switch (ri->reason) {
+        case REASON_DEFAULT_RST:      reason = "Power On"; break;
+        case REASON_WDT_RST:          reason = "Hardware Watchdog"; break;
+        case REASON_EXCEPTION_RST:    reason = "Exception"; break;
+        case REASON_SOFT_WDT_RST:     reason = "Software Watchdog"; break;
+        case REASON_SOFT_RESTART:     reason = "Software/System restart"; break;
+        case REASON_DEEP_SLEEP_AWAKE: reason = "Deep-Sleep Wake"; break;
+        case REASON_EXT_SYS_RST:      reason = "External System"; break;
+        default:                      reason = "Unknown"; break;
+    }
+    char buf[224];
+    snprintf(buf, sizeof(buf),
+        "Fatal exception:%u flag:%u (%s) epc1:0x%08x epc2:0x%08x epc3:0x%08x excvaddr:0x%08x depc:0x%08x",
+        (unsigned)ri->exccause, (unsigned)ri->reason, reason,
+        (unsigned)ri->epc1, (unsigned)ri->epc2, (unsigned)ri->epc3,
+        (unsigned)ri->excvaddr, (unsigned)ri->depc);
+    request->send(200, "text/plain", buf);
+#else
+    request->send(200, "text/plain", "no crash context on this platform");
+#endif
 }
 
 // ── Ornithopter Config Endpoint ──────────────────────────────────
@@ -1115,6 +1285,16 @@ static bool SaveOrnithopterConfig()
     f.print((int)activeProfile);
     f.print(",\"model_name\":");
     _pteroPrintJsonString(f, ornithopter.modelName);
+    f.print(",\"guardiao_active\":");
+    f.print(ornithopter.guardiaoAtivo ? "true" : "false");
+    f.print(",\"guardiao_delta_max\":");
+    f.print((int)ornithopter.guardiaoDeltaMax);
+    f.print(",\"guardiao_delta_arm\":");
+    f.print((int)ornithopter.guardiaoDeltaMaxArm);
+    f.print(",\"guardiao_delta_persist\":");
+    f.print((int)ornithopter.guardiaoDeltaPersistencia);
+    f.print(",\"guardiao_limiar_simult\":");
+    f.print((int)ornithopter.guardiaoLimiarSimultaneidade);
 #ifdef ZEPHYRUS_ENABLED
     f.print(",\"gyro_enabled\":");
     f.print(zephyrus.gyroEnabled ? "true" : "false");
@@ -1307,6 +1487,29 @@ void LoadOrnithopterConfig()
     if (o["profile_id"].is<int>())            setOrnithopterProfile((uint8_t)o["profile_id"].as<int>());
     if (o["model_name"].is<const char*>())
         strlcpy(ornithopter.modelName, o["model_name"].as<const char*>(), sizeof(ornithopter.modelName));
+    // Guardião — CRSF channel glitch filter (clamped so a corrupt config can't
+    // freeze every stick move or pass every glitch).
+    if (o["guardiao_active"].is<bool>())   ornithopter.guardiaoAtivo = o["guardiao_active"].as<bool>();
+    if (o["guardiao_delta_max"].is<int>()) {
+        int32_t v = o["guardiao_delta_max"].as<int>();
+        if (v < 20) v = 20; else if (v > 500) v = 500;
+        ornithopter.guardiaoDeltaMax = (uint16_t)v;
+    }
+    if (o["guardiao_delta_arm"].is<int>()) {
+        int32_t v = o["guardiao_delta_arm"].as<int>();
+        if (v < 100) v = 100; else if (v > 1639) v = 1639;
+        ornithopter.guardiaoDeltaMaxArm = (uint16_t)v;
+    }
+    if (o["guardiao_delta_persist"].is<int>()) {
+        int32_t v = o["guardiao_delta_persist"].as<int>();
+        if (v < 20) v = 20; else if (v > 1000) v = 1000;
+        ornithopter.guardiaoDeltaPersistencia = (uint16_t)v;
+    }
+    if (o["guardiao_limiar_simult"].is<int>()) {
+        int32_t v = o["guardiao_limiar_simult"].as<int>();
+        if (v < 2) v = 2; else if (v > STK_COUNT) v = STK_COUNT;
+        ornithopter.guardiaoLimiarSimultaneidade = (uint8_t)v;
+    }
 #ifdef ZEPHYRUS_ENABLED
     if (o["gyro_enabled"].is<bool>()) {
         zephyrus.gyroEnabled = o["gyro_enabled"].as<bool>();
@@ -1570,6 +1773,20 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         if (t < -300) t = -300;
         if (t >  300) t =  300;
         ornithopter.servoTrimUs[i] = (int16_t)t;
+    }
+
+    // Guardião — CRSF channel glitch filter (runtime-configurable)
+    {
+        bool ga = _pteroParamInt(request, "guardiao_active", ornithopter.guardiaoAtivo ? 1 : 0) != 0;
+        int32_t dMax = _pteroParamInt(request, "guardiao_delta_max", ornithopter.guardiaoDeltaMax);
+        int32_t dArm = _pteroParamInt(request, "guardiao_delta_arm", ornithopter.guardiaoDeltaMaxArm);
+        int32_t dPers = _pteroParamInt(request, "guardiao_delta_persist", ornithopter.guardiaoDeltaPersistencia);
+        int32_t lSim = _pteroParamInt(request, "guardiao_limiar_simult", ornithopter.guardiaoLimiarSimultaneidade);
+        if (dMax < 20)  dMax = 20;   else if (dMax > 500)  dMax = 500;
+        if (dArm < 100) dArm = 100;  else if (dArm > 1639) dArm = 1639;
+        if (dPers < 20) dPers = 20;  else if (dPers > 1000) dPers = 1000;
+        if (lSim < 2)   lSim = 2;    else if (lSim > STK_COUNT) lSim = STK_COUNT;
+        ornithopter.configurarGuardiao(ga, (uint16_t)dMax, (uint16_t)dArm, (uint16_t)dPers, (uint8_t)lSim);
     }
 
     // User-facing model identifier (shown in Overview, included in backup).
@@ -2445,7 +2662,9 @@ static void startServices()
   server.on("/sethome", WebUpdateSetHome);
   server.on("/forget", WebUpdateForget);
   server.on("/connect", WebUpdateConnect);
+#if !defined(PTERONAUTOS)
   server.on("/config", HTTP_GET, GetConfiguration);
+#endif
   server.on("/access", WebUpdateAccessPoint);
   server.on("/firmware.bin", WebUpdateGetFirmware);
 
@@ -2468,14 +2687,18 @@ static void startServices()
   server.on("/pteronautos/state/", HTTP_GET, GetPteronautosState);
   server.on("/pteronautos/ping", HTTP_GET, GetPteronautosPing);
   server.on("/pteronautos/diag", HTTP_GET, GetPteronautosDiag);
+  server.on("/pteronautos/crash", HTTP_GET, GetPteronautosCrash);
   server.on("/pteronautos/i2cscan", HTTP_GET, GetPteronautosI2cScan);
   server.on("/pteronautos/config", HTTP_GET, GetPteronautosConfig);
   server.on("/pteronautos/config", HTTP_POST, PostPteronautosConfig);
+  server.on("/pteronautos/settings", HTTP_GET, GetPteronautosSettings);
+  server.on("/pteronautos/rx-config", HTTP_GET, GetPteronautosRxConfig);
   server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);
   server.on("/pteronautos/sweep/status", HTTP_GET, GetPteronautosSweepStatus);
   server.on("/pteronautos/backup", HTTP_GET, GetPteronautosBackup);
   server.on("/pteronautos/stick", HTTP_GET, GetPteronautosStick);
   server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
+  server.on("/pteronautos/blackbox", HTTP_GET, GetPteronautosBlackbox);
   server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
@@ -2484,7 +2707,12 @@ static void startServices()
     server.on("/udpcontrol", HTTP_POST, WebUdpControl);
   #endif
 
+#if !defined(PTERONAUTOS)
+  // Kept only for the official ExpressLRS Configurator on stock (non-PteronautOS)
+  // targets. PteronautOS orphans it: its WebUI writes via /pteronautos/rx-config.
   server.addHandler(new AsyncCallbackJsonWebHandler("/config", UpdateConfiguration));
+#endif
+  server.addHandler(new AsyncCallbackJsonWebHandler("/pteronautos/rx-config", UpdateConfiguration));
   server.addHandler(new AsyncCallbackJsonWebHandler("/options.json", UpdateSettings));
   #if defined(TARGET_RX)
     server.addHandler(new AsyncCallbackJsonWebHandler("/voltage-sample", SampleVoltageSources));

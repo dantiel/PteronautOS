@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -34,6 +34,8 @@ els = {
 };
 
 currentRunId = null;
+
+currentBuildInfo = null;
 
 firmwareBytes = null;
 
@@ -340,6 +342,9 @@ specimenMeta = function(rec) {
   if (p.device_name) {
     parts.push(p.device_name);
   }
+  if (rec.version) {
+    parts.push(rec.version);
+  }
   parts.push(fmtSize(rec.size));
   return parts.join(" · ");
 };
@@ -356,6 +361,7 @@ saveSpecimen = async function() {
       name: "pteronautos-firmware.bin",
       size: firmwareBytes.length,
       params: collectParams(),
+      version: currentBuildInfo != null ? currentBuildInfo.version : void 0,
       blob: firmwareBytes.slice().buffer
     };
     await idbPutSpecimen(rec);
@@ -557,6 +563,7 @@ startBuild = async function() {
   els.downloadBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
+  currentBuildInfo = null;
   els.log.textContent = "";
   setStatus("Dispatching build…", "busy");
   els.runLink.classList.add("hidden");
@@ -593,7 +600,7 @@ startBuild = async function() {
 };
 
 poll = async function() {
-  var data, err;
+  var branch, data, err, ref, sha;
   if (!currentRunId) {
     return;
   }
@@ -610,6 +617,11 @@ poll = async function() {
       busy = false;
       return;
     }
+    sha = (ref = data.head_sha) != null ? ref.slice(0, 7) : void 0;
+    branch = data.head_branch || "pteronautos";
+    currentBuildInfo = {
+      version: branch + (sha ? " @" + sha : "")
+    };
     setStatus("Build complete — downloading image…", "busy");
     await downloadFirmware();
     await saveSpecimen();
@@ -626,12 +638,16 @@ poll = async function() {
 };
 
 downloadFirmware = async function() {
-  var resp, text;
+  var resp, text, ver;
   setStatus("Downloading firmware…", "busy");
   resp = (await fetch(API_BASE + "/api/build/" + currentRunId + "/download"));
   if (!resp.ok) {
     text = (await resp.text());
     throw new Error("Download failed (HTTP " + resp.status + "): " + text);
+  }
+  ver = resp.headers.get("X-Pteronautos-Version");
+  if (ver) {
+    currentBuildInfo.version = ver;
   }
   firmwareBytes = new Uint8Array((await resp.arrayBuffer()));
   return log("Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)");

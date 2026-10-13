@@ -88,10 +88,13 @@ Zephyrus::Zephyrus()
     , rollAttitudeCorrection(0.0f), pitchAttitudeCorrection(0.0f)
     , pitchPTerm(0.0f), pitchITerm(0.0f), pitchDTerm(0.0f), pitchErrorRate(0.0f)
     , _mpuPresent(false)
+    , _fullResetDone(false)
+    , _wireBegun(false)
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
     , _lastAhrsUs(0)
     , _lastProbeUs(0)
+    , _i2cFailCount(0)
     , _slewLPF(0.0f)
     , boardRotation(ZEPHYR_BOARD_ROTATION)
     , slewGain(0.0f)
@@ -120,6 +123,17 @@ Zephyrus::Zephyrus()
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+    _lastRxLsb = 0;
+    _lastRyLsb = 0;
+    faultNan = 0;
+    faultI2cFail = 0;
+    faultBusRecover = 0;
+    faultReinit = 0;
+    lastFaultReason = ZEPHYR_FAULT_NONE;
+#ifdef ZEPHYR_BLACKBOX
+    bbHead = 0;
+    bbCount = 0;
+#endif
 #ifdef MESOZOIC_HORIZON
     flapSin = 0.0f;
     flapCos = 1.0f;
@@ -130,6 +144,39 @@ Zephyrus::Zephyrus()
     stickYawNorm = 0.0f;
     mesoGravityInit(_mesoGravity);
     mesoAttitudeInit(_mesoAttitude);
+#endif
+}
+
+// ---------------------------------------------------------------------------
+//  Blackbox: always-on fault register + ring-buffer frame recorder
+// ---------------------------------------------------------------------------
+void Zephyrus::_bbFault(uint8_t reason) {
+    lastFaultReason = reason;
+    switch (reason) {
+        case ZEPHYR_FAULT_NAN:       faultNan++;        break;
+        case ZEPHYR_FAULT_I2C_FAIL:  faultI2cFail++;    break;
+        case ZEPHYR_FAULT_BUS_REC:   faultBusRecover++; break;
+        case ZEPHYR_FAULT_REINIT:    faultReinit++;     break;
+        default: break;
+    }
+}
+
+void Zephyrus::_bbTick(uint32_t nowUs, uint8_t flags) {
+#ifdef ZEPHYR_BLACKBOX
+    ZephyrBbFrame &f = bbRing[bbHead];
+    f.tMs          = (uint16_t)((nowUs / 1000) & 0xFFFF);
+    f.rxLsb        = _lastRxLsb;
+    f.ryLsb        = _lastRyLsb;
+    float rc = rollCorrection * _gyroScale;
+    float pc = pitchCorrection * _gyroScale;
+    f.rollCorrLsb  = (rc >  32767.0f) ?  32767 : (rc < -32768.0f ? -32768 : (int16_t)rc);
+    f.pitchCorrLsb = (pc >  32767.0f) ?  32767 : (pc < -32768.0f ? -32768 : (int16_t)pc);
+    f.flags        = flags;
+    f.i2cFail      = _i2cFailCount;
+    bbHead = (bbHead + 1) % ZEPHYR_BB_SAMPLES;
+    if (bbCount < ZEPHYR_BB_SAMPLES) bbCount++;
+#else
+    (void)nowUs; (void)flags;
 #endif
 }
 
@@ -169,17 +216,62 @@ bool Zephyrus::_mpuBurstRead(uint8_t reg, uint8_t *buf, uint8_t len) {
     return true;
 }
 
+// Clock out a stuck slave. If the MPU was aborted mid-byte (servo EMI glitch,
+// power transient, partial read) it can hold SDA low indefinitely — every
+// subsequent START then fails because SDA must be HIGH to begin a transaction.
+// That is exactly the "works a few seconds, then the gyro dies permanently"
+// fault. Pulsing SCL while SDA floats high lets the slave finish its byte and
+// release the line; a trailing STOP returns the bus to idle.
+void Zephyrus::_i2cBusRecover() {
+#if defined(ARDUINO)
+    pinMode(ZEPHYR_I2C_SDA, INPUT_PULLUP);
+    pinMode(ZEPHYR_I2C_SCL, OUTPUT);
+    for (uint8_t i = 0; i < 16; i++) {
+        digitalWrite(ZEPHYR_I2C_SCL, LOW);
+        delayMicroseconds(5);
+        digitalWrite(ZEPHYR_I2C_SCL, HIGH);
+        delayMicroseconds(5);
+        if (digitalRead(ZEPHYR_I2C_SDA)) break;   // SDA released — bus free
+    }
+    // STOP condition: SDA low→high while SCL is high.
+    pinMode(ZEPHYR_I2C_SDA, OUTPUT);
+    digitalWrite(ZEPHYR_I2C_SDA, LOW);
+    delayMicroseconds(5);
+    digitalWrite(ZEPHYR_I2C_SCL, HIGH);
+    delayMicroseconds(5);
+    pinMode(ZEPHYR_I2C_SDA, INPUT_PULLUP);   // release SDA → STOP
+    delayMicroseconds(5);
+    pinMode(ZEPHYR_I2C_SCL, INPUT_PULLUP);
+    pinMode(ZEPHYR_I2C_SDA, INPUT_PULLUP);
+#endif
+}
+
 // ---------------------------------------------------------------------------
 //  MPU6050 Initialization
 // ---------------------------------------------------------------------------
 bool Zephyrus::_mpuInit() {
-    // Reset device
-    _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_DEVICE_RESET);
-    delay(100);
+    // Full device reset + PLL settle happens exactly ONCE per boot. It needs a
+    // ~105ms blocking wait that must NEVER run on the flight hot path: blocking
+    // servosUpdate() for >50ms starves PWM.feedWatchdog() and trips the PWM
+    // waveform watchdog (WATCHDOG_TIMEOUT_US=50ms in waveform_8266.cpp), which
+    // freezes every servo mid-flap — the "stabilization freezes after a few
+    // seconds" symptom. Re-probes (absent/loose MPU) and stuck-bus re-inits
+    // therefore skip the reset and only re-assert the idempotent config below.
+    if (!_fullResetDone) {
+        _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_DEVICE_RESET);
+        delay(100);
+        _fullResetDone = true;
 
-    // Wake up with X-gyro PLL clock
-    _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_CLKSEL_PLL);
-    delay(5);
+        // Wake up with X-gyro PLL clock
+        _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_CLKSEL_PLL);
+        delay(5);
+    } else {
+        // Re-init (stuck-bus recovery / re-probe): NO device reset, NO blocking
+        // delay. Re-assert wake+PLL clock (idempotent — also recovers a device
+        // that power-glitched while the bus was out) and fall through to the
+        // WHO_AM_I probe + register re-program.
+        _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_CLKSEL_PLL);
+    }
 
     // Verify presence
     uint8_t who = _mpuRead(MPU_REG_WHO_AM_I);
@@ -269,8 +361,17 @@ void Zephyrus::begin() {
     pinMode(ZEPHYR_I2C_SCL, INPUT);
 #endif
 
-    Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
-    Wire.setClock(ZEPHYR_I2C_CLOCK);
+    if (!_wireBegun)
+    {
+        Wire.begin(ZEPHYR_I2C_SDA, ZEPHYR_I2C_SCL);
+        Wire.setClock(ZEPHYR_I2C_CLOCK);
+        // Bound the bit-banged clock-stretch wait so a stuck MPU (SCL held low
+        // after a servo EMI glitch) fails each bit in 2ms instead of 150ms. The
+        // default 150ms/bit lets one stuck read block the main loop for ~21s,
+        // which starves the hardware watchdog and reboots the radio.
+        Wire.setClockStretchLimit(ZEPHYR_I2C_CLOCK_STRETCH_US);
+        _wireBegun = true;
+    }
 
     if (!_mpuInit()) {
         // Probe failed. Leave _begun false so update() retries with backoff.
@@ -283,12 +384,23 @@ void Zephyrus::begin() {
     _mpuPresent = true;
     _begun = true;
     enabled = true;
+    _i2cFailCount = 0;
 
-    // Start auto-calibration
-    _calibCount = 0;
-    _calibStable = 0;
-    _calibrating = true;
-    calibrated = false;
+    // Start auto-calibration ONLY on first bring-up. A stuck-bus recovery
+    // re-init must NOT re-run the ~1-2 s calibration: the gyro bias + accel
+    // level reference are still physically valid (the sensor did not move),
+    // and re-calibrating mid-flight freezes the stabilizer for its whole
+    // duration — the "works a few seconds then the gyro dies" symptom after a
+    // servo EMI glitch. Re-seed the AHRS clock so the first tick ignores the
+    // outage gap instead of integrating it as a giant dt.
+    if (!calibrated) {
+        _calibCount = 0;
+        _calibStable = 0;
+        _calibrating = true;
+    } else {
+        _lastAhrsUs = 0;
+        _bbFault(ZEPHYR_FAULT_REINIT);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -760,18 +872,20 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchDTerm = 0.0f;
         pitchErrorRate = 0.0f;
         _slewLPF = 0.0f;
+        _bbTick(nowUs, 0x04);
         return;
     }
 
     // Calibration phase — accumulate samples, skip AHRS/PID until done
     if (_calibrating) {
         _calibrationStep();
-        if (_calibrating) return;  // Not done yet
+        if (_calibrating) { _bbTick(nowUs, 0x02); return; }
         // Calibration complete — proceed to AHRS+PID
     }
 
     // Read MPU6050
     if (!_mpuReadSensors()) {
+        _bbFault(ZEPHYR_FAULT_I2C_FAIL);
         // I2C failure — decay corrections, zero raw PID terms so the
         // Ornithopter Ondas modulation never consumes stale values
         rollCorrection *= 0.9f;
@@ -784,8 +898,24 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchITerm = 0.0f;
         pitchDTerm = 0.0f;
         pitchErrorRate = 0.0f;
+
+        // Stuck-bus recovery: a single glitch is just skipped, but a run of
+        // failures means the MPU is holding SDA low and will never answer
+        // again until we clock it out and re-init. Trigger the recovery,
+        // then let begin() re-probe on the next tick.
+        uint8_t bbFlags = 0x01;   // I2C fail this tick
+        if (++_i2cFailCount >= ZEPHYR_I2C_FAIL_RESET) {
+            _i2cFailCount = 0;
+            _i2cBusRecover();
+            _begun = false;
+            _lastProbeUs = 0;   // allow immediate re-probe on next tick
+            bbFlags |= 0x08;    // bus recovery triggered
+            _bbFault(ZEPHYR_FAULT_BUS_REC);
+        }
+        _bbTick(nowUs, bbFlags);
         return;
     }
+    _i2cFailCount = 0;   // healthy read resets the failure window
 
     // Compute dt for AHRS
     if (_lastAhrsUs == 0) { _lastAhrsUs = nowUs; return; }
@@ -803,9 +933,20 @@ void Zephyrus::update(uint32_t nowUs) {
         if (dtMs == 0) dtMs = 4;   // nominal 250 Hz gate period fallback
 
         // Bias-correct in raw LSB (sensor frame), then rotate to aircraft frame.
-        int16_t rx = _gyroRaw[0] - _gyroBiasLsb[0];
-        int16_t ry = _gyroRaw[1] - _gyroBiasLsb[1];
-        int16_t rz = _gyroRaw[2] - _gyroBiasLsb[2];
+        // Compute in int32 and clamp to ±32767: a saturated gyro at the ±250 dps
+        // rail reads ±32750 LSB, and subtracting a small bias pushes the result
+        // past ±32767 — an int16 truncation would wrap the sign and reverse the
+        // rate-error direction (the "freeze on a hard flick" fault). Symmetric
+        // clamp also makes every board-rotation negation below overflow-safe.
+        int32_t rxi = (int32_t)_gyroRaw[0] - (int32_t)_gyroBiasLsb[0];
+        int32_t ryi = (int32_t)_gyroRaw[1] - (int32_t)_gyroBiasLsb[1];
+        int32_t rzi = (int32_t)_gyroRaw[2] - (int32_t)_gyroBiasLsb[2];
+        if (rxi >  32767) rxi =  32767; else if (rxi < -32767) rxi = -32767;
+        if (ryi >  32767) ryi =  32767; else if (ryi < -32767) ryi = -32767;
+        if (rzi >  32767) rzi =  32767; else if (rzi < -32767) rzi = -32767;
+        int16_t rx = (int16_t)rxi;
+        int16_t ry = (int16_t)ryi;
+        int16_t rz = (int16_t)rzi;
         if (boardRotation != 0) {
             int16_t tmp;
             switch (boardRotation) {
@@ -818,6 +959,8 @@ void Zephyrus::update(uint32_t nowUs) {
             default: break;
             }
         }
+        _lastRxLsb = rx;   // blackbox: board-rotated, bias-corrected rate
+        _lastRyLsb = ry;
 
         // LSB → °/s (MPU6050 ±250 dps ⇒ 131 LSB/(°/s)). One multiply, no division.
         const float lsbToDps = 1.0f / _gyroScale;
@@ -854,6 +997,11 @@ void Zephyrus::update(uint32_t nowUs) {
                                gravX, gravY, gravZ, dt, MESO_ATT_TAU);
             rollDeg  = _mesoAttitude.roll;
             pitchDeg = _mesoAttitude.pitch;
+            // HORIZON NaN/Inf guard: a corrupt attitude must never leak into
+            // the wing-centre axis below (NaN comparisons are always false, so
+            // the downstream clamps in Ornithopter cannot see it).
+            if (isnan(rollDeg)  || isinf(rollDeg))  { rollDeg  = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
+            if (isnan(pitchDeg) || isinf(pitchDeg)) { pitchDeg = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
 
             // Channel split: the accelerometer-derived attitude error (deg)
             // drives the wing CENTRE axis (slow level hold); the inner rate PID
@@ -862,6 +1010,8 @@ void Zephyrus::update(uint32_t nowUs) {
             // pure rate command).
             rollAttitudeCorrection  = -rollDeg  * (1.0f - fabsf(stickRollNorm));
             pitchAttitudeCorrection = -pitchDeg * (1.0f - fabsf(stickPitchNorm));
+            if (isnan(rollAttitudeCorrection)  || isinf(rollAttitudeCorrection))  { rollAttitudeCorrection  = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
+            if (isnan(pitchAttitudeCorrection) || isinf(pitchAttitudeCorrection)) { pitchAttitudeCorrection = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
 
             // Outer attitude loop (HORIZON blend): attitude error → rate
             // setpoint, self-level strength fading as |stick| grows and the
@@ -884,24 +1034,72 @@ void Zephyrus::update(uint32_t nowUs) {
         // derived under MESOZOIC_HORIZON). Sign mirrors the attitude path (a
         // positive disturbance → negative correction); the wing mixer applies
         // the sense.
+
+        // ── Runtime PID gains → Q12 fixed-point (rate semantics) ─────────────
+        // The WebUI PID sliders write the float fields
+        // zephyrus.{roll,pitch,yaw}{Kp,Ki,Kd,Imax}; mesoPid is fixed-point Q12
+        // (real gain = value/4096) and Imax is in Q12·LSB integrator units.
+        // Convert here so the sliders actually reach the rate damper — the old
+        // code read the compile-time MESO_* #defines and silently ignored every
+        // slider. Clamp to the Q12 rail first: a slider at the POST max (Kp ≤ 10)
+        // would otherwise wrap int16 and reverse the damper sign.
+        float rkp = rollKp;   if (rkp < 0.0f) rkp = 0.0f; else if (rkp > 7.5f) rkp = 7.5f;
+        float rki = rollKi;   if (rki < 0.0f) rki = 0.0f; else if (rki > 1.0f) rki = 1.0f;
+        float rkd = rollKd;   if (rkd < 0.0f) rkd = 0.0f; else if (rkd > 1.0f) rkd = 1.0f;
+        float rmx = rollImax; if (rmx < 0.0f) rmx = 0.0f; else if (rmx > 60.0f) rmx = 60.0f;
+        float pkp = pitchKp;  if (pkp < 0.0f) pkp = 0.0f; else if (pkp > 7.5f) pkp = 7.5f;
+        float pki = pitchKi;  if (pki < 0.0f) pki = 0.0f; else if (pki > 1.0f) pki = 1.0f;
+        float pkd = pitchKd;  if (pkd < 0.0f) pkd = 0.0f; else if (pkd > 1.0f) pkd = 1.0f;
+        float pmx = pitchImax; if (pmx < 0.0f) pmx = 0.0f; else if (pmx > 60.0f) pmx = 60.0f;
+        float ykp = yawKp;    if (ykp < 0.0f) ykp = 0.0f; else if (ykp > 7.5f) ykp = 7.5f;
+        float yki = yawKi;    if (yki < 0.0f) yki = 0.0f; else if (yki > 1.0f) yki = 1.0f;
+        float ykd = yawKd;    if (ykd < 0.0f) ykd = 0.0f; else if (ykd > 1.0f) ykd = 1.0f;
+        float ymx = yawImax;  if (ymx < 0.0f) ymx = 0.0f; else if (ymx > 60.0f) ymx = 60.0f;
+
+        const float gscale = _gyroScale;   // 131 LSB/(°/s) at ±250 dps
+        const int16_t rollKpQ   = (int16_t)(rkp * 4096.0f);
+        const int16_t rollKiQ   = (int16_t)(rki * 4096.0f);
+        const int16_t rollKdQ   = (int16_t)(rkd * 4096.0f);
+        const int32_t rollImaxQ = (int32_t)(rmx * gscale * 4096.0f);
+        const int16_t pitchKpQ   = (int16_t)(pkp * 4096.0f);
+        const int16_t pitchKiQ   = (int16_t)(pki * 4096.0f);
+        const int16_t pitchKdQ   = (int16_t)(pkd * 4096.0f);
+        const int32_t pitchImaxQ = (int32_t)(pmx * gscale * 4096.0f);
+        const int16_t yawKpQ     = (int16_t)(ykp * 4096.0f);
+        const int16_t yawKiQ     = (int16_t)(yki * 4096.0f);
+        const int16_t yawKdQ     = (int16_t)(ykd * 4096.0f);
+        const int32_t yawImaxQ   = (int32_t)(ymx * gscale * 4096.0f);
+
         int16_t rollC, pitchC, yawC;
 #ifdef MESOZOIC_HORIZON
         {
-            int16_t rollSpLsb  = (int16_t)(rollRateSetpoint  * _gyroScale);
-            int16_t pitchSpLsb = (int16_t)(pitchRateSetpoint * _gyroScale);
-            int16_t yawSpLsb   = (int16_t)(yawRateSetpoint   * _gyroScale);
+            // HORIZON NaN/Inf + range guard on the rate setpoint → int16 cast.
+            // A corrupt setpoint (NaN/Inf float) would be UB when cast to int16
+            // and could feed a garbage setpoint into mesoPid.
+            float rollSp  = rollRateSetpoint  * _gyroScale;
+            float pitchSp = pitchRateSetpoint * _gyroScale;
+            float yawSp   = yawRateSetpoint   * _gyroScale;
+            if (isnan(rollSp)  || isinf(rollSp))  { rollSp  = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
+            if (isnan(pitchSp) || isinf(pitchSp)) { pitchSp = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
+            if (isnan(yawSp)   || isinf(yawSp))   { yawSp   = 0.0f; _bbFault(ZEPHYR_FAULT_NAN); }
+            if (rollSp  >  32767.0f) rollSp  =  32767.0f; else if (rollSp  < -32768.0f) rollSp  = -32768.0f;
+            if (pitchSp >  32767.0f) pitchSp =  32767.0f; else if (pitchSp < -32768.0f) pitchSp = -32768.0f;
+            if (yawSp   >  32767.0f) yawSp   =  32767.0f; else if (yawSp   < -32768.0f) yawSp   = -32768.0f;
+            int16_t rollSpLsb  = (int16_t)rollSp;
+            int16_t pitchSpLsb = (int16_t)pitchSp;
+            int16_t yawSpLsb   = (int16_t)yawSp;
             // Rate error computed in int32 then saturated to int16: the raw
             // (setpoint − measured) difference can exceed ±32767 LSB, and an
             // unclamped int16 truncation wraps it (sign reversal). mesoClampRateErr
             // preserves the full-scale error magnitude without the wraparound.
-            rollC  = mesoPid(_mesoRoll,  (int16_t)mesoClampRateErr((int32_t)rollSpLsb  - rx), MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
-            pitchC = mesoPid(_mesoPitch, (int16_t)mesoClampRateErr((int32_t)pitchSpLsb - ry), MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
-            yawC   = mesoPid(_mesoYaw,   (int16_t)mesoClampRateErr((int32_t)yawSpLsb   - rz), MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+            rollC  = mesoPid(_mesoRoll,  (int16_t)mesoClampRateErr((int32_t)rollSpLsb  - rx), rollKpQ,  rollKdQ,  rollKiQ,  rollImaxQ,  dtMs);
+            pitchC = mesoPid(_mesoPitch, (int16_t)mesoClampRateErr((int32_t)pitchSpLsb - ry), pitchKpQ, pitchKdQ, pitchKiQ, pitchImaxQ, dtMs);
+            yawC   = mesoPid(_mesoYaw,   (int16_t)mesoClampRateErr((int32_t)yawSpLsb   - rz), yawKpQ,   yawKdQ,   yawKiQ,   yawImaxQ,   dtMs);
         }
 #else
-        rollC  = mesoPid(_mesoRoll,  -rx, MESO_ROLL_KP,  MESO_ROLL_KD,  MESO_ROLL_KI,  MESO_ROLL_IMAX,  dtMs);
-        pitchC = mesoPid(_mesoPitch, -ry, MESO_PITCH_KP, MESO_PITCH_KD, MESO_PITCH_KI, MESO_PITCH_IMAX, dtMs);
-        yawC   = mesoPid(_mesoYaw,   -rz, MESO_YAW_KP,   MESO_YAW_KD,   MESO_YAW_KI,   MESO_YAW_IMAX,   dtMs);
+        rollC  = mesoPid(_mesoRoll,  -rx, rollKpQ,  rollKdQ,  rollKiQ,  rollImaxQ,  dtMs);
+        pitchC = mesoPid(_mesoPitch, -ry, pitchKpQ, pitchKdQ, pitchKiQ, pitchImaxQ, dtMs);
+        yawC   = mesoPid(_mesoYaw,   -rz, yawKpQ,   yawKdQ,   yawKiQ,   yawImaxQ,   dtMs);
 #endif
 
         rollCorrection  = (float)rollC  * lsbToDps;
@@ -926,6 +1124,7 @@ void Zephyrus::update(uint32_t nowUs) {
         if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = ZEPHYR_RUDDER_CLAMP_US;
         if (rudderCorrection < -ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = -ZEPHYR_RUDDER_CLAMP_US;
     }
+    _bbTick(nowUs, 0);
     return;
 #endif // MESOZOIC_ONLY
 
@@ -1006,4 +1205,5 @@ void Zephyrus::update(uint32_t nowUs) {
         rudderCorrection = ZEPHYR_RUDDER_CLAMP_US;
     if (rudderCorrection < -ZEPHYR_RUDDER_CLAMP_US)
         rudderCorrection = -ZEPHYR_RUDDER_CLAMP_US;
+    _bbTick(nowUs, 0);
 }
