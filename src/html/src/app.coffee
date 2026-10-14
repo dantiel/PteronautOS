@@ -380,7 +380,7 @@ class App extends LitElement
         .then(=> @ensureLoadedForRoute route)
         .then =>
           rendered = false
-          @runWithSettingsRetry 'Loading panel data...', =>
+          @runWithSettingsRetry @_t('app.loading_panel_data'), =>
             first = if rendered or not @currentRoute
               Promise.resolve()
             else

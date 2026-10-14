@@ -90,6 +90,12 @@ export default {
     'ornithopter.glide.ratchet_throttle_desc': 'Motor % while seeking ratchet lock',
     'ornithopter.glide.ratchet_timeout': 'Ratchet Timeout',
     'ornithopter.glide.ratchet_timeout_desc': 'Max seek time before safety stop',
+        'ornithopter.flight_profiles.group_wing_angles': 'Wing Angles',
+    'ornithopter.flight_profiles.group_stroke': 'Stroke & Ferocity',
+    'ornithopter.flight_profiles.group_scales': 'Stick Scales',
+    'ornithopter.flight_profiles.group_elev_rudd': 'Elevator & Rudder Mixes',
+    'ornithopter.flight_profiles.group_skew': 'Inertial Skew',
+    'ornithopter.flight_profiles.group_thrust': 'Throttle Thrust',
     'ornithopter.save': 'Save Configuration',
     'ornithopter.save_hint': 'Sends kernel + mixer choice + all mixing params + glide config to /pteronautos/config',
 

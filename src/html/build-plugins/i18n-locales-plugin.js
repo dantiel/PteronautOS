@@ -8,7 +8,8 @@
 //   I18N_LOCALES=en,de npm run build:pteronautos   # English + German
 //   I18N_LOCALES=pt                               # Portuguese only
 //
-// Unset -> all locales are bundled (backward compatible).
+// Unset -> English fallback + Portuguese primary (PteronautOS default).
+// I18N_LOCALES=all -> all 11 locales; I18N_LOCALES=de,fr -> those only.
 
 import path from 'path'
 
@@ -19,9 +20,10 @@ export function i18nLocalesPlugin(env) {
   const resolvedId = '\0' + virtualId
   const localesDir = path.resolve(process.cwd(), 'src/locales')
 
-  // Smallest default (single locale) for the fastest first load on the
-  // ESP8285's slow WiFi. 'all' bakes every locale; otherwise a comma list.
-  let selected = ['en']
+  // Default bake: English fallback + Portuguese primary — lean enough for
+  // the ESP8285's slow WiFi, complete enough for the project's audience.
+  // 'all' bakes every locale; otherwise a comma list.
+  let selected = ['en', 'pt']
   const flag = (env.I18N_LOCALES || '').trim().toLowerCase()
   if (flag === 'all') {
     selected = ALL_LOCALES

@@ -4,7 +4,7 @@
  *
  * The locale set is resolved at build time by the `i18n-locales-plugin`
  * (virtual:i18n-locales), driven by the I18N_LOCALES env flag. When the flag
- * is unset the virtual module re-exports all 11 locales.
+ * is unset the virtual module exports English fallback + Portuguese primary.
  */
 import {i18n} from './i18n.js';
 import {locales} from 'virtual:i18n-locales';

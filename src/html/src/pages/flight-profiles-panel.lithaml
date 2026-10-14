@@ -53,6 +53,8 @@
 
     %table.mui-table.mui-table--bordered
       %tbody
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_wing_angles')
         %tr
           %td
             %b= self._t('ornithopter.glide_angle.title')
@@ -70,6 +72,8 @@
           %td
                         %input{type: "number", min: "-15", max: "15", step: "1", .value: self.flappingAngleDeg, @input: self._onNumberInput('flappingAngleDeg'), @change: self._onNumberCommit('flappingAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
             | °
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_stroke')
         %tr
           %td
             %b= self._t('ornithopter.stroke_ferocity.title')
@@ -88,6 +92,26 @@
             %input{type: "range", min: "0", max: "100", .value: self.returnFerocity, @input: self._onSlider('returnFerocity'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
             %span.value= self.returnFerocity
             %small.label= self._returnLabel()
+       %tr
+         %td
+           %b= self._t('ornithopter.throttle_frequency_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.throttle_frequency_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.throttleFrequencyMix, @input: self._onSlider('throttleFrequencyMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.throttleFrequencyMix
+           %
+       %tr
+         %td
+           %b= self._t('ornithopter.ferocity_shape_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.ferocity_shape_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.ferocityShapeMix, @input: self._onSlider('ferocityShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.ferocityShapeMix
+           %
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_scales')
         %tr
           %td
             %b= self._t('ornithopter.aileron_scale.title')
@@ -102,6 +126,8 @@
             %input{type: "range", min: "0", max: "100", .value: self.elevatorScale, @input: self._onSlider('elevatorScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
             %span.value= self.elevatorScale
             %
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_elev_rudd')
         %tr
           %td
             %b= self._t('ornithopter.rudder_ferocity_range.title')
@@ -145,24 +171,8 @@
             %input{type: "range", min: "0", max: "100", .value: self.elevatorAntigravityMix, @input: self._onSlider('elevatorAntigravityMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
             %span.value= self.elevatorAntigravityMix
             %
-       %tr
-         %td
-           %b= self._t('ornithopter.throttle_frequency_mix.title')
-           %br
-           %small{style: "color:#888;"}= self._t('ornithopter.throttle_frequency_mix.desc')
-         %td
-           %input{type: "range", min: "0", max: "100", .value: self.throttleFrequencyMix, @input: self._onSlider('throttleFrequencyMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.throttleFrequencyMix
-           %
-       %tr
-         %td
-           %b= self._t('ornithopter.ferocity_shape_mix.title')
-           %br
-           %small{style: "color:#888;"}= self._t('ornithopter.ferocity_shape_mix.desc')
-         %td
-           %input{type: "range", min: "0", max: "100", .value: self.ferocityShapeMix, @input: self._onSlider('ferocityShapeMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.ferocityShapeMix
-           %
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_skew')
        %tr
          %td
            %b= self._t('ornithopter.stroke_skew.title')
@@ -183,6 +193,27 @@
            %small.label= self._returnSkewLabel()
        %tr
          %td
+           %b= self._t('ornithopter.aileron_skew_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.aileron_skew_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.aileronSkewMix, @input: self._onSlider('aileronSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.aileronSkewMix
+           %small.label= self._aileronSkewMixLabel()
+       %tr
+         %td
+           %b= self._t('ornithopter.aileron_skew_rate_mix.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.aileron_skew_rate_mix.desc')
+         %td
+           %input{type: "range", min: "0", max: "100", .value: self.aileronSkewRateMix, @input: self._onSlider('aileronSkewRateMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self.aileronSkewRateMix
+           %small.label= self._aileronSkewRateMixLabel()
+
+        %tr.pfg-hdr
+          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_thrust')
+       %tr
+         %td
            %b= self._t('ornithopter.throttle_thrust_shape_mix.title')
            %br
            %small{style: "color:#888;"}= self._t('ornithopter.throttle_thrust_shape_mix.desc')
@@ -201,15 +232,6 @@
  
        %tr
          %td
-           %b= self._t('ornithopter.aileron_skew_mix.title')
-           %br
-           %small{style: "color:#888;"}= self._t('ornithopter.aileron_skew_mix.desc')
-         %td
-           %input{type: "range", min: "0", max: "100", .value: self.aileronSkewMix, @input: self._onSlider('aileronSkewMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.aileronSkewMix
-           %small.label= self._aileronSkewMixLabel()
-       %tr
-         %td
            %b= self._t('ornithopter.throttle_skew_rate_mix.title')
            %br
            %small{style: "color:#888;"}= self._t('ornithopter.throttle_skew_rate_mix.desc')
@@ -217,16 +239,6 @@
            %input{type: "range", min: "0", max: "100", .value: self.throttleSkewRateMix, @input: self._onSlider('throttleSkewRateMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
            %span.value= self.throttleSkewRateMix
            %small.label= self._throttleSkewRateMixLabel()
-       %tr
-         %td
-           %b= self._t('ornithopter.aileron_skew_rate_mix.title')
-           %br
-           %small{style: "color:#888;"}= self._t('ornithopter.aileron_skew_rate_mix.desc')
-         %td
-           %input{type: "range", min: "0", max: "100", .value: self.aileronSkewRateMix, @input: self._onSlider('aileronSkewRateMix'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-           %span.value= self.aileronSkewRateMix
-           %small.label= self._aileronSkewRateMixLabel()
-
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
 .mui-panel
   .mui--text-title= self._t('ornithopter.channel_test.title')
