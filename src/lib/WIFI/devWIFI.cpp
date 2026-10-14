@@ -1070,12 +1070,12 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     JsonArray stickArr = orni["stick_channels"].to<JsonArray>();
     for (int i = 0; i < STK_COUNT; ++i) stickArr.add(ornithopter.stickChannels[i]);
 
-    // Guardião — CRSF channel glitch filter (values in CRSF raw 172–1811)
-    orni["guardiao_active"]        = ornithopter.guardiaoAtivo;
-    orni["guardiao_delta_max"]     = (int)ornithopter.guardiaoDeltaMax;
-    orni["guardiao_delta_arm"]     = (int)ornithopter.guardiaoDeltaMaxArm;
-    orni["guardiao_delta_persist"] = (int)ornithopter.guardiaoDeltaPersistencia;
-    orni["guardiao_limiar_simult"] = (int)ornithopter.guardiaoLimiarSimultaneidade;
+    // Glitch Filter — CRSF channel glitch filter (values in CRSF raw 172–1811)
+    orni["glitch_active"]        = ornithopter.glitchActive;
+    orni["glitch_delta_max"]     = (int)ornithopter.glitchDeltaMax;
+    orni["glitch_delta_arm"]     = (int)ornithopter.glitchDeltaArm;
+    orni["glitch_delta_persist"] = (int)ornithopter.glitchDeltaPersist;
+    orni["glitch_simult_threshold"] = (int)ornithopter.glitchSimultThreshold;
 
     // Flight profiles (3 × tuning param sets)
     JsonArray fpArr = orni["flight_profiles"].to<JsonArray>();
@@ -1309,16 +1309,16 @@ static bool SaveOrnithopterConfig()
     f.print((int)activeProfile);
     f.print(F(",\"model_name\":"));
     _pteroPrintJsonString(f, ornithopter.modelName);
-    f.print(F(",\"guardiao_active\":"));
-    f.print(ornithopter.guardiaoAtivo ? "true" : "false");
-    f.print(F(",\"guardiao_delta_max\":"));
-    f.print((int)ornithopter.guardiaoDeltaMax);
-    f.print(F(",\"guardiao_delta_arm\":"));
-    f.print((int)ornithopter.guardiaoDeltaMaxArm);
-    f.print(F(",\"guardiao_delta_persist\":"));
-    f.print((int)ornithopter.guardiaoDeltaPersistencia);
-    f.print(F(",\"guardiao_limiar_simult\":"));
-    f.print((int)ornithopter.guardiaoLimiarSimultaneidade);
+    f.print(F(",\"glitch_active\":"));
+    f.print(ornithopter.glitchActive ? "true" : "false");
+    f.print(F(",\"glitch_delta_max\":"));
+    f.print((int)ornithopter.glitchDeltaMax);
+    f.print(F(",\"glitch_delta_arm\":"));
+    f.print((int)ornithopter.glitchDeltaArm);
+    f.print(F(",\"glitch_delta_persist\":"));
+    f.print((int)ornithopter.glitchDeltaPersist);
+    f.print(F(",\"glitch_simult_threshold\":"));
+    f.print((int)ornithopter.glitchSimultThreshold);
 #ifdef ZEPHYRUS_ENABLED
     f.print(F(",\"gyro_enabled\":"));
     f.print(zephyrus.gyroEnabled ? "true" : "false");
@@ -1511,28 +1511,28 @@ void LoadOrnithopterConfig()
     if (o["profile_id"].is<int>())            setOrnithopterProfile((uint8_t)o["profile_id"].as<int>());
     if (o["model_name"].is<const char*>())
         strlcpy(ornithopter.modelName, o["model_name"].as<const char*>(), sizeof(ornithopter.modelName));
-    // Guardião — CRSF channel glitch filter (clamped so a corrupt config can't
+    // Glitch Filter — CRSF channel glitch filter (clamped so a corrupt config can't
     // freeze every stick move or pass every glitch).
-    if (o["guardiao_active"].is<bool>())   ornithopter.guardiaoAtivo = o["guardiao_active"].as<bool>();
-    if (o["guardiao_delta_max"].is<int>()) {
-        int32_t v = o["guardiao_delta_max"].as<int>();
+    if (o["glitch_active"].is<bool>())   ornithopter.glitchActive = o["glitch_active"].as<bool>();
+    if (o["glitch_delta_max"].is<int>()) {
+        int32_t v = o["glitch_delta_max"].as<int>();
         if (v < 20) v = 20; else if (v > 500) v = 500;
-        ornithopter.guardiaoDeltaMax = (uint16_t)v;
+        ornithopter.glitchDeltaMax = (uint16_t)v;
     }
-    if (o["guardiao_delta_arm"].is<int>()) {
-        int32_t v = o["guardiao_delta_arm"].as<int>();
+    if (o["glitch_delta_arm"].is<int>()) {
+        int32_t v = o["glitch_delta_arm"].as<int>();
         if (v < 100) v = 100; else if (v > 1639) v = 1639;
-        ornithopter.guardiaoDeltaMaxArm = (uint16_t)v;
+        ornithopter.glitchDeltaArm = (uint16_t)v;
     }
-    if (o["guardiao_delta_persist"].is<int>()) {
-        int32_t v = o["guardiao_delta_persist"].as<int>();
+    if (o["glitch_delta_persist"].is<int>()) {
+        int32_t v = o["glitch_delta_persist"].as<int>();
         if (v < 20) v = 20; else if (v > 1000) v = 1000;
-        ornithopter.guardiaoDeltaPersistencia = (uint16_t)v;
+        ornithopter.glitchDeltaPersist = (uint16_t)v;
     }
-    if (o["guardiao_limiar_simult"].is<int>()) {
-        int32_t v = o["guardiao_limiar_simult"].as<int>();
+    if (o["glitch_simult_threshold"].is<int>()) {
+        int32_t v = o["glitch_simult_threshold"].as<int>();
         if (v < 2) v = 2; else if (v > STK_COUNT) v = STK_COUNT;
-        ornithopter.guardiaoLimiarSimultaneidade = (uint8_t)v;
+        ornithopter.glitchSimultThreshold = (uint8_t)v;
     }
 #ifdef ZEPHYRUS_ENABLED
     if (o["gyro_enabled"].is<bool>()) {
@@ -1799,18 +1799,18 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.servoTrimUs[i] = (int16_t)t;
     }
 
-    // Guardião — CRSF channel glitch filter (runtime-configurable)
+    // Glitch Filter — CRSF channel glitch filter (runtime-configurable)
     {
-        bool ga = _pteroParamInt(request, "guardiao_active", ornithopter.guardiaoAtivo ? 1 : 0) != 0;
-        int32_t dMax = _pteroParamInt(request, "guardiao_delta_max", ornithopter.guardiaoDeltaMax);
-        int32_t dArm = _pteroParamInt(request, "guardiao_delta_arm", ornithopter.guardiaoDeltaMaxArm);
-        int32_t dPers = _pteroParamInt(request, "guardiao_delta_persist", ornithopter.guardiaoDeltaPersistencia);
-        int32_t lSim = _pteroParamInt(request, "guardiao_limiar_simult", ornithopter.guardiaoLimiarSimultaneidade);
+        bool ga = _pteroParamInt(request, "glitch_active", ornithopter.glitchActive ? 1 : 0) != 0;
+        int32_t dMax = _pteroParamInt(request, "glitch_delta_max", ornithopter.glitchDeltaMax);
+        int32_t dArm = _pteroParamInt(request, "glitch_delta_arm", ornithopter.glitchDeltaArm);
+        int32_t dPers = _pteroParamInt(request, "glitch_delta_persist", ornithopter.glitchDeltaPersist);
+        int32_t lSim = _pteroParamInt(request, "glitch_simult_threshold", ornithopter.glitchSimultThreshold);
         if (dMax < 20)  dMax = 20;   else if (dMax > 500)  dMax = 500;
         if (dArm < 100) dArm = 100;  else if (dArm > 1639) dArm = 1639;
         if (dPers < 20) dPers = 20;  else if (dPers > 1000) dPers = 1000;
         if (lSim < 2)   lSim = 2;    else if (lSim > STK_COUNT) lSim = STK_COUNT;
-        ornithopter.configurarGuardiao(ga, (uint16_t)dMax, (uint16_t)dArm, (uint16_t)dPers, (uint8_t)lSim);
+        ornithopter.configureGlitchFilter(ga, (uint16_t)dMax, (uint16_t)dArm, (uint16_t)dPers, (uint8_t)lSim);
     }
 
     // User-facing model identifier (shown in Overview, included in backup).

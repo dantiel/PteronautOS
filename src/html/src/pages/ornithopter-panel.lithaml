@@ -200,46 +200,46 @@
 
 .mui-panel
   .mui--text-title
-    = self._t('ornithopter.guardiao.title')
+    = self._t('ornithopter.glitch.title')
     %label{style: "cursor:pointer;"}
-      %input{type: "checkbox", checked: self.guardiaoAtivo, @change: self._onCheck('guardiaoAtivo'), .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#ccc;margin-left:12px;vertical-align:middle;"}
-      %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.guardiaoAtivo ? self._t('ornithopter.guardiao.enabled') : self._t('ornithopter.guardiao.disabled')
-  %small{style: "color:#888;"}= self._t('ornithopter.guardiao.desc')
-  - if self.guardiaoAtivo
+      %input{type: "checkbox", checked: self.glitchActive, @change: self._onCheck('glitchActive'), .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#ccc;margin-left:12px;vertical-align:middle;"}
+      %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.glitchActive ? self._t('ornithopter.glitch.enabled') : self._t('ornithopter.glitch.disabled')
+  %small{style: "color:#888;"}= self._t('ornithopter.glitch.desc')
+  - if self.glitchActive
     %table.mui-table.mui-table--bordered
       %tbody
         %tr
           %td
-            %b= self._t('ornithopter.guardiao.delta_max')
+            %b= self._t('ornithopter.glitch.delta_max')
             %br
-            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_max_desc')
+            %small{style: "color:#888;"}= self._t('ornithopter.glitch.delta_max_desc')
           %td
-            %input{type: "range", min: "20", max: "500", .value: self.guardiaoDeltaMax, @input: self._onSlider('guardiaoDeltaMax'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.guardiaoDeltaMax
+            %input{type: "range", min: "20", max: "500", .value: self.glitchDeltaMax, @input: self._onSlider('glitchDeltaMax'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.glitchDeltaMax
         %tr
           %td
-            %b= self._t('ornithopter.guardiao.delta_arm')
+            %b= self._t('ornithopter.glitch.delta_arm')
             %br
-            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_arm_desc')
+            %small{style: "color:#888;"}= self._t('ornithopter.glitch.delta_arm_desc')
           %td
-            %input{type: "range", min: "100", max: "1639", .value: self.guardiaoDeltaArm, @input: self._onSlider('guardiaoDeltaArm'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.guardiaoDeltaArm
+            %input{type: "range", min: "100", max: "1639", .value: self.glitchDeltaArm, @input: self._onSlider('glitchDeltaArm'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.glitchDeltaArm
         %tr
           %td
-            %b= self._t('ornithopter.guardiao.delta_persist')
+            %b= self._t('ornithopter.glitch.delta_persist')
             %br
-            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.delta_persist_desc')
+            %small{style: "color:#888;"}= self._t('ornithopter.glitch.delta_persist_desc')
           %td
-            %input{type: "range", min: "20", max: "1000", .value: self.guardiaoDeltaPersist, @input: self._onSlider('guardiaoDeltaPersist'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.guardiaoDeltaPersist
+            %input{type: "range", min: "20", max: "1000", .value: self.glitchDeltaPersist, @input: self._onSlider('glitchDeltaPersist'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.glitchDeltaPersist
         %tr
           %td
-            %b= self._t('ornithopter.guardiao.limiar_simult')
+            %b= self._t('ornithopter.glitch.simult_threshold')
             %br
-            %small{style: "color:#888;"}= self._t('ornithopter.guardiao.limiar_simult_desc')
+            %small{style: "color:#888;"}= self._t('ornithopter.glitch.simult_threshold_desc')
           %td
-            %input{type: "range", min: "2", max: "7", .value: self.guardiaoLimiarSimult, @input: self._onSlider('guardiaoLimiarSimult'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.guardiaoLimiarSimult
+            %input{type: "range", min: "2", max: "7", .value: self.glitchSimultThreshold, @input: self._onSlider('glitchSimultThreshold'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.glitchSimultThreshold
 
 .mui-panel.ptero-centered
   %button.ptero-btn{@click: self._saveConfig, .disabled: self._uiLocked()}= self._t('ornithopter.save')

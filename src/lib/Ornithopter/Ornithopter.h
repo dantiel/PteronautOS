@@ -124,32 +124,34 @@ public:
     uint16_t ratchetTimeoutMs;    // ms before ratchet releases
     char modelName[33];           // user-facing model identifier (WebUI + backup)
 
-    // ── Guardião dos Ventos — CRSF channel glitch filter (runtime) ──
+    // ── Glitch Filter — CRSF channel glitch filter (runtime) ──
     // Rejects single-frame channel corruptions (slow-decode / RF glitch) before
     // they reach the mixer — a corrupted frame would otherwise slam a wing servo.
     // Values in CRSF raw units (172=988µs, 1811=2012µs). Disable with
-    // guardiaoAtivo=false for raw passthrough. Ported from Gralha Azul's
+    // glitchActive=false for raw passthrough. Ported from Gralha Azul's
     // verificarCanal, adapted to PteronautOS's decoupled mixer/CRSF cadence.
-    bool     guardiaoAtivo;                // master on/off
-    uint16_t guardiaoDeltaMax;             // per-frame Δ for stick/pot channels
-    uint16_t guardiaoDeltaMaxArm;          // per-frame Δ for switched channels (arm/profile)
-    uint16_t guardiaoDeltaPersistencia;    // confirmation window (Δ between candidate frames)
-    uint8_t  guardiaoLimiarSimultaneidade; // ≥N anomalous channels = collective ghost
+    bool     glitchActive;            // master on/off
+    uint16_t glitchDeltaMax;          // per-frame Δ for stick/pot channels
+    uint16_t glitchDeltaArm;          // per-frame Δ for switched channels (arm/profile)
+    uint16_t glitchDeltaPersist;      // confirmation window (Δ between candidate frames)
+    uint8_t  glitchSimultThreshold;   // ≥N anomalous channels = collective ghost
 
-    // Setter encadeável — the WebUI calls ornithopter.configurarGuardiao(...)
-    inline void configurarGuardiao(bool ativo, uint16_t deltaMax = 160,
+    // Chained setter — the WebUI calls ornithopter.configureGlitchFilter(...)
+    inline void configureGlitchFilter(bool active, uint16_t deltaMax = 160,
                                    uint16_t deltaArm = 800, uint16_t deltaPersist = 320,
-                                   uint8_t limiarSimult = 4) {
-        guardiaoAtivo = ativo;
-        guardiaoDeltaMax = deltaMax;
-        guardiaoDeltaMaxArm = deltaArm;
-        guardiaoDeltaPersistencia = deltaPersist;
-        guardiaoLimiarSimultaneidade = limiarSimult;
-        _guardiaoInicializado = false;   // re-baseline on new config
+                                   uint8_t simultThreshold = 4) {
+        glitchActive = active;
+        glitchDeltaMax = deltaMax;
+        glitchDeltaArm = deltaArm;
+        glitchDeltaPersist = deltaPersist;
+        glitchSimultThreshold = simultThreshold;
+        _glitchInitialized = false;   // re-baseline on new config
+        _glitchGhostStreak = 0;
     }
-    inline void habilitarGuardiao(bool ativo) {
-        guardiaoAtivo = ativo;
-        _guardiaoInicializado = false;   // re-baseline on toggle
+    inline void setGlitchFilterEnabled(bool active) {
+        glitchActive = active;
+        _glitchInitialized = false;   // re-baseline on toggle
+        _glitchGhostStreak = 0;
     }
 
 #ifdef ZEPHYRUS_ENABLED
@@ -243,17 +245,19 @@ private:
     float _antiGravGate;     // |elevRate| moving-average gate (0 rest … 1 moving)
     uint16_t _f[SF_COUNT];  // servo output indexed by ServoFunc
 
-    // Guardião filter state (per-channel delta + 2-frame persistence)
-    bool     _guardiaoInicializado;
-    uint16_t _guardiaoRef[STK_COUNT];         // last accepted value per channel
-    uint16_t _guardiaoCandidato[STK_COUNT];   // candidate awaiting confirmation
-    uint8_t  _guardiaoPersistencia[STK_COUNT];// 0=idle, 1=awaiting confirmation
-    uint16_t _guardiaoLastRaw[STK_COUNT];     // last-seen raw (new-frame detection)
+    // Glitch filter state (per-channel delta + 2-frame persistence)
+    #define GLITCH_GHOST_REBASELINE_FRAMES 20  // consecutive collective rejections before forced re-baseline
+    bool     _glitchInitialized;
+    uint16_t _glitchRef[STK_COUNT];         // last accepted value per channel
+    uint16_t _glitchCandidate[STK_COUNT];   // candidate awaiting confirmation
+    uint8_t  _glitchPersist[STK_COUNT];// 0=idle, 1=awaiting confirmation
+    uint16_t _glitchLastRaw[STK_COUNT];     // last-seen raw (new-frame detection)
+    uint8_t  _glitchGhostStreak;            // consecutive collective rejections (self-heal counter)
 
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);
     float _crsfToNorm(uint16_t raw);
     void  _readChannels();
-    void  _applyGuardiaoFilter();
+    void  _applyGlitchFilter();
     bool  _isArmed();              // throttle-zero pre-arm latch
     void  _computeServoMixer();    // waveform kernel
     void  _computeGearboxMixer();  // gearbox kernel

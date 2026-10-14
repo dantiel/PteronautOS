@@ -47,12 +47,12 @@ class OrnithopterPanel extends PteroElement
     ratchetThrottlePct: {state: true}
     ratchetTimeoutMs:   {state: true}
     modelName:          {state: true}
-    # Guardião — CRSF channel glitch filter
-    guardiaoAtivo:        {state: true}
-    guardiaoDeltaMax:     {state: true}
-    guardiaoDeltaArm:     {state: true}
-    guardiaoDeltaPersist: {state: true}
-    guardiaoLimiarSimult: {state: true}
+    # Glitch Filter — CRSF channel glitch filter
+    glitchActive:        {state: true}
+    glitchDeltaMax:     {state: true}
+    glitchDeltaArm:     {state: true}
+    glitchDeltaPersist: {state: true}
+    glitchSimultThreshold: {state: true}
 
   constructor: ->
     super()
@@ -81,11 +81,11 @@ class OrnithopterPanel extends PteroElement
     @ratchetThrottlePct   = 15
     @ratchetTimeoutMs     = 500
     @modelName            = ''
-    @guardiaoAtivo        = true
-    @guardiaoDeltaMax     = 160
-    @guardiaoDeltaArm     = 800
-    @guardiaoDeltaPersist = 320
-    @guardiaoLimiarSimult = 4
+    @glitchActive        = true
+    @glitchDeltaMax     = 160
+    @glitchDeltaArm     = 800
+    @glitchDeltaPersist = 320
+    @glitchSimultThreshold = 4
     @_pollInFlight        = false
     @_saveInFlight        = false
     @_fieldFocused        = false
@@ -156,11 +156,11 @@ class OrnithopterPanel extends PteroElement
       @hallSensorPin      = o.hall_sensor_pin      if o.hall_sensor_pin?
       @ratchetThrottlePct = o.ratchet_throttle_pct if o.ratchet_throttle_pct?
       @ratchetTimeoutMs   = o.ratchet_timeout_ms   if o.ratchet_timeout_ms?
-      @guardiaoAtivo        = o.guardiao_active == true   if o.guardiao_active?
-      @guardiaoDeltaMax     = o.guardiao_delta_max        if o.guardiao_delta_max?
-      @guardiaoDeltaArm     = o.guardiao_delta_arm        if o.guardiao_delta_arm?
-      @guardiaoDeltaPersist = o.guardiao_delta_persist    if o.guardiao_delta_persist?
-      @guardiaoLimiarSimult = o.guardiao_limiar_simult    if o.guardiao_limiar_simult?
+      @glitchActive        = o.glitch_active == true   if o.glitch_active?
+      @glitchDeltaMax     = o.glitch_delta_max        if o.glitch_delta_max?
+      @glitchDeltaArm     = o.glitch_delta_arm        if o.glitch_delta_arm?
+      @glitchDeltaPersist = o.glitch_delta_persist    if o.glitch_delta_persist?
+      @glitchSimultThreshold = o.glitch_simult_threshold    if o.glitch_simult_threshold?
 
   render: -> renderFn(this)
 
@@ -294,10 +294,10 @@ class OrnithopterPanel extends PteroElement
       when 'servoSpeed'  then [25, 250]
       when 'servoMinUs'  then [500, 1490]
       when 'servoMaxUs'  then [1510, 2500]
-      when 'guardiaoDeltaMax'     then [20, 500]
-      when 'guardiaoDeltaArm'     then [100, 1639]
-      when 'guardiaoDeltaPersist' then [20, 1000]
-      when 'guardiaoLimiarSimult' then [2, 7]
+      when 'glitchDeltaMax'     then [20, 500]
+      when 'glitchDeltaArm'     then [100, 1639]
+      when 'glitchDeltaPersist' then [20, 1000]
+      when 'glitchSimultThreshold' then [2, 7]
       else null
 
   _clamp: (prop, v) ->
@@ -336,11 +336,11 @@ class OrnithopterPanel extends PteroElement
     body.append 'ratchet_throttle_pct', parseInt(@ratchetThrottlePct)
     body.append 'ratchet_timeout_ms',   parseInt(@ratchetTimeoutMs)
     body.append 'model_name',           @modelName or ''
-    body.append 'guardiao_active',        if @guardiaoAtivo then '1' else '0'
-    body.append 'guardiao_delta_max',     parseInt(@guardiaoDeltaMax)
-    body.append 'guardiao_delta_arm',     parseInt(@guardiaoDeltaArm)
-    body.append 'guardiao_delta_persist', parseInt(@guardiaoDeltaPersist)
-    body.append 'guardiao_limiar_simult', parseInt(@guardiaoLimiarSimult)
+    body.append 'glitch_active',        if @glitchActive then '1' else '0'
+    body.append 'glitch_delta_max',     parseInt(@glitchDeltaMax)
+    body.append 'glitch_delta_arm',     parseInt(@glitchDeltaArm)
+    body.append 'glitch_delta_persist', parseInt(@glitchDeltaPersist)
+    body.append 'glitch_simult_threshold', parseInt(@glitchSimultThreshold)
     try
       res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
       if res and res.ok
