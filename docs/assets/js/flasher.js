@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -398,6 +398,31 @@ selectSpecimen = async function(id) {
   }
 };
 
+downloadSpecimen = function(rec) {
+  var a, blob, bytes, err, url;
+  if ((rec != null ? rec.blob : void 0) == null) {
+    return;
+  }
+  try {
+    bytes = new Uint8Array(rec.blob);
+    blob = new Blob([bytes], {
+      type: "application/octet-stream"
+    });
+    url = URL.createObjectURL(blob);
+    a = document.createElement("a");
+    a.href = url;
+    a.download = rec.name || "pteronautos-firmware.bin";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return log("Downloaded firmware fossil (" + fmtSize(bytes.length) + ").");
+  } catch (error) {
+    err = error;
+    return setStatus("Couldn't download firmware fossil: " + err.message, "fail");
+  }
+};
+
 dismissSpecimen = async function(id) {
   if (!window.confirm("Dismiss this firmware fossil? It will be removed from this browser.")) {
     return;
@@ -433,7 +458,7 @@ clearSpecimens = async function() {
 };
 
 specimenNode = function(rec) {
-  var dismiss, li, meta, name, selectBtn;
+  var dismiss, downloadBtn, li, meta, name, selectBtn;
   li = document.createElement("li");
   li.className = "flasher-specimen";
   if (rec.id === selectedSpecimenId) {
@@ -454,6 +479,15 @@ specimenNode = function(rec) {
   selectBtn.addEventListener("click", function() {
     return selectSpecimen(rec.id);
   });
+  downloadBtn = document.createElement("button");
+  downloadBtn.type = "button";
+  downloadBtn.className = "flasher-specimen-download";
+  downloadBtn.title = "Download this firmware fossil";
+  downloadBtn.setAttribute("aria-label", "Download this firmware fossil");
+  downloadBtn.textContent = "↓";
+  downloadBtn.addEventListener("click", function() {
+    return downloadSpecimen(rec);
+  });
   dismiss = document.createElement("button");
   dismiss.type = "button";
   dismiss.className = "flasher-specimen-dismiss";
@@ -464,6 +498,7 @@ specimenNode = function(rec) {
     return dismissSpecimen(rec.id);
   });
   li.appendChild(selectBtn);
+  li.appendChild(downloadBtn);
   li.appendChild(dismiss);
   return li;
 };

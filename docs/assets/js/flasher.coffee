@@ -261,6 +261,23 @@ selectSpecimen = (id) ->
   catch err
     setStatus "Couldn't load firmware fossil: " + err.message, "fail"
 
+downloadSpecimen = (rec) ->
+  return unless rec?.blob?
+  try
+    bytes = new Uint8Array rec.blob
+    blob = new Blob [bytes], type: "application/octet-stream"
+    url = URL.createObjectURL blob
+    a = document.createElement "a"
+    a.href = url
+    a.download = rec.name or "pteronautos-firmware.bin"
+    document.body.appendChild a
+    a.click()
+    a.remove()
+    URL.revokeObjectURL url
+    log "Downloaded firmware fossil (" + fmtSize(bytes.length) + ")."
+  catch err
+    setStatus "Couldn't download firmware fossil: " + err.message, "fail"
+
 dismissSpecimen = (id) ->
   return unless window.confirm "Dismiss this firmware fossil? It will be removed from this browser."
   await idbDeleteSpecimen id
@@ -306,6 +323,15 @@ specimenNode = (rec) ->
   selectBtn.appendChild meta
   selectBtn.addEventListener "click", -> selectSpecimen rec.id
 
+  downloadBtn = document.createElement "button"
+  downloadBtn.type = "button"
+  downloadBtn.className = "flasher-specimen-download"
+  downloadBtn.title = "Download this firmware fossil"
+  downloadBtn.setAttribute "aria-label", "Download this firmware fossil"
+  downloadBtn.textContent = "↓"
+  downloadBtn.addEventListener "click", ->
+    downloadSpecimen rec
+
   dismiss = document.createElement "button"
   dismiss.type = "button"
   dismiss.className = "flasher-specimen-dismiss"
@@ -315,6 +341,7 @@ specimenNode = (rec) ->
   dismiss.addEventListener "click", -> dismissSpecimen rec.id
 
   li.appendChild selectBtn
+  li.appendChild downloadBtn
   li.appendChild dismiss
   li
 

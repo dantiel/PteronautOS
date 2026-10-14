@@ -2093,7 +2093,8 @@ footer .lang-switch {
   line-height: 1.4;
 }
 
-.flasher-specimen-dismiss {
+.flasher-specimen-dismiss,
+.flasher-specimen-download {
   flex: 0 0 auto;
   width: 2.4rem;
   font-family: "Turret Road", monospace;
@@ -2106,7 +2107,8 @@ footer .lang-switch {
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.flasher-specimen-dismiss:hover {
+.flasher-specimen-dismiss:hover,
+.flasher-specimen-download:hover {
   color: var(--text);
   border-color: var(--accent);
 }
