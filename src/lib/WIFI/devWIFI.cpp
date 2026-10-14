@@ -803,6 +803,11 @@ static void GetPteronautosSystem(AsyncWebServerRequest *request)
 static void GetPteronautosBlackbox(AsyncWebServerRequest *request)
 {
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
+#if !defined(ZEPHYRUS_ENABLED)
+    // No ESP-side gyro in this build (EP2 + RP2040: the companion owns the
+    // gyro) — there is no Zephyrus fault register to report.
+    request->send(200, "application/json", "{\"ok\":true,\"compiled\":false}");
+#else
     String out;
 #ifdef ZEPHYR_BLACKBOX
     out.reserve(4096);
@@ -851,6 +856,7 @@ static void GetPteronautosBlackbox(AsyncWebServerRequest *request)
     out += "}}";
 #endif
     request->send(200, "application/json", out);
+#endif
 }
 
 // ── Servo sweep externs (defined in devServoOutput.cpp) ──────────
