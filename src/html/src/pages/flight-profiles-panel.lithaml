@@ -54,7 +54,7 @@
     %table.mui-table.mui-table--bordered
       %tbody
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_wing_angles')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_wing_angles')
         %tr
           %td
             %b= self._t('ornithopter.glide_angle.title')
@@ -73,7 +73,7 @@
                         %input{type: "number", min: "-15", max: "15", step: "1", .value: self.flappingAngleDeg, @input: self._onNumberInput('flappingAngleDeg'), @change: self._onNumberCommit('flappingAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
             | °
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_stroke')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_stroke')
         %tr
           %td
             %b= self._t('ornithopter.stroke_ferocity.title')
@@ -111,7 +111,7 @@
            %span.value= self.ferocityShapeMix
            %
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_scales')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_scales')
         %tr
           %td
             %b= self._t('ornithopter.aileron_scale.title')
@@ -127,7 +127,7 @@
             %span.value= self.elevatorScale
             %
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_elev_rudd')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_elev_rudd')
         %tr
           %td
             %b= self._t('ornithopter.rudder_ferocity_range.title')
@@ -172,7 +172,7 @@
             %span.value= self.elevatorAntigravityMix
             %
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_skew')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_skew')
        %tr
          %td
            %b= self._t('ornithopter.stroke_skew.title')
@@ -211,7 +211,7 @@
            %small.label= self._aileronSkewRateMixLabel()
 
         %tr.pfg-hdr
-          %td{colspan: "2", style: "background:#0e1216;color:#9cf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:8px 10px;"}= self._t('ornithopter.flight_profiles.group_thrust')
+          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_thrust')
        %tr
          %td
            %b= self._t('ornithopter.throttle_thrust_shape_mix.title')
