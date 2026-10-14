@@ -240,24 +240,27 @@
            %span.value= self.throttleSkewRateMix
            %small.label= self._throttleSkewRateMixLabel()
 / Virtual stick — CH1–CH7 vertical PWM channel sliders for testing
+/ Engraved monochrome console: state via brightness + the single
+/ semantic $warn status dot on the override toggle when armed.
 .mui-panel
   .mui--text-title= self._t('ornithopter.channel_test.title')
-  %label{style: "cursor:pointer;display:inline-block;margin:8px 0;padding:6px 12px;border:1px solid #333;border-radius:4px;background:#151515;"}
-    %input{type: "checkbox", checked: self.stickOverride, @change: self._onStickToggle, .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#9cf;margin-right:8px;vertical-align:middle;"}
-    %span{style: "color:#9cf;font-size:14px;vertical-align:middle;"}= self.stickOverride ? self._t('ornithopter.channel_test.override_on') : self._t('ornithopter.channel_test.override_off')
+  %label.pto-chn-toggle
+    %span{class: self._chnToggleDot()}
+    %input.pto-chn-check{type: "checkbox", checked: self.stickOverride, @change: self._onStickToggle, .disabled: self._uiLocked()}
+    %span{class: self._chnToggleState()}= self.stickOverride ? self._t('ornithopter.channel_test.override_on') : self._t('ornithopter.channel_test.override_off')
   %br
-  %small{style: "color:#888;"} = self._t('ornithopter.channel_test.hint')
-  .chnrow{style: "display:flex;gap:14px;align-items:flex-end;margin-top:12px;overflow-x:auto;padding-bottom:6px;"}
+  %small.ptero-muted = self._t('ornithopter.channel_test.hint')
+  .pto-chn-row
     - for def of self.channelDefs
-      .chncol{style: "display:flex;flex-direction:column;align-items:center;min-width:64px;"}
-        %div{style: "color:#9cf;font-size:11px;font-weight:700;"}= "CH#{def.ch}"
-        %div{style: "color:#ccc;font-size:11px;margin:2px 0;"}= def.fn
-        %input{type: "range", min: "1000", max: "2000", .value: self._stickPwm(def), @input: self._onStickInput(def), @change: self._onStickRelease(def), .disabled: self._uiLocked(), style: self._chnSliderStyle()}
-        %div{style: "color:#d4a017;font-size:11px;font-family:'SF Mono',monospace;"}= "#{self._stickPwm(def)}µs"
+      .pto-chn-col
+        .pto-chn-label= "CH#{def.ch}"
+        .pto-chn-fn= def.fn
+        %input.pto-chn-slider{type: "range", min: "1000", max: "2000", .value: self._stickPwm(def), @input: self._onStickInput(def), @change: self._onStickRelease(def), .disabled: self._uiLocked()}
+        .pto-chn-us= "#{self._stickPwm(def)}µs"
         - if def.snap
-          %div{style: "color:#666;font-size:10px;"} = self._t('ornithopter.channel_test.spring')
+          .pto-chn-mode= self._t('ornithopter.channel_test.spring')
         - else
-          %div{style: "color:#666;font-size:10px;"} = self._t('ornithopter.channel_test.hold')
+          .pto-chn-mode= self._t('ornithopter.channel_test.hold')
 
 / Live mixer output — debug readout to trace stick→servo chain
 .mui-panel

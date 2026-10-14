@@ -178,8 +178,11 @@ class FlightProfilesPanel extends PteroElement
 
   _stickPwm: (def) -> @_crsfToPwm(@stickChannels[def.stk] ? 992)
 
-  _chnSliderStyle: ->
-    "-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl;width:20px;height:150px;margin:6px 0;cursor:pointer;accent-color:#9cf;"
+  _chnToggleDot: ->
+    if @stickOverride then 'pto-status-dot pto-status-dot--warn' else 'pto-status-dot pto-status-dot--off'
+
+  _chnToggleState: ->
+    if @stickOverride then 'pto-chn-state is-on' else 'pto-chn-state'
 
   # ── Apply polled state ────────────────────────────────────────────
   _applyState: (data) ->

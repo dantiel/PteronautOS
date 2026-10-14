@@ -546,6 +546,111 @@ input[type="range"]
   &:hover
     background: transparent !important
 
+// ═══ Channel test (virtual stick console) ═══
+// CH1–CH7 vertical PWM sliders — engraved monochrome columns.
+// No hues anywhere: state is carried by brightness plus the single
+// semantic status dot on the override toggle ($warn when armed).
+.pto-chn-toggle
+  display: inline-flex
+  align-items: center
+  gap: 8px
+  margin: 10px 0 2px
+  padding: 6px 14px
+  background: #0d0d0d
+  border: 1px solid var(--dim)
+  border-radius: var(--radius)
+  cursor: pointer
+  user-select: none
+  +transition((border-color, box-shadow))
+
+  &:hover
+    border-color: var(--mut)
+
+  .pto-chn-state
+    font-family: $turret
+    font-size: 12px
+    font-weight: 800
+    letter-spacing: 0.22em
+    text-transform: uppercase
+    color: var(--mut)
+    +transition(color)
+
+    &.is-on
+      color: var(--text)
+      +text-shadow-3d
+
+.pto-chn-check
+  width: 16px
+  height: 16px
+  margin: 0
+  accent-color: var(--accent)
+  cursor: pointer
+
+.pto-chn-row
+  display: flex
+  gap: 14px
+  align-items: flex-end
+  margin-top: 12px
+  overflow-x: auto
+  padding-bottom: 6px
+
+.pto-chn-col
+  display: flex
+  flex-direction: column
+  align-items: center
+  min-width: 64px
+
+.pto-chn-label
+  font-family: $turret
+  font-size: 10px
+  font-weight: 900
+  letter-spacing: 0.18em
+  text-transform: uppercase
+  color: #3c3c3c
+  width: 100%
+  text-align: center
+  padding: 4px 0
+  background: #0d0d0d
+  border: 1px solid var(--dim)
+  border-radius: 2px
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5)
+  user-select: none
+
+.pto-chn-fn
+  font-family: $turret
+  font-size: 9px
+  font-weight: 400
+  letter-spacing: 0.14em
+  text-transform: uppercase
+  color: var(--mut)
+  margin: 5px 0 2px
+
+.pto-chn-slider
+  -webkit-appearance: slider-vertical
+  appearance: slider-vertical
+  writing-mode: vertical-lr
+  direction: rtl
+  width: 20px
+  height: 150px
+  margin: 6px 0
+  cursor: pointer
+  accent-color: var(--accent)
+
+.pto-chn-us
+  font-family: $turret
+  font-size: 11px
+  font-weight: 400
+  color: var(--accent)
+  letter-spacing: 0.06em
+
+.pto-chn-mode
+  font-family: $turret
+  font-size: 9px
+  font-weight: 400
+  letter-spacing: 0.12em
+  text-transform: uppercase
+  color: var(--mut)
+
 // ═══ Artificial Horizon ═══
 .pto-horizon-wrap
   position: relative
