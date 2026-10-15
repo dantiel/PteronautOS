@@ -321,6 +321,18 @@ static void servosUpdate(unsigned long now)
     // No local PWM fallback: an EP2 has no servo outputs. A silent companion
     // must never turn its receiver UART/reset pins into surrogate PWM pins.
 #else
+    // Restore the link latch on EVERY connected transition. event() only
+    // fires onLinkUp once (its !initialized gate), so without this the
+    // mixer stays latched at failsafe centre forever after the FIRST link
+    // loss or WebUI session — the wings stay dead until reboot, no matter
+    // what the sticks do.
+    if (connectionState == connected && connectionHasModelMatch && teamraceHasModelMatch && !ornithopter.linkUp)
+    {
+        ornithopterOnLinkUp();
+#ifdef ZEPHYRUS_ENABLED
+        zephyrusOnLinkUp();
+#endif
+    }
     ornithopterUpdate();
     orniInitWrite(&servoWrite);
 #endif
