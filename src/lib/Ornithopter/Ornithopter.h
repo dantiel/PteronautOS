@@ -147,11 +147,13 @@ public:
         glitchSimultThreshold = simultThreshold;
         _glitchInitialized = false;   // re-baseline on new config
         _glitchGhostStreak = 0;
+        for (uint8_t i = 0; i < STK_COUNT; i++) _glitchLastRaw[i] = 0xFFFF; // sentinel → baseline on next tick
     }
     inline void setGlitchFilterEnabled(bool active) {
         glitchActive = active;
         _glitchInitialized = false;   // re-baseline on toggle
         _glitchGhostStreak = 0;
+        for (uint8_t i = 0; i < STK_COUNT; i++) _glitchLastRaw[i] = 0xFFFF; // sentinel → baseline on next tick
     }
 
 #ifdef ZEPHYRUS_ENABLED
@@ -233,6 +235,7 @@ private:
     FlappingOscillator _osc;
     uint32_t _lastUpdateUs;
     bool _armedState;         // arming latch — throttle-zero + arm-switch high
+    bool _wasArmedAtLoss;     // armed state snapshot at link loss (grants recovery re-arm)
  
     float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
     float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost

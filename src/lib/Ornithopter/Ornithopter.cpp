@@ -175,6 +175,7 @@ Ornithopter::Ornithopter()
  #endif
   , _lastUpdateUs(0)
   , _armedState(false)
+  , _wasArmedAtLoss(false)
   , _prevThrottlePct(-1.0f)
   , _throttleRateLPF(0.0f)
   , _prevAileronNorm(-2.0f)
@@ -213,6 +214,24 @@ void Ornithopter::onLinkUp() {
     linkUp = true;
     _glitchInitialized = false;  // re-baseline Glitch Filter on fresh link
     _glitchGhostStreak = 0;
+    // Fully define the filter state: sentinel the freshness tracker so the
+    // first post-link frame ALWAYS baselines — even when it equals the
+    // held/failsafe values left in the tracker (neutral sticks). Without
+    // this the filter stayed un-baselined (passthrough) until the first
+    // stick movement — an undefined protection state at the worst moment.
+    for (uint8_t i = 0; i < STK_COUNT; i++) {
+        _glitchRef[i]       = 992;
+        _glitchCandidate[i] = 992;
+        _glitchPersist[i]   = 0;
+        _glitchLastRaw[i]   = 0xFFFF;   // no CRSF frame can match this
+    }
+    // Arm continuity: if the bird was armed when the link dropped and the
+    // arm switch is still high, resume armed immediately — the failsafe
+    // already proved the outputs safe. Power-on still requires the
+    // throttle-zero arming ceremony (_wasArmedAtLoss starts false).
+    if (_wasArmedAtLoss && ChannelData[ORNI_CH_ARM] > 992) {
+        _armedState = true;
+    }
     _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale slew kick
     _throttleRateLPF = 0.0f;
     _prevAileronNorm = -2.0f;   // seed on next flap tick — no stale roll slew kick
@@ -234,12 +253,22 @@ void Ornithopter::onLinkUp() {
 #endif
 }
 
-void Ornithopter::onLinkDown() { linkUp = false; enterFailsafe(); }
+void Ornithopter::onLinkDown() {
+    if (linkUp) _wasArmedAtLoss = _armedState;  // snapshot on the loss transition only
+    linkUp = false;
+    enterFailsafe();
+}
 
 void Ornithopter::enterFailsafe() {
-    _armedState = false;  // disarm — require fresh throttle-zero + arm cycle
+    _armedState = false;  // disarm — recovery re-arms only if _wasArmedAtLoss
     _glitchInitialized = false;  // re-baseline Glitch Filter on next link
     _glitchGhostStreak = 0;
+    for (uint8_t i = 0; i < STK_COUNT; i++) {
+        _glitchRef[i]       = 992;
+        _glitchCandidate[i] = 992;
+        _glitchPersist[i]   = 0;
+        _glitchLastRaw[i]   = 0xFFFF;  // sentinel — defined state during the gap
+    }
     for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
