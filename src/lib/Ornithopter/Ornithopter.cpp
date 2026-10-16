@@ -189,6 +189,8 @@ Ornithopter::Ornithopter()
   , _glitchGhostStreak(0)
 {
     modelName[0] = '\0';
+    _glitchFrameTick = 0;
+    _armLowFrame = 0xFFFF;   // arm-high sentinel — no debounce state at boot
     for (uint8_t i = 0; i < STK_COUNT; ++i) {
         _glitchRef[i]         = 992;
         _glitchCandidate[i]   = 992;
@@ -212,6 +214,7 @@ Ornithopter::Ornithopter()
 
 void Ornithopter::onLinkUp() {
     linkUp = true;
+    _armLowFrame = 0xFFFF;      // defined state on fresh link — no stale debounce
     _glitchInitialized = false;  // re-baseline Glitch Filter on fresh link
     _glitchGhostStreak = 0;
     // Fully define the filter state: sentinel the freshness tracker so the
@@ -261,6 +264,7 @@ void Ornithopter::onLinkDown() {
 
 void Ornithopter::enterFailsafe() {
     _armedState = false;  // disarm — recovery re-arms only if _wasArmedAtLoss
+    _armLowFrame = 0xFFFF;   // defined state during the gap — no stale debounce
     _glitchInitialized = false;  // re-baseline Glitch Filter on next link
     _glitchGhostStreak = 0;
     for (uint8_t i = 0; i < STK_COUNT; i++) {
@@ -360,6 +364,9 @@ void Ornithopter::_applyGlitchFilter() {
         if (raw[i] != _glitchLastRaw[i]) anyChanged = true;
         _glitchLastRaw[i] = raw[i];
     }
+    // Arm-debounce clock: advances on DISTINCT CRSF frames (not mixer ticks),
+    // so a low voiceArm held across rejected frames counts once per real frame.
+    if (anyChanged) _glitchFrameTick++;
 
     if (!glitchActive) {
         for (uint8_t i = 0; i < STK_COUNT; i++) *out[i] = raw[i];
@@ -451,9 +458,18 @@ void Ornithopter::_applyGlitchFilter() {
 // switch (or link loss / failsafe) clears the latch.
 bool Ornithopter::_isArmed() {
     if (voiceArm <= 992) {
-        _armedState = false;                 // disarm on switch low
-    } else if (!_armedState) {
-        _armedState = (voiceThrottle < ORNI_ARM_THROTTLE_ZERO_US);  // arm only at zero throttle
+        if (_armLowFrame == 0xFFFF) _armLowFrame = _glitchFrameTick;  // start of a low run
+        // Disarm only after the low state persists across 3 DISTINCT CRSF
+        // frames. A single corrupted frame — e.g. one admitted by the ghost-
+        // streak re-baseline, or arriving while the filter is in a passthrough
+        // window — must NOT kill the latch permanently. A genuine switch flip
+        // stays low on every frame, so it disarms within ~13 ms at 150 Hz.
+        else if ((uint16_t)(_glitchFrameTick - _armLowFrame) >= 2) _armedState = false;
+    } else {
+        _armLowFrame = 0xFFFF;               // arm high — reset the low-run tracker
+        if (!_armedState) {
+            _armedState = (voiceThrottle < ORNI_ARM_THROTTLE_ZERO_US);  // arm only at zero throttle
+        }
     }
     return _armedState;
 }

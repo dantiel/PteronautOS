@@ -256,6 +256,8 @@ private:
     uint8_t  _glitchPersist[STK_COUNT];// 0=idle, 1=awaiting confirmation
     uint16_t _glitchLastRaw[STK_COUNT];     // last-seen raw (new-frame detection)
     uint8_t  _glitchGhostStreak;            // consecutive collective rejections (self-heal counter)
+    uint16_t _glitchFrameTick;              // distinct CRSF frames seen (arm-debounce clock)
+    uint16_t _armLowFrame;                  // frame tick when voiceArm first read low (0xFFFF = high)
 
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);
     float _crsfToNorm(uint16_t raw);
