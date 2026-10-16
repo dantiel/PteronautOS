@@ -133,7 +133,13 @@ static void servoWriteRaw(uint8_t ch, uint16_t us)
     {
         servoWriteDshot(chMode, ch, us);
     }
-    else if (servoPins[ch] != UNDEF_PIN && pwmChannelValues[ch] != us)
+    // Restart the pulse train whenever the value changed OR the waveform is
+    // dead. The ESP8266 software waveform has a 50ms NMI watchdog that stops
+    // ALL pulses if servosUpdate() stalls (WebUI/lwIP, I2C); with static
+    // stick values the != dedup below would otherwise skip the restart
+    // forever and the servos would stay unpowered until a value changes.
+    else if (servoPins[ch] != UNDEF_PIN &&
+             (pwmChannelValues[ch] != us || !PWM.isRunning(pwmChannels[ch])))
     {
         pwmChannelValues[ch] = us;
         if (chMode == somOnOff)

@@ -105,6 +105,11 @@ void feedWaveform8266()
   MEMBARRIER();
 }
 
+bool isWaveformRunning8266(uint8_t gpio)
+{
+  return (wvfState.waveformEnabled >> gpio) & 1;
+}
+
 static inline void armWaveformWatchdog() {
     watchdogLastFeedCycle = ESP.getCycleCount();
     watchdogArmed = true;

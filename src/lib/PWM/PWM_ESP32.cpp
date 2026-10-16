@@ -285,4 +285,11 @@ void PWMController::feedWatchdog()
 {
 }
 
+// Hardware LEDC/MCPWM pulse trains are continuous: once started they run
+// until explicitly stopped, so the output is always "running" after allocate.
+bool PWMController::isRunning(pwm_channel_t)
+{
+    return true;
+}
+
 #endif

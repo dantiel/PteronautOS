@@ -57,4 +57,14 @@ void PWMController::feedWatchdog()
     feedWaveform8266();
 }
 
+bool PWMController::isRunning(pwm_channel_t channel)
+{
+    if (channel < 0)
+        return false;
+    int8_t pin = pwm_gpio[channel];
+    if (pin < 0)
+        return false;
+    return isWaveformRunning8266(pin);
+}
+
 #endif

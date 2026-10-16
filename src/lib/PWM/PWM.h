@@ -45,6 +45,17 @@ public:
      * indicate that the system is still running correctly.
      */
     void feedWatchdog();
+
+    /**
+     * @brief Whether the output pulse train is actively running on this channel.
+     *
+     * On platforms with a software waveform + watchdog (ESP8266), a watchdog trip
+     * stops ALL pulses; the servo layer must re-arm the waveform even when the
+     * requested microseconds did not change (the write-dedup would otherwise
+     * skip the restart and leave the servos unpowered until a value changes).
+     * On hardware-PWM platforms the pulse train is continuous: always true.
+     */
+    bool isRunning(pwm_channel_t channel);
 };
 
 extern PWMController PWM;
