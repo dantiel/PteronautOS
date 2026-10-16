@@ -502,11 +502,13 @@ function convertHamlFnCall(expr) {
 }
 
 function escapeLitText(text) {
-  // Escape characters that would break the template literal
+  // Escape characters that would break the template literal.
+  // Backslashes must be escaped FIRST, or the final pass would
+  // double the escape sequences just produced.
   return text
+    .replace(/\\/g, '\\\\')
     .replace(/`/g, '\\`')
     .replace(/\$/g, '\\$')
-    .replace(/\\/g, '\\\\')
 }
 
 function cleanAttrVal(val) {
