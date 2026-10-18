@@ -625,16 +625,68 @@ input[type="range"]
   color: var(--mut)
   margin: 5px 0 2px
 
-.pto-chn-slider
-  -webkit-appearance: slider-vertical
-  appearance: slider-vertical
+// Custom vertical slider — the global `input[type="range"]` rule pins every
+// range to 6px tall (fine for horizontal tracks, fatal for these vertical
+// columns). Selector is deliberately `input[type="range"].pto-chn-slider` so
+// it outranks that global rule and the columns regain real travel height.
+// The knob is rendered explicitly (native thumb can't be resized) and is
+// oversized for touch use on small screens.
+input[type="range"].pto-chn-slider
+  appearance: none
+  -webkit-appearance: none
   writing-mode: vertical-lr
   direction: rtl
-  width: 20px
-  height: 150px
+  width: 28px
+  height: 160px
   margin: 6px 0
+  padding: 0 !important
+  background: transparent !important
+  border: none !important
+  border-radius: 0 !important
   cursor: pointer
-  accent-color: var(--accent)
+
+  &::-webkit-slider-runnable-track
+    width: 8px
+    height: 100%
+    background: var(--dim)
+    border: 1px solid #000
+    border-radius: 4px
+
+  &::-moz-range-track
+    width: 8px
+    height: 100%
+    background: var(--dim)
+    border: 1px solid #000
+    border-radius: 4px
+
+  &::-webkit-slider-thumb
+    -webkit-appearance: none
+    appearance: none
+    width: 28px
+    height: 28px
+    margin-left: -10px
+    border-radius: 50%
+    background: var(--accent)
+    border: 2px solid #000
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6)
+
+  &::-moz-range-thumb
+    width: 28px
+    height: 28px
+    border-radius: 50%
+    background: var(--accent)
+    border: 2px solid #000
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6)
+
+  &:focus
+    outline: none !important
+    box-shadow: none !important
+
+    &::-webkit-slider-thumb
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.6)
+
+    &::-moz-range-thumb
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.6)
 
 .pto-chn-us
   font-family: $turret
