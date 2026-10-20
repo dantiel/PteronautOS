@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: You found a bug in ExpressLRS. 🐞
+about: You found a bug in PteronautOS. 🐞
 labels: 'bug'
 ---
 
@@ -21,6 +21,10 @@ labels: 'bug'
 
 4.
 
+## Expected Behavior
+
+<!--- What should have happened instead? -->
+
 ## Possible Solution (Not obligatory)
 
 <!--- Suggest a reason for the bug or how to fix it. -->
@@ -28,20 +32,15 @@ labels: 'bug'
 ## Details
 
 <!--- Additional details you think might be relevant -->
-
 <!--- How has this issue affected you? What are you trying to accomplish? -->
-<!--- Did you make any changes to the boilerplate after cloning it? -->
-<!--- Providing context helps us come up with a solution that is most useful in the real world -->
 
 ## Your Environment
 
-<!--- Include as many relevant details about the environment you experienced the bug in -->
+<!--- Include as many relevant details about your setup as possible -->
 
-- TX hardware:
-- RX hardware:
-- Handset model:
-- OpenTX version (including nightly number)
-- ExpressLRS version (TX & RX MUST MATCH):
-- Packet Rate:
-- Telemetry Ratio:
-- user_defines:
+- Mixer profile (airframe type):
+- Firmware version (git tag or commit SHA):
+- Radio / TX (CRSF) and OpenTX/EdgeTX version:
+- Zephyrus (MPU6050 gyro) present:
+- MUSHIN bridge (EP2 → RP2040) present:
+- Regulatory domain / packet rate:
