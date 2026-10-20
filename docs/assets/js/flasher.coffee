@@ -57,7 +57,7 @@ FIELD_IDS = [
   "#zephyrus_i2c_sda"
   "#zephyrus_i2c_scl"
   "#zephyrus_board_rotation"
-  "#mushin_enabled"
+  "#hardware_target"
   "#zephyrus_enabled"
   "#zephyrus_mode"
   "#zephyrus_i2c_pre_detect"
@@ -133,7 +133,7 @@ collectParams = ->
   zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
   zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
-  mushin_enabled: (if $("#mushin_enabled").checked then "1" else "0")
+  hardware_target: $("#hardware_target").value
   zephyrus_enabled: zeph
   zephyrus_mode: $("#zephyrus_mode").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
@@ -214,6 +214,11 @@ MIXER_LABELS =
   "6": "elevator + rudder"
   "7": "motor + elevator + rudder"
 
+HARDWARE_LABELS =
+  "pwmp7": "PWMP7"
+  "ep2pwm": "EP2 PWM"
+  "mushin": "EP2 + RP2040"
+
 fmtSize = (n) ->
   if n >= 1048576 then (n / 1048576).toFixed(1) + " MB" else Math.round(n / 1024) + " KB"
 
@@ -225,7 +230,7 @@ specimenMeta = (rec) ->
   parts = [fmtWhen rec.ts]
   parts.push (MIXER_LABELS[p.mixer_profile] or "mixer " + p.mixer_profile)
   parts.push (if p.regulatory_domain is "EU_CE_2400" then "EU CE" else "ISM")
-  parts.push (if p.mushin_enabled is "1" then "MUSHIN" else "local PWM")
+  parts.push (HARDWARE_LABELS[p.hardware_target] or p.hardware_target)
   parts.push (if p.zephyrus_enabled is "1" then "Zephyrus" else "no gyro")
   parts.push p.device_name if p.device_name
   parts.push rec.version if rec.version
@@ -627,7 +632,7 @@ flash = ->
         els.progressBar.style.width = pct + "%"
         els.statusText.textContent = "Flashing… " + pct + "%"
 
-    mushin = $("#mushin_enabled").checked
+    mushin = $("#hardware_target").value is "mushin"
     if mushin
       log "Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware."
     else
@@ -649,18 +654,20 @@ flash = ->
     busy = false
 
 syncGyroFields = ->
-  mushin = $("#mushin_enabled").checked
+  mushin = $("#hardware_target").value is "mushin"
+  localGyro = $("#hardware_target").value is "pwmp7"
   zeph = $("#zephyrus_enabled")
   zephRow = zeph.closest ".flasher-toggle"
-  # MUSHIN owns servos + gyro on the RP2040 — local Zephyrus is meaningless.
-  if mushin
+  # Local MPU6050 gyro exists only on the PWMP7 board — the EP2 variants have
+  # no free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
+  unless localGyro
     zeph.checked = false
     zeph.disabled = true
     zephRow.classList.add "is-disabled"
   else
     zeph.disabled = false
     zephRow.classList.remove "is-disabled"
-  enabled = zeph.checked and not mushin
+  enabled = zeph.checked and localGyro
   wrap = $("#zephyrus-fields")
   wrap.classList.toggle "is-greyed", not enabled
   for el in wrap.querySelectorAll "input, select"
@@ -676,7 +683,7 @@ for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
 
-$("#mushin_enabled").addEventListener "change", syncGyroFields
+$("#hardware_target").addEventListener "change", syncGyroFields
 $("#zephyrus_enabled").addEventListener "change", syncGyroFields
 
 for l in LOCALES

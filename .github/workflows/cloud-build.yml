@@ -55,14 +55,15 @@ on:
         type: choice
         default: '0'
         options: ['0', '1', '2', '3', '4', '5', '6']
-      mushin_enabled:
-        description: 'Enable the MUSHIN bridge (EP2 → RP2040 muscle link)'
-        required: false
+      hardware_target:
+        description: 'Receiver hardware target (board)'
+        required: true
         type: choice
-        default: '0'
+        default: 'pwmp7'
         options:
-          - '0'   # off — standalone PWM receiver, wings flap locally
-          - '1'   # EP2 + RP2040, shared UART0 on GPIO1/3
+          - 'pwmp7'   # PWMP7 — 3 local servo pads (GPIO9/10/5)
+          - 'ep2pwm'  # EP2 standalone — 2 local servo pads (GPIO3/1)
+          - 'mushin'  # EP2 + RP2040 companion (MUSHIN bridge)
       zephyrus_enabled:
         description: 'Zephyrus gyro stabilization (MPU6050)'
         required: false
@@ -217,10 +218,11 @@ jobs:
 
       - name: Build firmware
         run: |
-          TARGET_ENV=PteronautOS_ESP8285_2400_RX
-          if [ "${{ inputs.mushin_enabled }}" = "1" ]; then
-            TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX
-          fi
+          case "${{ inputs.hardware_target }}" in
+            ep2pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
+            mushin) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
+            *)      TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+          esac
           echo "TARGET_ENV=$TARGET_ENV" >> "$GITHUB_ENV"
           if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
             DOMAIN_FLAG="-DRegulatory_Domain_EU_CE_2400"
@@ -246,7 +248,7 @@ jobs:
             "zephyrus_i2c_sda": "${{ inputs.zephyrus_i2c_sda }}",
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
-            "mushin_enabled": "${{ inputs.mushin_enabled }}",
+            "hardware_target": "${{ inputs.hardware_target }}",
             "zephyrus_enabled": "${{ inputs.zephyrus_enabled }}",
             "zephyrus_mode": "${{ inputs.zephyrus_mode }}",
             "zephyrus_i2c_pre_detect": "${{ inputs.zephyrus_i2c_pre_detect }}",

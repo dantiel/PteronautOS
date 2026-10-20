@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -67,7 +67,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#mushin_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#hardware_target", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -184,7 +184,7 @@ collectParams = function() {
     zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value,
     zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
-    mushin_enabled: ($("#mushin_enabled").checked ? "1" : "0"),
+    hardware_target: $("#hardware_target").value,
     zephyrus_enabled: zeph,
     zephyrus_mode: $("#zephyrus_mode").value,
     zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
@@ -324,6 +324,12 @@ MIXER_LABELS = {
   "7": "motor + elevator + rudder"
 };
 
+HARDWARE_LABELS = {
+  "pwmp7": "PWMP7",
+  "ep2pwm": "EP2 PWM",
+  "mushin": "EP2 + RP2040"
+};
+
 fmtSize = function(n) {
   if (n >= 1048576) {
     return (n / 1048576).toFixed(1) + " MB";
@@ -342,7 +348,7 @@ specimenMeta = function(rec) {
   parts = [fmtWhen(rec.ts)];
   parts.push(MIXER_LABELS[p.mixer_profile] || "mixer " + p.mixer_profile);
   parts.push((p.regulatory_domain === "EU_CE_2400" ? "EU CE" : "ISM"));
-  parts.push((p.mushin_enabled === "1" ? "MUSHIN" : "local PWM"));
+  parts.push(HARDWARE_LABELS[p.hardware_target] || p.hardware_target);
   parts.push((p.zephyrus_enabled === "1" ? "Zephyrus" : "no gyro"));
   if (p.device_name) {
     parts.push(p.device_name);
@@ -879,7 +885,7 @@ flash = async function() {
         return els.statusText.textContent = "Flashing… " + pct + "%";
       }
     });
-    mushin = $("#mushin_enabled").checked;
+    mushin = $("#hardware_target").value === "mushin";
     if (mushin) {
       log("Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware.");
     } else {
@@ -905,12 +911,14 @@ flash = async function() {
 };
 
 syncGyroFields = function() {
-  var el, enabled, i, len, mushin, ref, wrap, zeph, zephRow;
-  mushin = $("#mushin_enabled").checked;
+  var el, enabled, i, len, localGyro, mushin, ref, wrap, zeph, zephRow;
+  mushin = $("#hardware_target").value === "mushin";
+  localGyro = $("#hardware_target").value === "pwmp7";
   zeph = $("#zephyrus_enabled");
   zephRow = zeph.closest(".flasher-toggle");
-  // MUSHIN owns servos + gyro on the RP2040 — local Zephyrus is meaningless.
-  if (mushin) {
+  // Local MPU6050 gyro exists only on the PWMP7 board — the EP2 variants have
+  // no free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
+  if (!localGyro) {
     zeph.checked = false;
     zeph.disabled = true;
     zephRow.classList.add("is-disabled");
@@ -918,7 +926,7 @@ syncGyroFields = function() {
     zeph.disabled = false;
     zephRow.classList.remove("is-disabled");
   }
-  enabled = zeph.checked && !mushin;
+  enabled = zeph.checked && localGyro;
   wrap = $("#zephyrus-fields");
   wrap.classList.toggle("is-greyed", !enabled);
   ref = wrap.querySelectorAll("input, select");
@@ -942,7 +950,7 @@ for (i = 0, len = FIELD_IDS.length; i < len; i++) {
   $(id).addEventListener("change", saveConfig);
 }
 
-$("#mushin_enabled").addEventListener("change", syncGyroFields);
+$("#hardware_target").addEventListener("change", syncGyroFields);
 
 $("#zephyrus_enabled").addEventListener("change", syncGyroFields);
 

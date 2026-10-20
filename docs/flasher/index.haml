@@ -30,6 +30,13 @@
           %h2!= flasher_heading_config
 
           %label.flasher-field
+            %span!= flasher_hardware_target
+            %select#hardware_target
+              %option{value: "pwmp7", selected: true} PWMP7 — 3 servo pads (GPIO9/10/5)
+              %option{value: "ep2pwm"} EP2 standalone — 2 servo pads (GPIO3/1)
+              %option{value: "mushin"} EP2 + RP2040 — MUSHIN companion
+
+          %label.flasher-field
             %span!= flasher_mixer_profile
             %select#mixer_profile
               %option{value: "0"} SERVO_2WING — 2 flapping wings
@@ -54,12 +61,6 @@
           %details.flasher-advanced
             %summary!= flasher_advanced
             .flasher-grid.flasher-toggles
-              %label.flasher-field.flasher-toggle
-                %span.flasher-toggle-text!= flasher_mushin_enabled
-                %span.flasher-switch
-                  %input.flasher-switch-input#mushin_enabled{type: "checkbox"}
-                  %span.flasher-switch-track
-                    %span.flasher-switch-knob
               %label.flasher-field.flasher-toggle
                 %span.flasher-toggle-text!= flasher_zephyrus_enabled
                 %span.flasher-switch

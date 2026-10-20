@@ -28,6 +28,14 @@
 <section class='flasher-card'>
 <h2>Build-Konfiguration</h2>
 <label class='flasher-field'>
+<span>Empfänger-Hardware</span>
+<select id='hardware_target'>
+<option selected value='pwmp7'>PWMP7 — 3 servo pads (GPIO9/10/5)</option>
+<option value='ep2pwm'>EP2 standalone — 2 servo pads (GPIO3/1)</option>
+<option value='mushin'>EP2 + RP2040 — MUSHIN companion</option>
+</select>
+</label>
+<label class='flasher-field'>
 <span>Mixer-Profil</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -54,15 +62,6 @@
 <details class='flasher-advanced'>
 <summary>Erweitert — I2C, Mushin, WiFi</summary>
 <div class='flasher-grid flasher-toggles'>
-<label class='flasher-field flasher-toggle'>
-<span class='flasher-toggle-text'>Mushin (EP2 → RP2040)</span>
-<span class='flasher-switch'>
-<input class='flasher-switch-input' id='mushin_enabled' type='checkbox'>
-<span class='flasher-switch-track'>
-<span class='flasher-switch-knob'></span>
-</span>
-</span>
-</label>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Zephyrus-Gyro (MPU6050)</span>
 <span class='flasher-switch'>
@@ -116,7 +115,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Prüft SCL vor der I2C-Initialisierung, damit ein fehlender MPU6050 sauber bootet. Bei ungewöhnlichen Pull-ups deaktivieren.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Bei aktivem MUSHIN deaktiviert.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Lokales Gyro nur auf der PWMP7-Platine.</p>
 <label class='flasher-field'>
 <span>WiFi-Auto-On-Intervall (s)</span>
 <input id='auto_wifi_on_interval' min='-1' type='number' value='30'>
