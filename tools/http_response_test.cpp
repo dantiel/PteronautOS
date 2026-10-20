@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cstdint>
 #include <string>
 
 constexpr int ASYNC_WRITE_FLAG_COPY = 1;
