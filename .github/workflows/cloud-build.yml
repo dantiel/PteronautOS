@@ -67,9 +67,9 @@ on:
         description: 'Zephyrus gyro stabilization (MPU6050)'
         required: false
         type: choice
-        default: '1'
+        default: '0'
         options:
-          - '0'   # no gyro — ZEPHYRUS_ENABLED removed
+          - '0'   # no gyro — ZEPHYRUS_ENABLED not compiled in (default)
           - '1'   # MPU6050 + AHRS/PID compiled in
       zephyrus_mode:
         description: 'Stabilizer mode (1=rate-only Mesozoic, 0=AHRS self-level)'
@@ -163,7 +163,11 @@ jobs:
       - name: Write user defines
         run: |
           {
-            echo "-DAUTO_WIFI_ON_INTERVAL=${{ inputs.auto_wifi_on_interval }}"
+            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+              echo "-DAUTO_WIFI_ON_INTERVAL=${{ inputs.auto_wifi_on_interval }}"
+            else
+              echo "-DAUTO_WIFI_ON_INTERVAL=-1"
+            fi
             echo "-DLOCK_ON_FIRST_CONNECTION"
             echo "-DMIXER_PROFILE=${{ inputs.mixer_profile }}"
             echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"
@@ -171,8 +175,8 @@ jobs:
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
             # Companion UART pins/baud belong to the EP2 target, not user overrides.
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
-            if [ "${{ inputs.zephyrus_enabled }}" = "0" ]; then
-              echo "!-D ZEPHYRUS_ENABLED=1"
+            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+              echo "-DZEPHYRUS_ENABLED=1"
             fi
             if [ "${{ inputs.zephyrus_mode }}" = "0" ]; then
               echo "!-D MESOZOIC_ONLY=1"

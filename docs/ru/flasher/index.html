@@ -66,7 +66,7 @@
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Zephyrus gyro (MPU6050)</span>
 <span class='flasher-switch'>
-<input checked='checked' class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
+<input class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
 <span class='flasher-switch-track'>
 <span class='flasher-switch-knob'></span>
 </span>
@@ -205,6 +205,7 @@
 <button class='flasher-secondary' id='load-btn' type='button'>Загрузить .bin</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Прошить через Web Serial</button>
 <button class='flasher-secondary' disabled id='download-btn' type='button'>Скачать .bin</button>
+<button class='flasher-secondary' disabled id='download-gz-btn' type='button'>Скачать .bin.gz (WiFi)</button>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Отключить</button>
 </div>
 <input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>

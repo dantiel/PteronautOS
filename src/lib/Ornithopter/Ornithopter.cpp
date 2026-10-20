@@ -6,7 +6,10 @@
 #else
   #include <Arduino.h>
 #endif
-#include <algorithm>
+
+// ─────────────────────────────────────────────────────────────────────
+//  KERNEL — lifecycle, link state, channel input, arming, update loop
+// ─────────────────────────────────────────────────────────────────────
 
 Ornithopter ornithopter;
 
@@ -20,70 +23,6 @@ void setOrnithopterProfile(uint8_t p)
         activeProfile = (MixerProfile)p;
         ornithopter.enterFailsafe();  // recenter servos for the new profile
     }
-}
-
-void Ornithopter::applyFlightProfile(uint8_t idx)
-{
-    if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
-    activeFlightProfile = idx;
-    const FlightProfileParams &p = flightProfiles[idx];
-    strokeFerocity      = p.strokeFerocity;
-    returnFerocity      = p.returnFerocity;
-    glideAngleDeg       = p.glideAngleDeg;
-    flappingAngleDeg    = p.flappingAngleDeg;
-    aileronScale        = p.aileronScale;
-    elevatorScale       = p.elevatorScale;
-    rudderFerocityRange = p.rudderFerocityRange;
-    rudderAmplitudeDifferential = p.rudderAmplitudeDifferential;
-    elevatorFerocityMix = p.elevatorFerocityMix;
-    throttleFrequencyMix = p.throttleFrequencyMix;
-    ferocityShapeMix = p.ferocityShapeMix;
-    strokeSkew        = p.strokeSkew;
-    returnSkew        = p.returnSkew;
-    throttleThrustShapeMix = p.throttleThrustShapeMix;
-    throttleThrustExpo    = p.throttleThrustExpo;
-    aileronSkewMix      = p.aileronSkewMix;
-    throttleSkewRateMix = p.throttleSkewRateMix;
-    aileronSkewRateMix = p.aileronSkewRateMix;
-    elevatorFerocityRateMix = p.elevatorFerocityRateMix;
-    elevatorAntigravityMix  = p.elevatorAntigravityMix;
-}
-
-void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
-                                         int8_t glide, int8_t flapAng,
-                                         float ail, float elev, float rudRng,
-                                         float rudAmpDiff, float elevFerMix,
-                                         float thrThrustExpo, float thrThrustShape,
-                                         float thrFreqMix,
-                                         float ferShapeMix,
-                                         float strokeSkew, float returnSkew,
-                                         float ailSkewMix,
-                                         float thrSkewRateMix, float ailSkewRateMix,
-                                         float elevFerRateMix, float elevAntiGravMix)
-{
-    if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
-    FlightProfileParams &p = flightProfiles[idx];
-    p.strokeFerocity      = sf;
-    p.returnFerocity      = rf;
-    p.glideAngleDeg       = glide;
-    p.flappingAngleDeg    = flapAng;
-    p.aileronScale        = ail;
-    p.elevatorScale       = elev;
-    p.rudderFerocityRange = rudRng;
-    p.rudderAmplitudeDifferential = rudAmpDiff;
-    p.elevatorFerocityMix = elevFerMix;
-    p.throttleThrustShapeMix = thrThrustShape;
-    p.throttleThrustExpo  = thrThrustExpo;
-    p.throttleFrequencyMix = thrFreqMix;
-    p.ferocityShapeMix = ferShapeMix;
-    p.strokeSkew       = strokeSkew;
-    p.returnSkew       = returnSkew;
-    p.aileronSkewMix      = ailSkewMix;
-    p.throttleSkewRateMix = thrSkewRateMix;
-    p.aileronSkewRateMix = ailSkewRateMix;
-    p.elevatorFerocityRateMix = elevFerRateMix;
-    p.elevatorAntigravityMix  = elevAntiGravMix;
-    if (idx == activeFlightProfile) applyFlightProfile(idx);
 }
 
 Ornithopter::Ornithopter()
@@ -176,6 +115,7 @@ Ornithopter::Ornithopter()
   , _lastUpdateUs(0)
   , _armedState(false)
   , _wasArmedAtLoss(false)
+  , _wasFlapping(false)
   , _prevThrottlePct(-1.0f)
   , _throttleRateLPF(0.0f)
   , _prevAileronNorm(-2.0f)
@@ -206,28 +146,20 @@ Ornithopter::Ornithopter()
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;  // motor stopped
     }
-    // Flight profile defaults — three distinct tuning sets
-    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    _loadDefaultFlightProfiles();
 }
+
+// ─── Link state ─────────────────────────────────────────────────────
 
 void Ornithopter::onLinkUp() {
     linkUp = true;
     _armLowFrame = 0xFFFF;      // defined state on fresh link — no stale debounce
-    _glitchInitialized = false;  // re-baseline Glitch Filter on fresh link
-    _glitchGhostStreak = 0;
     // Fully define the filter state: sentinel the freshness tracker so the
     // first post-link frame ALWAYS baselines — even when it equals the
     // held/failsafe values left in the tracker (neutral sticks). Without
     // this the filter stayed un-baselined (passthrough) until the first
     // stick movement — an undefined protection state at the worst moment.
-    for (uint8_t i = 0; i < STK_COUNT; i++) {
-        _glitchRef[i]       = 992;
-        _glitchCandidate[i] = 992;
-        _glitchPersist[i]   = 0;
-        _glitchLastRaw[i]   = 0xFFFF;   // no CRSF frame can match this
-    }
+    _resetGlitchFilter();
     // Arm continuity: if the bird was armed when the link dropped and the
     // arm switch is still high, resume armed immediately — the failsafe
     // already proved the outputs safe. Power-on still requires the
@@ -235,25 +167,8 @@ void Ornithopter::onLinkUp() {
     if (_wasArmedAtLoss && ChannelData[ORNI_CH_ARM] > 992) {
         _armedState = true;
     }
-    _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale slew kick
-    _throttleRateLPF = 0.0f;
-    _prevAileronNorm = -2.0f;   // seed on next flap tick — no stale roll slew kick
-    _aileronRateLPF = 0.0f;
-    _prevElevatorNorm = -2.0f;  // seed on next flap tick — no stale fer dwell kick
-    _elevatorRateLPF = 0.0f;
-    _elevFerStroke = 0.0f;
-    _elevFerReturn = 0.0f;
-    _antiGravGate = 0.0f;
-#ifdef ZEPHYRUS_ENABLED
-    // Reset SSFF state on arm — fresh biases for each flight
-    _prevFlappingSin = 0.0f;
-    _ssffAccumError = 0.0f;
-    _ssffAccumCount = 0;
-    _ssffFerocityUpBias = 0.0f;
-    _ssffFerocityDownBias = 0.0f;
-    _ferHold = 0.0f;
-    _ferHoldVel = 0.0f;
-#endif
+    _resetSlewTransients();     // seed on next flap tick — no stale slew kick
+    _ondasReset();
 }
 
 void Ornithopter::onLinkDown() {
@@ -265,37 +180,19 @@ void Ornithopter::onLinkDown() {
 void Ornithopter::enterFailsafe() {
     _armedState = false;  // disarm — recovery re-arms only if _wasArmedAtLoss
     _armLowFrame = 0xFFFF;   // defined state during the gap — no stale debounce
-    _glitchInitialized = false;  // re-baseline Glitch Filter on next link
-    _glitchGhostStreak = 0;
-    for (uint8_t i = 0; i < STK_COUNT; i++) {
-        _glitchRef[i]       = 992;
-        _glitchCandidate[i] = 992;
-        _glitchPersist[i]   = 0;
-        _glitchLastRaw[i]   = 0xFFFF;  // sentinel — defined state during the gap
-    }
+    _resetGlitchFilter();
     for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;
     } else {
         _osc.reset();
-        _prevElevatorNorm = -2.0f;  // fresh seed on next flap tick
-        _elevatorRateLPF = 0.0f;
-        _elevFerStroke = 0.0f;
-        _elevFerReturn = 0.0f;
-        _antiGravGate = 0.0f;
+        _resetElevatorTransients();  // fresh seed on next flap tick
     }
-#ifdef ZEPHYRUS_ENABLED
-    _prevFlappingSin = 0.0f;
-    _ssffAccumError = 0.0f;
-    _ssffAccumCount = 0;
-    _ssffFerocityUpBias = 0.0f;
-    _ssffFerocityDownBias = 0.0f;
-    _ferHold = 0.0f;
-    _ferHoldVel = 0.0f;
-#endif
+    _ondasReset();
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────
+
 float Ornithopter::_crsfToFloat(uint16_t raw, float outMin, float outMax) {
     float t = (float)(raw - 172) / (float)(1811 - 172);
     return outMin + t * (outMax - outMin);
@@ -303,6 +200,22 @@ float Ornithopter::_crsfToFloat(uint16_t raw, float outMin, float outMax) {
 
 float Ornithopter::_crsfToNorm(uint16_t raw) {
     return _crsfToFloat(raw, -1.0f, 1.0f);
+}
+
+void Ornithopter::_resetSlewTransients() {
+    _prevThrottlePct = -1.0f;   // seed on next flap tick — no stale slew kick
+    _throttleRateLPF = 0.0f;
+    _prevAileronNorm = -2.0f;   // seed on next flap tick — no stale roll slew kick
+    _aileronRateLPF = 0.0f;
+    _resetElevatorTransients();
+}
+
+void Ornithopter::_resetElevatorTransients() {
+    _prevElevatorNorm = -2.0f;  // seed on next flap tick — no stale fer dwell kick
+    _elevatorRateLPF = 0.0f;
+    _elevFerStroke = 0.0f;
+    _elevFerReturn = 0.0f;
+    _antiGravGate = 0.0f;
 }
 
 void Ornithopter::_readChannels() {
@@ -326,133 +239,7 @@ void Ornithopter::_readChannels() {
     if (prof != activeFlightProfile) applyFlightProfile(prof);
 }
 
-// ─── Glitch Filter — CRSF channel glitch filter ──────────────
-// Rejects single-frame channel corruptions (slow-decode / RF glitch) that would
-// otherwise slam a wing servo. Per-channel delta + 2-frame persistence + collective
-// ghost detection (≥N channels anomalous = whole frame rejected). Ported from
-// Gralha Azul's verificarCanal, adapted to PteronautOS's decoupled mixer/CRSF
-// cadence (the mixer ticks at 333Hz while CRSF arrives at 150–500Hz).
-// Baselines on the first GENUINE frame after link-up (pre-link frames pass through
-// unfiltered) and self-heals after 20 consecutive collective rejections.
-void Ornithopter::_applyGlitchFilter() {
-    const uint16_t raw[STK_COUNT] = {
-        (uint16_t)ChannelData[ORNI_CH_AILERON],
-        (uint16_t)ChannelData[ORNI_CH_ELEVATOR],
-        (uint16_t)ChannelData[ORNI_CH_THROTTLE],
-        (uint16_t)ChannelData[ORNI_CH_RUDDER],
-        (uint16_t)ChannelData[ORNI_CH_ARM],
-        (uint16_t)ChannelData[ORNI_CH_FREQ],
-        (uint16_t)ChannelData[ORNI_CH_PROFILE],
-    };
-    uint16_t* out[STK_COUNT] = {
-        &voiceAileron, &voiceElevator, &voiceThrottle, &voiceRudder,
-        &voiceArm, &voiceFreq, &voiceProfile,
-    };
-    // Arm + profile are switched channels that legitimately jump full-range
-    // (172↔1811); everything else is a stick/pot that moves smoothly.
-    const uint16_t deltaMaxCanal[STK_COUNT] = {
-        glitchDeltaMax, glitchDeltaMax, glitchDeltaMax, glitchDeltaMax,
-        glitchDeltaArm, glitchDeltaMax, glitchDeltaArm,
-    };
-
-    // Track frame freshness continuously — even while disabled or pre-link —
-    // so the baseline is taken on the first GENUINE frame after link-up,
-    // not on stale failsafe/held channel data (the old code baselined on the
-    // first mixer tick and could lock the refs to garbage forever).
-    bool anyChanged = false;
-    for (uint8_t i = 0; i < STK_COUNT; i++) {
-        if (raw[i] != _glitchLastRaw[i]) anyChanged = true;
-        _glitchLastRaw[i] = raw[i];
-    }
-    // Arm-debounce clock: advances on DISTINCT CRSF frames (not mixer ticks),
-    // so a low voiceArm held across rejected frames counts once per real frame.
-    if (anyChanged) _glitchFrameTick++;
-
-    if (!glitchActive) {
-        for (uint8_t i = 0; i < STK_COUNT; i++) *out[i] = raw[i];
-        _glitchInitialized = false;   // re-baseline on re-enable
-        return;
-    }
-
-    // No link yet — raw passthrough (the failsafe already centres the servos).
-    // Stay un-baselined so the first real frame after link-up sets the refs.
-    if (!linkUp) {
-        for (uint8_t i = 0; i < STK_COUNT; i++) *out[i] = raw[i];
-        _glitchInitialized = false;
-        return;
-    }
-
-    if (!_glitchInitialized) {
-        if (!anyChanged) {
-            // Stale held frame — wait for the first real frame after link-up.
-            for (uint8_t i = 0; i < STK_COUNT; i++) *out[i] = raw[i];
-            return;
-        }
-        // First genuine frame after link-up — accept unconditionally
-        // (Gralha Azul's rule: the first frame initializes the refs).
-        _glitchInitialized = true;
-        for (uint8_t i = 0; i < STK_COUNT; i++) {
-            _glitchRef[i]       = raw[i];
-            _glitchCandidate[i] = raw[i];
-            _glitchPersist[i]   = 0;
-            *out[i]             = raw[i];
-        }
-        return;
-    }
-
-    // Same CRSF frame re-read (333Hz mixer vs 150Hz link) — voice* already
-    // holds the accepted values; nothing to do.
-    if (!anyChanged) return;
-
-    // Pass 1: count channels exceeding their per-frame delta (simultaneity).
-    uint8_t anomalous = 0;
-    for (uint8_t i = 0; i < STK_COUNT; i++) {
-        uint16_t d = (raw[i] > _glitchRef[i]) ? (uint16_t)(raw[i] - _glitchRef[i])
-                                                : (uint16_t)(_glitchRef[i] - raw[i]);
-        if (d > deltaMaxCanal[i]) anomalous++;
-    }
-
-    if (anomalous >= glitchSimultThreshold) {
-        // Collective ghost — reject the whole frame, keep last accepted values.
-        // Self-heal: RF noise cannot persist for many frames — if it does, the
-        // world has changed (failsafe recovery, profile switch) or the refs are
-        // stale, so force a re-baseline instead of freezing the servos forever.
-        for (uint8_t i = 0; i < STK_COUNT; i++) _glitchPersist[i] = 0;
-        if (++_glitchGhostStreak >= GLITCH_GHOST_REBASELINE_FRAMES) {
-            _glitchGhostStreak = 0;
-            _glitchInitialized = false;   // next fresh frame re-baselines
-        }
-        return;
-    }
-    _glitchGhostStreak = 0;
-
-    // Pass 2: per-channel delta + 2-frame persistence confirmation.
-    for (uint8_t i = 0; i < STK_COUNT; i++) {
-        uint16_t d = (raw[i] > _glitchRef[i]) ? (uint16_t)(raw[i] - _glitchRef[i])
-                                                : (uint16_t)(_glitchRef[i] - raw[i]);
-        if (d <= deltaMaxCanal[i]) {
-            *out[i]              = raw[i];
-            _glitchRef[i]        = raw[i];
-            _glitchPersist[i]    = 0;
-        } else if (_glitchPersist[i] == 0) {
-            _glitchCandidate[i]  = raw[i];
-            _glitchPersist[i]    = 1;   // frozen this frame — await confirmation
-        } else {
-            uint16_t dc = (raw[i] > _glitchCandidate[i]) ? (uint16_t)(raw[i] - _glitchCandidate[i])
-                                                           : (uint16_t)(_glitchCandidate[i] - raw[i]);
-            if (dc <= glitchDeltaPersist) {
-                *out[i]              = raw[i];   // confirmed (2 consecutive frames)
-                _glitchRef[i]        = raw[i];
-                _glitchPersist[i]    = 0;
-            } else {
-                _glitchCandidate[i]  = raw[i];   // inconsistent — new candidate, still frozen
-                _glitchPersist[i]    = 1;
-            }
-        }
-    }
-}
-
-// ─── Arming latch ──────────────────────────────────────────────────
+// ─── Arming latch ───────────────────────────────────────────────────
 // Requires the arm switch high AND throttle at zero (below the pre-arm
 // threshold). Once latched, throttle may rise to flap; dropping the arm
 // switch (or link loss / failsafe) clears the latch.
@@ -480,641 +267,8 @@ uint16_t Ornithopter::_clampServo(int32_t us) {
     return (uint16_t)us;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  SERVO KERNEL — waveform-driven flapping wings
-// ═══════════════════════════════════════════════════════════════════
-void Ornithopter::_computeServoMixer() {
-    float aileronNorm  = _crsfToNorm(voiceAileron);
-    float elevatorNorm = _crsfToNorm(voiceElevator);
-    float throttleUsF  = (float)voiceThrottle;
-    bool armed = _isArmed();
+// ─── Update ─────────────────────────────────────────────────────────
 
-    static bool wasFlapping = false;
-    bool isFlapping;
-    if (wasFlapping) {
-        isFlapping = armed && (throttleUsF > (float)(ORNI_FLAP_THRESHOLD_US - ORNI_FLAP_HYSTERESIS_US));
-    } else {
-        isFlapping = armed && (throttleUsF > (float)ORNI_FLAP_THRESHOLD_US);
-    }
-    wasFlapping = isFlapping;
-
-#ifdef ZEPHYRUS_ENABLED
-    // Aeroelastic PID gain modulation: scale Zephyrus pitch response
-    // by glide/flap coefficient based on flapping state
-    aeroGainScale = isFlapping ? (aeroFlapCoeff * 0.01f) : (aeroGlideCoeff * 0.01f);
-#endif
-
-    // Steering magnitudes scaled by runtime WebUI params (aileron_scale /
-    // elevator_scale, 0–100). Sign application happens below — the mirror
-    // mount swaps the code axes (see angle formula).
-    float aileronCmd  = aileronNorm * aileronScale * 0.01f * ORNI_STEER_MAX_DEG;
-    float elevatorCmd = elevatorNorm * elevatorScale * 0.01f * ORNI_STEER_MAX_DEG;
-        float glideCmd    = (float)glideAngleDeg;   // static wing angle (glide only)
-        float flapCenterCmd = (float)flappingAngleDeg; // flap stroke centre offset
-
-    // Mesozoic 2-wing stabilizer centre terms — declared unconditionally so
-    // the angle formulas below need no #ifdef. Zero when Zephyrus is compiled
-    // out (ZEPHYRUS_ENABLED undefined) or the gains are 0.
-    float gyroPitchCenter = 0.0f;   // symmetric flap centre shift (deg)
-    float gyroRollCenter  = 0.0f;   // roll self-level centre (deg, flap + glide)
-#ifdef ZEPHYRUS_ENABLED
-    // Centre channel = ATTITUDE (accel, slow level hold) + RATE (gyro, fast
-    // damping) summed on the SAME axis. Both terms shift the wing CENTRE, so
-    // they work in glide AND flap (the flap-only amplitude/ferocity axes below
-    // get their own rate bridges). Under MESOZOIC_ONLY the attitude error comes
-    // from the HORIZON layer (0 in the rate-only brain) and the rate error from
-    // the inner mesoPid; the Mahony path keeps its legacy deg correction alone.
-#ifdef MESOZOIC_ONLY
-    gyroPitchCenter = gyroPitchAttitudeCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE
-                    + gyroPitchCorrection       * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_RATE_CENTER_SCALE;
-    if (gyroPitchCenter >  ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_CENTER_CLAMP;
-    if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
-#else
-    gyroPitchCenter = gyroPitchCorrection * (wingPitchGain * 0.01f) * ZEPHYR_WING_PITCH_CENTER_SCALE;
-    if (gyroPitchCenter >  ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter =  ZEPHYR_WING_PITCH_CENTER_CLAMP;
-    if (gyroPitchCenter < -ZEPHYR_WING_PITCH_CENTER_CLAMP) gyroPitchCenter = -ZEPHYR_WING_PITCH_CENTER_CLAMP;
-#endif
-
-    // Roll centre (deg): symmetric aileron-centre offset. ATTITUDE term levels
-    // the wings (slow), RATE term damps the tumble (fast). Both work in flap
-    // AND glide — the flap-only roll amplitude axis below is a third, separate
-    // bridge. This is the same two-actuator roll the pilot gets from aileronCmd
-    // + aileron amplitude differential.
-#ifdef MESOZOIC_ONLY
-    gyroRollCenter = gyroRollAttitudeCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE
-                   + gyroRollCorrection       * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_RATE_CENTER_SCALE;
-    if (gyroRollCenter >  ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_CENTER_CLAMP;
-    if (gyroRollCenter < -ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_CENTER_CLAMP;
-#else
-    gyroRollCenter = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_CENTER_SCALE;
-    if (gyroRollCenter >  ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter =  ZEPHYR_WING_ROLL_CENTER_CLAMP;
-    if (gyroRollCenter < -ZEPHYR_WING_ROLL_CENTER_CLAMP) gyroRollCenter = -ZEPHYR_WING_ROLL_CENTER_CLAMP;
-#endif
-#endif
-
-    int angleLeft, angleRight;
-
-    if (isFlapping) {
-        // At 0% coupling CH6 independently commands frequency. At 100%, the
-        // normalized frequency command follows normalized throttle, so
-        // frequency and amplitude scale together. Intermediate profile values
-        // are a continuous blend. Both sources are CRSF raw (172–1811).
-        float independentFreq01 = _crsfToNorm(voiceFreq) * 0.5f + 0.5f;
-        float throttlePct = constrain((throttleUsF - (float)ORNI_FLAP_THRESHOLD_US) /
-                                      (1811.0f - (float)ORNI_FLAP_THRESHOLD_US), 0.0f, 1.0f);
-        float freq01 = orniThrottleFrequencyCommand(independentFreq01,
-                                                    throttlePct,
-                                                    throttleFrequencyMix);
-        float freqMax = flapBaseFreq * 0.1f;                   // deci-Hz → Hz
-        float freqHz = ORNI_FREQ_MIN + freq01 * (freqMax - ORNI_FREQ_MIN);
-        _osc.cadenceTarget = freqHz * 6.283185307f;            // 2π rad/s
-
-        uint32_t nowUs = micros();
-        if (_lastUpdateUs == 0) _lastUpdateUs = nowUs;
-        float dt = (float)(nowUs - _lastUpdateUs) * 1e-6f;
-        if (dt > 0.1f) dt = 0.1f;
-        _lastUpdateUs = nowUs;
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // ── Real Ondas wiring (Nigredo) ──────────────────────────────
-        // Zephyrus bridges the raw pitch PID terms at 250 Hz
-        // (ZephyrusFilter.h) and NaN-guards them upstream (Validatio),
-        // so the values consumed here are live and bounded.
-        // Cadence P → Phase Advance: nose-up asks for a brief faster flap,
-        // nose-down a brief slower one (clamped to [0.5, 2.0]). The demand
-        // feeds the phase-quantized Josephson washboard in advance(): a weak
-        // demand bends the phase and rings back to the same beat, a strong one
-        // slips a WHOLE stroke — the flap always lands on a beat, never between.
-        _osc.kGainMod = 1.0f + gyroPitchPTerm * aeroGainScale * cadenceGain * 0.00005f;
-        if (_osc.kGainMod < 0.5f) _osc.kGainMod = 0.5f;
-        if (_osc.kGainMod > 2.0f) _osc.kGainMod = 2.0f;
-#endif
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        _osc.anchorGain = anchorGain;
-#else
-        _osc.anchorGain = 0.0f;
-#endif
-
-#if !defined(MUSHIN_ENABLED)
-        float rawWave = _osc.advance(dt);
-#endif
-
-#if defined(MESOZOIC_HORIZON)
-        // Flap phase for the Zephyrus gravity recovery (bridged each tick).
-        flapSin = sinf(rawWave);
-        flapCos = cosf(rawWave);
-#endif
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // Resonance uses the oscillator fundamental. SSFF below must instead
-        // use the shaped wave's asymmetric reversal boundary.
-        float waveSin = sinf(rawWave);
-        if (ssffGain <= 0.0f) {
-            // Purificatio: zero stale biases when SSFF is disabled
-            _ssffFerocityUpBias   = 0.0f;
-            _ssffFerocityDownBias = 0.0f;
-        }
-#endif
-
-        // Amplitude = throttle % of the servo-speed-limited max at this freq.
-        float degPerSec = 60.0f / (servoSpeed * 0.001f);       // ms/60° → °/s
-        float ampMax = degPerSec / (2.0f * freqHz);
-                if (ampMax > ORNI_AMP_MAX) ampMax = ORNI_AMP_MAX;            // hard safety ceiling
-        float amplitude = throttlePct * ampMax;
-
-        // Elevator → ferocity: ASYMMETRIC stroke modulation.
-        // Elevator-up (norm +1) strengthens the DOWNSTROKE (power stroke)
-        // ferocity; elevator-down (norm -1) strengthens the UPSTROKE
-        // (recovery) ferocity. Each direction boosts only one half-stroke.
-        // CRSF: elevator up = 1811 (norm +1), down = 172 (norm -1).
-        float elevFerScale = elevatorFerocityMix * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN);
-        float elevUpBoost   = fmaxf( elevatorNorm, 0.0f) * elevFerScale;   // climb → downstroke
-        float elevDownBoost = fmaxf(-elevatorNorm, 0.0f) * elevFerScale;   // dive  → upstroke
-
-        // ── Elevator-RATE → ferocity transient (slew) + antigravity ──
-        // The faster the elevator stick moves, the more ferocity dwells in
-        // that stroke direction (climb → downstroke, dive → upstroke). The
-        // transient DECAYS toward the CURRENT static stick coupling (so a held
-        // climb settles on the steady climb ferocity, not neutral). Antigravity
-        // is a rate-gated, stick-proportional feed-forward that fights gravity
-        // in the stick direction while moving, then fades when the stick rests.
-        float elevRateKickUp   = 0.0f;
-        float elevRateKickDown = 0.0f;
-        float antiGravUp       = 0.0f;
-        float antiGravDown     = 0.0f;
-
-        if (_prevElevatorNorm < -1.5f) {
-            // First flap tick after glide/link: seed the transient at the static
-            // coupling so the pre-existing elevator→ferocity mix applies
-            // instantly (no soft-start dip) — only the kicks ride on top.
-            _prevElevatorNorm = elevatorNorm;
-            _elevFerStroke = elevUpBoost;
-            _elevFerReturn = elevDownBoost;
-        } else if (dt > 0.0f) {
-            float elevRate = (elevatorNorm - _prevElevatorNorm) / dt;
-            _prevElevatorNorm = elevatorNorm;
-            float alphaRate = dt / (ORNI_ELEV_RATE_LPF_TAU + dt);
-            _elevatorRateLPF += (elevRate - _elevatorRateLPF) * alphaRate;
-
-            elevRateKickUp   = orniElevatorRateFerKick( _elevatorRateLPF, elevatorFerocityRateMix);
-            elevRateKickDown = orniElevatorRateFerKick(-_elevatorRateLPF, elevatorFerocityRateMix);
-
-            float gate = fabsf(_elevatorRateLPF) * ORNI_ANTIGRAV_GATE_GAIN;
-            if (gate > 1.0f) gate = 1.0f;
-            float alphaGate = dt / (ORNI_ANTIGRAV_GATE_TAU + dt);
-            _antiGravGate += (gate - _antiGravGate) * alphaGate;
-
-            antiGravUp   = orniElevatorAntigravity(_antiGravGate,  elevatorNorm, elevatorAntigravityMix);
-            antiGravDown = orniElevatorAntigravity(_antiGravGate, -elevatorNorm, elevatorAntigravityMix);
-
-            // Decaying accumulator toward the current static coupling + kick +
-            // antigravity — so the transient relaxes "in the direction of the
-            // current stick input". The DELTA over the static is what we add.
-            float alphaFer = dt / (ORNI_ELEV_RATE_TAU + dt);
-            _elevFerStroke += ((elevUpBoost + elevRateKickUp   + antiGravUp)   - _elevFerStroke) * alphaFer;
-            _elevFerReturn += ((elevDownBoost + elevRateKickDown + antiGravDown) - _elevFerReturn) * alphaFer;
-        }
-
-        // Transient EXTRA ferocity riding on the static coupling (≈0 at rest).
-        float elevFerRateUp   = _elevFerStroke - elevUpBoost;    // downstroke dwell kick
-        float elevFerRateDown = _elevFerReturn - elevDownBoost;  // upstroke dwell kick
-
-        // Throttle → thrust-shape coupling (per-profile, 0–100). One blended
-        // knob: thrust aggression α = expo(throttle)·mix drives dwell (square)
-        // AND centre (front-load) together — the defined overlap of ferocity
-        // and skew along the thrust axis. 0 = throttle drives amplitude only;
-        // 100 = full dwell + full front-load at full gas. The per-profile expo
-        // curves where along the stick that aggression arrives.
-        OrniThrustShape thrust = orniThrottleThrustShape(throttlePct, throttleThrustShapeMix,
-                                                         throttleThrustExpo);
-
-        // Ferocity (dwell/shape) = per-profile stroke/return sliders
-        // + elevator mix + throttle mix (+ gyro).
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // Ferocity PD-blend: P-term + D-term → dwell ratio (clamped ±0.5).
-        float ferocitySignal = (gyroPitchPTerm * ferocityPGain * 0.00015f
-                              + gyroPitchDTerm * ferocityDGain * 0.0003f) * aeroGainScale;
-        if (ferocitySignal > 0.5f) ferocitySignal = 0.5f;
-        if (ferocitySignal < -0.5f) ferocitySignal = -0.5f;
-        // Inertial harmonizer: the held dwell bias is a damped pendulum
-        // (ω₀=10, ζ=0.7) tracking the live PD blend. It catches the demanded
-        // ferocity with pendulum momentum and decays back inertially, so the
-        // dwell change lands in step with the phase-quantized cadence above
-        // rather than snapping the reversal boundary mid-stroke.
-        {
-            constexpr float fOmega = 10.0f;
-            constexpr float fZeta  = 0.7f;
-            _ferHoldVel += (-fOmega * fOmega * (_ferHold - ferocitySignal)
-                            - 2.0f * fZeta * fOmega * _ferHoldVel) * dt;
-            _ferHold += _ferHoldVel * dt;
-        }
-        ferocitySignal = _ferHold;
-        // Balance I → asymmetry: accumulated pitch error shifts the
-        // stroke centre (clamped to ±3.0 ferocity units).
-        float iBias = gyroPitchITerm * aeroGainScale * balanceGain * 0.0001f;
-        if (iBias > 3.0f) iBias = 3.0f;
-        if (iBias < -3.0f) iBias = -3.0f;
-        // Resonance lock-in pump feeds both half-strokes symmetrically.
-        float resonanceBias = _resonanceAccum;
-
-        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal + iBias + _ssffFerocityUpBias + resonanceBias + elevUpBoost + elevFerRateUp + thrust.dwellBoost;
-        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN)
-                          + ferocitySignal - iBias + _ssffFerocityDownBias + resonanceBias + elevDownBoost + elevFerRateDown + thrust.dwellBoost;
-#else
-        float strokeFer = ORNI_FEROCITY_MIN + strokeFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevUpBoost + elevFerRateUp + thrust.dwellBoost;
-        float returnFer = ORNI_FEROCITY_MIN + returnFerocity * 0.01f * (ORNI_FEROCITY_MAX - ORNI_FEROCITY_MIN) + elevDownBoost + elevFerRateDown + thrust.dwellBoost;
-#endif
-#ifdef ZEPHYRUS_ENABLED
-#ifdef MESOZOIC_ONLY
-        // Mesozoic pitch stabilizer → ferocity (primary pitch channel):
-        // symmetric downstroke/upstroke dwell split. Both wings share the SAME
-        // half-stroke boost (common mode), producing pitch torque — the
-        // flapping analogue of the elevator, no discrete surface. Sign mirrors
-        // the elevator stick: positive correction (nose-up command) → downstroke
-        // dwell (climb), negative → upstroke dwell (dive).
-        {
-            float gyroPitchFer = gyroPitchCorrection * (wingPitchFerGain * 0.01f) * ZEPHYR_WING_PITCH_RATE_FER_SCALE;
-            if (gyroPitchFer >  ZEPHYR_WING_PITCH_RATE_FER_CLAMP) gyroPitchFer =  ZEPHYR_WING_PITCH_RATE_FER_CLAMP;
-            if (gyroPitchFer < -ZEPHYR_WING_PITCH_RATE_FER_CLAMP) gyroPitchFer = -ZEPHYR_WING_PITCH_RATE_FER_CLAMP;
-            strokeFer += fmaxf( gyroPitchFer, 0.0f);  // climb → downstroke dwell
-            returnFer += fmaxf(-gyroPitchFer, 0.0f);  // dive  → upstroke dwell
-        }
-#endif
-#endif
-        // Yaw stick → L/R wing differential, scaled by rudder_ferocity_range (0–100)
-        float rudderFer = _crsfToNorm(voiceRudder) * rudderFerocityRange * 0.01f * ORNI_DIFFERENTIAL_MAX;
-
-        // Yaw stick → L/R differential flap amplitude, scaled by
-        // rudder_amplitude_differential (0–100). The aileron roll axis (below)
-        // joins this same differential before the stroke scales are computed.
-        float rudderAmpDiff = _crsfToNorm(voiceRudder) * rudderAmplitudeDifferential * 0.01f;
-
-        float strokeFerL = strokeFer + rudderFer;
-        float strokeFerR = strokeFer - rudderFer;
-        float returnFerL = returnFer + rudderFer;
-        float returnFerR = returnFer - rudderFer;
-
-#ifdef ZEPHYRUS_ENABLED
-        // Mesozoic yaw stabilizer: gyro yaw-rate correction → differential
-        // ferocity (asymmetric drag). Rides the same axis as the rudder stick
-        // coupling above, so a yaw disturbance drags one wing harder than the
-        // other to arrest rotation. 0 gain = axis off.
-#ifdef MESOZOIC_ONLY
-        float gyroYawFer = gyroYawCorrection * (wingYawGain * 0.01f) * ZEPHYR_WING_YAW_RATE_FER_SCALE;
-        if (gyroYawFer >  ZEPHYR_WING_YAW_RATE_FER_CLAMP) gyroYawFer =  ZEPHYR_WING_YAW_RATE_FER_CLAMP;
-        if (gyroYawFer < -ZEPHYR_WING_YAW_RATE_FER_CLAMP) gyroYawFer = -ZEPHYR_WING_YAW_RATE_FER_CLAMP;
-#else
-        float gyroYawFer = gyroYawCorrection * (wingYawGain * 0.01f) * ZEPHYR_WING_YAW_FER_SCALE;
-        if (gyroYawFer >  ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer =  ZEPHYR_WING_YAW_FER_CLAMP;
-        if (gyroYawFer < -ZEPHYR_WING_YAW_FER_CLAMP) gyroYawFer = -ZEPHYR_WING_YAW_FER_CLAMP;
-#endif
-        strokeFerL += gyroYawFer; strokeFerR -= gyroYawFer;
-        returnFerL += gyroYawFer; returnFerR -= gyroYawFer;
-#endif
-
-        // Shared reversal threshold computed from the BASE ferocities (before
-        // rudder differential), so both wings reverse at the SAME phase even
-        // when their per-wing ferocities differ. Faithful to GralhaAzul's
-        // limiarBase (shared downstroke/upstroke boundary).
-        float fDbase = strokeFer; if (fDbase < 0.0f) fDbase = 0.0f; else if (fDbase > 8.0f) fDbase = 8.0f;
-        float fSbase = returnFer; if (fSbase < 0.0f) fSbase = 0.0f; else if (fSbase > 8.0f) fSbase = 8.0f;
-        float wDbase = 8.0f - fDbase; if (wDbase < 0.01f) wDbase = 0.01f;
-        float wSbase = 8.0f - fSbase; if (wSbase < 0.01f) wSbase = 0.01f;
-        float limiarShared = 6.283185307f * wDbase / (wDbase + wSbase);
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // Use exactly the boundary consumed by both shapeWave calls, not π.
-        // Updated biases take effect on the NEXT mixer tick: do not recompute
-        // this tick's boundary from its own feedback event.
-        const float strokeSign = rawWave < limiarShared ? 1.0f : -1.0f;
-        if (_prevFlappingSin != strokeSign) {
-            if (_ssffAccumCount > 0 && ssffGain > 0.0f) {
-                float bias = (_ssffAccumError / (float)_ssffAccumCount) * ssffGain * 0.00001f;
-                if (bias > 2.0f) bias = 2.0f;
-                if (bias < -2.0f) bias = -2.0f;
-                if (strokeSign > 0.0f) _ssffFerocityDownBias = bias;
-                else                  _ssffFerocityUpBias = bias;
-            }
-            _ssffAccumError = 0.0f;
-            _ssffAccumCount = 0;
-        }
-        _ssffAccumError += gyroPitchErrorRate;
-        _ssffAccumCount++;
-        _prevFlappingSin = strokeSign;
-#endif
-
-        // Thrust-shape centre (dwell + centre blended above) shifts both
-        // half-stroke centres symmetrically; the throttle-rate slew adds
-        // its transient on top.
-
-        // Throttle-RATE → transient boost/brake (slew): the low-passed
-        // throttle slew briefly shifts BOTH wave centres the same way as the
-        // static coupling — giving gas front-loads both half-strokes (boost),
-        // cutting gas late-loads both (brake). τ = ORNI_SKEW_RATE_LPF_TAU
-        // decays the kick once the stick rests; the sentinel seeds without kick.
-        float throttleRateBoost = 0.0f;
-        if (_prevThrottlePct < 0.0f) {
-            _prevThrottlePct = throttlePct;
-        } else if (dt > 0.0f) {
-            float throttleRate = (throttlePct - _prevThrottlePct) / dt;
-            _prevThrottlePct = throttlePct;
-            float alpha = dt / (ORNI_SKEW_RATE_LPF_TAU + dt);
-            _throttleRateLPF += (throttleRate - _throttleRateLPF) * alpha;
-            throttleRateBoost = orniThrottleSkewRateShift(_throttleRateLPF, throttleSkewRateMix);
-        }
-
-        // Skew bridge — phase-local stroke/return timing shift.
-        //   PITCH skew (symmetric): both wings front-load the downstroke and
-        //     back-load the upstroke, shifting thrust timing to level the nose.
-        //   ROLL/YAW skew (differential, in the local-PWM branch below): L/R
-        //     skew asymmetry drives a transient moment each half-stroke via
-        //     the wing's inertial reaction (F = -m*a — skew reshapes the
-        //     acceleration profile, i.e. the momentary inertial direction).
-        //     These are the gyro/accel "local" complements to ferocity dwell;
-        //     all three default off (sign unvalidated; tune on bench).
-        float gyroPitchSkew = 0.0f;
-#ifdef ZEPHYRUS_ENABLED
-#ifdef MESOZOIC_ONLY
-        gyroPitchSkew = gyroPitchAttitudeCorrection * (wingPitchSkewGain * 0.01f) * ZEPHYR_WING_PITCH_ATT_SKEW_SCALE;
-        if (gyroPitchSkew >  ZEPHYR_WING_PITCH_ATT_SKEW_CLAMP) gyroPitchSkew =  ZEPHYR_WING_PITCH_ATT_SKEW_CLAMP;
-        if (gyroPitchSkew < -ZEPHYR_WING_PITCH_ATT_SKEW_CLAMP) gyroPitchSkew = -ZEPHYR_WING_PITCH_ATT_SKEW_CLAMP;
-#endif
-#endif
-        float strokeSkewEff = strokeSkew + thrust.centreShift + throttleRateBoost + gyroPitchSkew;
-        float returnSkewEff = returnSkew + thrust.centreShift + throttleRateBoost - gyroPitchSkew;
-
-        // Aileron → differential flap AMPLITUDE coupling (roll steering).
-        // A centre-skew difference gives no NET aerodynamic impulse over a
-        // symmetric cycle (time-reversal symmetry), so steady pilot roll lives
-        // on the amplitude axis (the impulse differential that makes
-        // rudder_amplitude_differential work): aileron enlarges one stroke and
-        // shrinks the other. Skew's real moment is the phase-local INERTIAL
-        // reaction (F = -m*a, reshaped by the acceleration profile); that
-        // transient channel is the gyro skew bridge above (wing_roll_skew_gain
-        // / wing_yaw_skew_gain), not the pilot aileron path.
-        float aileronRollShift = orniAileronRollShift(aileronNorm, aileronSkewMix);
-
-        // Aileron-RATE → transient differential flap amplitude kick (slew):
-        // quick aileron movement briefly enlarges one wing / shrinks the other,
-        // a roll-torque kick that decays once the stick rests.
-        float aileronRateBoost = 0.0f;
-        if (_prevAileronNorm < -1.5f) {
-            _prevAileronNorm = aileronNorm;
-        } else if (dt > 0.0f) {
-            float aileronRate = (aileronNorm - _prevAileronNorm) / dt;
-            _prevAileronNorm = aileronNorm;
-            float alpha = dt / (ORNI_SKEW_RATE_LPF_TAU + dt);
-            _aileronRateLPF += (aileronRate - _aileronRateLPF) * alpha;
-            aileronRateBoost = orniAileronRollRateShift(_aileronRateLPF, aileronSkewRateMix);
-        }
-
-        // Roll torque = amplitude differential from rudder (yaw) + aileron
-        // (static + slew). Clamped so neither wing's stroke collapses to zero.
-        float rollAmpDiff = rudderAmpDiff + aileronRollShift + aileronRateBoost;
-
-#ifdef ZEPHYRUS_ENABLED
-        // Mesozoic roll stabilizer: gyro roll correction → differential flap
-        // amplitude. This is the aerodynamically effective roll axis (a roll
-        // perturbation enlarges one stroke and shrinks the other, producing a
-        // correcting torque). 0 gain = axis off.
-#ifdef MESOZOIC_ONLY
-        float gyroRollAmp = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_RATE_AMP_SCALE;
-        if (gyroRollAmp >  ZEPHYR_WING_ROLL_RATE_AMP_CLAMP) gyroRollAmp =  ZEPHYR_WING_ROLL_RATE_AMP_CLAMP;
-        if (gyroRollAmp < -ZEPHYR_WING_ROLL_RATE_AMP_CLAMP) gyroRollAmp = -ZEPHYR_WING_ROLL_RATE_AMP_CLAMP;
-#else
-        float gyroRollAmp = gyroRollCorrection * (wingRollGain * 0.01f) * ZEPHYR_WING_ROLL_AMP_SCALE;
-        if (gyroRollAmp >  ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp =  ZEPHYR_WING_ROLL_AMP_CLAMP;
-        if (gyroRollAmp < -ZEPHYR_WING_ROLL_AMP_CLAMP) gyroRollAmp = -ZEPHYR_WING_ROLL_AMP_CLAMP;
-#endif
-        rollAmpDiff += gyroRollAmp;
-#endif
-        if (rollAmpDiff > 0.9f) rollAmpDiff = 0.9f;
-        if (rollAmpDiff < -0.9f) rollAmpDiff = -0.9f;
-        float amplitudeL = amplitude * (1.0f + rollAmpDiff);
-        float amplitudeR = amplitude * (1.0f - rollAmpDiff);
-
-        // Centre-skew stays symmetric (throttle thrust vector); the roll axis
-        // moved to amplitude above, so both wings share the same skew.
-#if defined(MUSHIN_ENABLED)
-        // Compile the entire pilot-driven motion on EP2, but never evaluate
-        // phase or wave samples here. RP2040 owns the only running oscillator.
-        Motion::prepare(motionIntent, limiarShared, strokeFerL, returnFerL,
-                        strokeFerR, returnFerR, ferocityShapeMix, strokeSkewEff, returnSkewEff);
-        motionIntent.flapping = 1;
-        motionIntent.hz = freqHz;
-        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd + gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd - gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.amplitude[0] = -amplitudeL * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.amplitude[1] = amplitudeR * ORNI_ANGULAR_MULTIPLIER;
-        const float pulseL = 0, pulseR = 0; // local preview centres, not actuator samples
-#else
-        // Differential skew bridge (roll + yaw): skew reshapes the wing's
-        // acceleration profile, so an L/R skew asymmetry kicks a transient
-        // moment each half-stroke via the inertial reaction (F = -m*a) — the
-        // phase-local "momentary inertial direction". Roll uses the
-        // accelerometer attitude tendency (level hold); yaw uses the gyro rate
-        // (no magnetometer, so no yaw attitude reference). Mirrored across the
-        // two half-strokes like the symmetric pitch skew: stroke +, return -.
-        float diffSkew = 0.0f;
-#ifdef ZEPHYRUS_ENABLED
-#ifdef MESOZOIC_ONLY
-        float gyroRollSkew = gyroRollAttitudeCorrection * (wingRollSkewGain * 0.01f) * ZEPHYR_WING_ROLL_ATT_SKEW_SCALE;
-        if (gyroRollSkew >  ZEPHYR_WING_ROLL_ATT_SKEW_CLAMP) gyroRollSkew =  ZEPHYR_WING_ROLL_ATT_SKEW_CLAMP;
-        if (gyroRollSkew < -ZEPHYR_WING_ROLL_ATT_SKEW_CLAMP) gyroRollSkew = -ZEPHYR_WING_ROLL_ATT_SKEW_CLAMP;
-        float gyroYawSkew = gyroYawCorrection * (wingYawSkewGain * 0.01f) * ZEPHYR_WING_YAW_SKEW_SCALE;
-        if (gyroYawSkew >  ZEPHYR_WING_YAW_SKEW_CLAMP) gyroYawSkew =  ZEPHYR_WING_YAW_SKEW_CLAMP;
-        if (gyroYawSkew < -ZEPHYR_WING_YAW_SKEW_CLAMP) gyroYawSkew = -ZEPHYR_WING_YAW_SKEW_CLAMP;
-        diffSkew = gyroRollSkew + gyroYawSkew;
-#endif
-#endif
-        float pulseL = FlappingOscillator::shapeWave(rawWave, strokeFerL, returnFerL,
-                                                     limiarShared, ferocityShapeMix,
-                                                     strokeSkewEff + diffSkew, returnSkewEff - diffSkew);
-        float pulseR = FlappingOscillator::shapeWave(rawWave, strokeFerR, returnFerR,
-                                                     limiarShared, ferocityShapeMix,
-                                                     strokeSkewEff - diffSkew, returnSkewEff + diffSkew);
-
-        // ── MUSHIN v1 parameter cache ────────────────────────────────
-#endif
-        // The spirit streams wave parameters, not servo µs: the muscle
-        // reconstructs phase + shapeWave locally per tick. Values are
-        // post-mix (L wing) and symmetric (skew before aileron differential).
-        lastThrottlePct = throttlePct;
-        lastFlapHz = freqHz;
-        lastStrokeFer = strokeFerL;
-        lastReturnFer = returnFerL;
-        lastStrokeSkew = strokeSkewEff;
-        lastReturnSkew = returnSkewEff;
-        lastFlapping = true;
-
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // Resonance — phase-locked lock-in amplifier: accumulate
-        // errorRate × sin(phase), leaky τ = 0.15 s, clamped to ±2.0.
-        if (resonanceGain > 0.0f) {
-            _resonanceAccum += gyroPitchErrorRate * waveSin * resonanceGain * 0.01f * dt;
-            _resonanceAccum *= expf(-dt / 0.15f);
-            if (_resonanceAccum > 2.0f) _resonanceAccum = 2.0f;
-            if (_resonanceAccum < -2.0f) _resonanceAccum = -2.0f;
-        }
-#endif
-
-                float degL = amplitudeL * pulseL;
-                float degR = amplitudeR * pulseR;
-
-        // Neutral must NOT be scaled by ORNI_ANGULAR_MULTIPLIER — otherwise
-        // 100° × 2 = 200° pins the wings at max deflection and kills all
-        // visible flapping. Multiplier applies to deviation terms only.
-        // Mirror-mounted wing servos: code "common" == physical differential
-        // (roll/aileron), code "differential" == physical common (pitch/flap).
-        // Aileron (roll) → common; elevator (pitch) → differential.
-                // Glide angle is NOT applied here — it is a glide-only static offset
-                // (see non-flapping branch below). The flap centre offset
-                // (flappingAngleDeg) IS applied so glide and flap centres are tunable
-                // independently per flight profile.
-                angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + flapCenterCmd + gyroPitchCenter + gyroRollCenter - degL) * ORNI_ANGULAR_MULTIPLIER);
-                angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - flapCenterCmd - gyroPitchCenter + gyroRollCenter + degR) * ORNI_ANGULAR_MULTIPLIER);
-    } else {
-#if defined(MUSHIN_ENABLED)
-        motionIntent.flapping = 0;
-        motionIntent.hz = 0;
-        motionIntent.amplitude[0] = motionIntent.amplitude[1] = 0;
-        motionIntent.centre[0] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd + gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
-        motionIntent.centre[1] = ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd - gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
-#else
-        _osc.decay(0.0f);
-#endif
-        _lastUpdateUs = 0;
-        _prevThrottlePct = -1.0f;   // glide: sentinel seeds the next flap tick without kick
-        lastFlapping = false;       // MUSHIN v1: glide → cadence decay on the muscle
-        lastThrottlePct = 0.0f;
-        lastFlapHz = 0.0f;
-        _throttleRateLPF = 0.0f;
-        _prevAileronNorm = -2.0f;   // glide: sentinel seeds without roll slew kick
-        _aileronRateLPF = 0.0f;
-        _prevElevatorNorm = -2.0f;  // glide: sentinel seeds without fer dwell kick
-        _elevatorRateLPF = 0.0f;
-        _elevFerStroke = 0.0f;
-        _elevFerReturn = 0.0f;
-        _antiGravGate = 0.0f;
-#if defined(ZEPHYRUS_ENABLED) && !defined(MESOZOIC_ONLY)
-        // Glide pause: purge half-stroke accumulators so a fresh flap
-        // burst starts clean (no stale SSFF biases / resonance charge).
-        _ssffAccumError = 0.0f;
-        _ssffAccumCount = 0;
-        _ssffFerocityUpBias   = 0.0f;
-        _ssffFerocityDownBias = 0.0f;
-        _resonanceAccum = 0.0f;
-        _prevFlappingSin = 0.0f;
-        _ferHold = 0.0f;
-        _ferHoldVel = 0.0f;
-#endif
-        angleLeft  = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd + elevatorCmd + glideCmd + gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER);
-        angleRight = (int)((float)ORNI_NEUTRAL_ANGLE_DEG + (aileronCmd - elevatorCmd - glideCmd - gyroPitchCenter + gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER);
-    }
-
-    if (angleLeft  < 0) angleLeft  = 0; else if (angleLeft  > 180) angleLeft  = 180;
-    if (angleRight < 0) angleRight = 0; else if (angleRight > 180) angleRight = 180;
-
-    uint16_t usL = (uint16_t)(servoMinUs + (uint32_t)angleLeft  * (servoMaxUs - servoMinUs) / 180);
-    uint16_t usR = (uint16_t)(servoMinUs + (uint32_t)angleRight * (servoMaxUs - servoMinUs) / 180);
-
-    _f[SF_LEFT_WING]  = _clampServo((int32_t)usL + servoTrimUs[SF_LEFT_WING]);
-    _f[SF_RIGHT_WING] = _clampServo((int32_t)usR + servoTrimUs[SF_RIGHT_WING]);
-
-    // ── Tail / back wings (profile-dependent) ──
-    float rudderNorm  = _crsfToNorm(voiceRudder);
-    float rudderMix = (rudderNorm * rudderYawWeight * 0.01f) + (aileronNorm * rudderRollWeight * 0.01f);
-    if (rudderMix > 1.0f) rudderMix = 1.0f;
-    if (rudderMix < -1.0f) rudderMix = -1.0f;
-
-    if (ACTIVE_PROFILE == SERVO_4WING) {
-        // Back wings mirror front wings (same waveform), with their own trim
-        _f[SF_BACK_LEFT_WING]  = _clampServo((int32_t)_f[SF_LEFT_WING]  + servoTrimUs[SF_BACK_LEFT_WING]);
-        _f[SF_BACK_RIGHT_WING] = _clampServo((int32_t)_f[SF_RIGHT_WING] + servoTrimUs[SF_BACK_RIGHT_WING]);
-    } else if (PROFILE.servoCount >= 3) {
-        // SERVO_2WING_1RUD: crest/head rudder
-        int32_t rudderUs = (int32_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
-    #ifdef ZEPHYRUS_ENABLED
-                                   + gyroRudderCorrection
-    #endif
-                                  ) + servoTrimUs[SF_RUDDER];
-        _f[SF_RUDDER] = _clampServo(rudderUs);
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-//  GEARBOX KERNEL — CRSF channel → PWM, elevon mixing
-// ═══════════════════════════════════════════════════════════════════
-void Ornithopter::_computeGearboxMixer() {
-    float aileronNorm  = _crsfToNorm(voiceAileron);
-    float elevatorNorm = _crsfToNorm(voiceElevator);
-    float throttleNorm = _crsfToNorm(voiceThrottle);
-    float rudderNorm   = _crsfToNorm(voiceRudder);
-    bool armed = _isArmed();
-
-#ifdef ZEPHYRUS_ENABLED
-    // Aeroelastic PID gain modulation for gearbox
-    bool motorRunning = armed && (throttleNorm > 0.1f);
-    aeroGainScale = motorRunning ? (aeroFlapCoeff * 0.01f) : (aeroGlideCoeff * 0.01f);
-#endif
-
-    // ── Motor ──
-    float motorF = armed ? ((throttleNorm + 1.0f) * 0.5f) : 0.0f;  // 0..1
-    _f[SF_MOTOR] = (uint16_t)(1000.0f + motorF * 1000.0f);
-    _f[SF_MOTOR] = _clampServo(_f[SF_MOTOR]);
-
-    // ── Rudder ──
-    float rudderMix = (rudderNorm * rudderYawWeight * 0.01f) + (aileronNorm * rudderRollWeight * 0.01f);
-    if (rudderMix > 1.0f) rudderMix = 1.0f;
-    if (rudderMix < -1.0f) rudderMix = -1.0f;
-    int32_t rudderUs = (int32_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
-#ifdef ZEPHYRUS_ENABLED
-                               + gyroRudderCorrection
-#endif
-                              ) + servoTrimUs[SF_RUDDER];
-    _f[SF_RUDDER] = _clampServo(rudderUs);
-
-    // ── Tail surfaces ──
-    {
-        float rollPidUs  = 0.0f;
-        float pitchPidUs = 0.0f;
-    #ifdef ZEPHYRUS_ENABLED
-        rollPidUs  = gyroAileronCorrection;
-        pitchPidUs = gyroElevatorCorrection;
-        if (rollPidUs  > ZEPHYR_GEARBOX_CLAMP_US) rollPidUs  = ZEPHYR_GEARBOX_CLAMP_US;
-        if (rollPidUs  < -ZEPHYR_GEARBOX_CLAMP_US) rollPidUs  = -ZEPHYR_GEARBOX_CLAMP_US;
-        if (pitchPidUs > ZEPHYR_GEARBOX_CLAMP_US) pitchPidUs = ZEPHYR_GEARBOX_CLAMP_US;
-        if (pitchPidUs < -ZEPHYR_GEARBOX_CLAMP_US) pitchPidUs = -ZEPHYR_GEARBOX_CLAMP_US;
-    #endif
-
-        if (ACTIVE_PROFILE == GEARBOX_1ELE_1RUD || ACTIVE_PROFILE == GEARBOX_1MOT_1ELE_1RUD) {
-            // Traditional tail: separate elevator + rudder (no elevon mix)
-            float elev = elevatorNorm;
-            if (elev > 1.0f) elev = 1.0f; else if (elev < -1.0f) elev = -1.0f;
-            int32_t elevUs = (int32_t)((float)ORNI_SERVO_CENTER_US + elev * 500.0f + pitchPidUs) + servoTrimUs[SF_ELEVATOR];
-            _f[SF_ELEVATOR] = _clampServo(elevUs);
-        } else {
-            // VTAIL profiles: elevon mix on V-tail surfaces
-            float elevonScale = 500.0f;
-            float leftMix  = aileronNorm + elevatorNorm;
-            float rightMix = aileronNorm - elevatorNorm;
-            if (leftMix  > 1.0f) leftMix  = 1.0f; else if (leftMix  < -1.0f) leftMix  = -1.0f;
-            if (rightMix > 1.0f) rightMix = 1.0f; else if (rightMix < -1.0f) rightMix = -1.0f;
-
-            int32_t vtailL = (int32_t)((float)ORNI_SERVO_CENTER_US + leftMix  * elevonScale
-                                            + rollPidUs + pitchPidUs) + servoTrimUs[SF_VTAIL_LEFT];
-            int32_t vtailR = (int32_t)((float)ORNI_SERVO_CENTER_US + rightMix * elevonScale
-                                            - rollPidUs + pitchPidUs) + servoTrimUs[SF_VTAIL_RIGHT];
-            _f[SF_VTAIL_LEFT]  = _clampServo(vtailL);
-            _f[SF_VTAIL_RIGHT] = _clampServo(vtailR);
-        }
-    }
-}
-
-// ─── Update ────────────────────────────────────────────────────────
 bool Ornithopter::update() {
     if (!enabled) return false;
     _readChannels();

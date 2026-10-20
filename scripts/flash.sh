@@ -62,8 +62,10 @@ usage() {
   say "                       omitted → interactive prompt (all / some / skip)"
   say ""
   say "Build control:"
-  say "  --target pwmp7|ep2  receiver hardware (default pwmp7; ep2 needs RP2040)"
-  say "  --mode rate|horizon  gyro mode (default rate). horizon = accel level-hold"
+  say "  --target pwmp7|ep2|ep2-pwm  receiver hardware (default pwmp7)"
+  say "                       ep2 = MUSHIN companion (needs RP2040); ep2-pwm ="
+  say "                       standalone EP2 with RX/TX as 2 servo outputs"
+  say "  --mode none|horizon  gyro mode (default none = no gyro). horizon = accel level-hold"
   say "                       (maps to the Fossil Etcher zephyrus_mode + HORIZON flag)"
   say "  --no-build           skip WebUI+firmware rebuild, flash existing .bin"
   say ""
@@ -85,7 +87,7 @@ LIST_LANGS=0
 PORT=""
 BAUD=115200
 TARGET=pwmp7
-MODE=rate           # gyro mode: rate (MESOZOIC_ONLY) or horizon (+ accel level-hold)
+MODE=none           # gyro mode: none (default, no gyro) or horizon (accel level-hold)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -95,8 +97,8 @@ while [[ $# -gt 0 ]]; do
     --list-langs)  LIST_LANGS=1; shift ;;
     --port)        PORT="$2"; shift 2 ;;
     --baud)        BAUD="$2"; shift 2 ;;
-    --target)      TARGET="${2:?--target requires pwmp7 or ep2}"; shift 2 ;;
-    --mode)        MODE="${2:?--mode requires rate or horizon}"; shift 2 ;;
+    --target)      TARGET="${2:?--target requires pwmp7, ep2 or ep2-pwm}"; shift 2 ;;
+    --mode)        MODE="${2:?--mode requires none, rate or horizon}"; shift 2 ;;
     --help|-h)     usage; exit 0 ;;
     *) err "Unknown argument: $1"; usage; exit 1 ;;
   esac
@@ -105,12 +107,14 @@ done
 case "$TARGET" in
   pwmp7)
     case "$MODE" in
-      rate)    TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+      none)    TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+      rate)    TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;   # legacy alias — gyro is off by default now
       horizon) TARGET_ENV=PteronautOS_ESP8285_2400_RX_HORIZON ;;
-      *) err "Unknown mode for pwmp7: $MODE (use rate or horizon)"; exit 1 ;;
+      *) err "Unknown mode for pwmp7: $MODE (use none, rate or horizon)"; exit 1 ;;
     esac ;;
   ep2) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
-  *) err "Unknown target: $TARGET (use pwmp7 or ep2)"; exit 1 ;;
+  ep2-pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
+  *) err "Unknown target: $TARGET (use pwmp7, ep2 or ep2-pwm)"; exit 1 ;;
 esac
 
 # ---- Info: list languages ---------------------------------------------------

@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>Solo CRSF — necesita conversor</td>
+<td>2× PWM (RX/TX) — breakout + pad BOOT para flashear</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>Peso original; retirar termorretráctil, conectores o carcasa puede reducirlo un 30–60%.</p>
 <p class='hw-note'>Los receptores basados en ESP32 (ESP32-C3/S3) usan otra arquitectura y aún no son compatibles.</p>
-<p class='hw-note'>¿Sin PWM nativo? Cualquier receptor CRSF (EP2, EP1, EPW6…) puede mover servos con un convertidor CRSF→PWM barato — mira el tutorial.</p>
+<p class='hw-note'>El EP2 expone dos pads PWM nativos (RX/TX) en la compilación autónoma — sin conversor para un ala de 2 servos. La compilación MUSHIN reserva esos pads como UART0 para el RP2040; ver el tutorial.</p>
 <h2>Especificaciones clave</h2>
 <table>
 <tr>

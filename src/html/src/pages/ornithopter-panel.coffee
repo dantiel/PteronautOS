@@ -21,6 +21,7 @@ class OrnithopterPanel extends PteroElement
     # Selector state
     kernel:       {state: true}  # 'servo' | 'gearbox'
     profileId:    {state: true}  # 0–7
+    pwmOutputs:   {state: true}  # max local PWM pins (0 = unknown/companion)
     # Kernel param (global — not per flight profile)
     servoSpeed:   {state: true}
     flapBaseFreq: {state: true}
@@ -59,6 +60,7 @@ class OrnithopterPanel extends PteroElement
     @stateLoaded          = false
     @kernel               = 'servo'
     @profileId            = 1
+    @pwmOutputs           = 0
     @servoSpeed           = 70
     @flapBaseFreq         = 50
     @servoMinUs           = 988
@@ -123,6 +125,7 @@ class OrnithopterPanel extends PteroElement
   _applyConfig: (data) ->
     return unless data?.ornithopter
     o = data.ornithopter
+    @pwmOutputs = o.pwm_outputs if o.pwm_outputs?
     ft = o.type or 'servo'
     if ft != @kernel
       @kernel = ft
@@ -176,13 +179,18 @@ class OrnithopterPanel extends PteroElement
 
   # ── Profile helpers ───────────────────────────────────────────────
   _firstForKernel: (k) ->
-    for p in @profiles
-      return p.id if p.kernel == k
-    1  # fallback
+    p = @_profilesForKernel(k)[0]
+    if p then p.id else 1
+
+  # Profiles whose servo count fits the local PWM pads. pwmOutputs==0 means
+  # the count is unknown (or a companion drives the servos) → no filtering.
+  _availableProfiles: ->
+    max = @pwmOutputs
+    if max > 0 then @profiles.filter((p) -> p.servos <= max) else @profiles
 
   _profilesForKernel: ->
     k = @kernel
-    @profiles.filter (p) -> p.kernel == k
+    @_availableProfiles().filter (p) -> p.kernel == k
 
   _currentProfile: -> @profiles[@profileId] or @profiles[0]
 

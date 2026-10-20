@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -18,6 +18,7 @@ els = {
   buildBtn: $("#build-btn"),
   flashBtn: $("#flash-btn"),
   downloadBtn: $("#download-btn"),
+  downloadGzBtn: $("#download-gz-btn"),
   loadBtn: $("#load-btn"),
   disconnectBtn: $("#disconnect-btn"),
   fileInput: $("#firmware-file"),
@@ -168,20 +169,23 @@ setStatus = function(text, state) {
 };
 
 collectParams = function() {
-  var checked;
+  var checked, wifi, zeph;
   checked = LOCALES.filter(function(l) {
     return $(`#locale-${l}`).checked;
   });
+  zeph = $("#zephyrus_enabled").checked ? "1" : "0";
+  // Gyro off ⇒ no reason to keep the WiFi fallback polling alive.
+  wifi = zeph === "0" ? "-1" : $("#auto_wifi_on_interval").value;
   return {
     mixer_profile: $("#mixer_profile").value,
     regulatory_domain: $("#regulatory_domain").value,
     binding_phrase: $("#binding_phrase").value.trim(),
-    auto_wifi_on_interval: $("#auto_wifi_on_interval").value,
+    auto_wifi_on_interval: wifi,
     zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value,
     zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
     mushin_enabled: ($("#mushin_enabled").checked ? "1" : "0"),
-    zephyrus_enabled: ($("#zephyrus_enabled").checked ? "1" : "0"),
+    zephyrus_enabled: zeph,
     zephyrus_mode: $("#zephyrus_mode").value,
     zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
     rcvr_uart_baud: $("#rcvr_uart_baud").value,
@@ -194,6 +198,7 @@ collectParams = function() {
 
 enableFirmware = function() {
   els.downloadBtn.disabled = false;
+  els.downloadGzBtn.disabled = false;
   if (serialSupported) {
     return els.flashBtn.disabled = false;
   }
@@ -433,6 +438,7 @@ dismissSpecimen = async function(id) {
     localStorage.removeItem(SPECIMEN_KEY);
     firmwareBytes = null;
     els.downloadBtn.disabled = true;
+    els.downloadGzBtn.disabled = true;
     if (serialSupported) {
       els.flashBtn.disabled = true;
     }
@@ -450,6 +456,7 @@ clearSpecimens = async function() {
   localStorage.removeItem(SPECIMEN_KEY);
   firmwareBytes = null;
   els.downloadBtn.disabled = true;
+  els.downloadGzBtn.disabled = true;
   if (serialSupported) {
     els.flashBtn.disabled = true;
   }
@@ -596,6 +603,7 @@ startBuild = async function() {
   els.buildBtn.disabled = true;
   els.flashBtn.disabled = true;
   els.downloadBtn.disabled = true;
+  els.downloadGzBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
   currentBuildInfo = null;
@@ -714,6 +722,38 @@ saveFirmware = async function() {
   } finally {
     els.downloadBtn.disabled = false;
     busy = false;
+  }
+};
+
+// WiFi OTA image (.bin.gz). Gzip the in-memory .bin client-side (CompressionStream
+// is present in every Web Serial-capable browser) — the resulting stream carries
+// the ISIZE trailer that the ESP8266 eboot bootloader needs to inflate on boot.
+// Kept separate from saveFirmware: this is for the RX WebUI updater (no recovery).
+downloadGzFirmware = async function() {
+  var a, blob, err, stream, url;
+  if (firmwareBytes == null) {
+    return;
+  }
+  els.downloadGzBtn.disabled = true;
+  try {
+    setStatus("Compressing WiFi image (.bin.gz)…", "busy");
+    stream = new Blob([firmwareBytes]).stream().pipeThrough(new CompressionStream("gzip"));
+    blob = (await new Response(stream).blob());
+    url = URL.createObjectURL(blob);
+    a = document.createElement("a");
+    a.href = url;
+    a.download = "pteronautos-firmware.bin.gz";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    log("Saved pteronautos-firmware.bin.gz (" + blob.size + " bytes, WiFi / no-recovery)");
+    return setStatus("WiFi image downloaded — flash via the RX WebUI updater (advanced, no recovery).", "done");
+  } catch (error) {
+    err = error;
+    return setStatus("Compression failed: " + err.message, "fail");
+  } finally {
+    els.downloadGzBtn.disabled = false;
   }
 };
 
@@ -943,3 +983,5 @@ els.fileInput.addEventListener("change", async function() {
 els.flashBtn.addEventListener("click", flash);
 
 els.downloadBtn.addEventListener("click", saveFirmware);
+
+els.downloadGzBtn.addEventListener("click", downloadGzFirmware);

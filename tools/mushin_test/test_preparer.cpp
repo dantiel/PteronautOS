@@ -9,6 +9,7 @@ int main() {
     for(auto& c:ChannelData) c=992;
     ChannelData[4]=1811; ChannelData[2]=172;
     ornithopter.linkUp=true; ornithopter.enabled=true;
+    ornithopter.setGlitchFilterEnabled(false); // test drives the mixer, not the RF filter
     ornithopter.update(); // arm only with zero throttle
     ornithopter.ferocityShapeMix=100;
     ornithopter.strokeFerocity=90; ornithopter.returnFerocity=10;
@@ -21,7 +22,7 @@ int main() {
     ornithopter.servoMinUs=600; ornithopter.servoMaxUs=2400;
     ChannelData[0]=1811; ChannelData[2]=1811;
     clockUs+=3000; ornithopter.update();
-    const auto& r=ornithopter.motionRecipe;
+    const auto& r=ornithopter.motionIntent;
     assert(Motion::valid(r) && r.flapping && r.hz==20);
     assert(r.mix==1 && r.skew[0]>0 && r.skew[1]<0);
     assert(r.boundary<0.5f);

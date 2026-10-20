@@ -999,6 +999,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["profile_id"]          = pid;
     orni["type"]                = PROFILE_IS_GEARBOX ? "gearbox" : "servo";
     orni["kernel_fixed"]        = false;  // profile is runtime-switchable
+    orni["pwm_outputs"]         = GPIO_PIN_PWM_OUTPUTS_COUNT;  // local servo pads (0 = companion)
     orni["model_name"]          = ornithopter.modelName;
 
 #ifdef ZEPHYRUS_ENABLED

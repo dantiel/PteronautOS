@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>CRSF 専用 — コンバーターが必要</td>
+<td>2× PWM（RX/TX）— 書き込みにブレークアウト + BOOT パッド</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>標準重量。熱収縮チューブ、コネクタ、筐体を取り除くと 30～60% 軽量化できます。</p>
 <p class='hw-note'>ESP32 ベースのレシーバー (ESP32-C3/S3) は異なるアーキテクチャのため未対応です。</p>
-<p class='hw-note'>ネイティブPWMがない場合、どのCRSF受信機(EP2、EP1、EPW6…)も安価なCRSF→PWMコンバータでサーボを駆動できます — チュートリアル参照。</p>
+<p class='hw-note'>EP2はスタンドアロンビルドで2つのネイティブPWMパッド（RX/TX）を公開します — 2サーボ翼ならコンバーター不要です。MUSHINビルドはそれらをRP2040用UART0として予約します。チュートリアル参照。</p>
 <h2>主要スペック</h2>
 <table>
 <tr>

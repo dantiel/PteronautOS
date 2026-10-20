@@ -10,6 +10,7 @@ els =
   buildBtn: $("#build-btn")
   flashBtn: $("#flash-btn")
   downloadBtn: $("#download-btn")
+  downloadGzBtn: $("#download-gz-btn")
   loadBtn: $("#load-btn")
   disconnectBtn: $("#disconnect-btn")
   fileInput: $("#firmware-file")
@@ -122,15 +123,18 @@ setStatus = (text, state) ->
 
 collectParams = ->
   checked = LOCALES.filter (l) -> $("#locale-#{l}").checked
+  zeph = if $("#zephyrus_enabled").checked then "1" else "0"
+  # Gyro off ⇒ no reason to keep the WiFi fallback polling alive.
+  wifi = if zeph is "0" then "-1" else $("#auto_wifi_on_interval").value
   mixer_profile: $("#mixer_profile").value
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
-  auto_wifi_on_interval: $("#auto_wifi_on_interval").value
+  auto_wifi_on_interval: wifi
   zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
   zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
   mushin_enabled: (if $("#mushin_enabled").checked then "1" else "0")
-  zephyrus_enabled: (if $("#zephyrus_enabled").checked then "1" else "0")
+  zephyrus_enabled: zeph
   zephyrus_mode: $("#zephyrus_mode").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
   rcvr_uart_baud: $("#rcvr_uart_baud").value
@@ -141,6 +145,7 @@ collectParams = ->
 
 enableFirmware = ->
   els.downloadBtn.disabled = false
+  els.downloadGzBtn.disabled = false
   els.flashBtn.disabled = false if serialSupported
 
 # Firmware fossil storage (IndexedDB): every cloud build is kept with its full
@@ -286,6 +291,7 @@ dismissSpecimen = (id) ->
     localStorage.removeItem SPECIMEN_KEY
     firmwareBytes = null
     els.downloadBtn.disabled = true
+    els.downloadGzBtn.disabled = true
     els.flashBtn.disabled = true if serialSupported
   await renderSpecimens()
   log "Dismissed firmware fossil."
@@ -297,6 +303,7 @@ clearSpecimens = ->
   localStorage.removeItem SPECIMEN_KEY
   firmwareBytes = null
   els.downloadBtn.disabled = true
+  els.downloadGzBtn.disabled = true
   els.flashBtn.disabled = true if serialSupported
   await renderSpecimens()
   log "Dismissed all firmware fossils."
@@ -409,6 +416,7 @@ startBuild = ->
   els.buildBtn.disabled = true
   els.flashBtn.disabled = true
   els.downloadBtn.disabled = true
+  els.downloadGzBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
   currentBuildInfo = null
@@ -500,6 +508,32 @@ saveFirmware = ->
   finally
     els.downloadBtn.disabled = false
     busy = false
+
+# WiFi OTA image (.bin.gz). Gzip the in-memory .bin client-side (CompressionStream
+# is present in every Web Serial-capable browser) — the resulting stream carries
+# the ISIZE trailer that the ESP8266 eboot bootloader needs to inflate on boot.
+# Kept separate from saveFirmware: this is for the RX WebUI updater (no recovery).
+downloadGzFirmware = ->
+  return unless firmwareBytes?
+  els.downloadGzBtn.disabled = true
+  try
+    setStatus "Compressing WiFi image (.bin.gz)…", "busy"
+    stream = new Blob([firmwareBytes]).stream().pipeThrough(new CompressionStream "gzip")
+    blob = await new Response(stream).blob()
+    url = URL.createObjectURL blob
+    a = document.createElement "a"
+    a.href = url
+    a.download = "pteronautos-firmware.bin.gz"
+    document.body.appendChild a
+    a.click()
+    a.remove()
+    URL.revokeObjectURL url
+    log "Saved pteronautos-firmware.bin.gz (" + blob.size + " bytes, WiFi / no-recovery)"
+    setStatus "WiFi image downloaded — flash via the RX WebUI updater (advanced, no recovery).", "done"
+  catch err
+    setStatus "Compression failed: " + err.message, "fail"
+  finally
+    els.downloadGzBtn.disabled = false
 
 terminal = ->
   clean: ->
@@ -666,3 +700,4 @@ els.fileInput.addEventListener "change", ->
   els.fileInput.value = ""
 els.flashBtn.addEventListener "click", flash
 els.downloadBtn.addEventListener "click", saveFirmware
+els.downloadGzBtn.addEventListener "click", downloadGzFirmware

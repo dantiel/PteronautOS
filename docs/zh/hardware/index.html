@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>仅 CRSF — 需要转换器</td>
+<td>2× PWM（RX/TX）— 需转接板 + BOOT 焊盘烧录</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>原装重量；去除热缩管、连接器或外壳可减轻 30–60%。</p>
 <p class='hw-note'>基于 ESP32 的接收机 (ESP32-C3/S3) 采用不同架构，暂不支持。</p>
-<p class='hw-note'>没有原生PWM？任何CRSF接收机（EP2、EP1、EPW6…）都能通过廉价的CRSF→PWM转换器驱动舵机——参见教程。</p>
+<p class='hw-note'>EP2 在独立构建中提供两个原生 PWM 焊盘（RX/TX）——双舵机机翼无需转换器。MUSHIN 构建将这些焊盘保留为 RP2040 的 UART0；请参阅教程。</p>
 <h2>关键规格</h2>
 <table>
 <tr>

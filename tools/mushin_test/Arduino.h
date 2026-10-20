@@ -45,7 +45,9 @@ public:
   size_t write(const char* s) { size_t n = strlen(s); for (size_t i = 0; i < n; i++) write((uint8_t)s[i]); return n; }
   bool overflow() { return false; }
   template<class T> void print(T) {}
+  template<class T> void print(T, int) {}
   template<class T> void println(T) {}
+  template<class T> void println(T, int) {}
   void println() {}
 };
 extern SerialType Serial;

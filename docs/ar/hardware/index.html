@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>CRSF فقط — يحتاج محوّل</td>
+<td>2× PWM (RX/TX) — لوحة توصيل + وسادة BOOT للوميض</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>الوزن الأصلي؛ إزالة أنبوب الانكماش أو الموصلات أو الغلاف يمكن أن يخفّضه 30–60%.</p>
 <p class='hw-note'>أجهزة الاستقبال المبنية على ESP32 (ESP32-C3/S3) تستخدم بنية مختلفة وغير مدعومة بعد.</p>
-<p class='hw-note'>لا يوجد PWM أصلي؟ أي مستقبل CRSF(EP2 وEP1 وEPW6…)يمكنه تشغيل السيرفو عبر محول CRSF→PWM رخيص — انظر البرنامج التعليمي.</p>
+<p class='hw-note'>يعرض EP2 وسادتي PWM أصليتين (RX/TX) في البناء المستقل — لا حاجة لمحوّل لجناح بذراعين. يحتفظ بناء MUSHIN بتلك الوسائد كـ UART0 لـ RP2040؛ انظر البرنامج التعليمي.</p>
 <h2>المواصفات الرئيسية</h2>
 <table>
 <tr>

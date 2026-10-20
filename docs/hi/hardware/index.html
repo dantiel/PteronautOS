@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>केवल CRSF — कनवर्टर चाहिए</td>
+<td>2× PWM (RX/TX) — फ्लैश हेतु ब्रेकआउट + BOOT पैड</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>मूल वज़न; हीटश्रिंक, कनेक्टर या हाउसिंग हटाने से 30–60% कम हो सकता है।</p>
 <p class='hw-note'>ESP32-आधारित रिसीवर (ESP32-C3/S3) भिन्न आर्किटेक्चर का उपयोग करते हैं और अभी समर्थित नहीं हैं।</p>
-<p class='hw-note'>कोई नेटिव PWM नहीं? कोई भी CRSF रिसीवर (EP2, EP1, EPW6…) सस्ते CRSF→PWM कनवर्टर से सर्वो चला सकता है — ट्यूटोरियल देखें।</p>
+<p class='hw-note'>EP2 स्टैंडअलोन बिल्ड में दो नेटिव PWM पैड (RX/TX) देता है — 2-सर्वो विंग के लिए कन्वर्टर की जरूरत नहीं। MUSHIN बिल्ड उन पैड को RP2040 के लिए UART0 के रूप में आरक्षित करता है; ट्यूटोरियल देखें।</p>
 <h2>मुख्य विनिर्देश</h2>
 <table>
 <tr>

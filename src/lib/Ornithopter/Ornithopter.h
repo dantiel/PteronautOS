@@ -32,6 +32,10 @@ enum StickCh : uint8_t {
     STK_COUNT            = 7
 };
 
+// Per-tick mixer working set (defined after the class — forward-declared here
+// so the private stage helpers can take it by reference).
+struct OrniServoMix;
+
 class Ornithopter {
 public:
 #if defined(MUSHIN_ENABLED)
@@ -145,15 +149,11 @@ public:
         glitchDeltaArm = deltaArm;
         glitchDeltaPersist = deltaPersist;
         glitchSimultThreshold = simultThreshold;
-        _glitchInitialized = false;   // re-baseline on new config
-        _glitchGhostStreak = 0;
-        for (uint8_t i = 0; i < STK_COUNT; i++) _glitchLastRaw[i] = 0xFFFF; // sentinel → baseline on next tick
+        _resetGlitchFilter();   // re-baseline on new config
     }
     inline void setGlitchFilterEnabled(bool active) {
         glitchActive = active;
-        _glitchInitialized = false;   // re-baseline on toggle
-        _glitchGhostStreak = 0;
-        for (uint8_t i = 0; i < STK_COUNT; i++) _glitchLastRaw[i] = 0xFFFF; // sentinel → baseline on next tick
+        _resetGlitchFilter();   // re-baseline on toggle
     }
 
 #ifdef ZEPHYRUS_ENABLED
@@ -236,7 +236,8 @@ private:
     uint32_t _lastUpdateUs;
     bool _armedState;         // arming latch — throttle-zero + arm-switch high
     bool _wasArmedAtLoss;     // armed state snapshot at link loss (grants recovery re-arm)
- 
+    bool _wasFlapping;        // flap/glide hysteresis latch (throttle threshold)
+  
     float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
     float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost
     float _prevAileronNorm;  // last flap-tick aileron (sentinel -2 after glide/reset)
@@ -259,14 +260,83 @@ private:
     uint16_t _glitchFrameTick;              // distinct CRSF frames seen (arm-debounce clock)
     uint16_t _armLowFrame;                  // frame tick when voiceArm first read low (0xFFFF = high)
 
+    // ── Shared helpers ───────────────────────────────────────────────
     float _crsfToFloat(uint16_t raw, float outMin, float outMax);
     float _crsfToNorm(uint16_t raw);
     void  _readChannels();
-    void  _applyGlitchFilter();
     bool  _isArmed();              // throttle-zero pre-arm latch
-    void  _computeServoMixer();    // waveform kernel
-    void  _computeGearboxMixer();  // gearbox kernel
     static uint16_t _clampServo(int32_t us);
+    void  _resetGlitchFilter();    // defined-state filter reset (link/failsafe/reconfig)
+    void  _resetSlewTransients();  // throttle/aileron/elevator slew sentinels (full)
+    void  _resetElevatorTransients();  // elevator ferocity/antigrav sentinels only
+
+    // ── Flight profiles (OrnithopterProfiles.cpp) ────────────────────
+    void  _loadDefaultFlightProfiles();
+
+    // ── Glitch filter (OrnithopterGlitchFilter.cpp) ──────────────────
+    void  _applyGlitchFilter();
+
+    // ── Mixer kernels ────────────────────────────────────────────────
+    void  _computeServoMixer();    // waveform kernel  (OrnithopterMixer.cpp)
+    void  _computeGearboxMixer();  // gearbox kernel   (OrnithopterGearbox.cpp)
+
+    // ── Mesozoic stabilizer bridge (OrnithopterStabilizer.cpp) ───────
+    // Each axis computes its clamped correction term in isolation; the mixer
+    // only sums them. 0 when Zephyrus is compiled out or the gain is 0.
+    float _stabPitchCenter();
+    float _stabRollCenter();
+    float _stabPitchFerocity();
+    float _stabYawFerocity();
+    float _stabPitchSkew();
+    float _stabRollYawSkew();
+    float _stabRollAmplitude();
+
+    // ── Ondas waveform modulation (OrnithopterOndas.cpp) ─────────────
+    void  _ondasCadenceApply(float dt);     // kGainMod + anchor (P→phase advance)
+    void  _ondasZeroStaleBiases();          // zero SSFF biases when gain disabled
+    float _ondasFerocityBlend(float dt);    // PD-blend + inertial harmonizer
+    float _ondasBalanceBias();              // I-term → asymmetry (clamped ±3)
+    float _ondasResonanceBias();            // phase-locked resonance pump
+    void  _ondasStrokeSyncUpdate(float dt, float rawWave, float limiarShared);
+    void  _ondasReset();                    // link-up / failsafe state reset
+    void  _ondasGlidePurge();               // glide-pause half-stroke purge
+
+    // ── Servo mixer pipeline (OrnithopterMixer.cpp) ──────────────────
+    bool  _mixerIsFlapping(float throttleUsF, bool armed);
+    void  _mixerSteering(OrniServoMix &m);
+    void  _flapTiming(OrniServoMix &m);
+    void  _flapAmplitude(OrniServoMix &m);
+    void  _flapElevatorFerocity(OrniServoMix &m);
+    void  _flapFerocities(OrniServoMix &m);
+    void  _flapRudderDifferential(OrniServoMix &m);
+    void  _flapLimiar(OrniServoMix &m);
+    void  _flapSkewAndRoll(OrniServoMix &m);
+    void  _flapPulses(OrniServoMix &m);
+    void  _flapWaveCache(OrniServoMix &m);
+    void  _mixerFlapAngles(OrniServoMix &m, int &angleLeft, int &angleRight);
+    void  _mixerGlide(OrniServoMix &m, int &angleLeft, int &angleRight);
+    void  _mixerWriteWings(int angleLeft, int angleRight);
+    void  _mixerTailOutput(float aileronNorm);
 };
 
 extern Ornithopter ornithopter;
+
+// Per-tick servo-mixer working set — stack-allocated once per mixer tick,
+// filled by the pipeline helpers. No allocation, no globals.
+struct OrniServoMix {
+    // pilot + centre terms
+    float aileronNorm, elevatorNorm, rudderNorm;
+    float aileronCmd, elevatorCmd, glideCmd, flapCenterCmd;
+    float gyroPitchCenter, gyroRollCenter;
+    // flap dynamics
+    float throttleUsF, throttlePct, freqHz, dt, rawWave;
+    float amplitude;
+    float elevUpBoost, elevDownBoost, elevFerRateUp, elevFerRateDown;
+    OrniThrustShape thrust;
+    float strokeFer, returnFer;
+    float rudderFer, rudderAmpDiff;
+    float strokeFerL, strokeFerR, returnFerL, returnFerR;
+    float limiarShared;
+    float strokeSkewEff, returnSkewEff, amplitudeL, amplitudeR;
+    float degL, degR;
+};

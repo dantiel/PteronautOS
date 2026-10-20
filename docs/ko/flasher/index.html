@@ -66,7 +66,7 @@
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Zephyrus gyro (MPU6050)</span>
 <span class='flasher-switch'>
-<input checked='checked' class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
+<input class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
 <span class='flasher-switch-track'>
 <span class='flasher-switch-knob'></span>
 </span>
@@ -205,6 +205,7 @@
 <button class='flasher-secondary' id='load-btn' type='button'>.bin 불러오기</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial로 플래시</button>
 <button class='flasher-secondary' disabled id='download-btn' type='button'>.bin 다운로드</button>
+<button class='flasher-secondary' disabled id='download-gz-btn' type='button'>.bin.gz 다운로드 (WiFi)</button>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>연결 해제</button>
 </div>
 <input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>

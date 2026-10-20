@@ -177,12 +177,12 @@
 <strong>HappyModel EP2</strong>
 <span class='hw-mfr'>HappyModel</span>
 </td>
-<td data-val='0'>0</td>
+<td data-val='2'>2</td>
 <td data-val='5'>5 V</td>
 <td data-val='0.6'>0.6 g</td>
 <td data-val='12'>~$12</td>
 <td>ESP8285 · SX1280</td>
-<td>Только CRSF — нужен конвертер</td>
+<td>2× PWM (RX/TX) — для прошивки нужен breakout + BOOT</td>
 </tr>
 <tr>
 <td data-val='crsf pwm 12ch adapter'>
@@ -201,7 +201,7 @@
 </div>
 <p class='hw-note'>Вес в стоке; снятие термоусадки, разъёмов или корпуса снижает его на 30–60%.</p>
 <p class='hw-note'>Приёмники на ESP32 (ESP32-C3/S3) имеют другую архитектуру и пока не поддерживаются.</p>
-<p class='hw-note'>Нет нативного PWM? Любой CRSF-приёмник (EP2, EP1, EPW6…) может управлять сервами через дешёвый CRSF→PWM-конвертер — см. туториал.</p>
+<p class='hw-note'>EP2 в автономной сборке выводит два PWM-контакта (RX/TX) — конвертер не нужен для 2-сервоприводного крыла. Сборка MUSHIN резервирует их как UART0 для RP2040; см. руководство.</p>
 <h2>Ключевые характеристики</h2>
 <table>
 <tr>

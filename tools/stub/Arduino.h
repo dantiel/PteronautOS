@@ -36,6 +36,7 @@ public:
   void print(int v) { (void)v; }
   void print(uint32_t v) { (void)v; }
   void print(unsigned long v) { (void)v; }
+  void print(float v, int d) { (void)v; (void)d; }
   void println() {}
   void println(const char *s) { (void)s; }
   void println(int v) { (void)v; }

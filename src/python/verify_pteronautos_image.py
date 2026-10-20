@@ -31,14 +31,19 @@ def verify_image(path):
     if end + 128 + 16 + 512 + 2048 > len(data):
         raise ValueError("Missing embedded product/options/hardware blocks")
     product = data[end:end + 128].split(b"\0", 1)[0]
-    if product not in (b"PteronautOS PWMP7", b"PteronautOS EP2"):
+    if product not in (b"PteronautOS PWMP7", b"PteronautOS EP2", b"PteronautOS EP2 PWM"):
         raise ValueError("Unexpected receiver product")
     try:
         options = json.loads(data[end + 144:end + 656].split(b"\0", 1)[0])
         hardware = json.loads(data[end + 656:end + 2704].split(b"\0", 1)[0])
     except (ValueError, UnicodeError):
         raise ValueError("Invalid embedded options/hardware JSON") from None
-    layout = HARDWARE_PATH.with_name('pteronautos-ep2.json') if product == b"PteronautOS EP2" else HARDWARE_PATH
+    if product == b"PteronautOS EP2":
+        layout = HARDWARE_PATH.with_name('pteronautos-ep2.json')
+    elif product == b"PteronautOS EP2 PWM":
+        layout = HARDWARE_PATH.with_name('pteronautos-ep2-pwm.json')
+    else:
+        layout = HARDWARE_PATH
     expected = json.loads(layout.read_text())
     if hardware != expected or hardware.get("radio_rst") != 2 or 2 in hardware.get("pwm_outputs", []):
         raise ValueError("Hardware differs from project map (GPIO2 is radio reset, not PWM)")

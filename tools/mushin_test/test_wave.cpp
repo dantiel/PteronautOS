@@ -57,7 +57,7 @@ static int g_fails  = 0;
 } while (0)
 
 static void reset_all() {
-  motionActive=false; motionReceiver.reset(); motionRecipe=Motion::Recipe{};
+  motionActive=false; motionReceiver.reset(); motionIntent=Motion::Intent{};
   motionPhase=0; motionLastUs=motionLastMs=0; mwLastApplyUs=0;
   companionParser.reset();
   for (int i = 0; i < 3; ++i) SerialType::rxlen[i] = SerialType::rxpos[i] = 0;
@@ -687,7 +687,7 @@ static void test_single_uart() {
 static void test_prepared_transport() {
   printf("\n[prepared] atomic recipes, packet gaps, unsupported maps and STOP\n");
   reset_all(); mushin=true; g_ms=1000; g_us=1000000;
-  Motion::Recipe recipe;
+  Motion::Intent recipe;
   recipe.flapping=1; recipe.hz=10;
   recipe.centre[0]=recipe.centre[1]=90;
   recipe.amplitude[0]=-60; recipe.amplitude[1]=60;
@@ -700,20 +700,20 @@ static void test_prepared_transport() {
     memcpy(p+3,bytes+offset,n); queue_frame(Motion::frameType,p,n+3); pumpCrsf();
   };
   sendPart(0,1); sendPart(1,1); CHECK(!motionActive);
-  sendPart(2,1); CHECK(motionActive); CHECK_EQ(motionRecipe.hz,10);
+  sendPart(2,1); CHECK(motionActive); CHECK_EQ(motionIntent.hz,10);
   mushinApply(); CHECK(servos[0].last_us<1500); CHECK_EQ(servos[2].last_us,1700);
   g_ms+=25; g_us+=25000; mushinApply(); CHECK(std::fabs(motionPhase-0.25f)<0.001f);
-  recipe.hz=20; sendPart(0,2); CHECK_EQ(motionRecipe.hz,10);
-  sendPart(1,3); sendPart(2,2); CHECK_EQ(motionRecipe.hz,10); // mixed generations
+  recipe.hz=20; sendPart(0,2); CHECK_EQ(motionIntent.hz,10);
+  sendPart(1,3); sendPart(2,2); CHECK_EQ(motionIntent.hz,10); // mixed generations
   recipe.hz=NAN;
   for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,4);
-  CHECK_EQ(motionRecipe.hz,10);
+  CHECK_EQ(motionIntent.hz,10);
   recipe.hz=20; recipe.kind[3]=4; // no fourth servo configured
   for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,5);
-  CHECK_EQ(motionRecipe.hz,10);
+  CHECK_EQ(motionIntent.hz,10);
   recipe.kind[3]=7;
   for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,6);
-  CHECK_EQ(motionRecipe.hz,20); CHECK(std::fabs(motionPhase-0.25f)<0.001f);
+  CHECK_EQ(motionIntent.hz,20); CHECK(std::fabs(motionPhase-0.25f)<0.001f);
   g_ms+=101; g_us+=101000; mushinApply();
   CHECK(!motionActive); CHECK_EQ(servos[0].last_us,1500); CHECK_EQ(servos[2].last_us,1000);
   for(unsigned i=0;i<Motion::chunks;++i) sendPart(i,7);

@@ -63,7 +63,7 @@
               %label.flasher-field.flasher-toggle
                 %span.flasher-toggle-text!= flasher_zephyrus_enabled
                 %span.flasher-switch
-                  %input.flasher-switch-input#zephyrus_enabled{type: "checkbox", checked: "checked"}
+                  %input.flasher-switch-input#zephyrus_enabled{type: "checkbox"}
                   %span.flasher-switch-track
                     %span.flasher-switch-knob
             %p.flasher-conditional#mushin-note.hidden!= flasher_mushin_hint
@@ -166,6 +166,7 @@
             %button.flasher-secondary#load-btn{type: "button"}!= flasher_load_btn
             %button.flasher-secondary#flash-btn{type: "button", disabled: true}!= flasher_flash_btn
             %button.flasher-secondary#download-btn{type: "button", disabled: true}!= flasher_download_btn
+            %button.flasher-secondary#download-gz-btn{type: "button", disabled: true}!= flasher_download_gz_btn
             %button.flasher-secondary#disconnect-btn{type: "button", class: "hidden"}!= flasher_disconnect_btn
 
           %input#firmware-file{type: "file", accept: ".bin,application/octet-stream", class: "hidden"}

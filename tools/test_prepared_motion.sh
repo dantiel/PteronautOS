@@ -8,7 +8,15 @@ tables=src/lib/Ornithopter/OrnithopterWaveformTables.cpp
 "$motion_cxx" "${common[@]}" tools/mushin_test/test_prepared.cpp "$tables" -o "$motion_test_dir/parity"
 "$motion_test_dir/parity"
 "$motion_cxx" "${common[@]}" -DMUSHIN_ENABLED -Itools/mushin_test -Isrc/lib/Ornithopter \
-  tools/mushin_test/test_preparer.cpp src/lib/Ornithopter/Ornithopter.cpp "$tables" -o "$motion_test_dir/preparer"
+  tools/mushin_test/test_preparer.cpp \
+  src/lib/Ornithopter/Ornithopter.cpp \
+  src/lib/Ornithopter/OrnithopterMixer.cpp \
+  src/lib/Ornithopter/OrnithopterGearbox.cpp \
+  src/lib/Ornithopter/OrnithopterProfiles.cpp \
+  src/lib/Ornithopter/OrnithopterGlitchFilter.cpp \
+  src/lib/Ornithopter/OrnithopterStabilizer.cpp \
+  src/lib/Ornithopter/OrnithopterOndas.cpp \
+  "$tables" -o "$motion_test_dir/preparer"
 "$motion_test_dir/preparer"
 "$motion_cxx" "${common[@]}" -DARDUINO_ARCH_RP2040 -DYOSHI_RTC=0 \
   -Itools/motion_core_test -Itools/mushin_test -Itools/stub \

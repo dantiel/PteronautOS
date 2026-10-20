@@ -63,26 +63,29 @@ struct ProfileDesc {
     uint8_t funcMap[7];   // PWM index → ServoFunc
 };
 
+// One canonical table for every target. Servo functions are assigned to PWM
+// indices in order (index 0 = first broken-out servo pad). The hardware.json
+// `pwm_outputs` array defines the actual GPIO pins and their count, so a
+// profile whose servoCount exceeds GPIO_PIN_PWM_OUTPUTS_COUNT simply drops its
+// trailing functions (the filter never reaches those indices). PWMP7 lists
+// [9,10,5] (GPIO9/10/5), EP2-PWM lists [3,1] (GPIO3/1) — no target-specific map.
 constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
-    // Servos are mapped to PWM channels 4/5/6 (GPIO9/GPIO10/GPIO5) so CH1 (BOOT),
-    // CH2 (I2C SDA) and CH3 (I2C SCL) stay free for boot/I2C. funcMap is indexed
-    // by PWM output index (0-based): index 3 = CH4, 4 = CH5, 5 = CH6.
     // 0: SERVO_2WING
-    { 2, { SF_NONE, SF_NONE, SF_NONE, SF_LEFT_WING, SF_RIGHT_WING, SF_NONE, SF_NONE } },
+    { 2, { SF_LEFT_WING, SF_RIGHT_WING, SF_NONE, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
     // 1: SERVO_2WING_1RUD
-    { 3, { SF_NONE, SF_NONE, SF_NONE, SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER, SF_NONE } },
-    // 2: SERVO_4WING — 4 servos; only 3 PWM pins available (back-right dropped)
-    { 4, { SF_NONE, SF_NONE, SF_NONE, SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_NONE } },
+    { 3, { SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    // 2: SERVO_4WING — back-right drops when only 3 pads are broken out
+    { 4, { SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING, SF_NONE, SF_NONE, SF_NONE } },
     // 3: GEARBOX_2VTAIL_1RUD
-    { 3, { SF_NONE, SF_NONE, SF_NONE, SF_RUDDER, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE } },
+    { 3, { SF_RUDDER, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
     // 4: GEARBOX_1MOT_2VTAIL
-    { 3, { SF_NONE, SF_NONE, SF_NONE, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE } },
-    // 5: GEARBOX_1MOT_2VTAIL_1RUD — 4 servos; only 3 PWM pins (vtail-right dropped)
-    { 4, { SF_NONE, SF_NONE, SF_NONE, SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_NONE } },
+    { 3, { SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    // 5: GEARBOX_1MOT_2VTAIL_1RUD — vtail-right drops when only 3 pads
+    { 4, { SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE } },
     // 6: GEARBOX_1ELE_1RUD
-    { 2, { SF_NONE, SF_NONE, SF_NONE, SF_RUDDER, SF_ELEVATOR, SF_NONE, SF_NONE } },
+    { 2, { SF_RUDDER, SF_ELEVATOR, SF_NONE, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
     // 7: GEARBOX_1MOT_1ELE_1RUD
-    { 3, { SF_NONE, SF_NONE, SF_NONE, SF_RUDDER, SF_MOTOR, SF_ELEVATOR, SF_NONE } },
+    { 3, { SF_RUDDER, SF_MOTOR, SF_ELEVATOR, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
 };
 
 #define PROFILE PROFILES[activeProfile]

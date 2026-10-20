@@ -228,12 +228,32 @@ def appendConfiguration(source, target, env):
         if 'PteronautOS' in target_name:
             # Project-owned map, NOT the ignored upstream hardware checkout.
             # GPIO2 resets this receiver's radio and must never become PWM.
-            ep2 = target_name == 'PteronautOS_ESP8285_EP2_2400_RX'
-            hw_file = Path(__file__).resolve().parents[1] / ('targets/hardware/pteronautos-ep2.json' if ep2 else 'targets/hardware/pteronautos-pwmp7.json')
+            if target_name == 'PteronautOS_ESP8285_EP2_2400_RX':
+                kind = 'mushin'
+            elif target_name == 'PteronautOS_ESP8285_EP2_2400_RX_PWM':
+                kind = 'ep2pwm'
+            else:
+                kind = 'pwmp7'
+            hw_name = {
+                'mushin': 'pteronautos-ep2.json',
+                'ep2pwm': 'pteronautos-ep2-pwm.json',
+                'pwmp7': 'pteronautos-pwmp7.json',
+            }[kind]
+            product = {
+                'mushin': 'PteronautOS EP2',
+                'ep2pwm': 'PteronautOS EP2 PWM',
+                'pwmp7': 'PteronautOS PWMP7',
+            }[kind]
+            lua_name = {
+                'mushin': 'EP2 RP2040',
+                'ep2pwm': 'EP2 PWM RX',
+                'pwmp7': 'PWMP7 RX',
+            }[kind]
+            hw_file = Path(__file__).resolve().parents[1] / ('targets/hardware/' + hw_name)
             appendToFirmware(
                 firmware_file,
-                "PteronautOS EP2" if ep2 else "PteronautOS PWMP7",
-                "EP2 RP2040" if ep2 else "PWMP7 RX",
+                product,
+                lua_name,
                 defines,
                 None,           # config not needed
                 hw_file,        # layout_file

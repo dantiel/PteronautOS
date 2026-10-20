@@ -60,8 +60,10 @@ Build/flash the receiver with:
 ```
 
 The target is `PteronautOS_ESP8285_EP2_2400_RX`. The default script target remains
-the standalone PWMP7 board. The browser flasher's EP2 + RP2040 selection chooses
-the EP2 build; legacy custom MUSHIN pin/baud inputs are no longer used.
+the standalone PWMP7 board. `./scripts/flash.sh --target ep2-pwm` builds a
+standalone (non-MUSHIN) EP2 firmware that repurposes RX/TX as two servo outputs.
+The browser flasher's EP2 + RP2040 selection chooses the EP2 build; legacy custom
+MUSHIN pin/baud inputs are no longer used.
 
 Transport tests use host stubs. Hardware validation is still required for RP2040
 UART buffering, EP2 power/BOOT timing, USB flashing and actual servo failsafe.

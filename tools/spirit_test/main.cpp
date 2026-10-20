@@ -1,6 +1,7 @@
-// Functional test for the SPIRIT half of MUSHIN v1: MushinNoShin framing +
-// parser. Verifies emitIntentV1/emitIntents byte layout + xor, and the
-// ANNOUNCE/TELEMETRY parser (version handshake). Compiled with the real
+// Functional test for the SPIRIT half of MUSHIN: MushinNoShin framing +
+// parser. Verifies the prepared-motion intent emitter (bounded backpressure,
+// snapshot immutability, chunked reassembly) and the ANNOUNCE/TELEMETRY parser
+// (version handshake, heartbeat timeout). Compiled with the real
 // MushinNoShin.cpp against a minimal Stream surrogate.
 //
 // Build + run:
@@ -39,51 +40,7 @@ int main() {
     MushinNoShin mushin;
     mushin.begin(Serial1);
 
-    // ── [1] emitIntentV1 byte layout + xor ──
-    tx_reset();
-    MushinIntentV1 p;
-    p.throttle = 750; p.flapFreq = 40; p.ferocity = 63; p.skew = -25;
-    p.slew = 30; p.stance = 1; p.setpointRoll = 120; p.setpointPitch = -80;
-    mushin.emitIntentV1(p);
-
-    CHECK_EQ(SerialType::tx[0], 0xc8);
-    CHECK_EQ(SerialType::tx[2], Companion::mushinType);
-    CHECK_EQ(SerialType::tx[18], Companion::crc(SerialType::tx + 2, 16));
-    const uint8_t* T = SerialType::tx + 3;
-    CHECK_EQ(T[0], 0x9B);       // sync
-    CHECK_EQ(T[1], 11);         // len = MUSHIN_INTENT_V1_LEN
-    CHECK_EQ(T[2], 0x01);       // type = INTENT
-    CHECK_EQ(T[3], 750 & 0xFF);      // throttle lo
-    CHECK_EQ(T[4], (750 >> 8) & 0xFF);
-    CHECK_EQ(T[5], 40);              // flapFreq
-    CHECK_EQ(T[6], 63);              // ferocity
-    CHECK_EQ(T[7], (uint8_t)-25);    // skew i8
-    CHECK_EQ(T[8], 30);              // slew
-    CHECK_EQ(T[9], 1);               // stance
-    CHECK_EQ(T[10], 120 & 0xFF);     // roll lo
-    CHECK_EQ(T[11], (120 >> 8) & 0xFF);
-    CHECK_EQ(T[12], (uint8_t)((uint16_t)-80 & 0xFF));   // pitch lo
-    CHECK_EQ(T[13], (uint8_t)(((uint16_t)-80 >> 8) & 0xFF));
-    uint8_t x = 11 ^ 0x01;
-    for (int i = 3; i < 14; i++) x ^= T[i];
-    CHECK_EQ(T[14], x);          // xor over len+type+payload
-    CHECK_EQ(SerialType::txlen, 19);   // inner frame + CRSF envelope
-
-    // ── [2] emitIntents (v0 µs) layout + xor ──
-    tx_reset();
-    uint16_t us[3] = {1400, 1500, 1600};
-    mushin.emitIntents(us, 3);
-    T = SerialType::tx + 3;
-    CHECK_EQ(T[0], 0x9B); CHECK_EQ(T[1], 6); CHECK_EQ(T[2], 0x01);
-    CHECK_EQ(T[3], 1400 & 0xFF); CHECK_EQ(T[4], (1400 >> 8) & 0xFF);
-    CHECK_EQ(T[5], 1500 & 0xFF); CHECK_EQ(T[6], (1500 >> 8) & 0xFF);
-    CHECK_EQ(T[7], 1600 & 0xFF); CHECK_EQ(T[8], (1600 >> 8) & 0xFF);
-    uint8_t x0 = 6 ^ 0x01;
-    for (int i = 3; i < 9; i++) x0 ^= T[i];
-    CHECK_EQ(T[9], x0);
-    CHECK_EQ(SerialType::txlen, 14);
-
-    // ── [3] ANNOUNCE parse → version handshake (muscle v1) ──
+    // ── [1] ANNOUNCE parse → version handshake (muscle v1) ──
     SerialType::rxlen = 0; SerialType::rxpos = 0;
     {
         // [0x9B, 6, 0x02, ver=1, servos=3, rp2040=1, manji=0, gyro=1, linked=1, xor]
@@ -97,7 +54,7 @@ int main() {
         CHECK_EQ(mushin.announcedServoCount(), 3);
     }
 
-    // ── [4] ANNOUNCE with v0 muscle → version 0 (fallback trigger) ──
+    // ── [2] ANNOUNCE with v0 muscle → version 0 (fallback trigger) ──
     mushin = MushinNoShin(); mushin.begin(Serial1);
     SerialType::rxlen = 0; SerialType::rxpos = 0;
     {
@@ -111,7 +68,7 @@ int main() {
         CHECK_EQ(mushin.announcedServoCount(), 8);
     }
 
-    // ── [5] TELEMETRY parse (gyro rate, correction, version) ──
+    // ── [3] TELEMETRY parse (gyro rate, correction, version) ──
     SerialType::rxlen = 0; SerialType::rxpos = 0;
     {
         // [0x9B, 6, 0x03, r0 r1 c0 c1 linked ver xor]
@@ -131,27 +88,14 @@ int main() {
         CHECK_EQ(mushin.telemetry().linked, 1);
     }
 
-    // ── [6] heartbeat timeout unlinks ──
-    // [4] re-created mushin and fed announce at ms 0; [5] telemetry at ms 1000
+    // ── [4] heartbeat timeout unlinks ──
+    // [2] re-created mushin and fed announce at ms 0; [3] telemetry at ms 1000
     // must not extend the announce freshness, so at ms 2000 the link is stale.
     CHECK(mushin.isLinked());
     mushin.update(2000);   // > 1500 ms stale
     CHECK(!mushin.isLinked());
 
-    // ── [7] emitIntents clamps count > 8 → 8 (len 16 = MUSHIN_MAX_PAY) ──
-    tx_reset();
-    {
-        uint16_t big[10] = {1000,1100,1200,1300,1400,1500,1600,1700,1800,1900};
-        mushin.emitIntents(big, 10);
-        T = SerialType::tx + 3;
-        CHECK_EQ(T[0], 0x9B);
-        CHECK_EQ(T[1], 16);          // clamped payload length (8 servos × 2)
-        CHECK_EQ(T[2], 0x01);
-        CHECK_EQ(T[3], 1000 & 0xFF); // first intent still intact
-        CHECK_EQ(SerialType::txlen, 24);   // inner frame + CRSF envelope
-    }
-
-    // ── [8] ANNOUNCE len < 6 ignored; corrupt xor ignored ──
+    // ── [5] ANNOUNCE len < 6 ignored; corrupt xor ignored ──
     mushin = MushinNoShin(); mushin.begin(Serial1);
     SerialType::rxlen = 0; SerialType::rxpos = 0;
     {
@@ -170,7 +114,7 @@ int main() {
         CHECK(!mushin.isLinked());
     }
 
-    // ── [9] TELEMETRY len < 6 ignored ──
+    // ── [6] TELEMETRY len < 6 ignored ──
     SerialType::rxlen = 0; SerialType::rxpos = 0;
     {
         uint8_t t[7] = {0x9B, 5, 0x03, 0, 0, 0, 0};
@@ -181,44 +125,21 @@ int main() {
         CHECK(!mushin.telemetryFresh(0));
     }
 
-    // ── [10] emitIntentV1 extreme values (sign extension, no truncation) ──
+    // ── [7] Prepared-motion transport: exact framing, bounded backpressure,
+    //        atomic reassembly and no unbounded backlog of stale snapshots ──
     tx_reset();
-    {
-        MushinIntentV1 q;
-        q.throttle = 1000; q.flapFreq = 200; q.ferocity = 100; q.skew = -128;
-        q.slew = 255; q.stance = 5; q.setpointRoll = -250; q.setpointPitch = 250;
-        mushin.emitIntentV1(q);
-        T = SerialType::tx + 3;
-        CHECK_EQ(T[1], 11);
-        CHECK_EQ(T[3], 1000 & 0xFF);
-        CHECK_EQ(T[4], (1000 >> 8) & 0xFF);
-        CHECK_EQ(T[5], 200);
-        CHECK_EQ(T[6], 100);
-        CHECK_EQ(T[7], (uint8_t)-128);                          // skew i8 sign-extends
-        CHECK_EQ(T[8], 255);
-        CHECK_EQ(T[9], 5);
-        CHECK_EQ(T[10], (uint8_t)((uint16_t)-250 & 0xFF));      // roll i16 sign-extends
-        CHECK_EQ(T[11], (uint8_t)(((uint16_t)-250 >> 8) & 0xFF));
-        CHECK_EQ(T[12], (uint8_t)((uint16_t)250 & 0xFF));
-        CHECK_EQ(T[13], (uint8_t)(((uint16_t)250 >> 8) & 0xFF));
-        CHECK_EQ(SerialType::txlen, 19);
-    }
-
-    // Current prepared-motion transport: exact framing, bounded backpressure,
-    // atomic reassembly and no unbounded backlog of stale snapshots.
-    tx_reset();
-    Motion::Recipe recipe;
+    Motion::Intent recipe;
     recipe.hz=12;
     motionPart=Motion::chunks; motionSentMs=0;
     SerialType::capacity=0;
-    mushinEmitMotion(recipe,100);
+    mushinEmitIntent(recipe,100);
     CHECK_EQ(SerialType::txlen,0);
     SerialType::capacity=128;
     recipe.hz=18; // the in-flight snapshot must remain 12 Hz
-    mushinEmitMotion(recipe,101);
+    mushinEmitIntent(recipe,101);
     CHECK_EQ(SerialType::txlen,Motion::wireSize+Motion::chunks*7);
     Motion::Receiver receiver;
-    Motion::Recipe active; active.hz=3;
+    Motion::Intent active; active.hz=3;
     Companion::Parser parser;
     int accepted=0;
     for(int i=0;i<SerialType::txlen;++i) {
@@ -228,8 +149,8 @@ int main() {
         }
     }
     CHECK_EQ(accepted,1); CHECK_EQ(active.hz,12);
-    tx_reset(); mushinEmitMotion(recipe,104); CHECK_EQ(SerialType::txlen,0);
-    SerialType::capacity=0; mushinEmitMotion(recipe,111);
+    tx_reset(); mushinEmitIntent(recipe,104); CHECK_EQ(SerialType::txlen,0);
+    SerialType::capacity=0; mushinEmitIntent(recipe,111);
     CHECK_EQ(motionPart,0);
     mushinStop(); CHECK_EQ(motionPart,Motion::chunks);
     SerialType::capacity=128;
