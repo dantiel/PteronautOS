@@ -1,0 +1,24 @@
+title: "Build / Flight Showcase"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        🦅 Show off your ornithopter — builds, flights, video, photos.
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you build or fly?
+      description: Describe your bird — airframe, servos, and how it flew.
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Media
+      description: Links to video, photos, or build logs.
+      placeholder: "https://…"
+  - type: input
+    id: config
+    attributes:
+      label: Config highlights
+      placeholder: "waveform, cadence, mixer profile…"

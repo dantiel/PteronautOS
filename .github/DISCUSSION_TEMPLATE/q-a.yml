@@ -1,0 +1,29 @@
+title: "Help / Question"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        🙏 Ask the community for help. For **bugs**, please file a [Bug Report](https://github.com/dantiel/PteronautOS/issues/new/choose) instead.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you need help with?
+      placeholder: "How do I…"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What have you tried, and what did you observe?
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      placeholder: "git tag or commit SHA"
+  - type: input
+    id: target
+    attributes:
+      label: Target / hardware
+      placeholder: "e.g. ESP8285 2400 RX, MPU6050 present"

@@ -1,0 +1,14 @@
+title: "General Discussion"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        💬 Open conversation about PteronautOS — flight dynamics, hardware ideas, build philosophy, or anything else.
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic
+      description: What would you like to discuss?
+      placeholder: "Start the conversation…"
+    validations:
+      required: true

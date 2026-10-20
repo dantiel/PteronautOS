@@ -1,8 +1,11 @@
 blank_issues_enabled: true
 contact_links:
   - name: Feature Requests
-    url: https://github.com/dantiel/PteronautOS/discussions/new
-    about: Propose new features in the discussions section
+    url: https://github.com/dantiel/PteronautOS/discussions/new?category=ideas
+    about: Propose new features in the Ideas discussion category
+  - name: Community Support (Q&A)
+    url: https://github.com/dantiel/PteronautOS/discussions/new?category=q-a
+    about: Ask the community for help in the Q&A discussion category
   - name: Documentation
     url: https://dantiel.github.io/PteronautOS/
     about: PteronautOS documentation and architecture

@@ -127,6 +127,15 @@ Edit `src/lib/Ornithopter/OrnithopterConfig.h` to map your CRSF channels and tun
 
 For gyro tuning, edit `src/lib/Zephyrus/ZephyrusConfig.h` — see the [Zephyrus README](src/lib/Zephyrus/README.md).
 
+## Community
+
+Questions, ideas, and build showcases live in [GitHub Discussions](https://github.com/dantiel/PteronautOS/discussions). For bugs, open an [issue](https://github.com/dantiel/PteronautOS/issues).
+
+- 💬 [General](https://github.com/dantiel/PteronautOS/discussions/categories/general) — open conversation
+- 💡 [Ideas](https://github.com/dantiel/PteronautOS/discussions/categories/ideas) — feature requests
+- 🙏 [Q&A](https://github.com/dantiel/PteronautOS/discussions/categories/q-a) — community help
+- 🦅 [Show and tell](https://github.com/dantiel/PteronautOS/discussions/categories/show-and-tell) — builds & flights
+
 ## Credits
 
 Built on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS). Ornithopter module ported from [GralhaAzul v1.29.0](https://github.com/dantiel/o-grande-codigo-da-gralha-azul).
