@@ -4,6 +4,8 @@
 
 #include <Arduino.h>
 
+extern void reset_into_bootloader();
+
 // EP2 companion mode owns the normal receiver/programming UART exclusively.
 #define mushinSerial Serial // sole UART0 owner in companion firmware
 #if defined(DEBUG_LOG) || defined(DEBUG_RCVR_LINKSTATS) || defined(ZEPHYRUS_ENABLED)
@@ -116,8 +118,19 @@ void MushinNoShin::update(uint32_t nowMs)
 
     while (_serial->available())
     {
-        if (!_transport.feed((uint8_t)_serial->read(), nowMs) ||
-            _transport.type() != Companion::mushinType) continue;
+        if (!_transport.feed((uint8_t)_serial->read(), nowMs)) continue;
+        // The muscle's flasher bridge (YOSHIMITSU) drops a *running* spirit into
+        // its ROM bootloader with a CRSF COMMAND frame {dest 0xEC, type 0x32,
+        // 'b','l'}. Answer it here — the MUSHIN type filter below would otherwise
+        // discard the frame and the soft descend would silently do nothing.
+        if (_transport.type() == Companion::crsfCommandType)
+        {
+            const uint8_t *p = _transport.payload();
+            if (_transport.length() >= 2 && p[0] == 'b' && p[1] == 'l')
+                reset_into_bootloader();
+            continue;
+        }
+        if (_transport.type() != Companion::mushinType) continue;
         // Return-channel payload is isolated inside one CRC-checked envelope.
         _state = MS_IDLE;
         for (uint8_t j = 0; j < _transport.length(); ++j) {

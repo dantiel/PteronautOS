@@ -1493,8 +1493,16 @@ static void whisperRebootToBootloader() {
   bl[4] = 'l';
   bl[5] = Companion::crc(bl + 2, 3);             // 0x0A
   crsfSerialBegin();                             // the incantation is spoken at CRSF_BAUD (420000)
-  CRSF_SERIAL.write(bl, sizeof(bl));
-  CRSF_SERIAL.flush();
+  // A single 6-byte frame over a freshly re-initialized UART can be lost if the
+  // receiver's parser is mid-frame on a stale MUSHIN envelope (the 0xEC sync is
+  // then absorbed as a data byte and the whole incantation is discarded). Speak
+  // it three times, each separated by >5 ms so the receiver's parser timeout
+  // resets to idle and every attempt starts from a clean sync.
+  for (int attempt = 0; attempt < 3; ++attempt) {
+    CRSF_SERIAL.write(bl, sizeof(bl));
+    CRSF_SERIAL.flush();
+    if (attempt < 2) delay(6);                   // > Companion::Parser 5 ms timeout
+  }
   Serial.println("YOSHIMITSU: 'bl' whispered at 420000 — the receiver descends into ROM bootloader.");
 }
 

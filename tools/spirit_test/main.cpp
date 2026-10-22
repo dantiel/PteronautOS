@@ -24,6 +24,12 @@ SerialType Serial;
 #include "MushinNoShin.h"
 #include "MushinNoShin.cpp"
 
+// rx_main.cpp defines this in the real firmware; the standalone test provides a
+// surrogate so the 'bl' descend path (MushinNoShin::update → reset_into_bootloader)
+// can be asserted without linking the whole receiver.
+static int g_bootloader_calls = 0;
+void reset_into_bootloader() { g_bootloader_calls++; }
+
 static int g_checks = 0, g_fails = 0;
 #define CHECK(cond) do { g_checks++; if (!(cond)) { g_fails++; printf("FAIL %d  %s\n", __LINE__, #cond); } } while (0)
 #define CHECK_EQ(a,b) do { g_checks++; long long _a=(long long)(a),_b=(long long)(b); if (_a!=_b){ g_fails++; printf("FAIL %d  %s==%s (got %lld want %lld)\n",__LINE__,#a,#b,_a,_b);} } while(0)
@@ -34,6 +40,10 @@ static void feed_bytes(const uint8_t* p, int n) {
     uint8_t frame[64];
     int size = Companion::encode(Companion::mushinType, p, n, frame);
     for (int i = 0; i < size; i++) SerialType::rx[SerialType::rxlen++] = frame[i];
+}
+
+static void feed_raw(const uint8_t* p, int n) {
+    for (int i = 0; i < n; i++) SerialType::rx[SerialType::rxlen++] = p[i];
 }
 
 int main() {
@@ -154,6 +164,29 @@ int main() {
     CHECK_EQ(motionPart,0);
     mushinStop(); CHECK_EQ(motionPart,Motion::chunks);
     SerialType::capacity=128;
+
+    // ── [8] 'bl' bootloader incantation: a CRSF COMMAND frame addressed to the
+    //        receiver (sync 0xEC, type 0x32) must descend the spirit instead of
+    //        being filtered out by the MUSHIN type check. ──
+    mushin = MushinNoShin(); mushin.begin(Serial1);
+    SerialType::rxlen = 0; SerialType::rxpos = 0; g_bootloader_calls = 0;
+    {
+        uint8_t bl[6] = {0xEC, 0x04, 0x32, 'b', 'l', 0};
+        bl[5] = Companion::crc(bl + 2, 3);   // 0x0A
+        feed_raw(bl, 6);
+        mushin.update(0);
+        CHECK_EQ(g_bootloader_calls, 1);
+    }
+    // 'bd' (bind) and any other 0x32 payload must NOT descend.
+    g_bootloader_calls = 0;
+    {
+        uint8_t bd[6] = {0xEC, 0x04, 0x32, 'b', 'd', 0};
+        bd[5] = Companion::crc(bd + 2, 3);
+        feed_raw(bd, 6);
+        mushin.update(1);
+        CHECK_EQ(g_bootloader_calls, 0);
+    }
+
     printf("\n%d checks, %d failures\n", g_checks, g_fails);
     return g_fails ? 1 : 0;
 }

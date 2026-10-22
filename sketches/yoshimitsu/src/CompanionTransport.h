@@ -11,6 +11,8 @@ constexpr uint32_t runtimeBaud = 420000;
 constexpr uint32_t flashBaud = 115200;
 constexpr uint8_t rcType = 0x16;
 constexpr uint8_t mushinType = 0x80;
+constexpr uint8_t crsfCommandType = 0x32;  // CRSF_FRAMETYPE_COMMAND — carries the 'bl' bootloader incantation
+constexpr uint8_t receiverAddr = 0xEC;     // CRSF_ADDRESS_CRSF_RECEIVER — frames addressed to the spirit
 constexpr size_t maxFrame = 64;
 
 inline uint8_t crc(const uint8_t* p, size_t n) {
@@ -47,7 +49,7 @@ struct Parser {
         if (used && now - lastMs > 5) reset();
         lastMs = now;
         if (!used) {
-            if (b == 0xc8 || b == 0xee) frame[used++] = b;
+            if (b == 0xc8 || b == 0xee || b == 0xec) frame[used++] = b;
             return false;
         }
         if (used == 1 && (b < 2 || b > maxFrame - 2)) { reset(); return false; }
