@@ -104,6 +104,7 @@
 #define HOLD_ON_MS_DEFAULT           900   // wait inside bootloader after re-power
 #define RX_RESTART_MS_DEFAULT        700   // settle after a plain restart
 #define SETTLE_MS_DEFAULT            80    // BOOT release settle
+#define SOFT_REBOOT_MS_DEFAULT       250   // wait after the 'bl' incantation for the EP2 to descend
 #define BOOT_PRINT_MS_DEFAULT        150   // USB settle gate before the boot banner
 #define PRESS_WINDOW_MS_DEFAULT      1500  // button (ESP32)
 #define DEBOUNCE_MS_DEFAULT          40

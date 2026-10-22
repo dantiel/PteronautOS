@@ -353,7 +353,7 @@ static void bridgeSerialRecover() {
   #define BRIDGE_BURST BRIDGE_BURST_DEFAULT
 #endif
 #ifndef RX_PWR_MANUAL
-  #define RX_PWR_MANUAL 0   // 1 = no P-MOSFET: receiver power/reset is the user's hand (two-phase MEDITATION)
+  #define RX_PWR_MANUAL 0   // 1 = no P-MOSFET: receiver power/reset is the user's hand (MEDITATION uses the soft 'bl' descend)
 #endif
 #ifndef HOLD_OFF_MS
   #define HOLD_OFF_MS HOLD_OFF_MS_DEFAULT
@@ -366,6 +366,9 @@ static void bridgeSerialRecover() {
 #endif
 #ifndef SETTLE_MS
   #define SETTLE_MS SETTLE_MS_DEFAULT
+#endif
+#ifndef SOFT_REBOOT_MS
+  #define SOFT_REBOOT_MS SOFT_REBOOT_MS_DEFAULT
 #endif
 #ifndef BOOT_PRINT_MS
   #define BOOT_PRINT_MS BOOT_PRINT_MS_DEFAULT
@@ -1476,6 +1479,25 @@ static void bootAssert(bool hold) {
   }
 }
 
+// 'bl' incantation — a CRSF COMMAND frame (dest=receiver 0xEC, type=0x32) whose
+// payload is the two letters 'b','l'. The receiver's RXEndpoint::handleRaw
+// answers it with reset_into_bootloader() → ESP.rebootIntoUartDownloadMode(),
+// dropping a *running* EP2 into its ROM bootloader over the shared UART — no
+// BOOT hold, no power-cycle. CRC8/DVB-S2 (poly 0xD5) over {0x32,'b','l'} = 0x0A.
+static void whisperRebootToBootloader() {
+  uint8_t bl[6];
+  bl[0] = 0xEC;                                  // CRSF_ADDRESS_CRSF_RECEIVER
+  bl[1] = 0x04;                                  // frame_size = type(1) + 'bl'(2) + crc(1)
+  bl[2] = 0x32;                                  // CRSF_FRAMETYPE_COMMAND
+  bl[3] = 'b';
+  bl[4] = 'l';
+  bl[5] = Companion::crc(bl + 2, 3);             // 0x0A
+  crsfSerialBegin();                             // the incantation is spoken at CRSF_BAUD (420000)
+  CRSF_SERIAL.write(bl, sizeof(bl));
+  CRSF_SERIAL.flush();
+  Serial.println("YOSHIMITSU: 'bl' whispered at 420000 — the receiver descends into ROM bootloader.");
+}
+
 #if YOSHI_RP2040
 // Flash-backed EEPROM byte 7 = the last stance. Unlike the AON RTC (which dies
 // on power-off), flash survives a power cut — so a shared-rail power-cycle brings
@@ -1493,14 +1515,32 @@ static void nvmPersistStance() {}
 static void enterStance(Stance next);      // forward — defined in STANCE TRANSITIONS below
 
 // ── Power-cycle dance — async millis() machine, NEVER blocking ──────────────
-enum : uint8_t { DANCE_IDLE, DANCE_BOOT_HOLD, DANCE_POWER_OFF, DANCE_POWER_ON, DANCE_SETTLE };
+// Soft phases (DANCE_SOFT_*) whisper 'bl' over CRSF to drop a running receiver
+// into its ROM bootloader; the hard phases (DANCE_BOOT_HOLD … DANCE_SETTLE) hold
+// BOOT and power-cycle as the fallback for a receiver that will not answer.
+enum : uint8_t {
+  DANCE_IDLE,
+  DANCE_SOFT_SEND,   // whisper 'bl' at CRSF_BAUD → receiver reboots into ROM bootloader
+  DANCE_SOFT_WAIT,   // wait SOFT_REBOOT_MS for the receiver to descend, then bridge
+  DANCE_BOOT_HOLD,   // hard fallback: hold BOOT low
+  DANCE_POWER_OFF,
+  DANCE_POWER_ON,
+  DANCE_SETTLE
+};
 static uint8_t  dancePhase    = DANCE_IDLE;
 static bool     danceHoldBoot = false;
 static uint32_t danceT0       = 0;
 
-static void danceBegin(bool holdBoot) {
+static void danceBegin(bool holdBoot, bool soft = false) {
   if (dancePhase != DANCE_IDLE) return;         // one dance at a time
   danceHoldBoot = holdBoot;
+  if (soft) {
+    // Soft descend — no BOOT line, no power-cycle. Works on RX_PWR_MANUAL boards
+    // too (there is no MOSFET to steer), because the receiver reboots itself.
+    dancePhase = DANCE_SOFT_SEND;
+    danceT0    = millis();
+    return;
+  }
 #if RX_PWR_MANUAL
   // Two-phase MEDITATION — no P-MOSFET, so power/reset is the user's hand. We
   // steer BOOT only and leave the bridge transparent the whole time.
@@ -1521,6 +1561,24 @@ static void pumpDance() {
   switch (dancePhase) {
     case DANCE_IDLE:
       return;
+    case DANCE_SOFT_SEND:
+      whisperRebootToBootloader();              // 1. speak 'bl' at CRSF_BAUD
+      dancePhase = DANCE_SOFT_WAIT;
+      danceT0 = millis();
+      break;
+    case DANCE_SOFT_WAIT:
+      if (millis() - danceT0 >= SOFT_REBOOT_MS) {
+        bridgeSerialBegin();                    // 2. switch to BRIDGE_BAUD for esptool
+        dancePhase = DANCE_IDLE;
+        // Land directly (mirrors DANCE_SETTLE — do NOT re-enter via enterStance(),
+        // its guard would re-trigger danceBegin() forever).
+        stance = STANCE_MEDITATION;
+        medAdmin = true;                        // the sponge-head wakes as the administrator
+        nvmPersistStance();                     // a power cut mid-flash must not forget MEDITATION
+        jigNarrateStance(stance);
+        setStanceLed();
+      }
+      break;
     case DANCE_BOOT_HOLD:
       if (danceHoldBoot) bootAssert(true);      // 1. hold BOOT low (flash mode)
       rxPower(false);                           // 2. kill power
@@ -2054,10 +2112,13 @@ static void enterStance(Stance next) {
       break;
 
     case STANCE_MEDITATION:
-      bridgeSerialBegin();
       detachServos();                      // energy saving: no servo drive
       rxPower(true);                       // receiver powered so esptool sees it
-      if (previous != STANCE_FLEA) danceBegin(true);
+      if (previous != STANCE_FLEA) {
+        danceBegin(true, true);            // soft: whisper 'bl', then bridge (works with no MOSFET)
+      } else {
+        bridgeSerialBegin();               // from FLEA: already in ROM bootloader, just bridge
+      }
       Serial.println("YOSHIMITSU: MEDITATION — the sponge-head, ready to be flashed.");
       Serial.println("YOSHIMITSU:   the bridge is live. Exit: long-press BOOT (ESP32) or RESET (RP2040).");
 #if JIGUANG
@@ -2486,8 +2547,7 @@ void setup() {
     rxPower(false);
     attachServos();
   } else if (stance == STANCE_MEDITATION) {
-    bridgeSerialBegin();
-    danceBegin(true);
+    danceBegin(true, true);                 // soft descend: whisper 'bl', then bridge
     rxPower(true);
   } else {                         // BACK_TURNED (and any future silent pose)
     rxPower(false);

@@ -50,8 +50,8 @@ One board, six poses — each a Manji-scroll stance with a workbench meaning:
 |---|---|
 | **KINCHO** | CRSF → PWM servo converter. The sword stance: its parry is the CRC check that discards every corrupt frame. Pure channel→servo mapping — **no channel names**, no gyro. |
 | **MANJI_DRAGONFLY** | Converter + **Zephyrus gyro link**. The levitation: reads an optional MPU6050 over I2C and feeds a yaw-rate correction into the crest servo. The standard pose for an ornithopter **with** a gyro. Without a gyro it degrades gracefully into KINCHO. |
-| **FLEA** | The power-cycle jig. It balances on the sword-hilt to evade low attacks — holds `RX_BOOT` and power-cycles the receiver so an EP2-class ESP8285 drops into its ROM bootloader, then settles into MEDITATION. |
-| **MEDITATION** | The pocket flasher. The sponge-head sits cross-legged, saving energy (servos detached, LED dimmed) — but it is **ready to be flashed**: a pure transparent USB↔UART bridge carries esptool's binary SLIP untouched. |
+| **FLEA** | The power-cycle jig. It balances on the sword-hilt to evade low attacks — holds `RX_BOOT` and power-cycles the receiver so an EP2-class ESP8285 drops into its ROM bootloader, then settles into MEDITATION. The hard fallback when the soft `'bl'` descend will not answer. |
+| **MEDITATION** | The pocket flasher. The sponge-head sits cross-legged, saving energy (servos detached, LED dimmed) — but it is **ready to be flashed**: it first whispers the CRSF `'bl'` command over the shared UART to drop a *running* receiver into its ROM bootloader (no BOOT hold, no power-cycle), then becomes a pure transparent USB↔UART bridge carrying esptool's binary SLIP untouched. |
 | **NSS** | No-Sword bench. Blade sheathed: direct servo PWM over USB (`SERVO i us`), no RF, no receiver power. |
 | **BACK_TURNED** | The deceptive idle. It turns its back on every other stance and looks dead — servos centred, LED near-dark. The delusional follow-up: it silently cross-wires the two UARTs as a living mirror, so you can probe your wiring by sending bytes. |
 
@@ -126,9 +126,9 @@ servos → GPIO1..8   ·   gyro SDA → GPIO15 · SCL → GPIO16   ·   status L
 
 ## Flashing an EP2-class receiver through YOSHIMITSU
 
-1. Enter the flasher: type `FLEA` (or `MEDITATION` then `FLEA`), or on the S3
-   double-tap BOOT. FLEA drops the receiver into its ROM bootloader and settles
-   into MEDITATION.
+1. Enter the flasher: type `MEDITATION` — it whispers the `'bl'` command and drops
+   a running receiver into its ROM bootloader by itself. `FLEA` is the hard
+   BOOT-hold + power-cycle jig (the fallback). On the S3, double-tap BOOT for FLEA.
 2. **Close the serial monitor** (release the port) once the receiver is in its
    bootloader.
 3. Flash through the same port — **always** `--before no_reset`:
