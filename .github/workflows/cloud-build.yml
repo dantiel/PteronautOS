@@ -164,11 +164,7 @@ jobs:
       - name: Write user defines
         run: |
           {
-            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
-              echo "-DAUTO_WIFI_ON_INTERVAL=${{ inputs.auto_wifi_on_interval }}"
-            else
-              echo "-DAUTO_WIFI_ON_INTERVAL=-1"
-            fi
+            echo "-DAUTO_WIFI_ON_INTERVAL=${{ inputs.auto_wifi_on_interval }}"
             echo "-DLOCK_ON_FIRST_CONNECTION"
             echo "-DMIXER_PROFILE=${{ inputs.mixer_profile }}"
             echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"

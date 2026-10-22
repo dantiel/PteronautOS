@@ -46,7 +46,7 @@ int main() {
     r.centre[0]=95; r.centre[1]=105; r.trim[0]=12; r.trim[1]=-12;
     r.backTrim[0]=20; r.backTrim[1]=-20;
     r.minimum=600; r.maximum=2400;
-    uint16_t out[7]; Motion::outputs(r,0,out);
+    uint16_t out[Motion::outputCount]; Motion::outputs(r,0,out);
     assert(out[0]==1562 && out[1]==1638 && out[2]==1582 && out[3]==1618);
     uint8_t bytes[Motion::wireSize];
     r.hz=std::numeric_limits<float>::quiet_NaN(); Motion::encode(r,bytes);

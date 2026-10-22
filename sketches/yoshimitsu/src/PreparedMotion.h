@@ -12,7 +12,11 @@
 // host-endian fields or queued trajectories. Only complete intents go live.
 namespace Motion {
 constexpr uint8_t frameType = 0x81;
-constexpr size_t wireSize = 23 * 4 + 13 * 2 + 8; // 126, explicitly encoded below
+// Output channels carried on the wire. Bumped 7 → 9 for the Z-Wing (motor,
+// head rudder, 4 wing surfaces, 3 tail servos). MUST stay in sync with
+// ORNI_MAX_OUTPUTS in src/lib/Ornithopter/OrnithopterConfig.h.
+constexpr uint8_t outputCount = 9;
+constexpr size_t wireSize = 23 * 4 + 15 * 2 + 10; // 132, explicitly encoded below
 constexpr size_t chunkSize = 56;
 constexpr uint8_t chunks = (wireSize + chunkSize - 1) / chunkSize;
 constexpr float twoPi = 6.283185307f;
@@ -32,8 +36,8 @@ struct Intent {
     float centre[2] = {100, 100}, amplitude[2] = {};
     uint16_t minimum = 1000, maximum = 2000;
     int16_t trim[2] = {}, backTrim[2] = {};
-    uint16_t output[7] = {1500,1500,1500,1500,1500,1500,1500};
-    uint8_t kind[7] = {7,7,7,7,7,7,7}; // 0=fixed, 1/2=front, 3/4=back, 5=rudder, 6=motor, 7=unused
+    uint16_t output[outputCount] = {1500,1500,1500,1500,1500,1500,1500,1500,1500};
+    uint8_t kind[outputCount] = {7,7,7,7,7,7,7,7,7}; // 0=fixed, 1/2=front, 3/4=back, 5=rudder, 6=motor, 7=unused
     uint8_t flapping = 0;
 };
 inline void prepare(Intent& r, float boundaryRadians, float ld, float lu, float rd, float ru,
@@ -81,7 +85,7 @@ inline void outputs(const Intent& r, float phase, uint16_t* out) {
         const int angle = (int)clamp(r.centre[i] + r.amplitude[i] * w[i], 0, 180);
         wing[i] = safePulse(r.minimum + (uint32_t)angle * (r.maximum-r.minimum) / 180 + r.trim[i]);
     }
-    for (unsigned i=0; i<7; ++i) {
+    for (unsigned i=0; i<outputCount; ++i) {
         const uint8_t k = r.kind[i];
         out[i] = k == 0 || k > 4 ? r.output[i] : k <= 2 ? wing[k-1] : safePulse(wing[k-3] + r.backTrim[k-3]);
     }
@@ -127,7 +131,7 @@ inline bool valid(const Intent& r) {
     if(!range(r.mix,0,1) || !range(r.hz,0,20) || r.flapping>1 || r.minimum<500 || r.maximum>2500 || r.minimum>=r.maximum) return false;
     for(unsigned i=0;i<2;++i)
         if(!range(r.skew[i],-1,1) || !range(r.centre[i],-360,540) || !range(r.amplitude[i],-440,440) || r.trim[i]<-2000 || r.trim[i]>2000 || r.backTrim[i]<-2000 || r.backTrim[i]>2000) return false;
-    for(unsigned i=0;i<7;++i) if(r.kind[i]>7 || r.output[i]<500 || r.output[i]>2500) return false;
+    for(unsigned i=0;i<outputCount;++i) if(r.kind[i]>7 || r.output[i]<500 || r.output[i]>2500) return false;
     return true;
 }
 inline void encode(Intent r,uint8_t* bytes) { Codec c{bytes,0,false}; code(r,c); }

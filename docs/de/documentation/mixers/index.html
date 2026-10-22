@@ -106,10 +106,64 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 </td>
 <td>Hinteres Flügelpaar einer 4-Flügel-Zelle (Spiegel des vorderen Paars, eigener Trim)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Z-Wing-Querruder-Servo (Roll) — links / rechts</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Z-Wing geteiltes Bremsruder (Gier + Luftbremse) — links / rechts</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>Rotations-Leitwerk: dedizierter Pitch-Servo (vom 1+1-Leitwerk mitgenutzt)</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>Rotations-Leitwerk: Roll-/Rotations-Servo — links / rechts (1+1-Leitwerk nutzt nur links)</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>Split-Elevon-Leitwerk: Elevon — links / rechts (Di-/Anhedral)</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>Verschmolzenes Leitwerk: kombinierter Pitch + Rotation — links / rechts</td>
+</tr>
 </table>
 <p>Ein Laufzeit-<em>Profil</em> liefert die <code>funcMap</code>: ein Array, das PWM-Ausgangsindex → ServoFunc abbildet. Die ersten drei Slots (PWM 1…3) sind immer <code>SF_NONE</code> — sie gehören dem BOOT-Gurt und dem I2C-Bus — echte Servo-Funktionen beginnen also bei PWM-Index 3 (der Firmware-Kommentar erklärt: Index 3 = CH4, 4 = CH5, 5 = CH6).</p>
-<h2>Die acht Mixer-Profile</h2>
-<p>Acht Mixer-Profile existieren. Profile 0–2 treiben das <em>Wellenform</em>-Kernel (Schlagflügel), Profile 3–7 das <em>Getriebe</em>-Kernel (Motor + Leitwerke):</p>
+<h2>Die dreizehn Mixer-Profile</h2>
+<p>Dreizehn Mixer-Profile existieren. Profile 0–2 treiben das <em>Wellenform</em>-Kernel (Schlagflügel), Profile 3–12 das <em>Getriebe</em>-Kernel (Motor + Leitwerke):</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 <td>3</td>
 <td>Ruder · Motor · Höhenruder</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>Getriebe</td>
+<td>5</td>
+<td>Motor · Ruder · Leitwerk-Pitch · Leitwerk-Roll L · Leitwerk-Roll R</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>Getriebe</td>
+<td>4</td>
+<td>Motor · Ruder · Elevon L · Elevon R</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>Getriebe</td>
+<td>4</td>
+<td>Motor · Ruder · Leitwerk-Pitch · Leitwerk-Roll</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>Getriebe</td>
+<td>4</td>
+<td>Motor · Ruder · Pitch-Rot L · Pitch-Rot R</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>Getriebe</td>
+<td>9</td>
+<td>Motor · Ruder · Querruder L · Bremsruder L · Querruder R · Bremsruder R · Leitwerk-Pitch · Leitwerk-Roll L · Leitwerk-Roll R</td>
+</tr>
 </table>
 <p>Auswahl: Build-Flag <code>MIXER_PROFILE</code> (alt <code>ORNITHOPTER_GEARBOX=1</code> → Profil 5), dann zur Laufzeit über die WebUI überschreibbar (<code>setOrnithopterProfile</code>). Der Kernel-Test ist schlicht <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Flügelachsen-Mixing (Waveform-Kernel)</h2>
@@ -222,6 +331,9 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 <p>Der Ruder-Mixer wird <em>von beiden Kerneln wörtlich geteilt</em> — eine Gleichung, zwei Zellen:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Standard: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (zur Laufzeit in der WebUI tunbar, pro Backup gespeichert). Die Roll-Kopplung auf dem Ruder lässt einen flügelschweren Pterosaurier koordinierte Kurven ohne Gierfaden-Akrobatik halten; reduzieren Sie das Roll-Gewicht, wenn das Kopf-Ruder im Roll zu aggressiv wirkt.</p>
+<h2>Gleitregler (Getriebe-Kernel)</h2>
+<p>Das Getriebe-Kernel führt einen <em>Dantiel-artigen</em> Lage-+Raten-Regelkreis aus. Raten-Dämpfer (<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>) werden mit einem Lage-Halte-Term derselben Achse summiert. Kein Oszillator hier — die Knüppel kommandieren Rate/Lage und der Regelkreis steuert das Leitwerk.</p>
+<p>Gieren hat keine Magnetometer-Referenz und wird daher <em>nur ratengedämpft</em> (<code>gyroRudderCorrection</code>). Die Aero-Verstärkung folgt dem Motor: <code>aeroGainScale</code> schaltet Schlag- ↔ Gleit-Koeffizienten um, sobald der Motor dreht.</p>
 <h2>Leitwerks- &amp; Elevon-Mixing (Getriebe)</h2>
 <p>Das Getriebe-Kernel läuft zustandslos jeden Tick. Seine drei Sub-Mixer:</p>
 <ul>
@@ -231,6 +343,14 @@ Diese Seite dokumentiert die Mixer-Schicht von <code>src/lib/Ornithopter/Ornitho
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>Auf dem Getriebe-Kernel speist Zephyrus <em>beide</em> Roll- und Nick-PID-Korrekturen in die Leitwerk-Servos ein (Roll gegenphasig, Nick gleichtaktig), jeweils hart auf ±250&nbsp;µs begrenzt (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Ein Gyro-Glitch kann daher wackeln, aber nie einen Leitwerk-Servo blockieren.</p>
+<h2>Leitwerks-Physik</h2>
+<p>Profile 8–12 sind <em>vollständige</em> Leitwerks-Mixer — Flügel- und Leitwerksflächen werden nie getrennt, damit die Pin-Zuordnung intakt bleibt. Vier Leitwerks-Familien:</p>
+<ul>
+<li><strong>Rotations-Leitwerk</strong> (3-Servo und 1-Pitch+1-Rotation): Rotation erzeugt bei neutralem Pitch reines Roll und <em>null Gier</em>. Gier erscheint erst bei gepitchtem Leitwerk, und ihr Vorzeichen <em>invertiert</em> mit dem Pitch-Vorzeichen — Gier reitet auf dem Rotations-Differential, skaliert mit dem aktuellen Pitch (<code>tailYawCoupling</code>).</li>
+<li><strong>Split-/Elevon-Leitwerk</strong> (2 Servos): Pitch = Gleichtakt, Roll = Differenz. Der Di-/Anhedral-Schieber (<code>tailDihedralMix</code>, −100…+100) bestimmt, wie viel Gier auf dem Roll-Differenzial reitet — 0 = flach (kein Gier), + = Dihedral, − = Anhedral; die Größe skaliert mit Flächengröße und Winkel.</li>
+<li><strong>Verschmolzenes Leitwerk</strong> (2 Servos, mechanisches Gestänge): beide Servos teilen Pitch (Gleichtakt) und Rotation (Differenz) und verteilen so die Last. Gleiche Gier-Inversion bei negativem Höhenruder.</li>
+<li><strong>Z-Wing</strong> (9 PWM): Motor + Kopfruder + 4 Flügelflächen (Querruder L/R + geteilte Bremsruder L/R) + 3-Servo-Rotationsleitwerk. Querruder tragen primäres Roll (75 %), das Leitwerk sekundäres Roll (35 %) + pitch-abhängiges Gier, die Bremsruder trennen Luftbremse (Gleichtakt, ≤300 µs) von Gier (Differenz, 60 %). Die Luftbremse läuft über CH6 (den sonst ungenutzten Schlagfrequenz-Kanal).</li>
+</ul>
 <h2>Zephyrus-Einspeisung, Trims &amp; Failsafe</h2>
 <p>Je nach Kernel und Achse existieren drei verschiedene Einspeisepunkte:</p>
 <table>

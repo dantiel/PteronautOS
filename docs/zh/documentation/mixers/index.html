@@ -106,10 +106,64 @@
 </td>
 <td>四翼机架的后翼对（前翼对的镜像，独立微调）</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Z-Wing 副翼舵机（横滚）— 左 / 右</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Z-Wing 分体阻力舵（偏航 + 减速板）— 左 / 右</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>旋转尾翼：专用俯仰舵机（与 1+1 尾翼共用）</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>旋转尾翼：横滚/旋转舵机 — 左 / 右（1+1 尾翼仅用左侧）</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>分体升降副翼尾翼：升降副翼 — 左 / 右（上/下反角）</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>合并尾翼：俯仰 + 旋转复合 — 左 / 右</td>
+</tr>
 </table>
 <p>运行时<em>配置文件</em>提供 <code>funcMap</code>：一个将 PWM 输出索引 → ServoFunc 映射的数组。前三个槽位（PWM 1…3）始终为 <code>SF_NONE</code>——它们属于 BOOT 引脚和 I2C 总线——因此真正的伺服函数从 PWM 索引 3 开始（固件注释说明：索引 3 = CH4、4 = CH5、5 = CH6）。</p>
-<h2>八种混控配置文件</h2>
-<p>存在八个混控配置文件。配置文件 0–2 驱动<em>波形</em>内核（扑翼），配置文件 3–7 驱动<em>变速箱</em>内核（电机 + 尾翼）：</p>
+<h2>十三个混控器配置文件</h2>
+<p>共有十三个混控器配置文件。配置文件 0–2 驱动<em>波形</em>内核（扑翼），配置文件 3–12 驱动<em>变速箱</em>内核（电机 + 尾翼）：</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@
 <td>3</td>
 <td>方向舵 · 电机 · 升降舵</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>变速箱</td>
+<td>5</td>
+<td>电机 · 方向舵 · 尾俯仰 · 尾横滚左 · 尾横滚右</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>变速箱</td>
+<td>4</td>
+<td>电机 · 方向舵 · 升降副翼左 · 升降副翼右</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>变速箱</td>
+<td>4</td>
+<td>电机 · 方向舵 · 尾俯仰 · 尾横滚</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>变速箱</td>
+<td>4</td>
+<td>电机 · 方向舵 · 俯仰-横滚左 · 俯仰-横滚右</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>变速箱</td>
+<td>9</td>
+<td>电机 · 方向舵 · 副翼左 · 阻力舵左 · 副翼右 · 阻力舵右 · 尾俯仰 · 尾横滚左 · 尾横滚右</td>
+</tr>
 </table>
 <p>选择：构建标志 <code>MIXER_PROFILE</code>（旧式 <code>ORNITHOPTER_GEARBOX=1</code> → 配置文件 5），随后可通过 WebUI 运行时覆盖（<code>setOrnithopterProfile</code>）。内核测试仅为 <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>。</p>
 <h2>机翼轴混控（波形内核）</h2>
@@ -222,6 +331,9 @@
 <p>方向舵混控器被<em>两个内核逐字共享</em>——一个方程，两种机架：</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>默认值：<code>rudderYawWeight = 65%</code>、<code>rudderRollWeight = 35%</code>（可在 WebUI 运行时调校，按备份存储）。方向舵上的横滚耦合让翼载较重的翼龙无需偏航绳技巧即可保持协调转弯；若头舵在横滚上过于激进，请降低横滚权重。</p>
+<h2>滑翔控制器（变速箱内核）</h2>
+<p>变速箱内核运行丹蒂尔风格的<em>姿态 + 速率</em>闭环。速率阻尼器（<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>）与同轴上的姿态保持项求和。这里没有振荡器——摇杆给出速率/姿态指令，闭环操纵尾翼。</p>
+<p>偏航没有磁力计基准，因此<em>仅做速率阻尼</em>（<code>gyroRudderCorrection</code>）。气动增益跟随电机：<code>aeroGainScale</code> 随电机转动在扑翼 ↔ 滑翔系数之间切换。</p>
 <h2>齿轮箱尾翼与升降副翼混控</h2>
 <p>变速箱内核每个节拍无状态运行。其三个子混控器：</p>
 <ul>
@@ -231,6 +343,14 @@
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>在变速箱内核上，Zephyrus 将<em>横滚与俯仰两者</em>的 PID 修正注入尾翼伺服器（横滚反相、俯仰共模），各硬性钳制于 ±250&nbsp;µs（<code>ZEPHYR_GEARBOX_CLAMP_US</code>）。因此陀螺仪毛刺可以晃动、但绝不停转一个尾翼伺服器。</p>
+<h2>尾翼面物理</h2>
+<p>配置文件 8–12 是<em>完整</em>的尾翼混控器——翼面与尾翼面从不拆分，因此引脚分配保持完整。四种尾翼类型：</p>
+<ul>
+<li><strong>旋转尾翼</strong>（3 舵机及 1 俯仰 + 1 旋转）：旋转在中立俯仰下产生纯横滚、<em>零偏航</em>。偏航只在尾翼带俯仰时出现，且其符号随俯仰符号<em>反转</em>——偏航乘在由当前俯仰加权的旋转差分量上（<code>tailYawCoupling</code>）。</li>
+<li><strong>分体/升降副翼尾翼</strong>（2 舵机）：俯仰 = 共模，横滚 = 差分。上/下反角滑块（<code>tailDihedralMix</code>，−100…+100）决定有多少偏航乘在横滚差分上——0 = 平面（无偏航），+ = 上反角，− = 下反角；大小随舵面尺寸与角度变化。</li>
+<li><strong>合并尾翼</strong>（2 舵机，机械连杆）：两个舵机分担俯仰（共模）与旋转（差分），分散尾翼负载。负升降舵下的偏航反转相同。</li>
+<li><strong>Z-Wing</strong>（9 PWM）：电机 + 头方向舵 + 4 个翼面（副翼左/右 + 分体阻力舵左/右）+ 3 舵机旋转尾翼。副翼承担主横滚（75 %），尾翼承担次横滚（35 %）+ 俯仰联动偏航，阻力舵将减速板（共模，≤300 µs）与偏航（差分，60 %）分开。减速板走 CH6（原本未使用的扑翼频率通道）。</li>
+</ul>
 <h2>泽菲罗斯注入、微调与失控保护</h2>
 <p>根据内核与轴的不同，存在三个不同的注入点：</p>
 <table>

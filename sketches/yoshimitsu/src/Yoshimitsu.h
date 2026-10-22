@@ -154,6 +154,9 @@ static uint32_t motionLastUs = 0, motionLastMs = 0;
   #ifndef SERVO_PIN_8
     #define SERVO_PIN_8 YOSHI_DEFAULT(SERVO_PIN_8)
   #endif
+  #ifndef SERVO_PIN_9
+    #define SERVO_PIN_9 YOSHI_DEFAULT(SERVO_PIN_9)
+  #endif
   #ifndef RX_BOOT_PIN
     #define RX_BOOT_PIN YOSHI_DEFAULT(RX_BOOT_PIN)
   #endif
@@ -220,6 +223,9 @@ static uint32_t motionLastUs = 0, motionLastMs = 0;
   #endif
   #ifndef SERVO_PIN_8
     #define SERVO_PIN_8 YOSHI_DEFAULT(SERVO_PIN_8)
+  #endif
+  #ifndef SERVO_PIN_9
+    #define SERVO_PIN_9 YOSHI_DEFAULT(SERVO_PIN_9)
   #endif
   #ifndef RX_PWR_PIN
     #define RX_PWR_PIN YOSHI_DEFAULT(RX_PWR_PIN)
@@ -455,13 +461,13 @@ static void motionPublish(uint32_t) {}
 // channel feeds it lives in CHANNEL_TO_SERVO below. Reorder to taste.
 static const int8_t SERVO_PIN[SERVO_COUNT_MAX] = {
   SERVO_PIN_1, SERVO_PIN_2, SERVO_PIN_3, SERVO_PIN_4,
-  SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7, SERVO_PIN_8
+  SERVO_PIN_5, SERVO_PIN_6, SERVO_PIN_7, SERVO_PIN_8, SERVO_PIN_9
 };
 static uint8_t servoCount = 0;      // auto-counted from SERVO_PIN[] at boot
 
 // CHANNEL_TO_SERVO[i] = CRSF channel (0-based) feeding servo i.
 // The mixer/kernel owns channel meaning; the board only obeys.
-static const uint8_t CHANNEL_TO_SERVO[SERVO_COUNT_MAX] = { 0, 1, 3, 4, 5, 6, 7, 8 };
+static const uint8_t CHANNEL_TO_SERVO[SERVO_COUNT_MAX] = { 0, 1, 3, 4, 5, 6, 7, 8, 2 };
 
 static uint16_t channel[CHANNEL_COUNT];
 
@@ -1012,7 +1018,7 @@ static void mushinParse(uint8_t b) {
         mwIterm = 0;
         mwWingL = mwWingR = 1500;
         for (uint8_t i = 0; i < servoCount; ++i)
-          servos[i].writeMicroseconds(i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
+          servos[i].writeMicroseconds(i<Motion::outputCount && motionIntent.kind[i]==6 ? 1000 : 1500);
         return;
       }
       if (msType == MUSHIN_SWEEP) {   // raw µs bench sweep from the WebUI
@@ -1320,7 +1326,7 @@ static void mushinApply() {
       mushinLinked = false;
       motionReceiver.reset();
       for (uint8_t i=0; i<servoCount; ++i)
-        servos[i].writeMicroseconds(i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
+        servos[i].writeMicroseconds(i<Motion::outputCount && motionIntent.kind[i]==6 ? 1000 : 1500);
       return;
     }
 #if YOSHI_MOTION_CORE
@@ -1334,16 +1340,16 @@ static void mushinApply() {
       motionPhase += elapsed * motionCyclesPerUs;
       motionPhase -= (uint32_t)motionPhase;
     } else motionPhase = 0;
-    uint16_t output[7];
+    uint16_t output[Motion::outputCount];
     Motion::outputs(motionIntent, motionPhase, output);
 #if YOSHI_GYRO
     const int32_t correction = stance == STANCE_MANJI_DRAGONFLY && gyroConnected
         ? -(gyroZRate() * GYRO_GAIN) / GYRO_SCALE_LSB : 0;
 #endif
     for (uint8_t i=0; i<servoCount; ++i) {
-      int32_t value = i<7 ? output[i] : 1500;
+      int32_t value = i<Motion::outputCount ? output[i] : 1500;
 #if YOSHI_GYRO
-      if (i<7 && motionIntent.kind[i]==5) value += correction;
+      if (i<Motion::outputCount && motionIntent.kind[i]==5) value += correction;
 #endif
       servos[i].writeMicroseconds(Motion::safePulse(value));
     }
@@ -1407,7 +1413,7 @@ static void pumpCrsf() {
       Motion::Intent candidate;
       if (motionReceiver.accept(companionParser.payload(), companionParser.length(), millis(), candidate)) {
         bool supported=true;
-        for(uint8_t i=servoCount;i<7;++i) if(candidate.kind[i]!=7) supported=false;
+        for(uint8_t i=servoCount;i<Motion::outputCount;++i) if(candidate.kind[i]!=7) supported=false;
         if(!supported) continue; // never silently drop an actuator from a model
         motionIntent=candidate;
         if (!motionActive) { motionPhase=0; motionLastUs=micros(); }
@@ -1435,7 +1441,7 @@ static void pumpCrsf() {
 
   if (!mushinLinked && millis() - lastGoodMs > FAILSAFE_MS) {
     for (uint8_t i = 0; i < servoCount; i++)
-      servos[i].writeMicroseconds(mushin && i<7 && motionIntent.kind[i]==6 ? 1000 : 1500);
+      servos[i].writeMicroseconds(mushin && i<Motion::outputCount && motionIntent.kind[i]==6 ? 1000 : 1500);
     lastGoodMs = millis();
   }
 }
@@ -1921,10 +1927,10 @@ static void pumpWave() {
     wavePhase += elapsed * waveCyclesPerUs;
     wavePhase -= (uint32_t)wavePhase;            // wrap to [0,1) cycles
   } else wavePhase = 0.0f;
-  uint16_t output[7];
+  uint16_t output[Motion::outputCount];
   Motion::outputs(waveIntent, wavePhase, output);
   for (uint8_t i = 0; i < servoCount; i++)
-    servos[i].writeMicroseconds(Motion::safePulse(i < 7 ? output[i] : 1500));
+    servos[i].writeMicroseconds(Motion::safePulse(i < Motion::outputCount ? output[i] : 1500));
 }
 
 static void handleWaveCmd(const char* arg) {
@@ -2546,7 +2552,7 @@ void loop1() {
   const uint32_t currentEpoch=motionEpoch.load(std::memory_order_acquire);
   if(epoch!=currentEpoch) {
     if(running) for(uint8_t i=0;i<servoCount;++i)
-      servos[i].writeMicroseconds(i<7 && active.kind[i]==6?1000:1500);
+      servos[i].writeMicroseconds(i<Motion::outputCount && active.kind[i]==6?1000:1500);
     running=false; epoch=currentEpoch;
   }
   if(motionReady.load(std::memory_order_acquire)) {
@@ -2559,10 +2565,10 @@ void loop1() {
     motionReady.store(false,std::memory_order_release);
   }
   if(!running) return;
-  uint16_t output[7];
+  uint16_t output[Motion::outputCount];
   const bool stale=millis()-received>100;
   if(stale) {
-    for(unsigned i=0;i<7;++i) output[i]=active.kind[i]==6?1000:1500;
+    for(unsigned i=0;i<Motion::outputCount;++i) output[i]=active.kind[i]==6?1000:1500;
     running=false;
   } else {
     if(active.flapping) { phase+=(now-lastUs)*cyclesPerUs; phase-=(uint32_t)phase; }
@@ -2573,8 +2579,8 @@ void loop1() {
   const int32_t correction=motionCorrection.load(std::memory_order_acquire);
   for(uint8_t i=0;i<servoCount;++i) {
     if(motionEpoch.load(std::memory_order_acquire)!=epoch) return;
-    int32_t value=i<7?output[i]:1500;
-    if(!stale && i<7 && active.kind[i]==5) value+=correction;
+    int32_t value=i<Motion::outputCount?output[i]:1500;
+    if(!stale && i<Motion::outputCount && active.kind[i]==5) value+=correction;
     servos[i].writeMicroseconds(Motion::safePulse(value));
   }
   const uint32_t elapsed=micros()-now;

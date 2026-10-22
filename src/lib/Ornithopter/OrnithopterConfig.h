@@ -6,6 +6,7 @@
     -D MIXER_PROFILE=1   →  SERVO_2WING_1RUD (default, 3-servo waveform)
     -D MIXER_PROFILE=5   →  GEARBOX_1MOT_2VTAIL_1RUD (4-servo gearbox)
     -D MIXER_PROFILE=7   →  GEARBOX_1MOT_1ELE_1RUD (3-servo, traditional tail)
+    -D MIXER_PROFILE=8..12 → complete tail mixers + Z-Wing 9-PWM (see GEARBOX-MIXERS.md)
 
   Legacy: -D ORNITHOPTER_GEARBOX=1 still works → defaults to GEARBOX_1MOT_2VTAIL_1RUD.
 */
@@ -22,6 +23,12 @@ enum MixerProfile : uint8_t {
     GEARBOX_1MOT_2VTAIL_1RUD= 5,  // 4 servo: rudder, motor, V-tail L/R (gearbox)
     GEARBOX_1ELE_1RUD       = 6,  // 2 servo: traditional elevator + rudder (gearbox)
     GEARBOX_1MOT_1ELE_1RUD  = 7,  // 3 servo: motor + elevator + rudder (gearbox)
+    // ── Complete tail-surface mixers (gearbox) ────────────────────────
+    GEARBOX_1MOT_1RUD_TAIL3 = 8,  // 5 servo: motor + head rudder + 3-servo rotation tail
+    GEARBOX_1MOT_1RUD_ELEVON= 9,  // 4 servo: motor + head rudder + 2-servo split elevon tail
+    GEARBOX_1MOT_1RUD_TAIL11= 10, // 4 servo: motor + head rudder + 1-pitch 1-rotate tail
+    GEARBOX_1MOT_1RUD_TAILMERGED = 11, // 4 servo: motor + head rudder + merged 2-servo tail
+    ZWING_9PWM              = 12, // 9 servo: motor + head rudder + 4 wing + 3-servo tail
     PROFILE_COUNT
 };
 
@@ -54,13 +61,32 @@ enum ServoFunc : uint8_t {
     SF_ELEVATOR        = 7,   // traditional separate elevator
     SF_BACK_LEFT_WING  = 8,   // rear wing pair (4-wing models)
     SF_BACK_RIGHT_WING = 9,
-    SF_COUNT           = 10
+    // ── Z-Wing fixed-wing surfaces (gearbox) ──────────────────────────
+    SF_WING_AIL_L      = 10,  // left aileron servo (roll)
+    SF_WING_AIL_R      = 11,  // right aileron servo (roll)
+    SF_WING_DRAG_L     = 12,  // left split-drag-rudder servo (yaw + airbrake)
+    SF_WING_DRAG_R     = 13,  // right split-drag-rudder servo (yaw + airbrake)
+    // ── Tail surfaces (gearbox) ────────────────────────────────────────
+    SF_TAIL_PITCH      = 14,  // 3-servo rotation tail: dedicated pitch servo
+    SF_TAIL_ROLL_L     = 15,  // 3-servo rotation tail: rotation servo L (also 1+1 tail single-rotate)
+    SF_TAIL_ROLL_R     = 16,  // 3-servo rotation tail: rotation servo R
+    SF_ELEVON_L        = 17,  // 2-servo split tail: left elevon (di/anhedral)
+    SF_ELEVON_R        = 18,  // 2-servo split tail: right elevon (di/anhedral)
+    SF_TAIL_PITCHROT_L = 19,  // merged mechanical tail: servo L (pitch+rotation)
+    SF_TAIL_PITCHROT_R = 20,  // merged mechanical tail: servo R (pitch+rotation)
+    SF_COUNT           = 21
 };
+
+// ─── Output channel count ───────────────────────────────────────────
+// Max PWM outputs any profile drives — the Z-Wing's 9. Kept in sync with
+// Motion::outputCount in sketches/yoshimitsu/src/PreparedMotion.h (the MUSHIN
+// wire carries the same 9 channels). Direct-PWM boards break out ≤ this many.
+#define ORNI_MAX_OUTPUTS 9
 
 // ─── Profile Descriptor ────────────────────────────────────────────
 struct ProfileDesc {
     uint8_t servoCount;
-    uint8_t funcMap[7];   // PWM index → ServoFunc
+    uint8_t funcMap[ORNI_MAX_OUTPUTS];   // PWM index → ServoFunc
 };
 
 // One canonical table for every target. Servo functions are assigned to PWM
@@ -72,29 +98,40 @@ struct ProfileDesc {
 // [3,1] (GPIO3/1) — no target-specific map.
 constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
     // 0: SERVO_2WING
-    { 2, { SF_LEFT_WING, SF_RIGHT_WING, SF_NONE, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 2, { SF_LEFT_WING, SF_RIGHT_WING } },
     // 1: SERVO_2WING_1RUD
-    { 3, { SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 3, { SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER } },
     // 2: SERVO_4WING — back-right drops when only 3 pads are broken out
-    { 4, { SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING, SF_NONE, SF_NONE, SF_NONE } },
+    { 4, { SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING } },
     // 3: GEARBOX_2VTAIL_1RUD
-    { 3, { SF_RUDDER, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 3, { SF_RUDDER, SF_VTAIL_LEFT, SF_VTAIL_RIGHT } },
     // 4: GEARBOX_1MOT_2VTAIL
-    { 3, { SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 3, { SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT } },
     // 5: GEARBOX_1MOT_2VTAIL_1RUD — vtail-right drops when only 3 pads
-    { 4, { SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT, SF_NONE, SF_NONE, SF_NONE } },
+    { 4, { SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT } },
     // 6: GEARBOX_1ELE_1RUD
-    { 2, { SF_RUDDER, SF_ELEVATOR, SF_NONE, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 2, { SF_RUDDER, SF_ELEVATOR } },
     // 7: GEARBOX_1MOT_1ELE_1RUD
-    { 3, { SF_RUDDER, SF_MOTOR, SF_ELEVATOR, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },
+    { 3, { SF_RUDDER, SF_MOTOR, SF_ELEVATOR } },
+    // 8: GEARBOX_1MOT_1RUD_TAIL3 — motor, head rudder, 3-servo rotation tail
+    { 5, { SF_MOTOR, SF_RUDDER, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R } },
+    // 9: GEARBOX_1MOT_1RUD_ELEVON — motor, head rudder, 2-servo split elevon tail
+    { 4, { SF_MOTOR, SF_RUDDER, SF_ELEVON_L, SF_ELEVON_R } },
+    // 10: GEARBOX_1MOT_1RUD_TAIL11 — motor, head rudder, 1-pitch 1-rotate tail
+    { 4, { SF_MOTOR, SF_RUDDER, SF_TAIL_PITCH, SF_TAIL_ROLL_L } },
+    // 11: GEARBOX_1MOT_1RUD_TAILMERGED — motor, head rudder, merged 2-servo tail
+    { 4, { SF_MOTOR, SF_RUDDER, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R } },
+    // 12: ZWING_9PWM — motor, head rudder, 4 wing surfaces, 3-servo rotation tail
+    { 9, { SF_MOTOR, SF_RUDDER, SF_WING_AIL_L, SF_WING_DRAG_L, SF_WING_AIL_R, SF_WING_DRAG_R, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R } },
 };
 
 #define PROFILE PROFILES[activeProfile]
 
 #if defined(MUSHIN_ENABLED)
 // Logical companion outputs are not constrained by the PWMP7's three PWM pads.
-// Preserve existing order and restore the fourth output on four-actuator models.
-constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][7] = {
+// Order matches PROFILES[].funcMap so the MUSHIN wire carries the same routing
+// as the direct-PWM path; trailing entries zero-init to SF_NONE.
+constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][ORNI_MAX_OUTPUTS] = {
     {SF_LEFT_WING, SF_RIGHT_WING},
     {SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER},
     {SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING},
@@ -103,6 +140,11 @@ constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][7] = {
     {SF_RUDDER, SF_MOTOR, SF_VTAIL_LEFT, SF_VTAIL_RIGHT},
     {SF_RUDDER, SF_ELEVATOR},
     {SF_RUDDER, SF_MOTOR, SF_ELEVATOR},
+    {SF_MOTOR, SF_RUDDER, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R},
+    {SF_MOTOR, SF_RUDDER, SF_ELEVON_L, SF_ELEVON_R},
+    {SF_MOTOR, SF_RUDDER, SF_TAIL_PITCH, SF_TAIL_ROLL_L},
+    {SF_MOTOR, SF_RUDDER, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R},
+    {SF_MOTOR, SF_RUDDER, SF_WING_AIL_L, SF_WING_DRAG_L, SF_WING_AIL_R, SF_WING_DRAG_R, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R},
 };
 #endif
 

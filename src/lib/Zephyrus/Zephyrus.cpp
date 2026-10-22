@@ -17,6 +17,7 @@
     void begin() {}
     void begin(int,int) {}
     void setClock(unsigned long) {}
+    void setClockStretchLimit(uint32_t) {}
     void beginTransmission(int) {}
     void write(uint8_t) {}
     uint8_t endTransmission(bool=true) { return 0; }

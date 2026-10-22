@@ -62,10 +62,11 @@ static inline void zephyrusUpdate() {
     ornithopter.gyroPitchITerm     = zephyrus.pitchITerm;
     ornithopter.gyroPitchDTerm     = zephyrus.pitchDTerm;
     ornithopter.gyroPitchErrorRate = zephyrus.pitchErrorRate;
-#ifdef ORNITHOPTER_GEARBOX
+    // Gearbox tail corrections are bridged unconditionally: the profile can be
+    // switched waveform↔gearbox at runtime (WebUI), so a compile-time gate on a
+    // fixed profile flag would starve a runtime-selected gearbox profile of gyro.
     ornithopter.gyroAileronCorrection  = zephyrus.rollCorrection * ZEPHYR_GEARBOX_ROLL_GAIN;
     ornithopter.gyroElevatorCorrection = zephyrus.pitchCorrection * ZEPHYR_GEARBOX_PITCH_GAIN * ornithopter.aeroGainScale;
-#endif
 }
 
 static inline void zephyrusOnLinkUp()   { zephyrus.onLinkUp(); }

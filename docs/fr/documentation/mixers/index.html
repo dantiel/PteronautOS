@@ -106,10 +106,64 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 </td>
 <td>Paire d'ailes arrière d'une cellule 4 ailes (miroir de la paire avant, trim propre)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Servo d'aileron Z-Wing (roulis) — gauche / droite</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Gouverne de traînée fendue Z-Wing (lacet + aérofrein) — gauche / droite</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>Empennage rotatif : servo de pas dédié (partagé par l'empennage 1+1)</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>Empennage rotatif : servo de roulis/rotation — gauche / droite (le 1+1 n'utilise que le gauche)</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>Empennage split/élevon : élevon — gauche / droite (di/anhédral)</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>Empennage fusionné : pas + rotation combinés — gauche / droite</td>
+</tr>
 </table>
 <p>Un <em>profil</em> d'exécution fournit la <code>funcMap</code> : un tableau qui mappe l'index de sortie PWM → ServoFunc. Les trois premiers créneaux (PWM 1…3) sont toujours <code>SF_NONE</code> — ils appartiennent à la sangle BOOT et au bus I2C — donc les vraies fonctions de servo commencent à l'index PWM 3 (le commentaire du firmware l'explicite : index 3 = CH4, 4 = CH5, 5 = CH6).</p>
-<h2>Les huit profils de mixer</h2>
-<p>Huit profils de mixeur existent. Les profils 0–2 pilotent le noyau <em>forme d'onde</em> (ailes battantes), les profils 3–7 le noyau <em>boîte de vitesses</em> (moteur + empennages) :</p>
+<h2>Les treize profils de mixer</h2>
+<p>Treize profils de mixeur existent. Les profils 0–2 pilotent le noyau <em>forme d'onde</em> (ailes battantes), les profils 3–12 le noyau <em>boîte de vitesses</em> (moteur + empennages) :</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <td>3</td>
 <td>Gouverne · Moteur · Profondeur</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>boîte</td>
+<td>5</td>
+<td>Moteur · Gouverne · Pas d'empennage · Roulis empennage G · Roulis empennage D</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>boîte</td>
+<td>4</td>
+<td>Moteur · Gouverne · Élevon G · Élevon D</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>boîte</td>
+<td>4</td>
+<td>Moteur · Gouverne · Pas d'empennage · Roulis empennage</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>boîte</td>
+<td>4</td>
+<td>Moteur · Gouverne · Pas-roulis G · Pas-roulis D</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>boîte</td>
+<td>9</td>
+<td>Moteur · Gouverne · Aileron G · Traînée G · Aileron D · Traînée D · Pas d'empennage · Roulis empennage G · Roulis empennage D</td>
+</tr>
 </table>
 <p>Sélection : drapeau de build <code>MIXER_PROFILE</code> (ancien <code>ORNITHOPTER_GEARBOX=1</code> → profil 5), puis remplaçable à l'exécution via la WebUI (<code>setOrnithopterProfile</code>). Le test de noyau est simplement <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Mixage des axes d'aile (kernel onde)</h2>
@@ -222,6 +331,9 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 <p>Le mixeur de gouverne est <em>partagé verbatim par les deux noyaux</em> — une équation, deux cellules :</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Défauts : <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (réglables à l'exécution dans la WebUI, stockés par sauvegarde). Le couplage de roulis sur la gouverne permet à un ptérosaure lourd d'aile de tenir des virages coordonnés sans acrobatie de fil de lacet ; réduisez le poids de roulis si la gouverne de tête semble trop agressive en roulis.</p>
+<h2>Contrôleur de plané (noyau boîte)</h2>
+<p>Le noyau boîte exécute une boucle fermée <em>attitude + taux</em> de style dantiel. Les amortisseurs de taux (<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>) sont additionnés à un terme de tenue d'attitude sur le même axe. Pas d'oscillateur ici — les manches commandent taux/attitude et la boucle pilote l'empennage.</p>
+<p>Le lacet n'a pas de référence magnétomètre : il est <em>amorti en taux seulement</em> (<code>gyroRudderCorrection</code>). Le gain aéro suit le moteur : <code>aeroGainScale</code> bascule les coefficients battement ↔ plané selon que le moteur tourne.</p>
 <h2>Mixage empennage et elevons (boîte à engrenages)</h2>
 <p>Le noyau boîte s'exécute sans état à chaque tick. Ses trois sous-mixeurs :</p>
 <ul>
@@ -231,6 +343,14 @@ Cette page documente la couche mixeur de <code>src/lib/Ornithopter/Ornithopter.c
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>Sur le noyau boîte, Zephyrus injecte <em>les deux</em> corrections PID de roulis et tangage dans les servos d'empennage (roulis en opposition de phase, tangage en mode commun), chacune bornée dur à ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Un glitch de gyro peut donc faire osciller, mais jamais caler, un servo d'empennage.</p>
+<h2>Physique des empennages</h2>
+<p>Les profils 8–12 sont des mixeurs d'empennage <em>complets</em> — les surfaces d'aile et d'empennage ne sont jamais séparées, l'allocation des broches reste intacte. Quatre familles d'empennage :</p>
+<ul>
+<li><strong>Empennage rotatif</strong> (3 servos et 1 pas + 1 rotation) : la rotation produit un roulis pur au pas neutre et <em>zéro lacet</em>. Le lacet n'apparaît que lorsque l'empennage est cabré, et son signe <em>s'inverse</em> avec le signe du pas — le lacet chevauche le différentiel de rotation pondéré par le pas actuel (<code>tailYawCoupling</code>).</li>
+<li><strong>Empennage split/élevon</strong> (2 servos) : pas = mode commun, roulis = différentiel. Le curseur di/anhédral (<code>tailDihedralMix</code>, −100…+100) règle la part de lacet qui chevauche le différentiel de roulis — 0 = plat (aucun lacet), + = dièdre, − = anhédral ; l'amplitude dépend de la taille et de l'angle des surfaces.</li>
+<li><strong>Empennage fusionné</strong> (2 servos, liaison mécanique) : les deux servos partagent le pas (mode commun) et la rotation (différentiel), répartissant la charge. Même inversion de lacet en profondeur négative.</li>
+<li><strong>Z-Wing</strong> (9 PWM) : moteur + gouverne de tête + 4 surfaces d'aile (aileron G/D + gouverne de traînée fendue G/D) + empennage rotatif 3 servos. Les ailerons portent le roulis primaire (75 %), l'empennage le roulis secondaire (35 %) + le lacet lié au pas, et les gouvernes de traînée séparent l'aérofrein (commun, ≤300 µs) du lacet (différentiel, 60 %). L'aérofrein passe par CH6 (le canal de fréquence de battement sinon inutilisé).</li>
+</ul>
 <h2>Injection Zéphyros, trims et failsafe</h2>
 <p>Trois points d'injection différents existent selon le noyau et l'axe :</p>
 <table>

@@ -106,10 +106,64 @@
 </td>
 <td>4 翼機の後翼ペア(前翼ペアの鏡像、独自トリム)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Z-Wing エルロンサーボ（ロール）— 左 / 右</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Z-Wing 分割ドラッグラダー（ヨー + エアブレーキ）— 左 / 右</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>回転尾翼：専用ピッチサーボ（1+1 尾翼と共用）</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>回転尾翼：ロール／回転サーボ — 左 / 右（1+1 尾翼は左のみ使用）</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>分割エレボン尾翼：エレボン — 左 / 右（上/下反角）</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>統合尾翼：ピッチ + 回転の複合 — 左 / 右</td>
+</tr>
 </table>
 <p>実行時<em>プロファイル</em>が <code>funcMap</code> を提供します:PWM 出力インデックス → ServoFunc を対応付ける配列です。最初の 3 スロット(PWM 1…3)は常に <code>SF_NONE</code> — BOOT ストラップと I2C バスに属するため — 実際のサーボ機能は PWM インデックス 3 から始まります(ファームウェアのコメントに明記:インデックス 3 = CH4、4 = CH5、5 = CH6)。</p>
-<h2>8つのミキサープロファイル</h2>
-<p>8 つのミキサープロファイルが存在します。プロファイル 0–2 は <em>波形</em>カーネル(羽ばたき翼)、プロファイル 3–7 は <em>ギアボックス</em>カーネル(モーター + 尾翼)を駆動します:</p>
+<h2>13 個のミキサープロファイル</h2>
+<p>13 個のミキサープロファイルが存在する。プロファイル 0–2 は<em>波形</em>カーネル（羽ばたき翼）、プロファイル 3–12 は<em>ギアボックス</em>カーネル（モーター + 尾翼）を駆動する：</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@
 <td>3</td>
 <td>ラダー · モーター · エレベーター</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>ギアボックス</td>
+<td>5</td>
+<td>モーター · ラダー · テールピッチ · テールロール左 · テールロール右</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>ギアボックス</td>
+<td>4</td>
+<td>モーター · ラダー · エレボン左 · エレボン右</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>ギアボックス</td>
+<td>4</td>
+<td>モーター · ラダー · テールピッチ · テールロール</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>ギアボックス</td>
+<td>4</td>
+<td>モーター · ラダー · ピッチロール左 · ピッチロール右</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>ギアボックス</td>
+<td>9</td>
+<td>モーター · ラダー · エルロン左 · ドラッグ左 · エルロン右 · ドラッグ右 · テールピッチ · テールロール左 · テールロール右</td>
+</tr>
 </table>
 <p>選択:ビルドフラグ <code>MIXER_PROFILE</code>(旧 <code>ORNITHOPTER_GEARBOX=1</code> → プロファイル 5)、その後 WebUI で実行時に上書き可能(<code>setOrnithopterProfile</code>)。カーネル判定は単に <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>。</p>
 <h2>翼軸ミキシング（波形カーネル）</h2>
@@ -222,6 +331,9 @@
 <p>ラダーミキサーは <em>両カーネルで一字一句共有</em>されます — 1 つの式、2 つの機体:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>既定値:<code>rudderYawWeight = 65%</code>、<code>rudderRollWeight = 35%</code>(WebUI で実行時調整、バックアップごとに保存)。ラダーのロール結合により、翼の重い翼竜がヨーストリングの曲芸なしに協調旋回を保てます。ヘッドラダーがロールで攻撃的すぎる場合はロール重みを下げてください。</p>
+<h2>グライドコントローラ（ギアボックス・カーネル）</h2>
+<p>ギアボックス・カーネルはダンティエル流の<em>姿勢 + レート</em>閉ループを実行する。レートダンパー（<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>）は同軸上の姿勢保持項と合算される。ここにオシレーターはない — スティックがレート／姿勢を指令し、ループが尾翼を操る。</p>
+<p>ヨーには磁力計の基準がないため、<em>レート減衰のみ</em>（<code>gyroRudderCorrection</code>）となる。空力ゲインはモーターに追従する：<code>aeroGainScale</code> がモーター回転に応じてフラップ ↔ グライド係数を切り替える。</p>
 <h2>ギアボックス尾翼・エレボンミキシング</h2>
 <p>ギアボックス・カーネルは毎ティック・ステートレスに動作します。その 3 つのサブミキサー:</p>
 <ul>
@@ -231,6 +343,14 @@
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>ギアボックス・カーネルでは、Zephyrus が <em>ロールとピッチの両方の</em> PID 補正を尾翼サーボへ注入します(ロールは逆位相、ピッチはコモンモード)、各々 ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)にハードクランプ。したがってジャイロのグリッチは尾翼サーボを揺らしても、決して停止させません。</p>
+<h2>尾翼面の物理</h2>
+<p>プロファイル 8–12 は<em>完全な</em>尾翼ミキサーであり、翼面と尾翼面は決して分割されず、ピン割り当ては保たれる。4 つの尾翼系統：</p>
+<ul>
+<li><strong>回転尾翼</strong>（3 サーボおよび 1 ピッチ + 1 回転）：回転は中立ピッチで純粋なロールを生み、<em>ヨーはゼロ</em>である。ヨーは尾翼がピッチしたときだけ現れ、その符号はピッチ符号とともに<em>反転</em>する — ヨーは現在のピッチで重み付けされた回転差分に乗る（<code>tailYawCoupling</code>）。</li>
+<li><strong>分割／エレボン尾翼</strong>（2 サーボ）：ピッチ = コモンモード、ロール = 差分。上下反角スライダー（<code>tailDihedralMix</code>、−100…+100）がロール差分に乗るヨーの量を決める — 0 = 平面（ヨーなし）、+ = 上反角、− = 下反角。大きさは面のサイズと角度で変わる。</li>
+<li><strong>統合尾翼</strong>（2 サーボ、機械リンク）：両サーボがピッチ（コモンモード）と回転（差分）を分担し、荷重を分散する。負のエレベーターでのヨー反転は同じ。</li>
+<li><strong>Z-Wing</strong>（9 PWM）：モーター + 頭部ラダー + 翼面 4 枚（エルロン左/右 + 分割ドラッグラダー左/右）+ 3 サーボ回転尾翼。エルロンが主ロール（75 %）、尾翼が副ロール（35 %）+ ピッチ連動ヨー、ドラッグラダーはエアブレーキ（コモン、≤300 µs）とヨー（差分、60 %）を分離する。エアブレーキは CH6（本来未使用のフラップ周波数チャンネル）に乗る。</li>
+</ul>
 <h2>ゼピュロス注入、トリム＆フェイルセーフ</h2>
 <p>カーネルと軸に応じて 3 つの異なる注入点があります:</p>
 <table>

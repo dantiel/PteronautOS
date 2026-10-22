@@ -83,6 +83,42 @@
             %td
               %code SF_BACK_LEFT_WING / SF_BACK_RIGHT_WING
             %td!= mix_meaning_backwing
+          %tr
+            %td
+              %code 10 / 11
+            %td
+              %code SF_WING_AIL_L / SF_WING_AIL_R
+            %td!= mix_meaning_wingail
+          %tr
+            %td
+              %code 12 / 13
+            %td
+              %code SF_WING_DRAG_L / SF_WING_DRAG_R
+            %td!= mix_meaning_wingdrag
+          %tr
+            %td
+              %code 14
+            %td
+              %code SF_TAIL_PITCH
+            %td!= mix_meaning_tailpitch
+          %tr
+            %td
+              %code 15 / 16
+            %td
+              %code SF_TAIL_ROLL_L / SF_TAIL_ROLL_R
+            %td!= mix_meaning_tailroll
+          %tr
+            %td
+              %code 17 / 18
+            %td
+              %code SF_ELEVON_L / SF_ELEVON_R
+            %td!= mix_meaning_elevon
+          %tr
+            %td
+              %code 19 / 20
+            %td
+              %code SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R
+            %td!= mix_meaning_pitchrot
         %p!=mix_p3
 
         %h2!= mix_h2_profiles
@@ -158,6 +194,46 @@
             %td!= mix_kernel_gear
             %td 3
             %td!= mix_fm_row7
+          %tr
+            %td
+              %code 8
+            %td
+              %code GEARBOX_1MOT_1RUD_TAIL3
+            %td!= mix_kernel_gear
+            %td 5
+            %td!= mix_fm_row8
+          %tr
+            %td
+              %code 9
+            %td
+              %code GEARBOX_1MOT_1RUD_ELEVON
+            %td!= mix_kernel_gear
+            %td 4
+            %td!= mix_fm_row9
+          %tr
+            %td
+              %code 10
+            %td
+              %code GEARBOX_1MOT_1RUD_TAIL11
+            %td!= mix_kernel_gear
+            %td 4
+            %td!= mix_fm_row10
+          %tr
+            %td
+              %code 11
+            %td
+              %code GEARBOX_1MOT_1RUD_TAILMERGED
+            %td!= mix_kernel_gear
+            %td 4
+            %td!= mix_fm_row11
+          %tr
+            %td
+              %code 12
+            %td
+              %code ZWING_9PWM
+            %td!= mix_kernel_gear
+            %td 9
+            %td!= mix_fm_row12
         %p!=mix_p4
 
         %h2!= mix_h2_wing
@@ -189,6 +265,10 @@
                      + servoTrimUs[SF_RUDDER]
         %p!=mix_p10
 
+        %h2!= mix_h2_glide
+        %p!=mix_glide1
+        %p!=mix_glide2
+
         %h2!=mix_h2_gearbox
         %p!= mix_p11
         %ul
@@ -202,6 +282,14 @@
               VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR
               scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first
         %p!=mix_p12
+
+        %h2!= mix_h2_tailphys
+        %p!=mix_tail1
+        %ul
+          %li!=mix_tail_rot
+          %li!=mix_tail_elevon
+          %li!=mix_tail_merged
+          %li!=mix_tail_zwing
 
         %h2!=mix_h2_gyro
         %p!= mix_p13

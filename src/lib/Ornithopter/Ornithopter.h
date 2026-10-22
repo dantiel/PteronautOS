@@ -119,6 +119,8 @@ public:
     float   elevatorFerocityRateMix; // 0–100, elevator-rate → transient ferocity dwell (slew)
     float   elevatorAntigravityMix;  // 0–100, rate-gated stick-direction gravity assist
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
+    float   tailDihedralMix;      // -100…+100, split-tail dihedral/anhedral → yaw↔roll coupling
+    float   tailYawCoupling;      // 0–100, rotation-tail pitch-gated yaw authority
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
         bool    glideMode;            // true = gearbox idle glide
@@ -279,6 +281,11 @@ private:
     // ── Mixer kernels ────────────────────────────────────────────────
     void  _computeServoMixer();    // waveform kernel  (OrnithopterMixer.cpp)
     void  _computeGearboxMixer();  // gearbox kernel   (OrnithopterGearbox.cpp)
+    void  _gearboxTailRotation3(float rollUs, float pitchUs, float yawUs);
+    void  _gearboxTailRotation1(float rollUs, float pitchUs, float yawUs);
+    void  _gearboxTailMerged(float rollUs, float pitchUs, float yawUs);
+    void  _gearboxTailElevon(float rollUs, float pitchUs, float yawUs);
+    void  _gearboxZwing(float rollUs, float pitchUs, float yawUs, float airbrake01);
 
     // ── Mesozoic stabilizer bridge (OrnithopterStabilizer.cpp) ───────
     // Each axis computes its clamped correction term in isolation; the mixer

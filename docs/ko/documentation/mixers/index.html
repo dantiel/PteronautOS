@@ -106,10 +106,64 @@
 </td>
 <td>4-날개 기체의 후방 날개 쌍(전방 쌍의 미러, 자체 트림)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Z-Wing 에일러론 서보(롤) — 좌 / 우</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Z-Wing 분할 드래그 러더(요 + 에어브레이크) — 좌 / 우</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>회전 꼬리: 전용 피치 서보(1+1 꼬리와 공유)</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>회전 꼬리: 롤/회전 서보 — 좌 / 우(1+1 꼬리는 좌만 사용)</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>분할 엘레본 꼬리: 엘레본 — 좌 / 우(상/하반각)</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>병합 꼬리: 피치 + 회전 결합 — 좌 / 우</td>
+</tr>
 </table>
 <p>런타임 <em>프로파일</em>이 <code>funcMap</code>을 제공합니다: PWM 출력 인덱스 → ServoFunc을 매핑하는 배열. 처음 세 슬롯(PWM 1…3)은 항상 <code>SF_NONE</code> — BOOT 스트랩과 I2C 버스에 속하므로 — 실제 서보 함수는 PWM 인덱스 3에서 시작합니다(펌웨어 주석이 명시: 인덱스 3 = CH4, 4 = CH5, 5 = CH6).</p>
-<h2>여덟 가지 믹서 프로필</h2>
-<p>8개의 믹서 프로파일이 있습니다. 프로파일 0–2는 <em>파형</em> 커널(플래핑 날개)을, 프로파일 3–7은 <em>기어박스</em> 커널(모터 + 테일)을 구동합니다:</p>
+<h2>13개의 믹서 프로파일</h2>
+<p>13개의 믹서 프로파일이 존재한다. 프로파일 0–2는 <em>파형</em> 커널(플래핑 날개), 프로파일 3–12는 <em>기어박스</em> 커널(모터 + 꼬리)을 구동한다:</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@
 <td>3</td>
 <td>러더 · 모터 · 엘리베이터</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>기어박스</td>
+<td>5</td>
+<td>모터 · 러더 · 테일 피치 · 테일 롤 좌 · 테일 롤 우</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>기어박스</td>
+<td>4</td>
+<td>모터 · 러더 · 엘레본 좌 · 엘레본 우</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>기어박스</td>
+<td>4</td>
+<td>모터 · 러더 · 테일 피치 · 테일 롤</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>기어박스</td>
+<td>4</td>
+<td>모터 · 러더 · 피치-롤 좌 · 피치-롤 우</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>기어박스</td>
+<td>9</td>
+<td>모터 · 러더 · 에일러론 좌 · 드래그 좌 · 에일러론 우 · 드래그 우 · 테일 피치 · 테일 롤 좌 · 테일 롤 우</td>
+</tr>
 </table>
 <p>선택: 빌드 플래그 <code>MIXER_PROFILE</code>(레거시 <code>ORNITHOPTER_GEARBOX=1</code> → 프로파일 5), 이후 WebUI로 런타임 재정의(<code>setOrnithopterProfile</code>). 커널 검사는 단순히 <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>날개 축 믹싱 (파형 커널)</h2>
@@ -222,6 +331,9 @@
 <p>러더 믹서는 <em>두 커널이 그대로 공유</em>합니다 — 하나의 방정식, 두 기체:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>기본값: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code>(WebUI에서 런타임 조정, 백업별 저장). 러더의 롤 커플링 덕분에 날개가 무거운 프테로사우루스가 요스트링 곡예 없이 협조 선회를 유지합니다. 헤드 러더가 롤에서 너무 공격적이면 롤 가중치를 줄이세요.</p>
+<h2>글라이드 컨트롤러(기어박스 커널)</h2>
+<p>기어박스 커널은 단티엘 방식의 <em>자세 + 레이트</em> 폐루프를 실행한다. 레이트 댐퍼(<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>)는 같은 축의 자세 유지 항과 합산된다. 여기엔 오실레이터가 없다 — 스틱이 레이트/자세를 지령하고 루프가 꼬리를 조종한다.</p>
+<p>요에는 자력계 기준이 없으므로 <em>레이트 감쇠만</em> 적용된다(<code>gyroRudderCorrection</code>). 공력 게인은 모터를 따른다: <code>aeroGainScale</code>이 모터 회전에 따라 플랩 ↔ 글라이드 계수를 전환한다.</p>
 <h2>기어박스 꼬리·엘레본 믹싱</h2>
 <p>기어박스 커널은 매 틱 무상태로 실행됩니다. 세 하위 믹서:</p>
 <ul>
@@ -231,6 +343,14 @@
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>기어박스 커널에서 Zephyrus는 <em>롤과 피치 둘 다</em> PID 보정을 테일 서보에 주입합니다(롤 역위상, 피치 공통 모드), 각각 ±250&nbsp;µs(<code>ZEPHYR_GEARBOX_CLAMP_US</code>)로 하드 클램프. 따라서 자이로 글리치는 테일 서보를 흔들 수는 있어도 절대 멈추게 하지 못합니다.</p>
+<h2>꼬리면 물리</h2>
+<p>프로파일 8–12는 <em>완전한</em> 꼬리 믹서다. 날개면과 꼬리면은 절대 분리되지 않으므로 핀 할당이 그대로 유지된다. 네 가지 꼬리 계열:</p>
+<ul>
+<li><strong>회전 꼬리</strong>(3서보 및 1피치 + 1회전): 회전은 중립 피치에서 순수 롤을 만들고 <em>요는 0</em>이다. 요는 꼬리가 피치됐을 때만 나타나며, 그 부호는 피치 부호에 따라 <em>반전</em>된다 — 요는 현재 피치로 가중된 회전 차분에 실린다(<code>tailYawCoupling</code>).</li>
+<li><strong>분할/엘레본 꼬리</strong>(2서보): 피치 = 공통 모드, 롤 = 차분. 상/하반각 슬라이더(<code>tailDihedralMix</code>, −100…+100)가 롤 차분에 실리는 요의 양을 정한다 — 0 = 평면(요 없음), + = 상반각, − = 하반각. 크기는 면의 크기와 각도에 따라 달라진다.</li>
+<li><strong>병합 꼬리</strong>(2서보, 기계 링키지): 두 서보가 피치(공통 모드)와 회전(차분)을 나눠 하중을 분산한다. 음의 엘리베이터에서의 요 반전은 동일하다.</li>
+<li><strong>Z-Wing</strong>(9 PWM): 모터 + 헤드 러더 + 날개면 4개(에일러론 좌/우 + 분할 드래그 러더 좌/우) + 3서보 회전 꼬리. 에일러론이 주 롤(75 %), 꼬리가 부 롤(35 %) + 피치 연동 요, 드래그 러더는 에어브레이크(공통, ≤300 µs)와 요(차분, 60 %)를 분리한다. 에어브레이크는 CH6(본래 미사용 플랩 주파수 채널)에 실린다.</li>
+</ul>
 <h2>제피로스 주입, 트림·페일세이프</h2>
 <p>커널과 축에 따라 세 가지 주입 지점이 있습니다:</p>
 <table>

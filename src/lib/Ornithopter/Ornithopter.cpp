@@ -68,6 +68,8 @@ Ornithopter::Ornithopter()
   , elevatorFerocityRateMix(0.0f)
   , elevatorAntigravityMix(0.0f)
   , elevonScale(50.0f)
+  , tailDihedralMix(0.0f)
+  , tailYawCoupling(50.0f)
   , motorMinUs(ORNI_SERVO_MIN_US)
   , motorMaxUs(ORNI_SERVO_MAX_US)
     , glideMode(false)
@@ -302,7 +304,7 @@ bool Ornithopter::update() {
     motionIntent.backTrim[1] = servoTrimUs[SF_BACK_RIGHT_WING];
     if (PROFILE_IS_GEARBOX) { motionIntent.flapping = 0; motionIntent.hz = 0; }
     uint8_t n = 0;
-    for (uint8_t ch = 0; ch < 7; ++ch) {
+    for (uint8_t ch = 0; ch < ORNI_MAX_OUTPUTS; ++ch) {
         const uint8_t f = COMPANION_FUNCTIONS[activeProfile][ch];
         if (f == SF_NONE) continue;
         motionIntent.output[n] = _f[f];
@@ -311,7 +313,7 @@ bool Ornithopter::update() {
                               f == SF_RUDDER ? 5 : f == SF_MOTOR ? 6 : 0;
         ++n;
     }
-    while (n < 7) { motionIntent.kind[n] = 7; motionIntent.output[n++] = 1500; }
+    while (n < ORNI_MAX_OUTPUTS) { motionIntent.kind[n] = 7; motionIntent.output[n++] = 1500; }
 #endif
     return true;
 }

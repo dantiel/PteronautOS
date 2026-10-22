@@ -49,7 +49,7 @@ static void runFlap(float *gravOut, float *rollOut, float *pitchOut,
         const float ay = Gy + A1[1]*s + B1[1]*c + A2[1]*s2 + B2[1]*c2 + noise;
         const float az = Gz + A1[2]*s + B1[2]*c + A2[2]*s2 + B2[2]*c2 + noise;
 
-        mesoGravityUpdate(g, ax, ay, az, s, c, dt, tauLock, tauGrav);
+        mesoGravityUpdate(g, ax, ay, az, s, c, dt, tauLock, tauGrav, true);
         // steady tilt: zero gyro → attitude must come purely from gravity
         mesoAttitudeUpdate(att, 0.0f, 0.0f, g.grav[0], g.grav[1], g.grav[2], dt, tauAtt);
     }

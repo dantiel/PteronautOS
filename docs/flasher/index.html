@@ -27,14 +27,20 @@
 <p class='sub-lead'>Compila e grava o teu firmware a partir do navegador — sem consola, sem PlatformIO.</p>
 <section class='flasher-card'>
 <h2>Configuração do build</h2>
-<label class='flasher-field'>
+<div class='flasher-field'>
 <span>Hardware do receptor</span>
-<select id='hardware_target'>
-<option selected value='pwmp7'>PWMP7 — 3 servo pads (GPIO9/10/5)</option>
-<option value='ep2pwm'>EP2 standalone — 2 servo pads (GPIO3/1)</option>
-<option value='mushin'>EP2 + RP2040 — MUSHIN companion</option>
-</select>
+<div aria-label='Hardware do receptor' class='flasher-segmented' role='radiogroup'>
+<label class='flasher-seg'>
+<input checked='checked' id='receiver_board_pwm' name='receiver_board' type='radio' value='pwm'>
+<span>Placa PWM</span>
 </label>
+<label class='flasher-seg'>
+<input id='receiver_board_crsf' name='receiver_board' type='radio' value='crsf'>
+<span>sem PWM (EP1/EP2)</span>
+</label>
+</div>
+<p class='flasher-hint'>Placas PWM acionam os servos diretamente. Placas sem PWM (EP1/EP2) expõem CRSF nos pads seriais — reaproveite-os como saídas PWM de servo, ou mantenha o CRSF para um companheiro MUSHIN RP2040.</p>
+</div>
 <label class='flasher-field'>
 <span>Perfil do mixer</span>
 <select id='mixer_profile'>
@@ -66,6 +72,15 @@
 <span class='flasher-toggle-text'>Giro Zephyrus (MPU6050)</span>
 <span class='flasher-switch'>
 <input class='flasher-switch-input' id='zephyrus_enabled' type='checkbox'>
+<span class='flasher-switch-track'>
+<span class='flasher-switch-knob'></span>
+</span>
+</span>
+</label>
+<label class='flasher-field flasher-toggle hidden' id='mushin-toggle-row'>
+<span class='flasher-toggle-text'>Companheiro MUSHIN (RP2040)</span>
+<span class='flasher-switch'>
+<input class='flasher-switch-input' id='mushin_enabled' type='checkbox'>
 <span class='flasher-switch-track'>
 <span class='flasher-switch-knob'></span>
 </span>

@@ -112,7 +112,11 @@
 // --- Gearbox Leg Servo Mix: maps PID corrections to µs offset ---
 #define ZEPHYR_GEARBOX_ROLL_GAIN  3.0f   // µs per degree roll → leg ailerons
 #define ZEPHYR_GEARBOX_PITCH_GAIN 3.0f   // µs per degree pitch → leg elevons
-#define ZEPHYR_GEARBOX_CLAMP_US   250    // Hard clamp on leg servo correction (±µs)
+#define ZEPHYR_GEARBOX_CLAMP_US   250    // Hard clamp on leg servo correction (µs)
+// Glide controller: attitude error → µs of tail correction (level hold).
+// The rate dampers above stabilise; this term adds the slow self-level that
+// makes a gearbox bird hold its glide attitude hands-off (dantiel-style).
+#define ZEPHYR_GEARBOX_ATT_GAIN   4.0f   // µs per degree of attitude error
 
 // --- Board Mounting Rotation ---
 // How the MPU6050 is physically mounted in the aircraft.

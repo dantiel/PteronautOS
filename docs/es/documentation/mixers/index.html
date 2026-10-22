@@ -106,10 +106,64 @@ Esta página documenta la capa de mezclador de <code>src/lib/Ornithopter/Ornitho
 </td>
 <td>Par de alas traseras de una aeronave de 4 alas (espejo del par delantero, trim propio)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Servo de alerón Z-Wing (alabeo) — izquierda / derecha</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Timón de arrastre partido Z-Wing (guiñada + aerofreno) — izquierda / derecha</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>Cola de rotación: servo de paso dedicado (compartido por la cola 1+1)</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>Cola de rotación: servo de alabeo/rotación — izquierda / derecha (la 1+1 usa solo el izquierdo)</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>Cola dividida/elevón: elevón — izquierda / derecha (di/anhédrico)</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>Cola fusionada: paso + rotación combinados — izquierda / derecha</td>
+</tr>
 </table>
 <p>Un <em>perfil</em> en ejecución proporciona el <code>funcMap</code>: un array que mapea índice de salida PWM → ServoFunc. Los tres primeros slots (PWM 1…3) son siempre <code>SF_NONE</code> — pertenecen a la correa BOOT y al bus I2C — así que las funciones reales de servo comienzan en el índice PWM 3 (el comentario del firmware lo detalla: índice 3 = CH4, 4 = CH5, 5 = CH6).</p>
-<h2>Los ocho perfiles de mezclador</h2>
-<p>Existen ocho perfiles de mezclador. Los perfiles 0–2 accionan el kernel de <em>forma de onda</em> (alas batientes), los perfiles 3–7 el kernel de <em>caja de engranajes</em> (motor + colas):</p>
+<h2>Los trece perfiles de mezclador</h2>
+<p>Existen trece perfiles de mezclador. Los perfiles 0–2 accionan el kernel de <em>forma de onda</em> (alas batientes), los perfiles 3–12 el kernel de <em>caja</em> (motor + colas):</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@ Esta página documenta la capa de mezclador de <code>src/lib/Ornithopter/Ornitho
 <td>3</td>
 <td>Timón · Motor · Elevador</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>caja</td>
+<td>5</td>
+<td>Motor · Timón · Paso de cola · Alabeo de cola I · Alabeo de cola D</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>caja</td>
+<td>4</td>
+<td>Motor · Timón · Elevón I · Elevón D</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>caja</td>
+<td>4</td>
+<td>Motor · Timón · Paso de cola · Alabeo de cola</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>caja</td>
+<td>4</td>
+<td>Motor · Timón · Paso-alabeo I · Paso-alabeo D</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>caja</td>
+<td>9</td>
+<td>Motor · Timón · Alerón I · Arrastre I · Alerón D · Arrastre D · Paso de cola · Alabeo de cola I · Alabeo de cola D</td>
+</tr>
 </table>
 <p>Selección: bandera de compilación <code>MIXER_PROFILE</code> (legado <code>ORNITHOPTER_GEARBOX=1</code> → perfil 5), luego anulable en ejecución vía WebUI (<code>setOrnithopterProfile</code>). La prueba de kernel es simplemente <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Mezcla de ejes del ala (kernel de onda)</h2>
@@ -222,6 +331,9 @@ Esta página documenta la capa de mezclador de <code>src/lib/Ornithopter/Ornitho
 <p>El mezclador de timón es <em>compartido verbatim por ambos kernels</em> — una ecuación, dos aeronaves:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Por defecto: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (ajustables en ejecución en la WebUI, almacenados por backup). El acoplamiento de alabeo en el timón es lo que deja a un pterosaurio pesado de ala mantener giros coordinados sin gimnasia de hilo de guiñada; reduzca el peso de alabeo si el timón de cabeza se siente demasiado agresivo en alabeo.</p>
+<h2>Controlador de planeo (kernel de caja)</h2>
+<p>El kernel de caja ejecuta un bucle cerrado <em>actitud + tasa</em> de estilo dantiel. Los amortiguadores de tasa (<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>) se suman con un término de mantenimiento de actitud en el mismo eje. Aquí no hay oscilador: los mandos ordenan tasa/actitud y el bucle dirige la cola.</p>
+<p>La guiñada no tiene referencia de magnetómetro, así que se <em>amortigua solo en tasa</em> (<code>gyroRudderCorrection</code>). La ganancia aero sigue al motor: <code>aeroGainScale</code> conmuta los coeficientes de aleteo ↔ planeo según gire el motor.</p>
 <h2>Mezcla de cola y elevones (caja reductora)</h2>
 <p>El kernel de caja se ejecuta sin estado en cada tick. Sus tres sub-mezcladores:</p>
 <ul>
@@ -231,6 +343,14 @@ Esta página documenta la capa de mezclador de <code>src/lib/Ornithopter/Ornitho
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>En el kernel de caja, Zephyrus inyecta <em>ambas</em> correcciones PID de alabeo y cabeceo en los servos de cola (alabeo en antifase, cabeceo en modo común), cada una limitada a ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Un fallo de giroscopio puede por tanto menear, pero jamás calar, un servo de cola.</p>
+<h2>Física de las superficies de cola</h2>
+<p>Los perfiles 8–12 son mezcladores de cola <em>completos</em>: las superficies de ala y cola nunca se separan, así la asignación de pines queda intacta. Cuatro familias de cola:</p>
+<ul>
+<li><strong>Cola de rotación</strong> (3 servos y 1 paso + 1 rotación): la rotación produce alabeo puro en paso neutro y <em>cero guiñada</em>. La guiñada aparece solo con la cola cabeceada, y su signo <em>se invierte</em> con el signo del paso — la guiñada cabalga el diferencial de rotación ponderado por el paso actual (<code>tailYawCoupling</code>).</li>
+<li><strong>Cola dividida/elevón</strong> (2 servos): paso = modo común, alabeo = diferencial. El deslizador di/anhédrico (<code>tailDihedralMix</code>, −100…+100) fija cuánta guiñada cabalga el diferencial de alabeo — 0 = plano (sin guiñada), + = diedro, − = anédrico; la magnitud depende del tamaño y el ángulo de las superficies.</li>
+<li><strong>Cola fusionada</strong> (2 servos, varillaje mecánico): ambos servos reparten el paso (modo común) y la rotación (diferencial), distribuyendo la carga. Misma inversión de guiñada con elevador negativo.</li>
+<li><strong>Z-Wing</strong> (9 PWM): motor + timón de cabeza + 4 superficies de ala (alerón I/D + timón de arrastre partido I/D) + cola de rotación de 3 servos. Los alerones llevan el alabeo primario (75 %), la cola el alabeo secundario (35 %) + guiñada ligada al paso, y los timones de arrastre separan el aerofreno (común, ≤300 µs) de la guiñada (diferencial, 60 %). El aerofreno va por CH6 (el canal de frecuencia de aleteo, inutilizado en otro caso).</li>
+</ul>
 <h2>Inyección Céfiros, trims y failsafe</h2>
 <p>Existen tres puntos de inyección distintos según el kernel y el eje:</p>
 <table>

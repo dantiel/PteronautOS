@@ -32,7 +32,7 @@ int main() {
     // Glide is an explicit prepared position, not a throttled full-amplitude wave.
     ChannelData[2]=172; clockUs+=3000; ornithopter.update();
     assert(!r.flapping && r.hz==0 && r.amplitude[0]==0 && r.amplitude[1]==0);
-    uint16_t outputs[7]; Motion::outputs(r,0.73f,outputs);
+    uint16_t outputs[Motion::outputCount]; Motion::outputs(r,0.73f,outputs);
     assert(outputs[0]==ornithopter.funcValue(SF_LEFT_WING));
     assert(outputs[1]==ornithopter.funcValue(SF_RIGHT_WING));
     setOrnithopterProfile(SERVO_4WING); clockUs+=3000; ornithopter.update();

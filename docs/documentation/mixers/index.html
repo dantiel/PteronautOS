@@ -106,10 +106,64 @@ Esta página documenta a camada de mixer de <code>src/lib/Ornithopter/Ornithopte
 </td>
 <td>Par de asas traseiras de uma aeronave de 4 asas (espelho do par dianteiro, trim próprio)</td>
 </tr>
+<tr>
+<td>
+<code>10 / 11</code>
+</td>
+<td>
+<code>SF_WING_AIL_L / SF_WING_AIL_R</code>
+</td>
+<td>Servo de aileron Z-Wing (rolagem) — esquerda / direita</td>
+</tr>
+<tr>
+<td>
+<code>12 / 13</code>
+</td>
+<td>
+<code>SF_WING_DRAG_L / SF_WING_DRAG_R</code>
+</td>
+<td>Leme de arrasto dividido Z-Wing (guinada + travão aerodinâmico) — esquerda / direita</td>
+</tr>
+<tr>
+<td>
+<code>14</code>
+</td>
+<td>
+<code>SF_TAIL_PITCH</code>
+</td>
+<td>Cauda de rotação: servo de passo dedicado (partilhado pela cauda 1+1)</td>
+</tr>
+<tr>
+<td>
+<code>15 / 16</code>
+</td>
+<td>
+<code>SF_TAIL_ROLL_L / SF_TAIL_ROLL_R</code>
+</td>
+<td>Cauda de rotação: servo de rolagem/rotação — esquerda / direita (a 1+1 usa apenas o esquerdo)</td>
+</tr>
+<tr>
+<td>
+<code>17 / 18</code>
+</td>
+<td>
+<code>SF_ELEVON_L / SF_ELEVON_R</code>
+</td>
+<td>Cauda dividida/elevon: elevon — esquerda / direita (di/anédrico)</td>
+</tr>
+<tr>
+<td>
+<code>19 / 20</code>
+</td>
+<td>
+<code>SF_TAIL_PITCHROT_L / SF_TAIL_PITCHROT_R</code>
+</td>
+<td>Cauda fundida: passo + rotação combinados — esquerda / direita</td>
+</tr>
 </table>
 <p>Um <em>perfil</em> de execução fornece o <code>funcMap</code>: um array que mapeia índice de saída PWM → ServoFunc. As três primeiras vagas (PWM 1…3) são sempre <code>SF_NONE</code> — pertencem à correia BOOT e ao barramento I2C — por isso as funções reais de servo começam no índice PWM 3 (o comentário do firmware explica: índice 3 = CH4, 4 = CH5, 5 = CH6).</p>
-<h2>Os oito perfis de mixer</h2>
-<p>Existem oito perfis de mixer. Os perfis 0–2 acionam o kernel de <em>forma de onda</em> (asas batentes), os perfis 3–7 o kernel de <em>caixa de velocidades</em> (motor + caudas):</p>
+<h2>Os treze perfis de mixer</h2>
+<p>Existem treze perfis de mixer. Os perfis 0–2 acionam o kernel de <em>forma de onda</em> (asas batentes), os perfis 3–12 o kernel de <em>caixa</em> (motor + caudas):</p>
 <table>
 <tr>
 <th>#</th>
@@ -206,6 +260,61 @@ Esta página documenta a camada de mixer de <code>src/lib/Ornithopter/Ornithopte
 <td>3</td>
 <td>Leme · Motor · Profundor</td>
 </tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL3</code>
+</td>
+<td>caixa</td>
+<td>5</td>
+<td>Motor · Leme · Passo de cauda · Rolagem de cauda E · Rolagem de cauda D</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_ELEVON</code>
+</td>
+<td>caixa</td>
+<td>4</td>
+<td>Motor · Leme · Elevon E · Elevon D</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAIL11</code>
+</td>
+<td>caixa</td>
+<td>4</td>
+<td>Motor · Leme · Passo de cauda · Rolagem de cauda</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>
+<code>GEARBOX_1MOT_1RUD_TAILMERGED</code>
+</td>
+<td>caixa</td>
+<td>4</td>
+<td>Motor · Leme · Passo-rolagem E · Passo-rolagem D</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>
+<code>ZWING_9PWM</code>
+</td>
+<td>caixa</td>
+<td>9</td>
+<td>Motor · Leme · Aileron E · Arrasto E · Aileron D · Arrasto D · Passo de cauda · Rolagem de cauda E · Rolagem de cauda D</td>
+</tr>
 </table>
 <p>Seleção: flag de build <code>MIXER_PROFILE</code> (legada <code>ORNITHOPTER_GEARBOX=1</code> → perfil 5), depois sobreponível em execução pela WebUI (<code>setOrnithopterProfile</code>). O teste de kernel é simplesmente <code>activeProfile &ge; GEARBOX_2VTAIL_1RUD</code>.</p>
 <h2>Mixagem dos eixos da asa (kernel de onda)</h2>
@@ -222,6 +331,9 @@ Esta página documenta a camada de mixer de <code>src/lib/Ornithopter/Ornithopte
 <p>O mixer de leme é <em>partilhado verbatim por ambos os kernels</em> — uma equação, duas aeronaves:</p>
 <pre><code>mix  = rudderNorm · rudderYawWeight  +  aileronNorm · rudderRollWeight&#x000A;mix  = clamp(mix, −1 … +1)&#x000A;µs   = 1500 + mix · 500            (rudder centre ± 500 µs)&#x000A;       + gyroRudderCorrection       (Zephyrus, when enabled)&#x000A;       + servoTrimUs[SF_RUDDER]&#x000A;</code></pre>
 <p>Padrões: <code>rudderYawWeight = 65%</code>, <code>rudderRollWeight = 35%</code> (afináveis em execução na WebUI, guardados por backup). O acoplamento de rolagem no leme é o que permite a um pterossauro pesado de asa manter curvas coordenadas sem ginástica de fio de guinada; reduza o peso de rolagem se o leme de cabeça parecer agressivo demais na rolagem.</p>
+<h2>Controlador de planagem (kernel de caixa)</h2>
+<p>O kernel de caixa executa um ciclo fechado <em>atitude + taxa</em> de estilo dantiel. Os amortecedores de taxa (<code>gyroAileronCorrection</code> / <code>gyroElevatorCorrection</code>) somam-se a um termo de manutenção de atitude no mesmo eixo. Aqui não há oscilador — os sticks comandam taxa/atitude e o ciclo guia a cauda.</p>
+<p>A guinada não tem referência de magnetómetro, pelo que é <em>apenas amortecida em taxa</em> (<code>gyroRudderCorrection</code>). O ganho aero acompanha o motor: <code>aeroGainScale</code> alterna os coeficientes de batimento ↔ planagem conforme o motor gira.</p>
 <h2>Mixagem da cauda e elevons (caixa de velocidades)</h2>
 <p>O kernel de caixa executa sem estado a cada tick. Os seus três sub-mixers:</p>
 <ul>
@@ -231,6 +343,14 @@ Esta página documenta a camada de mixer de <code>src/lib/Ornithopter/Ornithopte
 </ul>
 <pre><code>VtailLeft  = 1500 + (aileron + elevator)·scale + rollPID + pitchPID + trimL&#x000A;VtailRight = 1500 + (aileron − elevator)·scale − rollPID + pitchPID + trimR&#x000A;scale = 500 µs;  both aileron/elevator sums clamped to −1…+1 first&#x000A;</code></pre>
 <p>No kernel de caixa, o Zephyrus injeta <em>ambas</em> as correções PID de rolagem e arfagem nos servos de cauda (rolagem anti-fase, arfagem modo comum), cada uma limitada a ±250&nbsp;µs (<code>ZEPHYR_GEARBOX_CLAMP_US</code>). Uma falha de giroscópio pode portanto abanar, mas nunca travar, um servo de cauda.</p>
+<h2>Física das superfícies de cauda</h2>
+<p>Os perfis 8–12 são misturadores de cauda <em>completos</em> — as superfícies de asa e cauda nunca se separam, mantendo a alocação de pinos intacta. Quatro famílias de cauda:</p>
+<ul>
+<li><strong>Cauda de rotação</strong> (3 servos e 1 passo + 1 rotação): a rotação produz rolagem pura em passo neutro e <em>zero guinada</em>. A guinada só aparece com a cauda cabrada, e o seu sinal <em>inverte</em> com o sinal do passo — a guinada cavalga o diferencial de rotação ponderado pelo passo atual (<code>tailYawCoupling</code>).</li>
+<li><strong>Cauda dividida/elevon</strong> (2 servos): passo = modo comum, rolagem = diferencial. O deslizador di/anédrico (<code>tailDihedralMix</code>, −100…+100) define quanto da guinada cavalga o diferencial de rolagem — 0 = plano (sem guinada), + = diedro, − = anédrico; a magnitude depende do tamanho e do ângulo das superfícies.</li>
+<li><strong>Cauda fundida</strong> (2 servos, ligação mecânica): ambos os servos repartem o passo (modo comum) e a rotação (diferencial), distribuindo a carga. Mesma inversão de guinada com profundor negativo.</li>
+<li><strong>Z-Wing</strong> (9 PWM): motor + leme de cabeça + 4 superfícies de asa (aileron E/D + leme de arrasto dividido E/D) + cauda de rotação de 3 servos. Os ailerons levam a rolagem primária (75 %), a cauda a rolagem secundária (35 %) + guinada ligada ao passo, e os lemes de arrasto separam o travão aerodinâmico (comum, ≤300 µs) da guinada (diferencial, 60 %). O travão aerodinâmico vai por CH6 (o canal de frequência de batimento, de resto inutilizado).</li>
+</ul>
 <h2>Injeção Zéfiros, trims e failsafe</h2>
 <p>Existem três pontos de injeção diferentes consoante o kernel e o eixo:</p>
 <table>

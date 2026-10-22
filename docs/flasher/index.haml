@@ -29,12 +29,16 @@
         %section.flasher-card
           %h2!= flasher_heading_config
 
-          %label.flasher-field
+          .flasher-field
             %span!= flasher_hardware_target
-            %select#hardware_target
-              %option{value: "pwmp7", selected: true} PWMP7 — PWM receiver (3–6 servo pads)
-              %option{value: "ep2pwm"} EP2 / EP1 — standalone PWM (2 servo pads)
-              %option{value: "mushin"} EP2 / EP1 — MUSHIN companion (RP2040)
+            .flasher-segmented{role: "radiogroup", "aria-label": flasher_hardware_target}
+              %label.flasher-seg
+                %input#receiver_board_pwm{type: "radio", name: "receiver_board", value: "pwm", checked: "checked"}
+                %span!= flasher_board_pwm
+              %label.flasher-seg
+                %input#receiver_board_crsf{type: "radio", name: "receiver_board", value: "crsf"}
+                %span!= flasher_board_crsf
+            %p.flasher-hint!= flasher_board_hint
 
           %label.flasher-field
             %span!= flasher_mixer_profile
@@ -65,6 +69,12 @@
                 %span.flasher-toggle-text!= flasher_zephyrus_enabled
                 %span.flasher-switch
                   %input.flasher-switch-input#zephyrus_enabled{type: "checkbox"}
+                  %span.flasher-switch-track
+                    %span.flasher-switch-knob
+              %label.flasher-field.flasher-toggle#mushin-toggle-row.hidden
+                %span.flasher-toggle-text!= flasher_mushin_enabled
+                %span.flasher-switch
+                  %input.flasher-switch-input#mushin_enabled{type: "checkbox"}
                   %span.flasher-switch-track
                     %span.flasher-switch-knob
             %p.flasher-conditional#mushin-note.hidden!= flasher_mushin_hint
