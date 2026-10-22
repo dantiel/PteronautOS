@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentRunId, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, busy, clearSpecimens, closeSerial, collectParams, currentBuildInfo, currentMushin, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, l, len, len1, loadFromDisk, log, openDb, poll, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, selectSpecimen, selectedSpecimenId, serialSupported, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -168,6 +168,18 @@ setStatus = function(text, state) {
   }
 };
 
+// The target selector is the single positive source of truth: each option names
+// exactly one compiled firmware target (pwmp7 | ep2pwm | mushin) — no
+// "board + negation" derivation, so every receiver identity is a first-class
+// choice, not a leftover.
+currentMushin = function() {
+  return $("#hardware_target").value === "mushin";
+};
+
+currentTarget = function() {
+  return $("#hardware_target").value;
+};
+
 collectParams = function() {
   var checked, wifi, zeph;
   checked = LOCALES.filter(function(l) {
@@ -184,7 +196,7 @@ collectParams = function() {
     zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value,
     zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value,
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
-    hardware_target: $("#hardware_target").value,
+    hardware_target: currentTarget(),
     zephyrus_enabled: zeph,
     zephyrus_mode: $("#zephyrus_mode").value,
     zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
@@ -885,7 +897,7 @@ flash = async function() {
         return els.statusText.textContent = "Flashing… " + pct + "%";
       }
     });
-    mushin = $("#hardware_target").value === "mushin";
+    mushin = currentMushin();
     if (mushin) {
       log("Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware.");
     } else {
@@ -911,12 +923,13 @@ flash = async function() {
 };
 
 syncGyroFields = function() {
-  var el, enabled, i, len, localGyro, mushin, ref, wrap, zeph, zephRow;
-  mushin = $("#hardware_target").value === "mushin";
-  localGyro = $("#hardware_target").value === "pwmp7";
+  var el, enabled, i, len, localGyro, mushin, ref, target, wrap, zeph, zephRow;
+  target = $("#hardware_target").value;
+  localGyro = target === "pwmp7";
+  mushin = target === "mushin";
   zeph = $("#zephyrus_enabled");
   zephRow = zeph.closest(".flasher-toggle");
-  // Local MPU6050 gyro exists only on the PWMP7 board — the EP2 variants have
+  // Local MPU6050 gyro exists only on the PWMP7 build — the EP2 variants have
   // no free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   if (!localGyro) {
     zeph.checked = false;

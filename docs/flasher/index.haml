@@ -32,9 +32,9 @@
           %label.flasher-field
             %span!= flasher_hardware_target
             %select#hardware_target
-              %option{value: "pwmp7", selected: true} PWMP7 — 3 servo pads (GPIO9/10/5)
-              %option{value: "ep2pwm"} EP2 standalone — 2 servo pads (GPIO3/1)
-              %option{value: "mushin"} EP2 + RP2040 — MUSHIN companion
+              %option{value: "pwmp7", selected: true} PWMP7 — PWM receiver (3–6 servo pads)
+              %option{value: "ep2pwm"} EP2 / EP1 — standalone PWM (2 servo pads)
+              %option{value: "mushin"} EP2 / EP1 — MUSHIN companion (RP2040)
 
           %label.flasher-field
             %span!= flasher_mixer_profile

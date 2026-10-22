@@ -11,7 +11,29 @@ from pathlib import Path
 HARDWARE_PATH = Path(__file__).resolve().parents[1] / "targets/hardware/pteronautos-pwmp7.json"
 
 
-def verify_image(path):
+def derive_pwm_outputs(kind, gyro_on):
+    """Canonical PteronautOS pin-map derivation, shared by the build and the verifier.
+
+    Order is the natural (silkscreen / GPIO-ascending) order a hand reads across
+    the board: CH1=GPIO0, CH2=GPIO1, CH3=GPIO3, CH7=GPIO9, GPIO10, GPIO5. The
+    firmware's channel index maps straight onto the physical pad, so "channel 1 =
+    CH1" needs no translation cipher. GPIO0 (BOOT strap, also the left-wing pad
+    upstream) and GPIO5 are valid PWM pins and are exposed; GPIO2 is radio reset
+    and must never appear.
+
+    Gyro ON holds GPIO1/GPIO3 (the MPU6050 I²C SDA/SCL lines) so those two pads
+    drop out of the middle, leaving [0, 9, 10, 5]. Gyro OFF frees them back in,
+    restoring the full six-pad natural order. EP2 standalone drives its two
+    broken-out UART pads; the MUSHIN companion has no local PWM at all.
+    """
+    if kind == "pwmp7":
+        return [0, 9, 10, 5] if gyro_on else [0, 1, 3, 9, 10, 5]
+    if kind == "ep2pwm":
+        return [3, 1]
+    return None
+
+
+def verify_image(path, expected_pwm_outputs=None):
     data = Path(path).read_bytes()
     if len(data) < 0x1008 or data[:2] != b"\xe9\x02":
         raise ValueError("Not a complete ESP8285 image at offset zero")
@@ -45,6 +67,8 @@ def verify_image(path):
     else:
         layout = HARDWARE_PATH
     expected = json.loads(layout.read_text())
+    if expected_pwm_outputs is not None:
+        expected["pwm_outputs"] = expected_pwm_outputs
     if hardware != expected or hardware.get("radio_rst") != 2 or 2 in hardware.get("pwm_outputs", []):
         raise ValueError("Hardware differs from project map (GPIO2 is radio reset, not PWM)")
     if not isinstance(options, dict):
@@ -62,9 +86,16 @@ def verify_image(path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", type=Path)
+    parser.add_argument(
+        "--pwm_outputs",
+        help="Expected pwm_outputs (comma-separated); overrides the static project map.",
+    )
     args = parser.parse_args()
+    expected_pwm = None
+    if args.pwm_outputs:
+        expected_pwm = [int(x) for x in args.pwm_outputs.split(",") if x.strip() != ""]
     try:
-        verify_image(args.image)
+        verify_image(args.image, expected_pwm_outputs=expected_pwm)
     except (ValueError, OSError) as error:
         parser.exit(1, f"Firmware verification failed: {error}\n")
     print("Verified PteronautOS receiver: hardware, options, DOUT / 1 MB / 40 MHz")

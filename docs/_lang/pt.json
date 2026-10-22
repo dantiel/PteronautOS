@@ -960,6 +960,7 @@
   "flasher_load_btn": "Carregar .bin",
   "flasher_disconnect_btn": "Desconectar",
   "flasher_zephyrus_enabled": "Giro Zephyrus (MPU6050)",
+  "flasher_mushin_enabled": "Companheiro MUSHIN (RP2040)",
   "flasher_zephyrus_mode": "Modo de estabilização",
   "flasher_zephyrus_hint": "Giro desligado — ative o Zephyrus para usar o MPU6050. Giro local apenas na placa PWMP7.",
   "flasher_mushin_hint": "O MUSHIN move servos + giro para o RP2040 — sem PWM local, sem giro local nesta placa.",

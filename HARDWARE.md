@@ -66,6 +66,19 @@
 | **Ch4** | 9 | CH7 | Aux / spare | Free |
 | **Ch5** | 10 | *(unlabeled)* | Aux / spare | May need to solder wire |
 
+> **Runtime servo pad map is derived at build time from the gyro toggle**
+> (Fossil Etcher). The firmware's `pwm_outputs` list follows the natural
+> silkscreen order — CH1=GPIO0, CH2=GPIO1, CH3=GPIO3, CH7=GPIO9, GPIO10, GPIO5 —
+> so channel *N* is the *N*th pad a hand reads across the board:
+> - **Gyro ON** (Zephyrus compiled in): `[0, 9, 10, 5]` — GPIO1 (SDA) and
+>   GPIO3 (SCL) stay held by the MPU6050 I²C bus.
+> - **Gyro OFF** (default): `[0, 1, 3, 9, 10, 5]` — GPIO1 (CH2) and GPIO3 (CH3)
+>   are freed from I²C and rejoin the map as two extra servo pads.
+>
+> GPIO0 (the BOOT strap, shared with the CH1 left-wing pad upstream) and GPIO5
+> are valid PWM pins and are exposed. GPIO5 has no pad on v1.1 but is broken out
+> on v1.0. GPIO2 is radio reset and must never be a servo.
+
 ### 1.4 MPU6050 Wiring (GY-521 Breakout)
 
 ```

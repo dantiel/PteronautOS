@@ -237,7 +237,20 @@ jobs:
 
       - name: Stage firmware artifact
         run: |
-          python src/python/verify_pteronautos_image.py "src/.pio/build/$TARGET_ENV/firmware.bin"
+          # PWMP7 derives its servo pads from the gyro toggle: gyro ON holds
+          # GPIO1/GPIO3 (I²C) leaving [0,9,10,5]; gyro OFF frees them back to
+          # the full natural order [0,1,3,9,10,5]. Pass it so verification stays
+          # exact against derive_pwm_outputs().
+          if [ "${{ inputs.hardware_target }}" = "pwmp7" ]; then
+            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+              PWM_OUT="0,9,10,5"
+            else
+              PWM_OUT="0,1,3,9,10,5"
+            fi
+            python src/python/verify_pteronautos_image.py --pwm_outputs "$PWM_OUT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+          else
+            python src/python/verify_pteronautos_image.py "src/.pio/build/$TARGET_ENV/firmware.bin"
+          fi
           mkdir -p dist
           cp "src/.pio/build/$TARGET_ENV/firmware.bin" dist/pteronautos.bin
           cat > dist/manifest.json <<'JSON'

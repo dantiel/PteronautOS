@@ -67,8 +67,9 @@ struct ProfileDesc {
 // indices in order (index 0 = first broken-out servo pad). The hardware.json
 // `pwm_outputs` array defines the actual GPIO pins and their count, so a
 // profile whose servoCount exceeds GPIO_PIN_PWM_OUTPUTS_COUNT simply drops its
-// trailing functions (the filter never reaches those indices). PWMP7 lists
-// [9,10,5] (GPIO9/10/5), EP2-PWM lists [3,1] (GPIO3/1) — no target-specific map.
+// trailing functions (the filter never reaches those indices). PWMP7 lists the
+// natural order [0,1,3,9,10,5] (gyro off) / [0,9,10,5] (gyro on), EP2-PWM lists
+// [3,1] (GPIO3/1) — no target-specific map.
 constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
     // 0: SERVO_2WING
     { 2, { SF_LEFT_WING, SF_RIGHT_WING, SF_NONE, SF_NONE, SF_NONE, SF_NONE, SF_NONE } },

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from verify_pteronautos_image import HARDWARE_PATH, verify_image
+from verify_pteronautos_image import HARDWARE_PATH, derive_pwm_outputs, verify_image
 
 
 class ImageTests(unittest.TestCase):
@@ -53,6 +53,22 @@ class ImageTests(unittest.TestCase):
             verify_image(self.image(hardware=hw))
         with self.assertRaisesRegex(ValueError, 'Hardware differs'):
             verify_image(self.image(product=b'PteronautOS EP2'))
+
+    def test_pwmp7_gyro_derivation(self):
+        self.assertEqual(derive_pwm_outputs('pwmp7', True), [0, 9, 10, 5])
+        self.assertEqual(derive_pwm_outputs('pwmp7', False), [0, 1, 3, 9, 10, 5])
+        self.assertEqual(derive_pwm_outputs('ep2pwm', False), [3, 1])
+        self.assertIsNone(derive_pwm_outputs('mushin', False))
+
+    def test_pwmp7_gyro_on_map_needs_override(self):
+        # The static project map is the gyro-OFF natural order; the gyro-ON map
+        # (GPIO1/GPIO3 held by I2C) differs from it, so it is only accepted when
+        # the build passes the derived override.
+        hw = json.loads(HARDWARE_PATH.read_text())
+        hw['pwm_outputs'] = [0, 9, 10, 5]
+        verify_image(self.image(hardware=hw), expected_pwm_outputs=[0, 9, 10, 5])
+        with self.assertRaisesRegex(ValueError, 'Hardware differs'):
+            verify_image(self.image(hardware=hw))
 
     def test_bad_clock_rejected(self):
         with self.assertRaisesRegex(ValueError, '40 MHz'):

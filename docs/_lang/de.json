@@ -960,6 +960,7 @@
   "flasher_load_btn": ".bin laden",
   "flasher_disconnect_btn": "Trennen",
   "flasher_zephyrus_enabled": "Zephyrus-Gyro (MPU6050)",
+  "flasher_mushin_enabled": "MUSHIN-Begleiter (RP2040)",
   "flasher_zephyrus_mode": "Stabilisierungsmodus",
   "flasher_zephyrus_hint": "Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Lokales Gyro nur auf der PWMP7-Platine.",
   "flasher_mushin_hint": "MUSHIN verlagert Servos + Gyro auf den RP2040 — kein lokales PWM, kein lokaler Gyro auf dieser Platine.",

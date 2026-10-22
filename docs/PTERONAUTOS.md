@@ -588,13 +588,13 @@ All in `OrnithopterConfig.h` and `ZephyrusConfig.h`. See sections 4 and 5 above 
 {
     "radio_dio1": 4,  "radio_miso": 12, "radio_mosi": 13,
     "radio_nss": 15,  "radio_sck": 14,  "led": 16,
-    "pwm_outputs": [0,1,3,9,10,5,2],
+    "pwm_outputs": [0,1,3,9,10,5],
     "vbat": 17, "vbat_offset": 12, "vbat_scale": 310,
     "vbat_cal_min": 3500, "vbat_cal_max": 25200
 }
 ```
 
-The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=1` and `-D ZEPHYR_I2C_SCL=3` (v1.1, using CH2/CH3 breakouts). For v1.0 boards with exposed GPIO2/GPIO5 pads, use `SDA=5, SCL=2`. The hardware JSON retains stock ELRS PWM output definitions for upstream compatibility.
+The I2C pin override happens at compile time via `-D ZEPHYR_I2C_SDA=1` and `-D ZEPHYR_I2C_SCL=3` (v1.1, using CH2/CH3 breakouts). For v1.0 boards with exposed GPIO2/GPIO5 pads, use `SDA=5, SCL=2`. The servo pad order is the natural silkscreen order (CH1=GPIO0 … GPIO5); GPIO2 is radio reset and must never appear in `pwm_outputs`.
 
 ---
 

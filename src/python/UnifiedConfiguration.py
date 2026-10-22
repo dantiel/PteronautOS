@@ -9,7 +9,7 @@ from pathlib import Path
 
 from external import jmespath
 from firmware import TXType
-from verify_pteronautos_image import verify_image
+from verify_pteronautos_image import verify_image, derive_pwm_outputs
 
 
 def findFirmwareEnd(f):
@@ -37,7 +37,7 @@ def findFirmwareEnd(f):
         pos = pos + 32
     return pos
 
-def appendToFirmware(firmware_file, product_name, lua_name, defines, config, layout_file, rx_as_tx):
+def appendToFirmware(firmware_file, product_name, lua_name, defines, config, layout_file, rx_as_tx, pwm_outputs=None):
     product = (product_name.encode() + (b'\0' * 128))[0:128]
     device = (lua_name.encode() + (b'\0' * 16))[0:16]
     end = findFirmwareEnd(firmware_file)
@@ -50,6 +50,8 @@ def appendToFirmware(firmware_file, product_name, lua_name, defines, config, lay
         try:
             with open(layout_file) as h:
                 hardware = json.load(h)
+                if pwm_outputs is not None:
+                    hardware['pwm_outputs'] = pwm_outputs
                 if config is not None and 'overlay' in config:
                     hardware.update(config['overlay'])
                 if rx_as_tx is not None:
@@ -224,6 +226,7 @@ def appendConfiguration(source, target, env):
 
     defines = json.JSONEncoder().encode(env['OPTIONS_JSON'])
 
+    pwm_outputs = None
     with open(str(target[0]), "r+b") as firmware_file:
         if 'PteronautOS' in target_name:
             # Project-owned map, NOT the ignored upstream hardware checkout.
@@ -249,6 +252,12 @@ def appendConfiguration(source, target, env):
                 'ep2pwm': 'EP2 PWM RX',
                 'pwmp7': 'PWMP7 RX',
             }[kind]
+            # Derive the local PWM pads from the build flags: PWMP7 gains the
+            # two I²C pins (GPIO1/GPIO3) as extra servos when Zephyrus is not
+            # compiled in; EP2 standalone keeps [3,1]; MUSHIN has no local PWM.
+            build_flags = env.get('BUILD_FLAGS', [])
+            gyro_on = any('ZEPHYRUS_ENABLED' in flag for flag in build_flags)
+            pwm_outputs = derive_pwm_outputs(kind, gyro_on)
             hw_file = Path(__file__).resolve().parents[1] / ('targets/hardware/' + hw_name)
             appendToFirmware(
                 firmware_file,
@@ -257,14 +266,15 @@ def appendConfiguration(source, target, env):
                 defines,
                 None,           # config not needed
                 hw_file,        # layout_file
-                None            # rx_as_tx not needed
+                None,           # rx_as_tx not needed
+                pwm_outputs     # derived servo pads
             )
             print("PteronautOS: embedded project hardware definition")
         else:
             doConfiguration(firmware_file, defines, config, target_name, device_name, None)
 
     if 'PteronautOS' in target_name:
-        verify_image(Path(str(target[0])))
+        verify_image(Path(str(target[0])), expected_pwm_outputs=pwm_outputs)
         print('PteronautOS: verified embedded hardware/options and DOUT / 40 MHz flash header')
 
 if __name__ == '__main__':

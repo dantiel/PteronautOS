@@ -121,6 +121,16 @@ setStatus = (text, state) ->
   els.statusDot.classList.add "done" if state is "done"
   els.statusDot.classList.add "fail" if state is "fail"
 
+# The target selector is the single positive source of truth: each option names
+# exactly one compiled firmware target (pwmp7 | ep2pwm | mushin) — no
+# "board + negation" derivation, so every receiver identity is a first-class
+# choice, not a leftover.
+currentMushin = ->
+  $("#hardware_target").value is "mushin"
+
+currentTarget = ->
+  $("#hardware_target").value
+
 collectParams = ->
   checked = LOCALES.filter (l) -> $("#locale-#{l}").checked
   zeph = if $("#zephyrus_enabled").checked then "1" else "0"
@@ -133,7 +143,7 @@ collectParams = ->
   zephyrus_i2c_sda: $("#zephyrus_i2c_sda").value
   zephyrus_i2c_scl: $("#zephyrus_i2c_scl").value
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
-  hardware_target: $("#hardware_target").value
+  hardware_target: currentTarget()
   zephyrus_enabled: zeph
   zephyrus_mode: $("#zephyrus_mode").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
@@ -632,7 +642,7 @@ flash = ->
         els.progressBar.style.width = pct + "%"
         els.statusText.textContent = "Flashing… " + pct + "%"
 
-    mushin = $("#hardware_target").value is "mushin"
+    mushin = currentMushin()
     if mushin
       log "Flashing complete. The receiver stays in the ROM bootloader — exit MEDITATION to boot the new firmware."
     else
@@ -654,26 +664,27 @@ flash = ->
     busy = false
 
 syncGyroFields = ->
-  mushin = $("#hardware_target").value is "mushin"
-  localGyro = $("#hardware_target").value is "pwmp7"
-  zeph = $("#zephyrus_enabled")
-  zephRow = zeph.closest ".flasher-toggle"
-  # Local MPU6050 gyro exists only on the PWMP7 board — the EP2 variants have
-  # no free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
-  unless localGyro
-    zeph.checked = false
-    zeph.disabled = true
-    zephRow.classList.add "is-disabled"
-  else
-    zeph.disabled = false
-    zephRow.classList.remove "is-disabled"
-  enabled = zeph.checked and localGyro
-  wrap = $("#zephyrus-fields")
-  wrap.classList.toggle "is-greyed", not enabled
-  for el in wrap.querySelectorAll "input, select"
-    el.disabled = not enabled
-  $("#zephyrus-hint").classList.toggle "hidden", enabled
-  $("#mushin-note").classList.toggle "hidden", not mushin
+ target = $("#hardware_target").value
+ localGyro = target is "pwmp7"
+ mushin = target is "mushin"
+ zeph = $("#zephyrus_enabled")
+ zephRow = zeph.closest ".flasher-toggle"
+ # Local MPU6050 gyro exists only on the PWMP7 build — the EP2 variants have
+ # no free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
+ unless localGyro
+   zeph.checked = false
+   zeph.disabled = true
+   zephRow.classList.add "is-disabled"
+ else
+   zeph.disabled = false
+   zephRow.classList.remove "is-disabled"
+ enabled = zeph.checked and localGyro
+ wrap = $("#zephyrus-fields")
+ wrap.classList.toggle "is-greyed", not enabled
+ for el in wrap.querySelectorAll "input, select"
+   el.disabled = not enabled
+ $("#zephyrus-hint").classList.toggle "hidden", enabled
+ $("#mushin-note").classList.toggle "hidden", not mushin
 
 restoreConfig()
 syncGyroFields()
