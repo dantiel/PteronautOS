@@ -33,7 +33,7 @@ def derive_pwm_outputs(kind, gyro_on):
     return None
 
 
-def verify_image(path, expected_pwm_outputs=None):
+def verify_image(path, expected_pwm_outputs=None, expected_product=None):
     data = Path(path).read_bytes()
     if len(data) < 0x1008 or data[:2] != b"\xe9\x02":
         raise ValueError("Not a complete ESP8285 image at offset zero")
@@ -55,6 +55,8 @@ def verify_image(path, expected_pwm_outputs=None):
     product = data[end:end + 128].split(b"\0", 1)[0]
     if product not in (b"PteronautOS PWMP7", b"PteronautOS EP2", b"PteronautOS EP2 PWM"):
         raise ValueError("Unexpected receiver product")
+    if expected_product is not None and product != expected_product.encode():
+        raise ValueError(f"Product {product!r} does not match expected {expected_product!r}")
     try:
         options = json.loads(data[end + 144:end + 656].split(b"\0", 1)[0])
         hardware = json.loads(data[end + 656:end + 2704].split(b"\0", 1)[0])
@@ -90,12 +92,20 @@ if __name__ == "__main__":
         "--pwm_outputs",
         help="Expected pwm_outputs (comma-separated); overrides the static project map.",
     )
+    parser.add_argument(
+        "--expect_product",
+        help="Expected product name (e.g. 'PteronautOS EP2 PWM'); fails the build on mismatch.",
+    )
     args = parser.parse_args()
     expected_pwm = None
     if args.pwm_outputs:
         expected_pwm = [int(x) for x in args.pwm_outputs.split(",") if x.strip() != ""]
     try:
-        verify_image(args.image, expected_pwm_outputs=expected_pwm)
+        verify_image(
+            args.image,
+            expected_pwm_outputs=expected_pwm,
+            expected_product=args.expect_product,
+        )
     except (ValueError, OSError) as error:
         parser.exit(1, f"Firmware verification failed: {error}\n")
     print("Verified PteronautOS receiver: hardware, options, DOUT / 1 MB / 40 MHz")
