@@ -541,6 +541,7 @@ static void populateSettingsJson(JsonObject settings, const JsonObject json)
 #endif
 }
 
+#if defined(PTERONAUTOS)
 static void GetPteronautosSettings(AsyncWebServerRequest *request)
 {
     if (heapCriticallyLow()) { serveHeapBusy(request); return; }
@@ -565,6 +566,7 @@ static void GetPteronautosRxConfig(AsyncWebServerRequest *request)
 #endif
     sendJsonResponse(request, response);
 }
+#endif // defined(PTERONAUTOS)
 
 #if !defined(PTERONAUTOS)
 // Legacy ELRS Configurator endpoint. PteronautOS orphans /config entirely: its
@@ -671,6 +673,7 @@ static void GetConfiguration(AsyncWebServerRequest *request)
 }
 #endif // !defined(PTERONAUTOS)
 
+#if defined(PTERONAUTOS)
 static void GetPteronautosDebug(AsyncWebServerRequest *request)
 {
     auto *response = new (std::nothrow) AsyncJsonResponse();
@@ -2017,6 +2020,7 @@ static void GetPteronautosStick(AsyncWebServerRequest *request)
 {
     PostPteronautosStick(request); // same response
 }
+#endif // defined(PTERONAUTOS)
 
 #if defined(TARGET_TX)
 static void UpdateConfiguration(AsyncWebServerRequest *request, JsonVariant &json)
@@ -2578,11 +2582,13 @@ static void startMDNS()
   options += " -DFAN_MIN_RUNTIME=" + String(firmwareOptions.fan_min_runtime);
   #endif
 server.addHandler(new AsyncCallbackJsonWebHandler("/options.json", UpdateSettings));
+#if defined(PTERONAUTOS)
 {
   auto *backupHandler = new AsyncCallbackJsonWebHandler("/pteronautos/backup", PostPteronautosBackup);
   backupHandler->setMaxContentLength(16384);
   server.addHandler(backupHandler);
 }
+#endif // defined(PTERONAUTOS)
 #if defined(TARGET_RX)
   if (firmwareOptions.lock_on_first_connection)
   {
@@ -2707,6 +2713,7 @@ static void startServices()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
 
+#if defined(PTERONAUTOS)
   // Fallback/retry for recovery mode. Normal receiver startup restores before
   // outputs start; never allocate the config document inside a state poll.
   LoadOrnithopterConfig();
@@ -2727,6 +2734,7 @@ static void startServices()
   server.on("/pteronautos/stick", HTTP_GET, GetPteronautosStick);
   server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
   server.on("/pteronautos/blackbox", HTTP_GET, GetPteronautosBlackbox);
+#endif // defined(PTERONAUTOS)
   server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
