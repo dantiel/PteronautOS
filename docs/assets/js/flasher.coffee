@@ -57,7 +57,7 @@ FIELD_IDS = [
   "#zephyrus_i2c_sda"
   "#zephyrus_i2c_scl"
   "#zephyrus_board_rotation"
-  "#mushin_enabled"
+  "#ep2_pwm_enabled"
   "#zephyrus_enabled"
   "#zephyrus_mode"
   "#zephyrus_i2c_pre_detect"
@@ -124,9 +124,9 @@ setStatus = (text, state) ->
   els.statusDot.classList.add "fail" if state is "fail"
 
 # Two board classes, both positive. A PWM board (PWMP7) drives servos natively;
-# a non-PWM board (EP1/EP2) exposes CRSF on its serial pads, which either stays
-# serial (MUSHIN RP2040 companion) or is repurposed into 2 PWM servo outputs.
-# The companion toggle is a positive switch, never a "board + negation".
+# a non-PWM board (EP1/EP2) exposes CRSF on its serial pads. Its NATURAL state
+# keeps CRSF for a MUSHIN RP2040 companion (servos + gyro live on the RP2040);
+# the opt-in "reuse as PWM" repurposes those pads into 2 local servo outputs.
 currentBoard = ->
   if $("#receiver_board_crsf").checked then "crsf" else "pwm"
 
@@ -134,13 +134,16 @@ setBoard = (v) ->
   $("#receiver_board_pwm").checked = v is "pwm"
   $("#receiver_board_crsf").checked = v is "crsf"
 
+currentEp2Pwm = ->
+  currentBoard() is "crsf" and $("#ep2_pwm_enabled").checked
+
 currentMushin = ->
-  currentBoard() is "crsf" and $("#mushin_enabled").checked
+  currentBoard() is "crsf" and not $("#ep2_pwm_enabled").checked
 
 currentTarget = ->
-  if currentBoard() is "pwm" then "pwmp7"
-  else if $("#mushin_enabled").checked then "mushin"
-  else "ep2pwm"
+  if currentEp2Pwm() then "ep2pwm"
+  else if currentBoard() is "pwm" then "pwmp7"
+  else "mushin"
 
 collectParams = ->
   checked = LOCALES.filter (l) -> $("#locale-#{l}").checked
@@ -678,10 +681,10 @@ flash = ->
 syncGyroFields = ->
   board = currentBoard()
   localGyro = board is "pwm"
-  mushin = currentMushin()
+  ep2Pwm = currentEp2Pwm()
   zeph = $("#zephyrus_enabled")
   zephRow = zeph.closest ".flasher-toggle"
-  mushinRow = $("#mushin-toggle-row")
+  ep2PwmRow = $("#ep2-pwm-toggle-row")
   # Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   # free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   unless localGyro
@@ -691,16 +694,16 @@ syncGyroFields = ->
   else
     zeph.disabled = false
     zephRow.classList.remove "is-disabled"
-  # MUSHIN companion only applies to a non-PWM board (its CRSF pad pair).
-  mushinRow.classList.toggle "hidden", board isnt "crsf"
-  $("#mushin_enabled").checked = false if board isnt "crsf"
+  # "Reuse as PWM" only applies to a non-PWM board (its CRSF pad pair).
+  ep2PwmRow.classList.toggle "hidden", board isnt "crsf"
+  $("#ep2_pwm_enabled").checked = false if board isnt "crsf"
   enabled = zeph.checked and localGyro
   wrap = $("#zephyrus-fields")
   wrap.classList.toggle "is-greyed", not enabled
   for el in wrap.querySelectorAll "input, select"
     el.disabled = not enabled
   $("#zephyrus-hint").classList.toggle "hidden", enabled
-  $("#mushin-note").classList.toggle "hidden", not mushin
+  $("#ep2-pwm-note").classList.toggle "hidden", not ep2Pwm
 
 restoreConfig()
 syncGyroFields()
@@ -714,7 +717,7 @@ for sel in ["#receiver_board_pwm", "#receiver_board_crsf"]
   $(sel).addEventListener "change", ->
     saveConfig()
     syncGyroFields()
-$("#mushin_enabled").addEventListener "change", ->
+$("#ep2_pwm_enabled").addEventListener "change", ->
   saveConfig()
   syncGyroFields()
 $("#zephyrus_enabled").addEventListener "change", syncGyroFields
