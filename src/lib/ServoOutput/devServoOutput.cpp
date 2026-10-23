@@ -297,7 +297,9 @@ static void servosUpdate(unsigned long now)
     // Advance mixer and write servo outputs on every tick (even disconnected — for PWM test)
     ornithopter.benchMode = (connectionState == wifiUpdate);
 #if defined(MUSHIN_ENABLED)
-    mushinUpdate(millis());
+    // UART0 draining (mushinUpdate) now lives in the main loop so the soft 'bl'
+    // bootloader descend is answered even when the servo tick is not yet armed
+    // (disconnected flasher jig). This block only plans/streams the motion.
     const bool companionControlValid = ornithopter.enabled && connectionState == connected &&
         connectionHasModelMatch && teamraceHasModelMatch &&
         (newChannelsAvailable || (lastUpdate && now - lastUpdate <= 100));

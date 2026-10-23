@@ -2090,7 +2090,14 @@ void loop()
     devicesUpdate(now);
 
     // read and process any data from serial ports, send any queued non-RC data
-#if !defined(MUSHIN_ENABLED)
+#if defined(MUSHIN_ENABLED)
+    // The companion owns UART0 exclusively (handleSerialIO is compiled out).
+    // Drain it every loop — independent of the servo device's tick, which is
+    // only armed after EVENT_CONNECTION_CHANGED (a connected/lost transition).
+    // The soft 'bl' bootloader descend must be answered even when the receiver
+    // is sitting disconnected in the flasher jig.
+    mushinUpdate(now);
+#else
     handleSerialIO();
 #endif
 
