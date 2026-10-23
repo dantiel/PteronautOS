@@ -56,10 +56,9 @@ on:
         default: '0'
         options: ['0', '1', '2', '3', '4', '5', '6']
       hardware_target:
-        description: 'Receiver hardware target (board)'
+        description: 'Receiver hardware target (board) — no default; a dropped input must fail, not silently build PWMP7'
         required: true
         type: choice
-        default: 'pwmp7'
         options:
           - 'pwmp7'   # PWMP7 — 3 local servo pads (GPIO9/10/5)
           - 'ep2pwm'  # EP2 standalone — 2 local servo pads (GPIO3/1)
@@ -214,10 +213,17 @@ jobs:
 
       - name: Build firmware
         run: |
+          # Fail closed: a missing/empty hardware_target (dropped by a stale
+          # worker that predates the field) must abort, not fall through to a
+          # PWMP7 image that the flasher UI never asked for.
           case "${{ inputs.hardware_target }}" in
             ep2pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
             mushin) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
-            *)      TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+            pwmp7)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+            *)
+              echo "::error::hardware_target is empty or unrecognized ('${{ inputs.hardware_target }}'). Redeploy the worker so it forwards hardware_target."
+              exit 1
+              ;;
           esac
           echo "TARGET_ENV=$TARGET_ENV" >> "$GITHUB_ENV"
           if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
