@@ -34,7 +34,13 @@
         %h2!= wififlash_h2_get
         %p!= wififlash_get_p
         %p.flasher-cta
-          %a{href: "#{asset_prefix}assets/firmware/pteronaut-egg.bin", download: "pteronaut-egg.bin"}!= wififlash_download
+          %a{href: "#{asset_prefix}assets/firmware/pteronaut-egg.bin.gz", download: "pteronaut-egg.bin.gz"}!= wififlash_download
+
+        %h2!= wififlash_h2_getfull
+        %p!= wififlash_getfull_p
+        %p.flasher-cta
+          %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= wififlash_download_full
+        %p!= wififlash_getfull_note
 
         %h2!= wififlash_h2_flash
         %p!= wififlash_flash_p
@@ -46,17 +52,17 @@
             %th!= wififlash_th_ssid
             %th!= wififlash_th_value
           %tr
+            %td!= wififlash_ssid_v
             %td
               %code PTERONAUT-EGG
-            %td!= wififlash_ssid_v
           %tr
+            %td!= wififlash_pass_v
             %td
               %code hatchnatural
-            %td!= wififlash_pass_v
           %tr
+            %td!= wififlash_host_v
             %td
               %code pteronaut-egg.local
-            %td!= wififlash_host_v
 
         %h2!= wififlash_h2_upload
         %p!= wififlash_upload_p
@@ -72,12 +78,6 @@
           %p.flasher-cta
             %a{href: "#{asset_prefix}#{lang_dir}flasher/?board=egg"}!= wififlash_etcher_link
 
-        %h2!= wififlash_h2_build
-        %p!= wififlash_build_p
-        %pre
-          %code
-            :preserve
-              pio run -d egg
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT

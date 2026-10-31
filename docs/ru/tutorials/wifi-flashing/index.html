@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>WiFi Flashing — Tutorials</title>
+<title>Прошивка по WiFi — Учебники</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,59 +26,62 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<p class='tutorial-number'>Tutorial 08</p>
-<h1>WiFi Flashing with the Pteronaut-Egg</h1>
-<p class='sub-lead'>Flash once with a cable, then update over WiFi — no FTDI, no UART, ever again.</p>
-<p>The Pteronaut-Egg is a tiny WiFi bootstrap (~294 KB) that lives on the receiver. Its only job is to accept the full PteronautOS firmware over WiFi and stage it — so you only need a USB cable once.</p>
-<p>The ESP8285 has a single ~1 MB flash region. A full image (~636 KB) cannot fit its own free staging space, so it cannot update itself over WiFi. The egg is small enough to fit, and the full image is small enough to flash the egg back — closing an endless egg ⇄ full cycle.</p>
-<h2>01 — Get the egg</h2>
-<p>Download the prebuilt Pteronaut-Egg. It is a fixed, config-independent bootstrap — no settings, no build required.</p>
+<p class='tutorial-number'>Учебник 08</p>
+<h1>Прошивка по WiFi с Pteronaut-Egg</h1>
+<p class='sub-lead'>Прошивайте и обновляйтесь полностью по WiFi — без кабеля, без FTDI, без UART, никогда.</p>
+<p>Pteronaut-Egg — это крошечный WiFi-бутстрап (~294 КБ), который живёт на приёмнике. Его единственная задача — принять полную прошивку PteronautOS по WiFi и подготовить её — так что кабель вам не нужен вовсе.</p>
+<p>У ESP8285 одна область флеш-памяти ~1 МБ. Полный образ (~636 КБ) не помещается в собственное свободное пространство для подготовки, поэтому не может обновиться по WiFi. Egg достаточно мал, чтобы поместиться, а полный образ достаточно мал, чтобы вернуть egg обратно — замыкая бесконечный цикл egg ↔ полный.</p>
+<h2>01 — Получите egg</h2>
+<p>Скачайте готовый образ Pteronaut-Egg. Это фиксированный бутстрап, не зависящий от конфигурации — без настроек и сборки.</p>
 <p class='flasher-cta'>
-<a download='pteronaut-egg.bin' href='../../../assets/firmware/pteronaut-egg.bin'>Download pteronaut-egg.bin</a>
+<a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>Скачать pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — Flash the egg (once)</h2>
-<p>Flash the egg onto the receiver with any ESP8266 flashing tool. The Fossil Etcher flashes it straight from the browser over Web Serial — hold BOOT (GPIO0), power-cycle, then click Flash.</p>
-<h2>03 — Connect to the egg</h2>
-<p>Power the receiver. The egg opens a WiFi access point; join it, then open the egg's upload page in a browser.</p>
+<h2>02 — Получите полную прошивку</h2>
+<p>Полная прошивка всегда собирается заново в Fossil Etcher — выберите приёмник, микшер и конфигурацию, затем скачайте новейший образ прямо из браузера. Без PlatformIO.</p>
+<p class='flasher-cta'>
+<a href='../../../ru/flasher/'>Открыть Fossil Etcher</a>
+</p>
+<p>Etcher каждый раз собирает актуальный PteronautOS из исходного кода, поэтому вы всегда получаете новейшую прошивку с настройками по умолчанию, соответствующими лучшим практикам.</p>
+<h2>03 — Прошивка не нужна</h2>
+<p>Ваш приёмник поставляется с уже установленным Pteronaut-Egg — прошивать нечего и кабель никогда не нужен. Если egg когда-либо будет стёрт, вы можете восстановить его по WiFi из WebUI полной прошивки.</p>
+<h2>04 — Подключитесь к egg</h2>
+<p>Включите приёмник. Egg открывает точку доступа WiFi; подключитесь к ней и откройте страницу загрузки egg в браузере.</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Value</th>
+<th>Поле</th>
+<th>Значение</th>
 </tr>
 <tr>
+<td>Сеть WiFi (AP)</td>
 <td>
 <code>PTERONAUT-EGG</code>
 </td>
-<td>WiFi network (AP)</td>
 </tr>
 <tr>
+<td>Пароль WiFi</td>
 <td>
 <code>hatchnatural</code>
 </td>
-<td>WiFi password</td>
 </tr>
 <tr>
+<td>Страница загрузки (mDNS, с запасным 192.168.4.1)</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
-<td>Upload page (mDNS, with 192.168.4.1 fallback)</td>
 </tr>
 </table>
-<h2>04 — Upload the full firmware</h2>
-<p>Build your full firmware in the Fossil Etcher (board, mixer, gyro, regulatory domain), download it, then drag the .bin onto the egg's ASCII egg. The egg stages it and reboots into full PteronautOS.</p>
-<h2>05 — Every future update</h2>
-<p>From now on, updating is two WiFi uploads and zero cables: full firmware → upload the egg back → upload the new full firmware. The cycle repeats indefinitely.</p>
-<h2>Brick risk (honest)</h2>
-<p>Like any over-the-air flash: if you upload a broken full image whose WiFi never starts, you need a cable again. The egg removes the cable from the normal path, not the emergency path.</p>
+<h2>05 — Загрузите полную прошивку</h2>
+<p>На странице загрузки egg перетащите полную прошивку, скачанную из Fossil Etcher, на ASCII-egg. Egg подготовит её и перезагрузится в полный PteronautOS.</p>
+<h2>06 — Каждое будущее обновление</h2>
+<p>Отныне обновление — это две загрузки по WiFi и ноль кабелей. Полный PteronautOS запускает стандартную WebUI ELRS — откройте её страницу Firmware Update, загрузите egg обратно, затем загрузите новую полную прошивку. Цикл повторяется бесконечно.</p>
+<h2>Риск окирпичивания (честно)</h2>
+<p>Как и при любой прошивке по воздуху: только сломанный полный образ, чей WiFi никогда не запускается, потребует проводного восстановления. В обычном использовании egg полностью убирает кабель — без кабеля, никогда.</p>
 <aside class='flasher-callout'>
-<p class='flasher-callout-text'>The Fossil Etcher is the shared flashing tool for both WiFi and UART workflows — flash the egg, or flash the full firmware directly, all from the browser.</p>
+<p class='flasher-callout-text'>Fossil Etcher — это общий инструмент прошивки для сценариев WiFi и UART — скачайте egg или соберите полную прошивку напрямую, всё из браузера.</p>
 <p class='flasher-cta'>
-<a href='../../../ru/flasher/?board=egg'>Open the Fossil Etcher</a>
+<a href='../../../ru/flasher/?board=egg'>Открыть Fossil Etcher</a>
 </p>
 </aside>
-<h2>Build the egg yourself</h2>
-<p>To rebuild the egg from source:</p>
-<pre><code>pio run -d egg&#x000A;</code></pre>
 </div>
 </main>
 <footer>

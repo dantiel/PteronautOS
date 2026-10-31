@@ -577,7 +577,7 @@ footer .lang-switch
   line-height: 1.6
   color: var(--text)
 
-.flasher-cta
+.sub-content .flasher-cta
   margin: 0
 
   a
@@ -590,14 +590,16 @@ footer .lang-switch
     padding: .65rem 1.25rem
     border-radius: 4px
     cursor: pointer
-    border: 1px solid var(--accent)
-    background: var(--accent)
+    border: 1px solid var(--text)
+    background: var(--text)
     color: var(--bg)
     text-decoration: none
-    transition: background .15s ease, border-color .15s ease
+    transition: background .15s ease, border-color .15s ease, color .15s ease
 
     &:hover
-      background: var(--nav)
+      background: transparent
+      color: var(--text)
+      border-color: var(--text)
 
 // ── Responsive ────────────────────────────────────────────────
 

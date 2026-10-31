@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>WiFi Flashing — Tutorials</title>
+<title>الوميض عبر WiFi — الدروس</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,59 +26,62 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<p class='tutorial-number'>Tutorial 08</p>
-<h1>WiFi Flashing with the Pteronaut-Egg</h1>
-<p class='sub-lead'>Flash once with a cable, then update over WiFi — no FTDI, no UART, ever again.</p>
-<p>The Pteronaut-Egg is a tiny WiFi bootstrap (~294 KB) that lives on the receiver. Its only job is to accept the full PteronautOS firmware over WiFi and stage it — so you only need a USB cable once.</p>
-<p>The ESP8285 has a single ~1 MB flash region. A full image (~636 KB) cannot fit its own free staging space, so it cannot update itself over WiFi. The egg is small enough to fit, and the full image is small enough to flash the egg back — closing an endless egg ⇄ full cycle.</p>
-<h2>01 — Get the egg</h2>
-<p>Download the prebuilt Pteronaut-Egg. It is a fixed, config-independent bootstrap — no settings, no build required.</p>
+<p class='tutorial-number'>الدرس 08</p>
+<h1>الوميض عبر WiFi باستخدام Pteronaut-Egg</h1>
+<p class='sub-lead'>وميض وتحديث بالكامل عبر WiFi — بدون كابل، بدون FTDI، بدون UART، أبدًا.</p>
+<p>إنّ Pteronaut-Egg هو مُحَمِّل إقلاع WiFi صغير (نحو 294 ك.ب) يعيش على المستقبِل. مهمّته الوحيدة هي قبول برنامج PteronautOS الكامل عبر WiFi وتجهيزه — لذا لا تحتاج إلى أي كابل إطلاقًا.</p>
+<p>يمتلك ESP8285 منطقة فلاش واحدة تبلغ نحو 1 م.ب. الصورة الكاملة (نحو 636 ك.ب) لا تتّسع في مساحة التجهيز الحرّة الخاصة بها، لذا لا يمكنها تحديث نفسها عبر WiFi. البيضة صغيرة بما يكفي لتتّسع، والصورة الكاملة صغيرة بما يكفي لإعادة وميض البيضة — لتُغلق دورة لا نهائية بيضة ↔ كاملة.</p>
+<h2>01 — احصل على البيضة</h2>
+<p>نزّل صورة Pteronaut-Egg الجاهزة. إنها مُحَمِّل إقلاع ثابت ومستقل عن الإعدادات — لا إعدادات ولا بناء مطلوب.</p>
 <p class='flasher-cta'>
-<a download='pteronaut-egg.bin' href='../../../assets/firmware/pteronaut-egg.bin'>Download pteronaut-egg.bin</a>
+<a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>تنزيل pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — Flash the egg (once)</h2>
-<p>Flash the egg onto the receiver with any ESP8266 flashing tool. The Fossil Etcher flashes it straight from the browser over Web Serial — hold BOOT (GPIO0), power-cycle, then click Flash.</p>
-<h2>03 — Connect to the egg</h2>
-<p>Power the receiver. The egg opens a WiFi access point; join it, then open the egg's upload page in a browser.</p>
+<h2>02 — احصل على البرنامج الكامل</h2>
+<p>يُبنى البرنامج الكامل طازجًا في Fossil Etcher في كل مرة — اختر مستقبِلك والمازج والإعدادات ثم نزّل أحدث صورة مباشرة من المتصفح. بدون PlatformIO.</p>
+<p class='flasher-cta'>
+<a href='../../../ar/flasher/'>افتح Fossil Etcher</a>
+</p>
+<p>يبني Etcher إصدار PteronautOS الحالي من المصدر في كل مرة، لذا تحصل دائمًا على أحدث برنامج بإعدادات افتراضية تتبع أفضل الممارسات.</p>
+<h2>03 — لا حاجة للوميض</h2>
+<p>يأتي مستقبِلك ومعه Pteronaut-Egg مُثبّت مسبقًا — لا يوجد ما يُومَض ولا حاجة لأي كابل أبدًا. وإذا مُحيت البيضة، يمكنك استعادتها عبر WiFi من واجهة الويب الخاصة بالبرنامج الكامل.</p>
+<h2>04 — اتصل بالبيضة</h2>
+<p>شغّل المستقبِل. تفتح البيضة نقطة وصول WiFi؛ انضم إليها ثم افتح صفحة الرفع الخاصة بالبيضة في المتصفح.</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Value</th>
+<th>الحقل</th>
+<th>القيمة</th>
 </tr>
 <tr>
+<td>شبكة WiFi (نقطة الوصول)</td>
 <td>
 <code>PTERONAUT-EGG</code>
 </td>
-<td>WiFi network (AP)</td>
 </tr>
 <tr>
+<td>كلمة مرور WiFi</td>
 <td>
 <code>hatchnatural</code>
 </td>
-<td>WiFi password</td>
 </tr>
 <tr>
+<td>صفحة الرفع (mDNS، مع رجوع إلى 192.168.4.1)</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
-<td>Upload page (mDNS, with 192.168.4.1 fallback)</td>
 </tr>
 </table>
-<h2>04 — Upload the full firmware</h2>
-<p>Build your full firmware in the Fossil Etcher (board, mixer, gyro, regulatory domain), download it, then drag the .bin onto the egg's ASCII egg. The egg stages it and reboots into full PteronautOS.</p>
-<h2>05 — Every future update</h2>
-<p>From now on, updating is two WiFi uploads and zero cables: full firmware → upload the egg back → upload the new full firmware. The cycle repeats indefinitely.</p>
-<h2>Brick risk (honest)</h2>
-<p>Like any over-the-air flash: if you upload a broken full image whose WiFi never starts, you need a cable again. The egg removes the cable from the normal path, not the emergency path.</p>
+<h2>05 — ارفع البرنامج الكامل</h2>
+<p>في صفحة رفع البيضة، اسحب البرنامج الكامل الذي نزّلته من Fossil Etcher وأفلته فوق البيضة النصية ASCII. تجهّز البيضة البرنامج ثم تُعيد التشغيل إلى PteronautOS الكامل.</p>
+<h2>06 — كل تحديث مستقبلي</h2>
+<p>من الآن فصاعدًا، التحديث هو رفعان عبر WiFi وصفر كابلات. يُشغّل PteronautOS الكامل واجهة الويب القياسية لـ ELRS — افتح صفحة Firmware Update الخاصة بها، ارفع البيضة مجددًا ثم ارفع البرنامج الكامل الجديد. تتكرر الدورة بلا نهاية.</p>
+<h2>خطر التعطّل (بصراحة)</h2>
+<p>مثل أي وميض لاسلكي: فقط الصورة الكاملة المعطوبة التي لا يبدأ WiFi لديها أبدًا ستفرض استعادة سلكية. في الاستخدام العادي تُزيل البيضة الكابل كليًا — بدون كابل، أبدًا.</p>
 <aside class='flasher-callout'>
-<p class='flasher-callout-text'>The Fossil Etcher is the shared flashing tool for both WiFi and UART workflows — flash the egg, or flash the full firmware directly, all from the browser.</p>
+<p class='flasher-callout-text'>إنّ Fossil Etcher هو أداة الوميض المشتركة لسير عمل WiFi وUART — نزّل البيضة أو ابنِ البرنامج الكامل مباشرة، كل ذلك من المتصفح.</p>
 <p class='flasher-cta'>
-<a href='../../../ar/flasher/?board=egg'>Open the Fossil Etcher</a>
+<a href='../../../ar/flasher/?board=egg'>افتح Fossil Etcher</a>
 </p>
 </aside>
-<h2>Build the egg yourself</h2>
-<p>To rebuild the egg from source:</p>
-<pre><code>pio run -d egg&#x000A;</code></pre>
 </div>
 </main>
 <footer>

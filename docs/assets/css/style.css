@@ -614,10 +614,10 @@ footer .lang-switch {
   color: var(--text);
 }
 
-.flasher-cta {
+.sub-content .flasher-cta {
   margin: 0;
 }
-.flasher-cta a {
+.sub-content .flasher-cta a {
   display: inline-block;
   font-family: "Turret Road", monospace;
   font-weight: 700;
@@ -627,14 +627,16 @@ footer .lang-switch {
   padding: 0.65rem 1.25rem;
   border-radius: 4px;
   cursor: pointer;
-  border: 1px solid var(--accent);
-  background: var(--accent);
+  border: 1px solid var(--text);
+  background: var(--text);
   color: var(--bg);
   text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.flasher-cta a:hover {
-  background: var(--nav);
+.sub-content .flasher-cta a:hover {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--text);
 }
 
 @media (max-width: 480px) {

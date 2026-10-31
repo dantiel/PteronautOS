@@ -3,7 +3,7 @@
 <head>
 <meta charset='utf-8'>
 <meta content='width=device-width, initial-scale=1' name='viewport'>
-<title>WiFi Flashing — Tutorials</title>
+<title>WiFi फ्लैशिंग — ट्यूटोरियल</title>
 <link href='https://fonts.googleapis.com' rel='preconnect'>
 <link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
 <link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
@@ -26,59 +26,62 @@
 </nav>
 <main class='sub-main'>
 <div class='sub-content'>
-<p class='tutorial-number'>Tutorial 08</p>
-<h1>WiFi Flashing with the Pteronaut-Egg</h1>
-<p class='sub-lead'>Flash once with a cable, then update over WiFi — no FTDI, no UART, ever again.</p>
-<p>The Pteronaut-Egg is a tiny WiFi bootstrap (~294 KB) that lives on the receiver. Its only job is to accept the full PteronautOS firmware over WiFi and stage it — so you only need a USB cable once.</p>
-<p>The ESP8285 has a single ~1 MB flash region. A full image (~636 KB) cannot fit its own free staging space, so it cannot update itself over WiFi. The egg is small enough to fit, and the full image is small enough to flash the egg back — closing an endless egg ⇄ full cycle.</p>
-<h2>01 — Get the egg</h2>
-<p>Download the prebuilt Pteronaut-Egg. It is a fixed, config-independent bootstrap — no settings, no build required.</p>
+<p class='tutorial-number'>ट्यूटोरियल 08</p>
+<h1>Pteronaut-Egg से WiFi फ्लैशिंग</h1>
+<p class='sub-lead'>पूरी तरह WiFi पर फ्लैश और अपडेट करें — कोई केबल नहीं, कोई FTDI नहीं, कोई UART नहीं, कभी नहीं।</p>
+<p>Pteronaut-Egg रिसीवर पर रहने वाला एक छोटा WiFi बूटस्ट्रैप (~294 KB) है। इसका एकमात्र काम पूरे PteronautOS फर्मवेयर को WiFi पर स्वीकार करना और तैयार करना है — इसलिए आपको कभी भी केबल की ज़रूरत नहीं होती।</p>
+<p>ESP8285 में एक ही ~1 MB फ्लैश क्षेत्र है। पूरी इमेज (~636 KB) अपनी ख़ाली स्टेजिंग जगह में नहीं समाती, इसलिए वह WiFi पर खुद को अपडेट नहीं कर सकती। Egg इतना छोटा है कि समा जाए, और पूरी इमेज इतनी छोटी है कि Egg को वापस फ्लैश कर सके — एक अनंत Egg ↔ पूर्ण चक्र बंद हो जाता है।</p>
+<h2>01 — Egg प्राप्त करें</h2>
+<p>पहले से बनी Pteronaut-Egg इमेज डाउनलोड करें। यह एक निश्चित, कॉन्फ़िग-स्वतंत्र बूटस्ट्रैप है — कोई सेटिंग नहीं, कोई बिल्ड ज़रूरी नहीं।</p>
 <p class='flasher-cta'>
-<a download='pteronaut-egg.bin' href='../../../assets/firmware/pteronaut-egg.bin'>Download pteronaut-egg.bin</a>
+<a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>pteronaut-egg.bin.gz डाउनलोड करें</a>
 </p>
-<h2>02 — Flash the egg (once)</h2>
-<p>Flash the egg onto the receiver with any ESP8266 flashing tool. The Fossil Etcher flashes it straight from the browser over Web Serial — hold BOOT (GPIO0), power-cycle, then click Flash.</p>
-<h2>03 — Connect to the egg</h2>
-<p>Power the receiver. The egg opens a WiFi access point; join it, then open the egg's upload page in a browser.</p>
+<h2>02 — पूरा फर्मवेयर प्राप्त करें</h2>
+<p>पूरा फर्मवेयर हर बार Fossil Etcher में ताज़ा बनता है — अपना रिसीवर, मिक्सर और कॉन्फ़िग चुनें, फिर नवीनतम इमेज सीधे ब्राउज़र से डाउनलोड करें। PlatformIO की ज़रूरत नहीं।</p>
+<p class='flasher-cta'>
+<a href='../../../hi/flasher/'>Fossil Etcher खोलें</a>
+</p>
+<p>Etcher हर बार स्रोत से मौजूदा PteronautOS बनाता है, इसलिए आपको हमेशा सर्वोत्तम-अभ्यास डिफ़ॉल्ट के साथ नवीनतम फर्मवेयर मिलता है।</p>
+<h2>03 — फ्लैशिंग की ज़रूरत नहीं</h2>
+<p>आपका रिसीवर Pteronaut-Egg पहले से लगे हुए आता है — फ्लैश करने के लिए कुछ नहीं है और कभी भी केबल की ज़रूरत नहीं। अगर Egg कभी मिट जाए, तो आप इसे पूरे फर्मवेयर की WebUI से WiFi पर बहाल कर सकते हैं।</p>
+<h2>04 — Egg से जुड़ें</h2>
+<p>रिसीवर को पावर दें। Egg एक WiFi एक्सेस पॉइंट खोलता है; उससे जुड़ें और फिर ब्राउज़र में Egg का अपलोड पेज खोलें।</p>
 <table>
 <tr>
-<th>Field</th>
-<th>Value</th>
+<th>फ़ील्ड</th>
+<th>मान</th>
 </tr>
 <tr>
+<td>WiFi नेटवर्क (AP)</td>
 <td>
 <code>PTERONAUT-EGG</code>
 </td>
-<td>WiFi network (AP)</td>
 </tr>
 <tr>
+<td>WiFi पासवर्ड</td>
 <td>
 <code>hatchnatural</code>
 </td>
-<td>WiFi password</td>
 </tr>
 <tr>
+<td>अपलोड पेज (mDNS, 192.168.4.1 फ़ॉलबैक के साथ)</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
-<td>Upload page (mDNS, with 192.168.4.1 fallback)</td>
 </tr>
 </table>
-<h2>04 — Upload the full firmware</h2>
-<p>Build your full firmware in the Fossil Etcher (board, mixer, gyro, regulatory domain), download it, then drag the .bin onto the egg's ASCII egg. The egg stages it and reboots into full PteronautOS.</p>
-<h2>05 — Every future update</h2>
-<p>From now on, updating is two WiFi uploads and zero cables: full firmware → upload the egg back → upload the new full firmware. The cycle repeats indefinitely.</p>
-<h2>Brick risk (honest)</h2>
-<p>Like any over-the-air flash: if you upload a broken full image whose WiFi never starts, you need a cable again. The egg removes the cable from the normal path, not the emergency path.</p>
+<h2>05 — पूरा फर्मवेयर अपलोड करें</h2>
+<p>Egg के अपलोड पेज पर, Fossil Etcher से डाउनलोड किए गए पूरे फर्मवेयर को ASCII Egg पर खींचें। Egg उसे तैयार करता है और पूरे PteronautOS में रीबूट करता है।</p>
+<h2>06 — हर भविष्य का अपडेट</h2>
+<p>अब से, अपडेट का मतलब दो WiFi अपलोड और शून्य केबल। पूरा PteronautOS मानक ELRS WebUI चलाता है — उसका Firmware Update पेज खोलें, Egg वापस अपलोड करें, फिर नया पूरा फर्मवेयर अपलोड करें। यह चक्र अनिश्चित काल तक दोहराया जाता है।</p>
+<h2>ब्रिक जोखिम (ईमानदारी से)</h2>
+<p>किसी भी ओवर-द-एयर फ्लैश की तरह: केवल एक ख़राब पूरी इमेज, जिसका WiFi कभी शुरू न हो, वायर्ड रिकवरी के लिए मजबूर करेगी। सामान्य उपयोग में Egg केबल को पूरी तरह हटा देता है — कोई केबल नहीं, कभी नहीं।</p>
 <aside class='flasher-callout'>
-<p class='flasher-callout-text'>The Fossil Etcher is the shared flashing tool for both WiFi and UART workflows — flash the egg, or flash the full firmware directly, all from the browser.</p>
+<p class='flasher-callout-text'>Fossil Etcher WiFi और UART दोनों वर्कफ़्लो के लिए साझा फ्लैशिंग टूल है — Egg डाउनलोड करें या पूरा फर्मवेयर सीधे बनाएँ, सब ब्राउज़र से।</p>
 <p class='flasher-cta'>
-<a href='../../../hi/flasher/?board=egg'>Open the Fossil Etcher</a>
+<a href='../../../hi/flasher/?board=egg'>Fossil Etcher खोलें</a>
 </p>
 </aside>
-<h2>Build the egg yourself</h2>
-<p>To rebuild the egg from source:</p>
-<pre><code>pio run -d egg&#x000A;</code></pre>
 </div>
 </main>
 <footer>
