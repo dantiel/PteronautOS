@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>pteronaut-egg.bin.gz डाउनलोड करें</a>
 </p>
-<h2>02 — पूरा फर्मवेयर प्राप्त करें</h2>
+<h2>02 — एग फ्लैश करें (पहली बार)</h2>
+<p>आपका रिसीवर स्टॉक ExpressLRS के साथ आता है — एग के साथ नहीं। एग को एक बार, पूरी तरह WiFi पर, रिसीवर की अपनी WebUI के माध्यम से इंस्टॉल करें। कभी कोई केबल नहीं।</p>
+<p>रिसीवर को पावर दें। स्टॉक ExpressLRS एक WiFi एक्सेस पॉइंट खोलता है। नीचे दिए गए डिफ़ॉल्ट ExpressLRS क्रेडेंशियल से जुड़ें, फिर WebUI खोलें।</p>
+<table>
+<tr>
+<th>फ़ील्ड</th>
+<th>मान</th>
+</tr>
+<tr>
+<td>WiFi नेटवर्क (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>WiFi पासवर्ड</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>अपलोड पेज</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>डाउनलोड किए गए pteronaut-egg.bin.gz को pteronaut-egg.bin में अनज़िप करें, इसे Firmware Update पेज पर अपलोड करें, और रिसीवर के एग में रीबूट होने की प्रतीक्षा करें।</p>
+<h2>03 — पूरा फर्मवेयर प्राप्त करें</h2>
 <p>पूरा फर्मवेयर हर बार Fossil Etcher में ताज़ा बनता है — अपना रिसीवर, मिक्सर और कॉन्फ़िग चुनें, फिर नवीनतम इमेज सीधे ब्राउज़र से डाउनलोड करें। PlatformIO की ज़रूरत नहीं।</p>
 <p class='flasher-cta'>
 <a href='../../../hi/flasher/'>Fossil Etcher खोलें</a>
 </p>
 <p>Etcher हर बार स्रोत से मौजूदा PteronautOS बनाता है, इसलिए आपको हमेशा सर्वोत्तम-अभ्यास डिफ़ॉल्ट के साथ नवीनतम फर्मवेयर मिलता है।</p>
-<h2>03 — फ्लैशिंग की ज़रूरत नहीं</h2>
-<p>आपका रिसीवर Pteronaut-Egg पहले से लगे हुए आता है — फ्लैश करने के लिए कुछ नहीं है और कभी भी केबल की ज़रूरत नहीं। अगर Egg कभी मिट जाए, तो आप इसे पूरे फर्मवेयर की WebUI से WiFi पर बहाल कर सकते हैं।</p>
-<h2>04 — Egg से जुड़ें</h2>
-<p>रिसीवर को पावर दें। Egg एक WiFi एक्सेस पॉइंट खोलता है; उससे जुड़ें और फिर ब्राउज़र में Egg का अपलोड पेज खोलें।</p>
+<h2>04 — एग से कनेक्ट करें</h2>
+<p>रिसीवर को पावर दें। एग एक WiFi एक्सेस पॉइंट खोलता है; नीचे दिए गए क्रेडेंशियल से जुड़ें, फिर ब्राउज़र में अपलोड पेज खोलें (pteronaut-egg.local, या फॉलबैक के रूप में 192.168.4.1)।</p>
 <table>
 <tr>
 <th>फ़ील्ड</th>
@@ -64,7 +88,7 @@
 </td>
 </tr>
 <tr>
-<td>अपलोड पेज (mDNS, 192.168.4.1 फ़ॉलबैक के साथ)</td>
+<td>अपलोड पेज</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
@@ -74,6 +98,48 @@
 <p>Egg के अपलोड पेज पर, Fossil Etcher से डाउनलोड किए गए पूरे फर्मवेयर को ASCII Egg पर खींचें। Egg उसे तैयार करता है और पूरे PteronautOS में रीबूट करता है।</p>
 <h2>06 — हर भविष्य का अपडेट</h2>
 <p>अब से, अपडेट का मतलब दो WiFi अपलोड और शून्य केबल। पूरा PteronautOS मानक ELRS WebUI चलाता है — उसका Firmware Update पेज खोलें, Egg वापस अपलोड करें, फिर नया पूरा फर्मवेयर अपलोड करें। यह चक्र अनिश्चित काल तक दोहराया जाता है।</p>
+<h2>WiFi नेटवर्क की तुलना</h2>
+<p>प्रत्येक चरण अपना WiFi नेटवर्क और पासवर्ड, और एक अलग अपलोड पेज इस्तेमाल करता है। यहाँ पूरा नक्शा है:</p>
+<table>
+<tr>
+<th>चरण</th>
+<th>WiFi नेटवर्क (AP)</th>
+<th>पासवर्ड</th>
+<th>अपलोड पेज</th>
+</tr>
+<tr>
+<td>स्टॉक ExpressLRS (रिसीवर पर)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>पूर्ण PteronautOS</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>ब्रिक जोखिम (ईमानदारी से)</h2>
 <p>किसी भी ओवर-द-एयर फ्लैश की तरह: केवल एक ख़राब पूरी इमेज, जिसका WiFi कभी शुरू न हो, वायर्ड रिकवरी के लिए मजबूर करेगी। सामान्य उपयोग में Egg केबल को पूरी तरह हटा देता है — कोई केबल नहीं, कभी नहीं।</p>
 <aside class='flasher-callout'>

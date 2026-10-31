@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>تنزيل pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — احصل على البرنامج الكامل</h2>
+<h2>02 — وميض البيضة (أول مرة)</h2>
+<p>يأتي المستقبِل مزوّدًا بـ ExpressLRS الأصلي — وليس البيضة. ثبّت البيضة مرة واحدة، بالكامل عبر WiFi، من خلال WebUI الخاص بالمستقبِل. بلا كابل، أبدًا.</p>
+<p>شغّل المستقبِل. يفتح ExpressLRS الأصلي نقطة وصول WiFi. اتصل بها باستخدام بيانات اعتماد ExpressLRS الافتراضية أدناه، ثم افتح WebUI.</p>
+<table>
+<tr>
+<th>الحقل</th>
+<th>القيمة</th>
+</tr>
+<tr>
+<td>شبكة WiFi (نقطة الوصول)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>كلمة مرور WiFi</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>صفحة الرفع</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>فك ضغط الملف المُنزَّل pteronaut-egg.bin.gz إلى pteronaut-egg.bin، وارفعه في صفحة Firmware Update، وانتظر إعادة تشغيل المستقبِل إلى البيضة.</p>
+<h2>03 — الحصول على البرنامج الثابت الكامل</h2>
 <p>يُبنى البرنامج الكامل طازجًا في Fossil Etcher في كل مرة — اختر مستقبِلك والمازج والإعدادات ثم نزّل أحدث صورة مباشرة من المتصفح. بدون PlatformIO.</p>
 <p class='flasher-cta'>
 <a href='../../../ar/flasher/'>افتح Fossil Etcher</a>
 </p>
 <p>يبني Etcher إصدار PteronautOS الحالي من المصدر في كل مرة، لذا تحصل دائمًا على أحدث برنامج بإعدادات افتراضية تتبع أفضل الممارسات.</p>
-<h2>03 — لا حاجة للوميض</h2>
-<p>يأتي مستقبِلك ومعه Pteronaut-Egg مُثبّت مسبقًا — لا يوجد ما يُومَض ولا حاجة لأي كابل أبدًا. وإذا مُحيت البيضة، يمكنك استعادتها عبر WiFi من واجهة الويب الخاصة بالبرنامج الكامل.</p>
-<h2>04 — اتصل بالبيضة</h2>
-<p>شغّل المستقبِل. تفتح البيضة نقطة وصول WiFi؛ انضم إليها ثم افتح صفحة الرفع الخاصة بالبيضة في المتصفح.</p>
+<h2>04 — الاتصال بالبيضة</h2>
+<p>شغّل المستقبِل. تفتح البيضة نقطة وصول WiFi؛ اتصل بها باستخدام بيانات الاعتماد أدناه، ثم افتح صفحة الرفع في المتصفح (pteronaut-egg.local، أو 192.168.4.1 كبديل).</p>
 <table>
 <tr>
 <th>الحقل</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>صفحة الرفع (mDNS، مع رجوع إلى 192.168.4.1)</td>
+<td>صفحة الرفع</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — ارفع البرنامج الكامل</h2>
+<h2>05 — رفع البرنامج الثابت الكامل</h2>
 <p>في صفحة رفع البيضة، اسحب البرنامج الكامل الذي نزّلته من Fossil Etcher وأفلته فوق البيضة النصية ASCII. تجهّز البيضة البرنامج ثم تُعيد التشغيل إلى PteronautOS الكامل.</p>
 <h2>06 — كل تحديث مستقبلي</h2>
 <p>من الآن فصاعدًا، التحديث هو رفعان عبر WiFi وصفر كابلات. يُشغّل PteronautOS الكامل واجهة الويب القياسية لـ ELRS — افتح صفحة Firmware Update الخاصة بها، ارفع البيضة مجددًا ثم ارفع البرنامج الكامل الجديد. تتكرر الدورة بلا نهاية.</p>
+<h2>مقارنة شبكات WiFi</h2>
+<p>تستخدم كل مرحلة شبكة WiFi وكلمة مرور خاصتين بها، وصفحة رفع مختلفة. إليك الخريطة الكاملة:</p>
+<table>
+<tr>
+<th>المرحلة</th>
+<th>شبكة WiFi (AP)</th>
+<th>كلمة المرور</th>
+<th>صفحة الرفع</th>
+</tr>
+<tr>
+<td>ExpressLRS الأصلي (مزوّد على المستقبِل)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>PteronautOS الكامل</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>خطر التعطّل (بصراحة)</h2>
 <p>مثل أي وميض لاسلكي: فقط الصورة الكاملة المعطوبة التي لا يبدأ WiFi لديها أبدًا ستفرض استعادة سلكية. في الاستخدام العادي تُزيل البيضة الكابل كليًا — بدون كابل، أبدًا.</p>
 <aside class='flasher-callout'>

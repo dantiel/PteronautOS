@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>Descargar pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — Consigue el firmware completo</h2>
+<h2>02 — Flashear el huevo (primera vez)</h2>
+<p>Tu receptor viene con ExpressLRS de stock — no con el huevo. Instala el huevo una vez, totalmente por WiFi, desde la propia WebUI del receptor. Sin cable, nunca.</p>
+<p>Alimenta el receptor. ExpressLRS de stock abre un punto de acceso WiFi. Conéctate con las credenciales predeterminadas de ExpressLRS de abajo y abre la WebUI.</p>
+<table>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+<tr>
+<td>Red WiFi (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>Contraseña WiFi</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>Página de subida</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>Descomprime el pteronaut-egg.bin.gz descargado a pteronaut-egg.bin, súbelo en la página Firmware Update y espera a que el receptor reinicie en el huevo.</p>
+<h2>03 — Obtener el firmware completo</h2>
 <p>El firmware completo siempre se compila al momento en el Fossil Etcher — elige tu receptor, mezclador y configuración, y descarga la imagen más reciente directamente desde el navegador. Sin PlatformIO.</p>
 <p class='flasher-cta'>
 <a href='../../../es/flasher/'>Abrir el Fossil Etcher</a>
 </p>
 <p>El Etcher compila el PteronautOS actual desde el código cada vez, para que siempre tengas el firmware más reciente con valores predeterminados de buenas prácticas.</p>
-<h2>03 — No hace falta flashear</h2>
-<p>Tu receptor viene con el Pteronaut-Egg ya instalado, así que no hay nada que flashear y nunca se necesita un cable. Si el egg se borrara, puedes restaurarlo por WiFi desde la WebUI del firmware completo.</p>
-<h2>04 — Conéctate al egg</h2>
-<p>Enciende el receptor. El egg abre un punto de acceso WiFi; conéctate a él y abre la página de subida del egg en un navegador.</p>
+<h2>04 — Conectar al huevo</h2>
+<p>Alimenta el receptor. El huevo abre un punto de acceso WiFi; conéctate con las credenciales de abajo y abre la página de subida en el navegador (pteronaut-egg.local, o 192.168.4.1 como alternativa).</p>
 <table>
 <tr>
 <th>Campo</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>Página de subida (mDNS, con respaldo 192.168.4.1)</td>
+<td>Página de subida</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — Sube el firmware completo</h2>
+<h2>05 — Subir el firmware completo</h2>
 <p>En la página de subida del egg, arrastra el firmware completo que descargaste del Fossil Etcher sobre el egg ASCII. El egg lo prepara y reinicia en el PteronautOS completo.</p>
 <h2>06 — Cada actualización futura</h2>
 <p>A partir de ahora, actualizar son dos subidas por WiFi y cero cables. El PteronautOS completo ejecuta la WebUI estándar de ELRS — abre su página Firmware Update, sube el egg de vuelta y luego sube el nuevo firmware completo. El ciclo se repite indefinidamente.</p>
+<h2>Redes WiFi comparadas</h2>
+<p>Cada etapa usa su propia red WiFi y contraseña, y una página de subida diferente. Aquí está el mapa completo:</p>
+<table>
+<tr>
+<th>Etapa</th>
+<th>Red WiFi (AP)</th>
+<th>Contraseña</th>
+<th>Página de subida</th>
+</tr>
+<tr>
+<td>ExpressLRS de stock (viene en el receptor)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>PteronautOS completo</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>Riesgo de brick (sincero)</h2>
 <p>Como en cualquier flasheo por aire: solo una imagen completa rota cuyo WiFi nunca arranque forzaría una recuperación por cable. En el uso normal el egg elimina el cable por completo — sin cable, nunca.</p>
 <aside class='flasher-callout'>

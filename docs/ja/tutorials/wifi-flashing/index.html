@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>pteronaut-egg.bin.gzをダウンロード</a>
 </p>
-<h2>02 — 完全ファームウェアを入手</h2>
+<h2>02 — エッグを書き込む（初回）</h2>
+<p>受信機には標準の ExpressLRS が搭載されています（エッグではありません）。エッグを一度だけ、完全に WiFi 経由で、受信機自身の WebUI からインストールします。ケーブルは一切不要です。</p>
+<p>受信機に電源を供給します。標準 ExpressLRS が WiFi アクセスポイントを開きます。下記のデフォルトの ExpressLRS 認証情報で接続し、WebUI を開きます。</p>
+<table>
+<tr>
+<th>項目</th>
+<th>値</th>
+</tr>
+<tr>
+<td>WiFiネットワーク (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>WiFiパスワード</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>アップロードページ</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>ダウンロードした pteronaut-egg.bin.gz を pteronaut-egg.bin に解凍し、Firmware Update ページでアップロードして、受信機がエッグに再起動するのを待ちます。</p>
+<h2>03 — 完全なファームウェアを入手</h2>
 <p>完全ファームウェアはFossil Etcherで毎回新しくビルドされます。受信機・ミキサー・設定を選び、最新イメージをブラウザから直接ダウンロード。PlatformIO不要。</p>
 <p class='flasher-cta'>
 <a href='../../../ja/flasher/'>Fossil Etcherを開く</a>
 </p>
 <p>Etcherは毎回ソースから現行のPteronautOSをビルドするので、常にベストプラクティスの既定値が入った最新ファームウェアが手に入ります。</p>
-<h2>03 — フラッシュ不要</h2>
-<p>受信機にはPteronaut-Eggが最初から入っています。フラッシュするものはなく、ケーブルも永久に不要です。万一Eggが消えても、完全ファームウェアのWebUIからWiFiで復元できます。</p>
-<h2>04 — Eggに接続</h2>
-<p>受信機に電源を入れます。EggがWiFiアクセスポイントを開くので、そこに接続し、ブラウザでEggのアップロードページを開きます。</p>
+<h2>04 — エッグに接続</h2>
+<p>受信機に電源を供給します。エッグが WiFi アクセスポイントを開きます; 下記の認証情報で接続し、ブラウザでアップロードページを開きます（pteronaut-egg.local、またはフォールバックとして 192.168.4.1）。</p>
 <table>
 <tr>
 <th>項目</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>アップロードページ (mDNS、192.168.4.1フォールバック付き)</td>
+<td>アップロードページ</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — 完全ファームウェアをアップロード</h2>
+<h2>05 — 完全なファームウェアをアップロード</h2>
 <p>Eggのアップロードページで、Fossil Etcherからダウンロードした完全ファームウェアをASCII Eggの上へドラッグします。Eggがそれを準備し、完全なPteronautOSへ再起動します。</p>
-<h2>06 — 今後のすべてのアップデート</h2>
+<h2>06 — 今後のすべての更新</h2>
 <p>これからはアップデート＝WiFiアップロード２回＋ケーブル０本。完全なPteronautOSは標準のELRS WebUIを実行します。Firmware Updateページを開き、Eggを書き戻してから新しい完全ファームウェアをアップロード。サイクルは無限に繰り返されます。</p>
+<h2>WiFiネットワークの比較</h2>
+<p>各段階は独自の WiFi ネットワークとパスワード、異なるアップロードページを使用します。完全なマップはこちら:</p>
+<table>
+<tr>
+<th>段階</th>
+<th>WiFiネットワーク (AP)</th>
+<th>パスワード</th>
+<th>アップロードページ</th>
+</tr>
+<tr>
+<td>標準 ExpressLRS（受信機に搭載）</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>完全な PteronautOS</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>ブリックリスク（正直に）</h2>
 <p>どの無線フラッシュも同じで、WiFiが全く起動しない壊れた完全イメージだけが有線復旧を強制します。通常使用ではEggがケーブルを完全に排除 — ケーブル不要、永久に。</p>
 <aside class='flasher-callout'>

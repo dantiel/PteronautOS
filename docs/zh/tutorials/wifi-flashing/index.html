@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>下载 pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — 获取完整固件</h2>
+<h2>02 — 刷写蛋（首次）</h2>
+<p>你的接收机预装的是原版 ExpressLRS——而不是蛋。仅需安装一次蛋，全程通过 WiFi，使用接收机自带的 WebUI。永远不需要数据线。</p>
+<p>给接收机通电。原版 ExpressLRS 会开启一个 WiFi 热点。使用下方默认的 ExpressLRS 凭据连接，然后打开 WebUI。</p>
+<table>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+<tr>
+<td>WiFi 网络 (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>WiFi 密码</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>上传页面</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>将下载的 pteronaut-egg.bin.gz 解压为 pteronaut-egg.bin，在 Firmware Update 页面上传，等待接收机重启进入蛋。</p>
+<h2>03 — 获取完整固件</h2>
 <p>完整固件每次都在 Fossil Etcher 中全新构建 — 选择你的接收机、混控和配置，然后直接从浏览器下载最新镜像。无需 PlatformIO。</p>
 <p class='flasher-cta'>
 <a href='../../../zh/flasher/'>打开 Fossil Etcher</a>
 </p>
 <p>Etcher 每次都从源码构建当前的 PteronautOS，因此你总能获得带最佳实践默认值的最新固件。</p>
-<h2>03 — 无需刷写</h2>
-<p>你的接收机出厂时已预装 Pteronaut-Egg — 无需刷写任何内容，也永远不需要线缆。如果 Egg 被擦除，你可以从完整固件的 WebUI 通过 WiFi 恢复它。</p>
-<h2>04 — 连接到 Egg</h2>
-<p>给接收机通电。Egg 会打开一个 WiFi 热点；加入它，然后在浏览器中打开 Egg 的上传页面。</p>
+<h2>04 — 连接到蛋</h2>
+<p>给接收机通电。蛋会开启一个 WiFi 热点；使用下方凭据连接，然后在浏览器中打开上传页面（pteronaut-egg.local，或备用的 192.168.4.1）。</p>
 <table>
 <tr>
 <th>字段</th>
@@ -64,7 +88,7 @@
 </td>
 </tr>
 <tr>
-<td>上传页面（mDNS，含 192.168.4.1 回退）</td>
+<td>上传页面</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
@@ -72,8 +96,50 @@
 </table>
 <h2>05 — 上传完整固件</h2>
 <p>在 Egg 的上传页面上，将从 Fossil Etcher 下载的完整固件拖到 ASCII Egg 上。Egg 会暂存它并重启进入完整的 PteronautOS。</p>
-<h2>06 — 之后的每次更新</h2>
+<h2>06 — 以后每次更新</h2>
 <p>从现在起，更新就是两次 WiFi 上传、零根线缆。完整的 PteronautOS 运行标准的 ELRS WebUI — 打开其 Firmware Update 页面，先上传回 Egg，再上传新的完整固件。此循环无限重复。</p>
+<h2>WiFi 网络对比</h2>
+<p>每个阶段使用各自的 WiFi 网络和密码，以及不同的上传页面。完整对照如下：</p>
+<table>
+<tr>
+<th>阶段</th>
+<th>WiFi 网络 (AP)</th>
+<th>密码</th>
+<th>上传页面</th>
+</tr>
+<tr>
+<td>原版 ExpressLRS（预装在接收机上）</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>完整 PteronautOS</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>变砖风险（如实说明）</h2>
 <p>与任何无线刷写一样：只有 WiFi 完全无法启动的损坏完整镜像才会强制有线恢复。在正常使用中，Egg 彻底消除了线缆 — 无需线缆，永远不用。</p>
 <aside class='flasher-callout'>

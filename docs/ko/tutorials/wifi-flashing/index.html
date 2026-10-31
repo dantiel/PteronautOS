@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>pteronaut-egg.bin.gz 다운로드</a>
 </p>
-<h2>02 — 전체 펀웨어 받기</h2>
+<h2>02 — 에그 플래시하기 (처음)</h2>
+<p>수신기는 순정 ExpressLRS로 제공됩니다 — 에그가 아닙니다. 에그를 한 번 설치하되, 전적으로 WiFi로, 수신기 자체 WebUI를 통해 하세요. 케이블은 절대 필요 없습니다.</p>
+<p>수신기에 전원을 공급하세요. 순정 ExpressLRS가 WiFi 액세스 포인트를 엽니다. 아래 기본 ExpressLRS 자격 증명으로 연결한 뒤 WebUI를 여세요.</p>
+<table>
+<tr>
+<th>필드</th>
+<th>값</th>
+</tr>
+<tr>
+<td>WiFi 네트워크 (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>WiFi 비밀번호</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>업로드 페이지</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>다운로드한 pteronaut-egg.bin.gz를 pteronaut-egg.bin으로 압축 해제하고, Firmware Update 페이지에서 업로드한 뒤 수신기가 에그로 재부팅될 때까지 기다리세요.</p>
+<h2>03 — 전체 펌웨어 받기</h2>
 <p>전체 펀웨어는 Fossil Etcher에서 매번 새로 빌드됩니다. 수신기, 믹서, 설정을 고르고 최신 이미지를 브라우저에서 바로 다운로드하세요. PlatformIO 없이요.</p>
 <p class='flasher-cta'>
 <a href='../../../ko/flasher/'>Fossil Etcher 열기</a>
 </p>
 <p>Etcher는 매번 소스에서 현재 PteronautOS를 빌드하므로 항상 모범 사례 기본값이 적용된 최신 펀웨어를 받게 됩니다.</p>
-<h2>03 — 플래싱 불필요</h2>
-<p>수신기에는 Pteronaut-Egg가 이미 설치되어 출고되므로 플래싱할 것도, 케이블도 전혀 필요 없습니다. Egg가 지워지더라도 전체 펀웨어의 WebUI에서 WiFi로 복원할 수 있습니다.</p>
-<h2>04 — Egg에 연결</h2>
-<p>수신기에 전원을 넣으세요. Egg가 WiFi 액세스 포인트를 엽니다. 여기에 접속한 뒤 브라우저에서 Egg의 업로드 페이지를 여세요.</p>
+<h2>04 — 에그에 연결하기</h2>
+<p>수신기에 전원을 공급하세요. 에그가 WiFi 액세스 포인트를 엽니다; 아래 자격 증명으로 연결한 뒤 브라우저에서 업로드 페이지를 여세요 (pteronaut-egg.local, 또는 192.168.4.1 대체).</p>
 <table>
 <tr>
 <th>필드</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>업로드 페이지 (mDNS, 192.168.4.1 폴백 포함)</td>
+<td>업로드 페이지</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — 전체 펀웨어 업로드</h2>
+<h2>05 — 전체 펌웨어 업로드하기</h2>
 <p>Egg의 업로드 페이지에서 Fossil Etcher에서 받은 전체 펀웨어를 ASCII Egg 위로 끌어다 놓으세요. Egg가 이를 준비하고 전체 PteronautOS로 재부팅합니다.</p>
-<h2>06 — 향후 모든 업데이트</h2>
+<h2>06 — 이후 모든 업데이트</h2>
 <p>이제부터 업데이트는 WiFi 업로드 두 번과 케이블 0개입니다. 전체 PteronautOS는 표준 ELRS WebUI를 실행합니다. Firmware Update 페이지를 열어 Egg를 되돌려 업로드한 뒤 새 전체 펀웨어를 업로드하세요. 이 순환이 무한히 반복됩니다.</p>
+<h2>WiFi 네트워크 비교</h2>
+<p>각 단계는 고유한 WiFi 네트워크와 비밀번호, 그리고 다른 업로드 페이지를 사용합니다. 전체 지도입니다:</p>
+<table>
+<tr>
+<th>단계</th>
+<th>WiFi 네트워크 (AP)</th>
+<th>비밀번호</th>
+<th>업로드 페이지</th>
+</tr>
+<tr>
+<td>순정 ExpressLRS (수신기에 탑재)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>전체 PteronautOS</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>브릭 위험 (솔직히)</h2>
 <p>모든 무선 플래싱처럼, WiFi가 아예 시작되지 않는 고장난 전체 이미지만이 유선 복구를 강제합니다. 정상 사용에서는 Egg가 케이블을 완전히 없월니다 — 케이블 없이, 영원히.</p>
 <aside class='flasher-callout'>

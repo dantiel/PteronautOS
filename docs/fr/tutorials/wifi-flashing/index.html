@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>Télécharger pteronaut-egg.bin.gz</a>
 </p>
-<h2>02 — Obtenez le firmware complet</h2>
+<h2>02 — Flasher l'œuf (première fois)</h2>
+<p>Votre récepteur est livré avec ExpressLRS d'origine — pas l'œuf. Installez l'œuf une fois, entièrement en WiFi, via la propre WebUI du récepteur. Aucun câble, jamais.</p>
+<p>Alimentez le récepteur. ExpressLRS d'origine ouvre un point d'accès WiFi. Rejoignez-le avec les identifiants ExpressLRS par défaut ci-dessous, puis ouvrez la WebUI.</p>
+<table>
+<tr>
+<th>Champ</th>
+<th>Valeur</th>
+</tr>
+<tr>
+<td>Réseau WiFi (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>Mot de passe WiFi</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>Page de téléversement</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>Décompressez le pteronaut-egg.bin.gz téléchargé en pteronaut-egg.bin, téléversez-le sur la page Firmware Update et attendez que le récepteur redémarre dans l'œuf.</p>
+<h2>03 — Obtenir le firmware complet</h2>
 <p>Le firmware complet est toujours compilé fraîchement dans le Fossil Etcher — choisissez votre récepteur, mixer et configuration, puis téléchargez l’image la plus récente directement depuis le navigateur. Pas de PlatformIO.</p>
 <p class='flasher-cta'>
 <a href='../../../fr/flasher/'>Ouvrir le Fossil Etcher</a>
 </p>
 <p>L’Etcher compile le PteronautOS actuel depuis le code à chaque fois, vous obtenez donc toujours le dernier firmware avec des réglages par défaut de bonne pratique.</p>
-<h2>03 — Aucun flashage nécessaire</h2>
-<p>Votre récepteur est livré avec le Pteronaut-Egg déjà installé — il n’y a rien à flasher et aucun câble n’est jamais nécessaire. Si l’egg est un jour effacé, vous pouvez le restaurer en WiFi depuis la WebUI du firmware complet.</p>
-<h2>04 — Connectez-vous à l’egg</h2>
-<p>Allumez le récepteur. L’egg ouvre un point d’accès WiFi ; rejoignez-le puis ouvrez la page de téléversement de l’egg dans un navigateur.</p>
+<h2>04 — Se connecter à l'œuf</h2>
+<p>Alimentez le récepteur. L'œuf ouvre un point d'accès WiFi ; rejoignez-le avec les identifiants ci-dessous, puis ouvrez la page de téléversement dans un navigateur (pteronaut-egg.local, ou 192.168.4.1 en secours).</p>
 <table>
 <tr>
 <th>Champ</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>Page de téléversement (mDNS, avec repli 192.168.4.1)</td>
+<td>Page de téléversement</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — Téléversez le firmware complet</h2>
+<h2>05 — Téléverser le firmware complet</h2>
 <p>Sur la page de téléversement de l’egg, faites glisser le firmware complet téléchargé depuis le Fossil Etcher sur l’egg ASCII. L’egg le prépare et redémarre dans le PteronautOS complet.</p>
-<h2>06 — Chaque future mise à jour</h2>
+<h2>06 — Chaque mise à jour future</h2>
 <p>Désormais, mettre à jour se fait en deux téléversements WiFi et zéro câble. Le PteronautOS complet exécute la WebUI ELRS standard — ouvrez sa page Firmware Update, téléversez l’egg en retour, puis téléversez le nouveau firmware complet. Le cycle se répète indéfiniment.</p>
+<h2>Réseaux WiFi comparés</h2>
+<p>Chaque étape utilise son propre réseau WiFi et mot de passe, et une page de téléversement différente. Voici la carte complète :</p>
+<table>
+<tr>
+<th>Étape</th>
+<th>Réseau WiFi (AP)</th>
+<th>Mot de passe</th>
+<th>Page de téléversement</th>
+</tr>
+<tr>
+<td>ExpressLRS d'origine (livré sur le récepteur)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>PteronautOS complet</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>Risque de brick (honnête)</h2>
 <p>Comme tout flashage en l’air : seule une image complète cassée dont le WiFi ne démarre jamais forcerait une récupération filaire. En usage normal, l’egg supprime entièrement le câble — aucun câble, jamais.</p>
 <aside class='flasher-callout'>

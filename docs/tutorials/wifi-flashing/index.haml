@@ -36,14 +36,31 @@
         %p.flasher-cta
           %a{href: "#{asset_prefix}assets/firmware/pteronaut-egg.bin.gz", download: "pteronaut-egg.bin.gz"}!= wififlash_download
 
+        %h2!= wififlash_h2_flash
+        %p!= wififlash_flash_p
+        %p!= wififlash_stock_p
+        %table
+          %tr
+            %th!= wififlash_th_ssid
+            %th!= wififlash_th_value
+          %tr
+            %td!= wififlash_ssid_v
+            %td
+              %code ExpressLRS RX
+          %tr
+            %td!= wififlash_pass_v
+            %td
+              %code expresslrs
+          %tr
+            %td!= wififlash_host_v
+            %td!= wififlash_page_stock
+        %p!= wififlash_stock_note
+
         %h2!= wififlash_h2_getfull
         %p!= wififlash_getfull_p
         %p.flasher-cta
           %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= wififlash_download_full
         %p!= wififlash_getfull_note
-
-        %h2!= wififlash_h2_flash
-        %p!= wififlash_flash_p
 
         %h2!= wififlash_h2_connect
         %p!= wififlash_connect_p
@@ -69,6 +86,37 @@
 
         %h2!= wififlash_h2_update
         %p!= wififlash_update_p
+
+        %h2!= wififlash_h2_wifi
+        %p!= wififlash_wifi_p
+        %table
+          %tr
+            %th!= wififlash_th_stage
+            %th!= wififlash_th_ap
+            %th!= wififlash_th_pw
+            %th!= wififlash_th_page
+          %tr
+            %td!= wififlash_stage_stock
+            %td
+              %code ExpressLRS RX
+            %td
+              %code expresslrs
+            %td!= wififlash_page_stock
+          %tr
+            %td!= wififlash_stage_egg
+            %td
+              %code PTERONAUT-EGG
+            %td
+              %code hatchnatural
+            %td
+              %code pteronaut-egg.local
+          %tr
+            %td!= wififlash_stage_full
+            %td
+              %code Pteronaut OS
+            %td
+              %code flynatural
+            %td!= wififlash_page_full
 
         %h2!= wififlash_h2_risk
         %p!= wififlash_risk_p

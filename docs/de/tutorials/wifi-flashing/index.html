@@ -36,16 +36,40 @@
 <p class='flasher-cta'>
 <a download='pteronaut-egg.bin.gz' href='../../../assets/firmware/pteronaut-egg.bin.gz'>pteronaut-egg.bin.gz herunterladen</a>
 </p>
-<h2>02 — Volle Firmware besorgen</h2>
+<h2>02 — Das Ei flashen (erstes Mal)</h2>
+<p>Dein Empfänger kommt mit Standard-ExpressLRS — nicht mit dem Ei. Installiere das Ei einmal, komplett über WiFi, über die eigene WebUI des Empfängers. Kein Kabel, niemals.</p>
+<p>Versorge den Empfänger mit Strom. Standard-ExpressLRS öffnet einen WiFi-Access-Point. Verbinde dich mit den Standard-ExpressLRS-Zugangsdaten unten und öffne die WebUI.</p>
+<table>
+<tr>
+<th>Feld</th>
+<th>Wert</th>
+</tr>
+<tr>
+<td>WiFi-Netzwerk (AP)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+</tr>
+<tr>
+<td>WiFi-Passwort</td>
+<td>
+<code>expresslrs</code>
+</td>
+</tr>
+<tr>
+<td>Upload-Seite</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
+<p>Entpacke die heruntergeladene pteronaut-egg.bin.gz zu pteronaut-egg.bin, lade sie auf der Seite Firmware Update hoch und warte, bis der Empfänger ins Ei neu startet.</p>
+<h2>03 — Vollständige Firmware holen</h2>
 <p>Die volle Firmware wird im Fossil Etcher jedes Mal frisch gebaut — wähle Empfänger, Mixer und Konfiguration und lade das neueste Image direkt aus dem Browser. Kein PlatformIO.</p>
 <p class='flasher-cta'>
 <a href='../../../de/flasher/'>Fossil Etcher öffnen</a>
 </p>
 <p>Der Etcher baut das aktuelle PteronautOS jedes Mal aus dem Quellcode, sodass du immer die neueste Firmware mit Best-Practice-Standards bekommst.</p>
-<h2>03 — Kein Flashen nötig</h2>
-<p>Dein Empfänger wird mit dem Pteronaut-Egg bereits darauf ausgeliefert — es gibt nichts zu flashen und es wird niemals ein Kabel benötigt. Falls das Egg je gelöscht wird, kannst du es über WiFi aus der WebUI der vollen Firmware wiederherstellen.</p>
-<h2>04 — Mit dem Egg verbinden</h2>
-<p>Schalte den Empfänger ein. Das Egg öffnet einen WiFi-Access-Point; verbinde dich damit und öffne dann die Upload-Seite des Eggs im Browser.</p>
+<h2>04 — Mit dem Ei verbinden</h2>
+<p>Versorge den Empfänger mit Strom. Das Ei öffnet einen WiFi-Access-Point; verbinde dich mit den Zugangsdaten unten und öffne die Upload-Seite im Browser (pteronaut-egg.local, oder 192.168.4.1 als Fallback).</p>
 <table>
 <tr>
 <th>Feld</th>
@@ -64,16 +88,58 @@
 </td>
 </tr>
 <tr>
-<td>Upload-Seite (mDNS, mit 192.168.4.1-Fallback)</td>
+<td>Upload-Seite</td>
 <td>
 <code>pteronaut-egg.local</code>
 </td>
 </tr>
 </table>
-<h2>05 — Volle Firmware hochladen</h2>
+<h2>05 — Vollständige Firmware hochladen</h2>
 <p>Ziehe auf der Upload-Seite des Eggs die volle Firmware, die du aus dem Fossil Etcher geladen hast, auf das ASCII-Egg. Das Egg speichert sie und startet in das volle PteronautOS neu.</p>
 <h2>06 — Jedes künftige Update</h2>
 <p>Ab jetzt sind Updates zwei WiFi-Uploads und null Kabel. Das volle PteronautOS läuft die Standard-ELRS-WebUI — öffne deren Firmware-Update-Seite, lade das Egg zurück und dann die neue volle Firmware hoch. Der Zyklus wiederholt sich endlos.</p>
+<h2>WiFi-Netzwerke im Vergleich</h2>
+<p>Jede Stufe nutzt ihr eigenes WiFi-Netzwerk und Passwort sowie eine andere Upload-Seite. Hier die vollständige Übersicht:</p>
+<table>
+<tr>
+<th>Stufe</th>
+<th>WiFi-Netzwerk (AP)</th>
+<th>Passwort</th>
+<th>Upload-Seite</th>
+</tr>
+<tr>
+<td>Standard-ExpressLRS (auf dem Empfänger)</td>
+<td>
+<code>ExpressLRS RX</code>
+</td>
+<td>
+<code>expresslrs</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+<tr>
+<td>Pteronaut-Egg</td>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+</tr>
+<tr>
+<td>Volles PteronautOS</td>
+<td>
+<code>Pteronaut OS</code>
+</td>
+<td>
+<code>flynatural</code>
+</td>
+<td>WebUI → Firmware Update</td>
+</tr>
+</table>
 <h2>Brick-Risiko (ehrlich)</h2>
 <p>Wie bei jedem Over-the-Air-Flash: Nur ein kaputtes volles Image, dessen WiFi nie startet, würde eine kabelgebundene Wiederherstellung erzwingen. Im normalen Gebrauch entfernt das Egg das Kabel vollständig — kein Kabel, niemals.</p>
 <aside class='flasher-callout'>
