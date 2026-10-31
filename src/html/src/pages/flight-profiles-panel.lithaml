@@ -42,9 +42,21 @@
     %select{@change: self._onEditProfile, .disabled: self._uiLocked(), style: "width:100%;padding:8px 10px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;margin:8px 0;"}
       - for i in [0,1,2]
         - if i == self.editProfile
-          %option{value: i, selected: ""}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
+          %option{value: i, selected: ""}= self._profileName(i)
         - else
-          %option{value: i}= self._t('ornithopter.flight_profiles.profile_n', {n: i})
+          %option{value: i}= self._profileName(i)
+    %div{style: "margin:8px 0;"}
+      %label{style: "display:block;font-size:12px;color:#888;margin-bottom:4px;"}= self._t('ornithopter.flight_profiles.name_label')
+      %input{type: "text", maxlength: "16", .value: self.profileName, @input: self._onNameInput, @change: self._onNameCommit, .disabled: self._uiLocked(), style: "width:100%;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
+    %div{style: "margin:8px 0 10px;display:flex;gap:6px;align-items:center;"}
+      %select{@change: self._onCopyFromChange, .disabled: self._uiLocked(), style: "flex:1;padding:6px 8px;font-family:inherit;font-size:13px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;"}
+        - for i in [0,1,2]
+          - if i != self.editProfile
+            - if i == self.copyFrom
+              %option{value: i, selected: ""}= self._t('ornithopter.flight_profiles.copy_from') + ' ' + self._profileName(i)
+            - else
+              %option{value: i}= self._t('ornithopter.flight_profiles.copy_from') + ' ' + self._profileName(i)
+      %button{@click: self._onCopyProfile, .disabled: self._uiLocked(), style: "padding:6px 12px;font-family:inherit;font-size:13px;background:#222;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;white-space:nowrap;"}= self._t('ornithopter.flight_profiles.copy_btn')
     %div{style: "color:#d4a017;font-size:13px;margin:4px 0 8px;"}
       = self._t('ornithopter.flight_profiles.active_ch7')
       = ': ' + self._t('ornithopter.flight_profiles.profile_n', {n: self.activeFlightProfile})

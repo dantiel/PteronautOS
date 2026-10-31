@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>WiFi Flashing — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='Scroll to top' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='Scroll to top' type='button'>⬆</button>
+<a class='home-link' href='../../../en/' title='PteronautOS home'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../en/tutorials/'>Tutorials</a>
+<a href='../../../en/hardware/'>Hardware</a>
+<a href='../../../en/documentation/'>Documentation</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Tutorial 08</p>
+<h1>WiFi Flashing with the Pteronaut-Egg</h1>
+<p class='sub-lead'>Flash once with a cable, then update over WiFi — no FTDI, no UART, ever again.</p>
+<p>The Pteronaut-Egg is a tiny WiFi bootstrap (~294 KB) that lives on the receiver. Its only job is to accept the full PteronautOS firmware over WiFi and stage it — so you only need a USB cable once.</p>
+<p>The ESP8285 has a single ~1 MB flash region. A full image (~636 KB) cannot fit its own free staging space, so it cannot update itself over WiFi. The egg is small enough to fit, and the full image is small enough to flash the egg back — closing an endless egg ⇄ full cycle.</p>
+<h2>01 — Get the egg</h2>
+<p>Download the prebuilt Pteronaut-Egg. It is a fixed, config-independent bootstrap — no settings, no build required.</p>
+<p class='flasher-cta'>
+<a download='pteronaut-egg.bin' href='../../../assets/firmware/pteronaut-egg.bin'>Download pteronaut-egg.bin</a>
+</p>
+<h2>02 — Flash the egg (once)</h2>
+<p>Flash the egg onto the receiver with any ESP8266 flashing tool. The Fossil Etcher flashes it straight from the browser over Web Serial — hold BOOT (GPIO0), power-cycle, then click Flash.</p>
+<h2>03 — Connect to the egg</h2>
+<p>Power the receiver. The egg opens a WiFi access point; join it, then open the egg's upload page in a browser.</p>
+<table>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>
+<code>PTERONAUT-EGG</code>
+</td>
+<td>WiFi network (AP)</td>
+</tr>
+<tr>
+<td>
+<code>hatchnatural</code>
+</td>
+<td>WiFi password</td>
+</tr>
+<tr>
+<td>
+<code>pteronaut-egg.local</code>
+</td>
+<td>Upload page (mDNS, with 192.168.4.1 fallback)</td>
+</tr>
+</table>
+<h2>04 — Upload the full firmware</h2>
+<p>Build your full firmware in the Fossil Etcher (board, mixer, gyro, regulatory domain), download it, then drag the .bin onto the egg's ASCII egg. The egg stages it and reboots into full PteronautOS.</p>
+<h2>05 — Every future update</h2>
+<p>From now on, updating is two WiFi uploads and zero cables: full firmware → upload the egg back → upload the new full firmware. The cycle repeats indefinitely.</p>
+<h2>Brick risk (honest)</h2>
+<p>Like any over-the-air flash: if you upload a broken full image whose WiFi never starts, you need a cable again. The egg removes the cable from the normal path, not the emergency path.</p>
+<aside class='flasher-callout'>
+<p class='flasher-callout-text'>The Fossil Etcher is the shared flashing tool for both WiFi and UART workflows — flash the egg, or flash the full firmware directly, all from the browser.</p>
+<p class='flasher-cta'>
+<a href='../../../en/flasher/?board=egg'>Open the Fossil Etcher</a>
+</p>
+</aside>
+<h2>Build the egg yourself</h2>
+<p>To rebuild the egg from source:</p>
+<pre><code>pio run -d egg&#x000A;</code></pre>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/wifi-flashing/'>PT</a>
+<a class='active' href='../../../en/tutorials/wifi-flashing/'>EN</a>
+<a class='' href='../../../es/tutorials/wifi-flashing/'>ES</a>
+<a class='' href='../../../fr/tutorials/wifi-flashing/'>FR</a>
+<a class='' href='../../../de/tutorials/wifi-flashing/'>DE</a>
+<a class='' href='../../../ru/tutorials/wifi-flashing/'>RU</a>
+<a class='' href='../../../ko/tutorials/wifi-flashing/'>한국어</a>
+<a class='' href='../../../ja/tutorials/wifi-flashing/'>日本語</a>
+<a class='' href='../../../zh/tutorials/wifi-flashing/'>中文</a>
+<a class='' href='../../../ar/tutorials/wifi-flashing/'>العربية</a>
+<a class='' href='../../../hi/tutorials/wifi-flashing/'>हिन्दी</a>
+</div>
+<p class='footer-links'>
+<a class='ext-link' href='https://github.com/dantiel/PteronautOS' rel='noopener' target='_blank'>GitHub</a>
+<span class='sep'>·</span>
+<a href='../../../en/documentation/'>Documentation</a>
+<span class='sep'>·</span>
+<a href='../../../en/hardware/'>Hardware</a>
+<span class='sep'>·</span>
+<a href='../../../en/flasher/'>Fossil Etcher</a>
+<span class='sep'>·</span>
+<a class='ext-link' href='https://pteronaut.myspreadshop.de/' rel='noopener' target='_blank'>Expedition Store</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

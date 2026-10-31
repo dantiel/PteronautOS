@@ -1,0 +1,104 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title!= wififlash_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ⬆
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number!= wififlash_number
+        %h1!= wififlash_h1
+        %p.sub-lead!= wififlash_lead
+
+        %p!= wififlash_p1
+        %p!= wififlash_p2
+
+        %h2!= wififlash_h2_get
+        %p!= wififlash_get_p
+        %p.flasher-cta
+          %a{href: "#{asset_prefix}assets/firmware/pteronaut-egg.bin", download: "pteronaut-egg.bin"}!= wififlash_download
+
+        %h2!= wififlash_h2_flash
+        %p!= wififlash_flash_p
+
+        %h2!= wififlash_h2_connect
+        %p!= wififlash_connect_p
+        %table
+          %tr
+            %th!= wififlash_th_ssid
+            %th!= wififlash_th_value
+          %tr
+            %td
+              %code PTERONAUT-EGG
+            %td!= wififlash_ssid_v
+          %tr
+            %td
+              %code hatchnatural
+            %td!= wififlash_pass_v
+          %tr
+            %td
+              %code pteronaut-egg.local
+            %td!= wififlash_host_v
+
+        %h2!= wififlash_h2_upload
+        %p!= wififlash_upload_p
+
+        %h2!= wififlash_h2_update
+        %p!= wififlash_update_p
+
+        %h2!= wififlash_h2_risk
+        %p!= wififlash_risk_p
+
+        %aside.flasher-callout
+          %p.flasher-callout-text!= wififlash_etcher_note
+          %p.flasher-cta
+            %a{href: "#{asset_prefix}#{lang_dir}flasher/?board=egg"}!= wififlash_etcher_link
+
+        %h2!= wififlash_h2_build
+        %p!= wififlash_build_p
+        %pre
+          %code
+            :preserve
+              pio run -d egg
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} العربية
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p.footer-links
+        %a.ext-link{href: "https://github.com/dantiel/PteronautOS", target: "_blank", rel: "noopener"}!= footer_github
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= nav_flasher
+        %span.sep ·
+        %a.ext-link{href: "https://pteronaut.myspreadshop.de/", target: "_blank", rel: "noopener"}!= footer_store
+      %p.credit!= footer_credit

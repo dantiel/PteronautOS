@@ -521,7 +521,8 @@ bool ICACHE_RAM_ATTR HandleSendDataDl()
         {
             OtaPackAirportData(&otaPkt, &((SerialAirPort *)serialIO)->apInputBuffer);
         }
-        else if (OtaIsFullRes)
+        else
+        if (OtaIsFullRes)
         {
             GenerateOtaDataDl(full, data_dl, nullptr);
         }

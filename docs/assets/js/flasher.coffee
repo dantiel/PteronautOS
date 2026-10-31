@@ -128,11 +128,14 @@ setStatus = (text, state) ->
 # keeps CRSF for a MUSHIN RP2040 companion (servos + gyro live on the RP2040);
 # the opt-in "reuse as PWM" repurposes those pads into 2 local servo outputs.
 currentBoard = ->
-  if $("#receiver_board_crsf").checked then "crsf" else "pwm"
+  if $("#receiver_board_crsf").checked then "crsf"
+  else if $("#receiver_board_egg").checked then "egg"
+  else "pwm"
 
 setBoard = (v) ->
   $("#receiver_board_pwm").checked = v is "pwm"
   $("#receiver_board_crsf").checked = v is "crsf"
+  $("#receiver_board_egg").checked = v is "egg"
 
 currentEp2Pwm = ->
   currentBoard() is "crsf" and $("#ep2_pwm_enabled").checked
@@ -141,7 +144,8 @@ currentMushin = ->
   currentBoard() is "crsf" and not $("#ep2_pwm_enabled").checked
 
 currentTarget = ->
-  if currentEp2Pwm() then "ep2pwm"
+  if currentBoard() is "egg" then "egg"
+  else if currentEp2Pwm() then "ep2pwm"
   else if currentBoard() is "pwm" then "pwmp7"
   else "mushin"
 
@@ -612,6 +616,22 @@ flash = ->
     activePort = await navigator.serial.requestPort()
     els.disconnectBtn.classList.remove "hidden"
 
+    # The radios are ESP8285. The MUSHIN RP2040 companion (Raspberry Pi VID
+    # 0x2e8a) is a separate chip, but in MEDITATION stance it IS the flasher
+    # bridge: a USB CDC port transparently forwarding esptool's SLIP to the
+    # EP2 UART. Do NOT hard-fail on PID 0x0003 here — the Waveshare RP2040 Zero
+    # reuses 0x0003 for its *normal* CDC serial (running firmware), and the
+    # actual RPI-RP2 UF2 drive is a mass-storage device that WebSerial never
+    # lists as a serial port anyway. So PID alone cannot mean "BOOTSEL" in a
+    # WebSerial picker; it just means "an RP2040 is on the other end". Remind
+    # the user to be in MEDITATION instead of guessing wrong.
+    info = await activePort.getInfo()
+    if info.usbVendorId is 0x2e8a
+      log "RP2040 serial port detected — flashing through the Yoshimitsu MEDITATION bridge (115200 baud, byte-transparent to the EP2 UART)."
+      log "If the flash fails with “Failed to connect”, Yoshimitsu is not in MEDITATION: enter it first (serial command MEDITATION, or 4 quick RESET-taps), then re-flash."
+      if currentTarget() is "pwmp7"
+        log "⚠️ Target is the standalone PWM board (PWMP7), but this bridge is wired to an EP2 (CRSF) radio. Select the \"CRSF board\" option unless you really mean to flash a PWMP7 image onto an EP2."
+
     # Manual bootloader entry matches HARDWARE.md: hold BOOT (GPIO0 / CH1),
     # power-cycle, keep holding ~1 s, then release. Try a manual sync first
     # (no DTR/RTS disturbance), then fall back to an auto-reset attempt for
@@ -680,11 +700,17 @@ flash = ->
 
 syncGyroFields = ->
   board = currentBoard()
+  isEgg = board is "egg"
   localGyro = board is "pwm"
   ep2Pwm = currentEp2Pwm()
   zeph = $("#zephyrus_enabled")
   zephRow = zeph.closest ".flasher-toggle"
   ep2PwmRow = $("#ep2-pwm-toggle-row")
+  # The egg is a config-independent WiFi bootstrap: hide every build option
+  # except the board selector. Nothing to tune — only build + flash/download.
+  $("#egg-hint").classList.toggle "hidden", not isEgg
+  for el in document.querySelectorAll ".receiver-config"
+    el.classList.toggle "hidden", isEgg
   # Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   # free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   unless localGyro
@@ -706,6 +732,13 @@ syncGyroFields = ->
   $("#ep2-pwm-note").classList.toggle "hidden", not ep2Pwm
 
 restoreConfig()
+
+# A ?board=egg|pwm|crsf link (e.g. from the WiFi-flashing tutorial) preselects
+# the board and wins over any previously saved config.
+boardParam = (new URLSearchParams(location.search).get("board") or "").toLowerCase()
+if boardParam in ["egg", "pwm", "crsf"]
+  setBoard boardParam
+
 syncGyroFields()
 restoreSpecimens()
 
@@ -713,7 +746,7 @@ for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
 
-for sel in ["#receiver_board_pwm", "#receiver_board_crsf"]
+for sel in ["#receiver_board_pwm", "#receiver_board_crsf", "#receiver_board_egg"]
   $(sel).addEventListener "change", ->
     saveConfig()
     syncGyroFields()

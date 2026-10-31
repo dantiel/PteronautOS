@@ -22,8 +22,8 @@ else:
 
 header_path = f'headers/web-{chip}-{type}{is8285}.h'
 if not os.path.isfile(header_path):
-    if chip == 'pteronautos':
-        fallback = f'headers/web-sx128x-{type}{is8285}.h'
+    if chip.startswith('pteronautos'):
+        fallback = f'headers/web-pteronautos-rx{is8285}.h'
         if os.path.isfile(fallback):
             sys.stderr.write(f'WARNING: PteronautOS WebUI not built, using {fallback}.\n')
             sys.stderr.write(f'Run "npm run build:pteronautos" in src/html/ for branded UI.\n')

@@ -19,6 +19,7 @@ void Ornithopter::_resetGlitchFilter()
         _glitchRef[i]       = 992;
         _glitchCandidate[i] = 992;
         _glitchPersist[i]   = 0;
+        _glitchFrozenFrames[i] = 0;
         _glitchLastRaw[i]   = 0xFFFF;  // sentinel — no CRSF frame can match this
     }
 }
@@ -123,9 +124,11 @@ void Ornithopter::_applyGlitchFilter() {
             *out[i]              = raw[i];
             _glitchRef[i]        = raw[i];
             _glitchPersist[i]    = 0;
+            _glitchFrozenFrames[i] = 0;
         } else if (_glitchPersist[i] == 0) {
             _glitchCandidate[i]  = raw[i];
             _glitchPersist[i]    = 1;   // frozen this frame — await confirmation
+            _glitchFrozenFrames[i] = 1;
         } else {
             uint16_t dc = (raw[i] > _glitchCandidate[i]) ? (uint16_t)(raw[i] - _glitchCandidate[i])
                                                            : (uint16_t)(_glitchCandidate[i] - raw[i]);
@@ -133,9 +136,20 @@ void Ornithopter::_applyGlitchFilter() {
                 *out[i]              = raw[i];   // confirmed (2 consecutive frames)
                 _glitchRef[i]        = raw[i];
                 _glitchPersist[i]    = 0;
+                _glitchFrozenFrames[i] = 0;
+            } else if (_glitchFrozenFrames[i] >= GLITCH_FROZEN_RELEASE_FRAMES) {
+                // Anti-stuck: a genuinely-changed channel held frozen by noise
+                // jittering past the confirmation window would lock forever.
+                // Force-accept + re-baseline so the servo tracks reality
+                // instead of freezing at a stale value.
+                *out[i]              = raw[i];
+                _glitchRef[i]        = raw[i];
+                _glitchPersist[i]    = 0;
+                _glitchFrozenFrames[i] = 0;
             } else {
                 _glitchCandidate[i]  = raw[i];   // inconsistent — new candidate, still frozen
                 _glitchPersist[i]    = 1;
+                _glitchFrozenFrames[i]++;
             }
         }
     }

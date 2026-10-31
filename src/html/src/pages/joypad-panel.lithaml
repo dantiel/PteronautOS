@@ -1,0 +1,78 @@
+.mui-panel.mui--text-title
+  %span.panel-icon.icon--symbols.icon--symbols--joypad
+  = self._t('joypad.title')
+
+/ ── Override + arm ──────────────────────────────────────────────
+.mui-panel
+  %label.pto-chn-toggle
+    %span{class: self._overrideDot()}
+    %input.pto-chn-check{type: "checkbox", checked: self.stickOverride, @change: self._onOverrideToggle}
+    %span= self.stickOverride ? self._t('joypad.override_on') : self._t('joypad.override_off')
+  %br
+  %small.ptero-muted= self._t('joypad.override_hint')
+  %br
+  %button{class: self._armClass(), @click: self._onArmToggle}= self._armLabel()
+  - if self._armed()
+    %span.pto-armed-badge= self._t('joypad.armed')
+
+/ ── Profile + speed ─────────────────────────────────────────────
+.mui-panel
+  %b= self._t('joypad.profile.title')
+  .pto-grid-3
+    - for o of self._profileOptions()
+      %button{class: self._profileBtnClass(o.val), @click: self._onProfileButton(o.val)}= o.label
+  %br
+  %b= self._t('joypad.speed.title')
+  %br
+  %input.joypad-speed{type: "range", min: "1000", max: "2000", step: "1", .value: self.speedUs, @input: self._onSpeedInput}
+  %span.value= "#{self.speedUs}µs"
+  %small.ptero-muted= self._t('joypad.speed.hint')
+
+/ ── Thumbsticks ─────────────────────────────────────────────────
+.joypad-stage
+  .joy-stick
+    .joy-pad{data-stick: "left"}
+      .joy-pad-ring
+      .joy-pad-knob{style: self._leftKnobStyle()}
+    .joy-stick-label
+      %b= self._t('joypad.stick.left')
+      %small= self._t('joypad.axes.left')
+  .joy-stick
+    .joy-pad{data-stick: "right"}
+      .joy-pad-ring
+      .joy-pad-knob{style: self._rightKnobStyle()}
+    .joy-stick-label
+      %b= self._t('joypad.stick.right')
+      %small= self._t('joypad.axes.right')
+
+/ ── Live output ─────────────────────────────────────────────────
+.mui-panel
+  .mui--text-title{style: "font-size:14px;"}= self._t('joypad.live.title')
+  %table.mui-table.mui-table--bordered
+    %tbody
+      %tr
+        %td
+          %b= self._t('joypad.live.link')
+        %td= self.linkUp ? self._t('joypad.live.up') : self._t('joypad.live.down')
+      %tr
+        %td
+          %b= self._t('joypad.live.throttle')
+        %td= "#{self._throttlePct()}%"
+      %tr
+        %td
+          %b= self._t('joypad.live.left_wing')
+        %td= "#{self.servoLeftUs}µs"
+      %tr
+        %td
+          %b= self._t('joypad.live.right_wing')
+        %td= "#{self.servoRightUs}µs"
+      %tr
+        %td
+          %b= self._t('joypad.live.rudder')
+        %td= "#{self.servoRudderUs}µs"
+      %tr
+        %td
+          %b= self._t('joypad.live.active_profile')
+        %td= self._t('joypad.profile_n', {n: self.activeProfile})
+
+%p.ptero-muted= self._t('joypad.safety')

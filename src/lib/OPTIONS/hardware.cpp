@@ -253,25 +253,52 @@ bool hardware_init(EspFlashStream &strmFlash)
     hardware_ClearAllFields();
     builtinHardwareConfig.clear();
 
-    Stream *strmSrc;
+    // Current target identity (skips the 4-byte magic prefix in target_name).
+    const char *currentTarget = (const char *)&target_name[4];
+
     JsonDocument doc;
+    String persisted;
+    bool useFlash = true;
+
     File file = LittleFS.open("/hardware.json", "r");
-    if (!file || file.isDirectory()) {
+    if (file && !file.isDirectory())
+    {
+        persisted = file.readString();
+        file.close();
+
+        // A persisted override is only honoured when it was written for this
+        // exact PteronautOS environment. Reflashing a different environment
+        // (e.g. PWMP7 → EP2 PWM) leaves LittleFS intact, so an untagged or
+        // foreign override must not resurrect the previous board's pin map.
+        JsonDocument persistedDoc;
+        DeserializationError persistedErr = deserializeJson(persistedDoc, persisted);
+        if (!persistedErr)
+        {
+            const char *storedTarget = persistedDoc["_target"] | "";
+            useFlash = !(storedTarget[0] && strcmp(storedTarget, currentTarget) == 0);
+        }
+        if (useFlash)
+        {
+            LittleFS.remove("/hardware.json");
+        }
+    }
+
+    DeserializationError error;
+    if (useFlash)
+    {
         constexpr size_t hardwareConfigOffset = ELRSOPTS_PRODUCTNAME_SIZE + ELRSOPTS_DEVICENAME_SIZE + ELRSOPTS_OPTIONS_SIZE;
         strmFlash.setPosition(hardwareConfigOffset);
         if (!options_HasStringInFlash(strmFlash))
         {
             return false;
         }
-
-        strmSrc = &strmFlash;
+        error = deserializeJson(doc, strmFlash);
     }
     else
     {
-        strmSrc = &file;
+        error = deserializeJson(doc, persisted);
     }
 
-    DeserializationError error = deserializeJson(doc, *strmSrc);
     if (error)
     {
         return false;

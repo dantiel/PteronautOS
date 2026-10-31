@@ -25,6 +25,10 @@
             %span.mui--align-middle.icon--symbols.icon--symbols--flight
             = self._t('app.menu.flight_profiles')
         %li
+          %a#menu-joypad{href: "#joypad"}
+            %span.mui--align-middle.icon--symbols.icon--symbols--joypad
+            = self._t('app.menu.joypad')
+        %li
           %a#menu-zephyrus{href: "#zephyrus"}
             %span.mui--align-middle.icon--symbols.icon--symbols--zephyrus
             = self._t('app.menu.zephyrus')
@@ -58,10 +62,11 @@
           %a#menu-servo{href: "#servo"}
             %span.mui--align-middle.icon--symbols.icon--symbols--servo
             = self._t('app.menu.servo')
-        %li
-          %a#menu-hardware{href: "#hardware"}
-            %span.mui--align-middle.icon--symbols.icon--symbols--hardware
-            = self._t('app.menu.hardware')
+        - if self._hasHardware()
+          %li
+            %a#menu-hardware{href: "#hardware"}
+              %span.mui--align-middle.icon--symbols.icon--symbols--hardware
+              = self._t('app.menu.hardware')
         %li
           %a#menu-wifi{href: "#wifi"}
             %span.mui--align-middle.icon--symbols.icon--symbols--wifi
@@ -78,10 +83,11 @@
     %li
       %strong= self._t('app.menu.diagnostics')
       %ul
-        %li
-          %a#menu-serial{href: "#serial"}
-            %span.mui--align-middle.icon--symbols.icon--symbols--serial
-            = self._t('app.menu.serial')
+        - if self._hasSerial()
+          %li
+            %a#menu-serial{href: "#serial"}
+              %span.mui--align-middle.icon--symbols.icon--symbols--serial
+              = self._t('app.menu.serial')
         %li
           %a#menu-debug{href: "#debug"}
             %span.mui--align-middle.icon--symbols.icon--symbols--debug
@@ -133,6 +139,8 @@
         %ornithopter-panel
       - when 'flight-profiles'
         %flight-profiles-panel
+      - when 'joypad'
+        %joypad-panel
       - when 'zephyrus'
         %zephyrus-panel
       - when 'servo'
@@ -155,12 +163,14 @@
         - if self._hasConnections()
           %connections-panel
       - when 'serial'
-        %serial-panel
+        - if self._hasSerial()
+          %serial-panel
       - when 'voltage'
         - if self._hasVoltage()
           %voltage-calibration-panel
       - when 'hardware'
-        %hardware-layout
+        - if self._hasHardware()
+          %hardware-layout
         
 %elrs-footer
   

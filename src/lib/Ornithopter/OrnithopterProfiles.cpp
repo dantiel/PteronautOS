@@ -7,10 +7,34 @@
 void Ornithopter::_loadDefaultFlightProfiles()
 {
     // Three distinct tuning sets (index 0..2). Aggregate init; the trailing
-    // fields of FlightProfileParams zero-initialize.
+    // fields of FlightProfileParams (incl. name) zero-initialize.
     flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    setFlightProfileName(0, "Gentle");
+    setFlightProfileName(1, "Standard");
+    setFlightProfileName(2, "Aggressive");
+}
+
+void Ornithopter::setFlightProfileName(uint8_t idx, const char *name)
+{
+    if (idx >= FLIGHT_PROFILE_COUNT) idx = 1;
+    char *dst = flightProfiles[idx].name;
+    if (name) {
+        uint8_t i = 0;
+        for (; i < ORNI_PROFILE_NAME_MAX && name[i]; ++i) dst[i] = name[i];
+        dst[i] = '\0';
+    } else {
+        dst[0] = '\0';
+    }
+}
+
+void Ornithopter::copyFlightProfile(uint8_t dst, uint8_t src)
+{
+    if (dst >= FLIGHT_PROFILE_COUNT) dst = 1;
+    if (src >= FLIGHT_PROFILE_COUNT || src == dst) return;
+    flightProfiles[dst] = flightProfiles[src];   // copies params + name
+    if (dst == activeFlightProfile) applyFlightProfile(dst);
 }
 
 void Ornithopter::applyFlightProfile(uint8_t idx)

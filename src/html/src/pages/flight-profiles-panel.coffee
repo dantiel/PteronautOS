@@ -80,6 +80,9 @@ class FlightProfilesPanel extends PteroElement
     # Virtual stick
     stickOverride:       {state: true}
     stickChannels:       {state: true}
+    # Flight profile name / copy
+    profileName:         {state: true}  # edit buffer for the profile name
+    copyFrom:            {state: true}  # source profile for the copy button
 
   constructor: ->
     super()
@@ -99,6 +102,8 @@ class FlightProfilesPanel extends PteroElement
     @kernel               = 'servo'
     @editProfile          = 1
     @activeFlightProfile  = 1
+    @profileName          = ''
+    @copyFrom             = 0
     @flightProfiles       = [
       {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
       {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
@@ -216,6 +221,7 @@ class FlightProfilesPanel extends PteroElement
       @ratchetTimeoutMs = o.ratchet_timeout_ms
     if o.flight_profiles?
       @flightProfiles = o.flight_profiles.map (p) =>
+        name:               p.name ? ''
         strokeFerocity:      p.stroke_ferocity ? 30
         returnFerocity:      p.return_ferocity ? 50
         glideAngleDeg:       p.glide_angle_deg ? -4
@@ -246,6 +252,7 @@ class FlightProfilesPanel extends PteroElement
     return if @_uiLocked()
     clearTimeout @_saveResetTimer if @_saveResetTimer
     @editProfile = parseInt(evt.target.value)
+    @copyFrom = @_copyFromFallback()
     @_loadEditProfile()
 
   # Load the selected edit profile's params into the slider buffer.
@@ -253,6 +260,7 @@ class FlightProfilesPanel extends PteroElement
     p = @_unsavedProfiles[@editProfile] or @flightProfiles[@editProfile] or @flightProfiles[1]
     @saveState = if @_unsavedProfiles[@editProfile] then 'error' else 'idle'
     @saveError = @_profileSaveErrors[@editProfile] or null
+    @profileName = p.name or ''
     @strokeFerocity      = p.strokeFerocity
     @returnFerocity      = p.returnFerocity
     @glideAngleDeg       = p.glideAngleDeg
@@ -273,6 +281,85 @@ class FlightProfilesPanel extends PteroElement
     @aileronSkewRateMix = p.aileronSkewRateMix
     @elevatorFerocityRateMix = p.elevatorFerocityRateMix
     @elevatorAntigravityMix = p.elevatorAntigravityMix
+
+  # ── Profile name + copy ────────────────────────────────────────────
+  _profileName: (i) ->
+    n = @flightProfiles[i]?.name
+    if n and n.trim() then n else @_t('ornithopter.flight_profiles.profile_n', {n: i})
+
+  _copyFromFallback: ->
+    (i for i in [0,1,2] when i != @editProfile)[0]
+
+  _onNameInput: (evt) =>
+    @profileName = evt.target.value
+
+  _onNameCommit: =>
+    return unless @configLoaded
+    return if @_saveInFlight
+    name = (@profileName or '').trim().substring(0, 16)
+    idx = @editProfile
+    @_saveInFlight = true
+    @saveState = 'saving'
+    @saveError = null
+    clearTimeout @_saveResetTimer if @_saveResetTimer
+    body = new URLSearchParams()
+    body.append 'flight_profile', idx
+    body.append 'name', name
+    try
+      res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
+      result = await res.json()
+      unless res.ok and result?.saved == true
+        throw new Error(result?.error or "HTTP #{res.status}: name not saved")
+      profiles = @flightProfiles.slice()
+      profiles[idx] = Object.assign({}, profiles[idx], {name: name})
+      @flightProfiles = profiles
+      @profileName = name
+      @saveState = 'saved'
+    catch e
+      @saveState = 'error'
+      @saveError = e?.message ? @_t('app.error.network')
+    finally
+      @_saveInFlight = false
+      if @saveState == 'saved'
+        @_saveResetTimer = setTimeout (=> @saveState = 'idle'), 2500
+
+  _onCopyFromChange: (evt) =>
+    @copyFrom = parseInt(evt.target.value)
+
+  _onCopyProfile: =>
+    return if @_uiLocked()
+    src = parseInt(@copyFrom)
+    return unless src in [0, 1, 2]
+    return if src == @editProfile
+    @_saveCopyProfile(@editProfile, src)
+
+  _saveCopyProfile: (dst, src) =>
+    @_saveInFlight = true
+    @saveState = 'saving'
+    @saveError = null
+    clearTimeout @_saveResetTimer if @_saveResetTimer
+    body = new URLSearchParams()
+    body.append 'flight_profile', dst
+    body.append 'copy_profile_from', src
+    try
+      res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
+      result = await res.json()
+      unless res.ok and result?.saved == true
+        throw new Error(result?.error or "HTTP #{res.status}: copy not confirmed")
+      profiles = @flightProfiles.slice()
+      profiles[dst] = Object.assign({}, profiles[src])
+      @flightProfiles = profiles
+      delete @_unsavedProfiles[dst]
+      delete @_profileSaveErrors[dst]
+      @saveState = 'saved'
+      @_loadEditProfile()
+    catch e
+      @saveState = 'error'
+      @saveError = e?.message ? @_t('app.error.network')
+    finally
+      @_saveInFlight = false
+      if @saveState == 'saved'
+        @_saveResetTimer = setTimeout (=> @saveState = 'idle'), 2500
 
   # ── Virtual Stick (channel test) ──────────────────────────────────
   _onStickToggle: =>
@@ -356,7 +443,7 @@ class FlightProfilesPanel extends PteroElement
       unless res.ok and result?.saved == true
         throw new Error(result?.error or "HTTP #{res.status}: save not confirmed")
       profiles = @flightProfiles.slice()
-      profiles[profileIndex] = snapshot
+      profiles[profileIndex] = Object.assign({}, @flightProfiles[profileIndex], snapshot)
       @flightProfiles = profiles
       delete @_unsavedProfiles[profileIndex]
       delete @_profileSaveErrors[profileIndex]

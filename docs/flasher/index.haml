@@ -38,9 +38,13 @@
               %label.flasher-seg
                 %input#receiver_board_crsf{type: "radio", name: "receiver_board", value: "crsf"}
                 %span!= flasher_board_crsf
+              %label.flasher-seg
+                %input#receiver_board_egg{type: "radio", name: "receiver_board", value: "egg"}
+                %span!= flasher_board_egg
             %p.flasher-hint!= flasher_board_hint
+            %p.flasher-hint#egg-hint.hidden!= flasher_board_egg_hint
 
-          %label.flasher-field
+          %label.flasher-field.receiver-config
             %span!= flasher_mixer_profile
             %select#mixer_profile
               %option{value: "0"} SERVO_2WING — 2 flapping wings
@@ -52,17 +56,17 @@
               %option{value: "6"} GEARBOX_1ELE_1RUD — elevator + rudder
               %option{value: "7"} GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder
 
-          %label.flasher-field
+          %label.flasher-field.receiver-config
             %span!= flasher_regulatory_domain
             %select#regulatory_domain
               %option{value: "EU_CE_2400", selected: true} EU CE (LBT — restricted band)
               %option{value: "ISM_2400"} ISM (full band)
 
-          %label.flasher-field
+          %label.flasher-field.receiver-config
             %span!= flasher_binding_phrase
             %input#binding_phrase{type: "text", placeholder: flasher_binding_placeholder, autocomplete: "off"}
 
-          %details.flasher-advanced
+          %details.flasher-advanced.receiver-config
             %summary!= flasher_advanced
             .flasher-grid.flasher-toggles
               %label.flasher-field.flasher-toggle
@@ -114,7 +118,7 @@
                 %span!= flasher_wifi_interval
                 %input#auto_wifi_on_interval{type: "number", value: "30", min: "-1"}
 
-          %details.flasher-advanced
+          %details.flasher-advanced.receiver-config
             %summary!= flasher_heading_system
             .flasher-grid
               %label.flasher-field

@@ -10,10 +10,11 @@ import {i18n} from './utils/i18n-loader'
 import './pages/info-panel.coffee'
 import {hideLoadingOverlay, loadJSON, showConfirm, showLoadingOverlay} from './utils/feedback'
 import {_} from './utils/libs'
+import FEATURES from '../features'
 
 # PteronautOS: static imports — panels bundled into app.js (no chunk HTTP, no ESP crash)
-import './page-groups/general-group.coffee'
-import './page-groups/advanced-group.coffee'
+import './page-groups/general-group.js'
+import './page-groups/advanced-group.js'
 
 SETTINGS_LOAD_FAILED_MESSAGE = 'Failed to load settings. Retry or power cycle device.'
 
@@ -207,6 +208,8 @@ class App extends LitElement
   _isSelectedLocale: (code) -> i18n.locale is code
   _hasConnections: -> elrsState.config.pwm isnt undefined
   _hasVoltage: -> (elrsState.settings?.voltage_source_count ? 0) > 0
+  _hasSerial: -> true
+  _hasHardware: -> true
   _productName: -> elrsState.settings?.product_name
   _version: -> elrsState.settings?.version
   _target: -> elrsState.settings?.target

@@ -370,6 +370,7 @@ constexpr float orniElevatorAntigravity(float gate01, float elevatorDeflection01
 // Up to 3 tuning param sets switchable in flight by the PROFILE channel.
 // Kernel (MixerProfile / servo geometry) is NOT per-profile — it stays fixed.
 #define FLIGHT_PROFILE_COUNT    3
+#define ORNI_PROFILE_NAME_MAX    16   // user-facing profile name, NUL-terminated
 
 struct FlightProfileParams {
     float   strokeFerocity;       // 0–100
@@ -393,6 +394,7 @@ struct FlightProfileParams {
     float   aileronSkewRateMix; // 0–100, aileron-rate → transient differential skew boost/brake (slew)
     float   elevatorFerocityRateMix; // 0–100, elevator-rate → transient ferocity dwell (slew)
     float   elevatorAntigravityMix;  // 0–100, rate-gated stick-direction gravity assist
+    char    name[ORNI_PROFILE_NAME_MAX + 1]; // WebUI-visible profile label
 };
 
 // ─── Rudder ────────────────────────────────────────────────────────

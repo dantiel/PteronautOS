@@ -255,23 +255,29 @@ static void WebUpdateHandleRoot(AsyncWebServerRequest *request)
   }
 }
 
-static void putFile(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+static void PostHardwareJson(AsyncWebServerRequest *request, JsonVariant &json)
 {
-  static File file;
-  static size_t bytes;
-  if (!file ||
-    // Request URI starts with a / and LittleFS File::name() does not include it, ESP32 doesn't have File::fullName()
-    strcmp(&request->url().c_str()[1], file.name()) != 0)
+  // Stamp the current PteronautOS environment into the persisted override so
+  // hardware_init() can discard it after a reflash to a different target. The
+  // previous putFile streaming handler could not inject fields mid-stream, so
+  // the /hardware.json POST is handled here as a parsed JSON document.
+  if (!json.is<JsonObject>())
   {
-    file = LittleFS.open(request->url(), "w");
-    bytes = 0;
+    request->send(400, "text/plain", "Hardware layout must be a JSON object");
+    return;
   }
-  file.write(data, len);
-  bytes += len;
-  if (bytes == total)
+  json["_target"] = (const char *)&target_name[4];
+
+  File file = LittleFS.open("/hardware.json", "w");
+  if (!file)
   {
-    file.close();
+    request->send(500, "text/plain", "Failed to open /hardware.json");
+    return;
   }
+  serializeJson(json, file);
+  file.close();
+
+  request->send(200, "text/plain", "Hardware layout saved");
 }
 
 static void getFile(AsyncWebServerRequest *request)
@@ -1085,6 +1091,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     JsonArray fpArr = orni["flight_profiles"].to<JsonArray>();
     for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
         JsonObject p = fpArr.createNestedObject();
+        p["name"]                  = ornithopter.flightProfiles[i].name;
         p["stroke_ferocity"]       = (int)ornithopter.flightProfiles[i].strokeFerocity;
         p["return_ferocity"]       = (int)ornithopter.flightProfiles[i].returnFerocity;
         p["stroke_skew"]           = (int)ornithopter.flightProfiles[i].strokeSkew;
@@ -1234,7 +1241,9 @@ static bool SaveOrnithopterConfig()
     f.print(F("{\"flight_profiles\":["));
     for (int i = 0; i < FLIGHT_PROFILE_COUNT; ++i) {
         if (i) f.print(',');
-        f.print(F("{\"stroke_ferocity\":"));
+        f.print(F("{\"name\":"));
+        _pteroPrintJsonString(f, ornithopter.flightProfiles[i].name);
+        f.print(F(",\"stroke_ferocity\":"));
         f.print((int)ornithopter.flightProfiles[i].strokeFerocity);
         f.print(F(",\"return_ferocity\":"));
         f.print((int)ornithopter.flightProfiles[i].returnFerocity);
@@ -1391,6 +1400,12 @@ void LoadOrnithopterConfig()
         for (int i = 0; i < FLIGHT_PROFILE_COUNT && i < (int)fpArr.size(); ++i) {
             JsonObject p = fpArr[i].as<JsonObject>();
             FlightProfileParams &dst = ornithopter.flightProfiles[i];
+            if (p["name"].is<const char*>()) {
+                const char *nm = p["name"].as<const char*>();
+                uint8_t j = 0;
+                for (; j < ORNI_PROFILE_NAME_MAX && nm[j]; ++j) dst.name[j] = nm[j];
+                dst.name[j] = '\0';
+            }
             if (p["stroke_ferocity"].is<int>())       dst.strokeFerocity      = p["stroke_ferocity"].as<int>();
             if (p["return_ferocity"].is<int>())       dst.returnFerocity      = p["return_ferocity"].as<int>();
             if (p["stroke_skew"].is<int>()) {
@@ -1623,6 +1638,19 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
             return;
         }
         fp = slot[0] - '0';
+    }
+    // Copy one flight-profile slot into another (WebUI "copy" button).
+    if (fp >= 0 && request->hasParam("copy_profile_from", true)) {
+        const String &srcStr = request->getParam("copy_profile_from", true)->value();
+        if (srcStr.length() == 1 && srcStr[0] >= '0' && srcStr[0] < '0' + FLIGHT_PROFILE_COUNT) {
+            ornithopter.copyFlightProfile((uint8_t)fp, (uint8_t)(srcStr[0] - '0'));
+        }
+    }
+    // Rename a flight-profile slot.
+    if (request->hasParam("name", true)) {
+        String nm = request->getParam("name", true)->value();
+        nm.trim();
+        ornithopter.setFlightProfileName(fp >= 0 ? (uint8_t)fp : ornithopter.activeFlightProfile, nm.c_str());
     }
     // Mixer profile — runtime-switchable
     int pid = _pteroParamInt(request, "profile_id", -1);
@@ -2735,7 +2763,8 @@ static void startServices()
   server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
   server.on("/pteronautos/blackbox", HTTP_GET, GetPteronautosBlackbox);
 #endif // defined(PTERONAUTOS)
-  server.on("/hardware.json", HTTP_GET | HTTP_POST, getFile, nullptr, putFile);
+  server.on("/hardware.json", HTTP_GET, getFile);
+  server.addHandler(new AsyncCallbackJsonWebHandler("/hardware.json", PostHardwareJson));
   server.on("/options.json", HTTP_GET, getFile);
   server.on("/reboot", HandleReboot);
   server.on("/reset", HandleReset);

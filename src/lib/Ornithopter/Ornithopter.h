@@ -88,6 +88,8 @@ public:
                                 float ailSkewMix,
                                 float thrSkewRateMix, float ailSkewRateMix,
                                 float elevFerRateMix, float elevAntiGravMix);
+    void setFlightProfileName(uint8_t idx, const char *name);
+    void copyFlightProfile(uint8_t dst, uint8_t src);
 
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
@@ -253,10 +255,12 @@ private:
 
     // Glitch filter state (per-channel delta + 2-frame persistence)
     #define GLITCH_GHOST_REBASELINE_FRAMES 20  // consecutive collective rejections before forced re-baseline
+    #define GLITCH_FROZEN_RELEASE_FRAMES  8   // consecutive frozen frames before a channel force-accepts (anti-stuck)
     bool     _glitchInitialized;
     uint16_t _glitchRef[STK_COUNT];         // last accepted value per channel
     uint16_t _glitchCandidate[STK_COUNT];   // candidate awaiting confirmation
     uint8_t  _glitchPersist[STK_COUNT];// 0=idle, 1=awaiting confirmation
+    uint8_t  _glitchFrozenFrames[STK_COUNT]; // consecutive frames held frozen (anti-stuck timeout)
     uint16_t _glitchLastRaw[STK_COUNT];     // last-seen raw (new-frame detection)
     uint8_t  _glitchGhostStreak;            // consecutive collective rejections (self-heal counter)
     uint16_t _glitchFrameTick;              // distinct CRSF frames seen (arm-debounce clock)

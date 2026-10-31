@@ -38,6 +38,7 @@ PAGES = %w[
   tutorials/zephyrus-wiring
   tutorials/yoshimitsu
   tutorials/companion-compute
+  tutorials/wifi-flashing
   hardware
   hardware/power
   hardware/telemetry

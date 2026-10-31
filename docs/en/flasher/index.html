@@ -38,10 +38,15 @@
 <input id='receiver_board_crsf' name='receiver_board' type='radio' value='crsf'>
 <span>non-PWM (EP1/EP2)</span>
 </label>
+<label class='flasher-seg'>
+<input id='receiver_board_egg' name='receiver_board' type='radio' value='egg'>
+<span>Pteronaut-Egg (WiFi)</span>
+</label>
 </div>
 <p class='flasher-hint'>PWM boards drive servos directly. non-PWM boards (EP1/EP2) expose CRSF on the serial pads — reuse them as PWM servo outputs, or keep CRSF for a MUSHIN RP2040 companion.</p>
+<p class='flasher-hint hidden' id='egg-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 </div>
-<label class='flasher-field'>
+<label class='flasher-field receiver-config'>
 <span>Mixer profile</span>
 <select id='mixer_profile'>
 <option value='0'>SERVO_2WING — 2 flapping wings</option>
@@ -54,18 +59,18 @@
 <option value='7'>GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder</option>
 </select>
 </label>
-<label class='flasher-field'>
+<label class='flasher-field receiver-config'>
 <span>Regulatory domain</span>
 <select id='regulatory_domain'>
 <option selected value='EU_CE_2400'>EU CE (LBT — restricted band)</option>
 <option value='ISM_2400'>ISM (full band)</option>
 </select>
 </label>
-<label class='flasher-field'>
+<label class='flasher-field receiver-config'>
 <span>Binding phrase</span>
 <input autocomplete='off' id='binding_phrase' placeholder='leave empty for traditional binding' type='text'>
 </label>
-<details class='flasher-advanced'>
+<details class='flasher-advanced receiver-config'>
 <summary>Advanced — I2C, Mushin, WiFi</summary>
 <div class='flasher-grid flasher-toggles'>
 <label class='flasher-field flasher-toggle'>
@@ -137,7 +142,7 @@
 </label>
 </div>
 </details>
-<details class='flasher-advanced'>
+<details class='flasher-advanced receiver-config'>
 <summary>System &amp; WebUI</summary>
 <div class='flasher-grid'>
 <label class='flasher-field'>

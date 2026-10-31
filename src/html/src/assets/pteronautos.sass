@@ -822,5 +822,100 @@ input[type="range"].pto-chn-slider
 .ptero-muted
   color: #666
   font-style: italic
+
+// ── Joypad (virtual touchsticks) ───────────────────────────────────
+.joypad-stage
+  display: flex
+  justify-content: center
+  align-items: flex-start
+  gap: 28px
+  padding: 10px 0
+  flex-wrap: wrap
+
+.joy-stick
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 10px
+
+.joy-stick-label
+  text-align: center
+  small
+    display: block
+    color: #888
+    font-size: 11px
+    margin-top: 2px
+
+.joy-pad
+  position: relative
+  width: 130px
+  height: 130px
+  border-radius: 50%
+  background: radial-gradient(circle at 50% 32%, #1c1c22 0%, #0e0e11 72%)
+  border: 2px solid #333
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.7), 0 0 16px rgba(212,160,23,0.08)
+  touch-action: none
+  -webkit-user-select: none
+  user-select: none
+  -webkit-tap-highlight-color: transparent
+  cursor: pointer
+
+.joy-pad-ring
+  position: absolute
+  inset: 14px
+  border-radius: 50%
+  border: 1px solid #26262c
+  background-image: linear-gradient(transparent 49.5%, #26262c 49.5%, #26262c 50.5%, transparent 50.5%), linear-gradient(90deg, transparent 49.5%, #26262c 49.5%, #26262c 50.5%, transparent 50.5%)
+
+.joy-pad-knob
+  position: absolute
+  top: 50%
+  left: 50%
+  width: 44px
+  height: 44px
+  margin: -22px 0 0 -22px
+  border-radius: 50%
+  background: radial-gradient(circle at 40% 35%, #e0b62a 0%, #d4a017 55%, #6b4c1e 100%)
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.28)
+  will-change: transform
+  transition: transform 0.05s linear
+
+.pto-armed-badge
+  display: inline-block
+  margin-left: 10px
+  padding: 3px 10px
+  border-radius: 3px
+  background: #d4a017
+  color: #1c1c22
+  font-weight: 700
+  font-size: 12px
+
+.ptero-btn--armed
+  background: #d4a017
+  color: #1c1c22
+  border-color: #d4a017
+  &:hover
+    background: #e0b62a
+    border-color: #e0b62a
+
+.pto-profile-btn
+  padding: 10px 0
+  font-family: inherit
+  font-size: 13px
+  background: #1c1c22
+  color: #ccc
+  border: 1px solid #333
+  border-radius: 4px
+  cursor: pointer
+  &.is-active
+    background: #d4a017
+    color: #1c1c22
+    border-color: #d4a017
+    font-weight: 700
+
+.joypad-speed
+  width: 100%
+  max-width: 280px
+  accent-color: #d4a017
   
   
