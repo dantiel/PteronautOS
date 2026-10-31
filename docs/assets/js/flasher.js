@@ -179,8 +179,6 @@ setStatus = function(text, state) {
 currentBoard = function() {
   if ($("#receiver_board_crsf").checked) {
     return "crsf";
-  } else if ($("#receiver_board_egg").checked) {
-    return "egg";
   } else {
     return "pwm";
   }
@@ -188,8 +186,7 @@ currentBoard = function() {
 
 setBoard = function(v) {
   $("#receiver_board_pwm").checked = v === "pwm";
-  $("#receiver_board_crsf").checked = v === "crsf";
-  return $("#receiver_board_egg").checked = v === "egg";
+  return $("#receiver_board_crsf").checked = v === "crsf";
 };
 
 currentEp2Pwm = function() {
@@ -201,9 +198,7 @@ currentMushin = function() {
 };
 
 currentTarget = function() {
-  if (currentBoard() === "egg") {
-    return "egg";
-  } else if (currentEp2Pwm()) {
+  if (currentEp2Pwm()) {
     return "ep2pwm";
   } else if (currentBoard() === "pwm") {
     return "pwmp7";
@@ -973,22 +968,13 @@ flash = async function() {
 };
 
 syncGyroFields = function() {
-  var board, el, enabled, ep2Pwm, ep2PwmRow, i, isEgg, j, len, len1, localGyro, ref, ref1, wrap, zeph, zephRow;
+  var board, el, enabled, ep2Pwm, ep2PwmRow, i, len, localGyro, ref, wrap, zeph, zephRow;
   board = currentBoard();
-  isEgg = board === "egg";
   localGyro = board === "pwm";
   ep2Pwm = currentEp2Pwm();
   zeph = $("#zephyrus_enabled");
   zephRow = zeph.closest(".flasher-toggle");
   ep2PwmRow = $("#ep2-pwm-toggle-row");
-  // The egg is a config-independent WiFi bootstrap: hide every build option
-  // except the board selector. Nothing to tune — only build + flash/download.
-  $("#egg-hint").classList.toggle("hidden", !isEgg);
-  ref = document.querySelectorAll(".receiver-config");
-  for (i = 0, len = ref.length; i < len; i++) {
-    el = ref[i];
-    el.classList.toggle("hidden", isEgg);
-  }
   // Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   // free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   if (!localGyro) {
@@ -1007,9 +993,9 @@ syncGyroFields = function() {
   enabled = zeph.checked && localGyro;
   wrap = $("#zephyrus-fields");
   wrap.classList.toggle("is-greyed", !enabled);
-  ref1 = wrap.querySelectorAll("input, select");
-  for (j = 0, len1 = ref1.length; j < len1; j++) {
-    el = ref1[j];
+  ref = wrap.querySelectorAll("input, select");
+  for (i = 0, len = ref.length; i < len; i++) {
+    el = ref[i];
     el.disabled = !enabled;
   }
   $("#zephyrus-hint").classList.toggle("hidden", enabled);
@@ -1018,11 +1004,10 @@ syncGyroFields = function() {
 
 restoreConfig();
 
-// A ?board=egg|pwm|crsf link (e.g. from the WiFi-flashing tutorial) preselects
-// the board and wins over any previously saved config.
+// A ?board=pwm|crsf link preselects the board and wins over any saved config.
 boardParam = (new URLSearchParams(location.search).get("board") || "").toLowerCase();
 
-if (boardParam === "egg" || boardParam === "pwm" || boardParam === "crsf") {
+if (boardParam === "pwm" || boardParam === "crsf") {
   setBoard(boardParam);
 }
 
@@ -1036,7 +1021,7 @@ for (i = 0, len = FIELD_IDS.length; i < len; i++) {
   $(id).addEventListener("change", saveConfig);
 }
 
-ref = ["#receiver_board_pwm", "#receiver_board_crsf", "#receiver_board_egg"];
+ref = ["#receiver_board_pwm", "#receiver_board_crsf"];
 for (j = 0, len1 = ref.length; j < len1; j++) {
   sel = ref[j];
   $(sel).addEventListener("change", function() {

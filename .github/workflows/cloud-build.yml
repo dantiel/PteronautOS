@@ -63,7 +63,6 @@ on:
           - 'pwmp7'   # PWMP7 — 3 local servo pads (GPIO9/10/5)
           - 'ep2pwm'  # EP2 standalone — 2 local servo pads (GPIO3/1)
           - 'mushin'  # EP2 + RP2040 companion (MUSHIN bridge)
-          - 'egg'     # Pteronaut-Egg — minimal WiFi bootstrap (flash the full image over WiFi)
       zephyrus_enabled:
         description: 'Zephyrus gyro stabilization (MPU6050)'
         required: false
@@ -221,27 +220,19 @@ jobs:
             ep2pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
             mushin) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
             pwmp7)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
-            egg)    TARGET_ENV=egg ;;
             *)
               echo "::error::hardware_target is empty or unrecognized ('${{ inputs.hardware_target }}'). Redeploy the worker so it forwards hardware_target."
               exit 1
               ;;
           esac
           echo "TARGET_ENV=$TARGET_ENV" >> "$GITHUB_ENV"
-          if [ "$TARGET_ENV" = "egg" ]; then
-            # The egg is a fixed, config-independent bootstrap: no ELRS, no
-            # WebUI, no regulatory domain flag. It lives in its own PlatformIO
-            # project (egg/) and shares the identical 1 MB linker script.
-            pio run -d egg -e egg
+          if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
+            DOMAIN_FLAG="-DRegulatory_Domain_EU_CE_2400"
           else
-            if [ "${{ inputs.regulatory_domain }}" = "EU_CE_2400" ]; then
-              DOMAIN_FLAG="-DRegulatory_Domain_EU_CE_2400"
-            else
-              DOMAIN_FLAG="-DRegulatory_Domain_ISM_2400"
-            fi
-            cd src
-            PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e "$TARGET_ENV"
+            DOMAIN_FLAG="-DRegulatory_Domain_ISM_2400"
           fi
+          cd src
+          PLATFORMIO_BUILD_FLAGS="$DOMAIN_FLAG" pio run -e "$TARGET_ENV"
 
       - name: Resolve firmware version
         run: echo "FW_VERSION=$(git describe --tags --always)" >> "$GITHUB_ENV"
@@ -259,27 +250,20 @@ jobs:
           case "${{ inputs.hardware_target }}" in
             ep2pwm) EXPECT_PRODUCT="PteronautOS EP2 PWM" ;;
             mushin) EXPECT_PRODUCT="PteronautOS EP2" ;;
-            egg)    EXPECT_PRODUCT="Pteronaut-Egg" ;;
             *)      EXPECT_PRODUCT="PteronautOS PWMP7" ;;
           esac
           mkdir -p dist
-          if [ "${{ inputs.hardware_target }}" = "egg" ]; then
-            # The egg is not ELRS and embeds no PteronautOS product string, so
-            # the image verifier does not apply. Just stage the built binary.
-            cp "egg/.pio/build/egg/firmware.bin" dist/pteronautos.bin
-          else
-            if [ "${{ inputs.hardware_target }}" = "pwmp7" ]; then
-              if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
-                PWM_OUT="0,9,10,5"
-              else
-                PWM_OUT="0,1,3,9,10,5"
-              fi
-              python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" --pwm_outputs "$PWM_OUT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+          if [ "${{ inputs.hardware_target }}" = "pwmp7" ]; then
+            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+              PWM_OUT="0,9,10,5"
             else
-              python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+              PWM_OUT="0,1,3,9,10,5"
             fi
-            cp "src/.pio/build/$TARGET_ENV/firmware.bin" dist/pteronautos.bin
+            python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" --pwm_outputs "$PWM_OUT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+          else
+            python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" "src/.pio/build/$TARGET_ENV/firmware.bin"
           fi
+          cp "src/.pio/build/$TARGET_ENV/firmware.bin" dist/pteronautos.bin
           cat > dist/manifest.json <<'JSON'
           {
             "mixer_profile": "${{ inputs.mixer_profile }}",

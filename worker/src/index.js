@@ -108,7 +108,7 @@ async function handleBuild(request, env) {
       mixer_profile: ["0", "1", "2", "3", "4", "5", "6", "7"],
       regulatory_domain: ["EU_CE_2400", "ISM_2400"],
       zephyrus_board_rotation: ["0", "1", "2", "3", "4", "5", "6"],
-      hardware_target: ["pwmp7", "ep2pwm", "mushin", "egg"],
+      hardware_target: ["pwmp7", "ep2pwm", "mushin"],
       zephyrus_enabled: ["0", "1"],
       zephyrus_mode: ["0", "1"],
       zephyrus_i2c_pre_detect: ["0", "1"],

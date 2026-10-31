@@ -129,13 +129,11 @@ setStatus = (text, state) ->
 # the opt-in "reuse as PWM" repurposes those pads into 2 local servo outputs.
 currentBoard = ->
   if $("#receiver_board_crsf").checked then "crsf"
-  else if $("#receiver_board_egg").checked then "egg"
   else "pwm"
 
 setBoard = (v) ->
   $("#receiver_board_pwm").checked = v is "pwm"
   $("#receiver_board_crsf").checked = v is "crsf"
-  $("#receiver_board_egg").checked = v is "egg"
 
 currentEp2Pwm = ->
   currentBoard() is "crsf" and $("#ep2_pwm_enabled").checked
@@ -144,8 +142,7 @@ currentMushin = ->
   currentBoard() is "crsf" and not $("#ep2_pwm_enabled").checked
 
 currentTarget = ->
-  if currentBoard() is "egg" then "egg"
-  else if currentEp2Pwm() then "ep2pwm"
+  if currentEp2Pwm() then "ep2pwm"
   else if currentBoard() is "pwm" then "pwmp7"
   else "mushin"
 
@@ -700,17 +697,11 @@ flash = ->
 
 syncGyroFields = ->
   board = currentBoard()
-  isEgg = board is "egg"
   localGyro = board is "pwm"
   ep2Pwm = currentEp2Pwm()
   zeph = $("#zephyrus_enabled")
   zephRow = zeph.closest ".flasher-toggle"
   ep2PwmRow = $("#ep2-pwm-toggle-row")
-  # The egg is a config-independent WiFi bootstrap: hide every build option
-  # except the board selector. Nothing to tune — only build + flash/download.
-  $("#egg-hint").classList.toggle "hidden", not isEgg
-  for el in document.querySelectorAll ".receiver-config"
-    el.classList.toggle "hidden", isEgg
   # Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   # free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   unless localGyro
@@ -733,10 +724,9 @@ syncGyroFields = ->
 
 restoreConfig()
 
-# A ?board=egg|pwm|crsf link (e.g. from the WiFi-flashing tutorial) preselects
-# the board and wins over any previously saved config.
+# A ?board=pwm|crsf link preselects the board and wins over any saved config.
 boardParam = (new URLSearchParams(location.search).get("board") or "").toLowerCase()
-if boardParam in ["egg", "pwm", "crsf"]
+if boardParam in ["pwm", "crsf"]
   setBoard boardParam
 
 syncGyroFields()
@@ -746,7 +736,7 @@ for id in FIELD_IDS
   $(id).addEventListener "input", saveConfig
   $(id).addEventListener "change", saveConfig
 
-for sel in ["#receiver_board_pwm", "#receiver_board_crsf", "#receiver_board_egg"]
+for sel in ["#receiver_board_pwm", "#receiver_board_crsf"]
   $(sel).addEventListener "change", ->
     saveConfig()
     syncGyroFields()
