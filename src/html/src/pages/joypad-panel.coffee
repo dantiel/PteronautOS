@@ -238,7 +238,9 @@ class JoypadPanel extends PteroElement
 
   # ── Template helpers ─────────────────────────────────────────────
   _knobStyle: (x, y) ->
-    "transform:translate(#{Math.round(x*KNOB_TRAVEL)}px,#{Math.round(y*KNOB_TRAVEL)}px);"
+    # CSS translate Y is screen-down positive; the stick Y axis is up-positive,
+    # so negate to make the knob visually follow the finger (and rest at bottom).
+    "transform:translate(#{Math.round(x*KNOB_TRAVEL)}px,#{Math.round(-y*KNOB_TRAVEL)}px);"
 
   _leftKnobStyle:  -> @_knobStyle @leftX,  @leftY
   _rightKnobStyle: -> @_knobStyle @rightX, @rightY
