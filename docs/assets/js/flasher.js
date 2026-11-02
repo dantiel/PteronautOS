@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -17,11 +17,11 @@ $ = function(sel) {
 els = {
   buildBtn: $("#build-btn"),
   flashBtn: $("#flash-btn"),
-  downloadBtn: $("#download-btn"),
   downloadGzBtn: $("#download-gz-btn"),
   disconnectBtn: $("#disconnect-btn"),
   eggDownload: $("#egg-download"),
-  wifiHint: $("#wifi-hint"),
+  uartInfo: $("#uart-info"),
+  wifiInfo: $("#wifi-info"),
   serialWarning: $("#serial-warning"),
   statusCard: $("#status-card"),
   statusDot: $("#status-dot"),
@@ -261,7 +261,6 @@ collectParams = function() {
 };
 
 enableFirmware = function() {
-  els.downloadBtn.disabled = false;
   els.downloadGzBtn.disabled = false;
   if (serialSupported) {
     return els.flashBtn.disabled = false;
@@ -508,7 +507,6 @@ dismissSpecimen = async function(id) {
     selectedSpecimenId = null;
     localStorage.removeItem(SPECIMEN_KEY);
     firmwareBytes = null;
-    els.downloadBtn.disabled = true;
     els.downloadGzBtn.disabled = true;
     if (serialSupported) {
       els.flashBtn.disabled = true;
@@ -526,7 +524,6 @@ clearSpecimens = async function() {
   selectedSpecimenId = null;
   localStorage.removeItem(SPECIMEN_KEY);
   firmwareBytes = null;
-  els.downloadBtn.disabled = true;
   els.downloadGzBtn.disabled = true;
   if (serialSupported) {
     els.flashBtn.disabled = true;
@@ -664,7 +661,6 @@ startBuild = async function() {
   var data, delay, err, params;
   els.buildBtn.disabled = true;
   els.flashBtn.disabled = true;
-  els.downloadBtn.disabled = true;
   els.downloadGzBtn.disabled = true;
   firmwareBytes = null;
   currentRunId = null;
@@ -758,39 +754,10 @@ downloadFirmware = async function() {
   return log("Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)");
 };
 
-saveFirmware = async function() {
-  var a, blob, err, url;
-  els.downloadBtn.disabled = true;
-  busy = true;
-  try {
-    if (firmwareBytes == null) {
-      await downloadFirmware();
-    }
-    blob = new Blob([firmwareBytes], {
-      type: "application/octet-stream"
-    });
-    url = URL.createObjectURL(blob);
-    a = document.createElement("a");
-    a.href = url;
-    a.download = "pteronautos-firmware.bin";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    return log("Saved pteronautos-firmware.bin (" + firmwareBytes.length + " bytes)");
-  } catch (error) {
-    err = error;
-    return setStatus("Download failed: " + err.message, "fail");
-  } finally {
-    els.downloadBtn.disabled = false;
-    busy = false;
-  }
-};
-
 // WiFi OTA image (.bin.gz). Gzip the in-memory .bin client-side (CompressionStream
 // is present in every Web Serial-capable browser) — the resulting stream carries
 // the ISIZE trailer that the ESP8266 eboot bootloader needs to inflate on boot.
-// Kept separate from saveFirmware: this is for the RX WebUI updater (no recovery).
+// This is for the RX WebUI updater (no recovery).
 downloadGzFirmware = async function() {
   var a, blob, err, stream, url;
   if (firmwareBytes == null) {
@@ -1021,17 +988,17 @@ syncGyroFields = function() {
   return $("#ep2-pwm-note").classList.toggle("hidden", !ep2Pwm);
 };
 
-// Swap the post-build actions to match the chosen flash method: UART shows
-// "Flash via Web Serial" + "Download .bin"; WiFi shows "Download .bin.gz"
-// plus the prebuilt Pteronaut-Egg link + instructions.
+// Swap the post-build actions to match the chosen flash method. UART surfaces
+// "Flash via Web Serial" + a UART-tutorial info box; WiFi surfaces
+// "Download .bin.gz" + the prebuilt Pteronaut-Egg link and its tutorial.
 syncFlashMethod = function() {
   var uart;
   uart = currentFlashMethod() === "uart";
   els.flashBtn.classList.toggle("hidden", !(uart && serialSupported));
-  els.downloadBtn.classList.toggle("hidden", !uart);
   els.downloadGzBtn.classList.toggle("hidden", uart);
   els.eggDownload.classList.toggle("hidden", uart);
-  els.wifiHint.classList.toggle("hidden", uart);
+  els.uartInfo.classList.toggle("hidden", !uart);
+  els.wifiInfo.classList.toggle("hidden", uart);
   return els.serialWarning.classList.toggle("hidden", !(uart && !serialSupported));
 };
 
@@ -1093,7 +1060,5 @@ els.disconnectBtn.addEventListener("click", disconnect);
 els.clearSpecimensBtn.addEventListener("click", clearSpecimens);
 
 els.flashBtn.addEventListener("click", flash);
-
-els.downloadBtn.addEventListener("click", saveFirmware);
 
 els.downloadGzBtn.addEventListener("click", downloadGzFirmware);

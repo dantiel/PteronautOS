@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>UART flashing uses a USB-to-serial (FTDI) cable. Build the firmware here and flash it straight over Web Serial — or download the image and flash it with esptool.</p>
+<p class='flasher-cta'>
+<a href='../../en/tutorials/flashing/'>UART flashing tutorial</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>Flash the Pteronaut-Egg first — it bootstraps WiFi on a stock receiver. Then build the full firmware below and upload the .bin.gz through the receiver's WebUI.</p>
+<p class='flasher-cta'>
+<a href='../../en/tutorials/wifi-flashing/'>WiFi flashing tutorial</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial isn't supported in Safari or Firefox. Build the firmware here and download the .bin, then flash it with esptool — or open this page in Chrome/Edge/Opera to flash over USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Build firmware</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Flash via Web Serial</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>Download .bin</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>Download .bin.gz (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>Download PTERONAUT-EGG.BIN.gz</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Disconnect</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>Building compiles a single merged .bin in GitHub Actions (~3–4 min).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

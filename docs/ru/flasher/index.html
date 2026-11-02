@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>Прошивка по UART использует USB-серийный кабель (FTDI). Соберите прошивку здесь и прошейте напрямую через Web Serial — или скачайте образ и прошейте через esptool.</p>
+<p class='flasher-cta'>
+<a href='../../ru/tutorials/flashing/'>Инструкция по прошивке UART</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>Сначала прошейте Pteronaut-Egg — он активирует WiFi на стандартном приёмнике. Затем соберите полную прошивку ниже и загрузите .bin.gz через веб-интерфейс приёмника.</p>
+<p class='flasher-cta'>
+<a href='../../ru/tutorials/wifi-flashing/'>Инструкция по прошивке по WiFi</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial не поддерживается в Safari/Firefox. Соберите прошивку, скачайте .bin и прошейте через esptool — или откройте страницу в Chrome/Edge/Opera для прошивки по USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Собрать прошивку</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Прошить через Web Serial</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>Скачать .bin</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>Скачать .bin.gz (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>Скачать PTERONAUT-EGG.BIN.gz</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Отключить</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>Сборка компилирует единый .bin в GitHub Actions (~3–4 мин).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

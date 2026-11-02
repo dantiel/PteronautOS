@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>تستخدم الكتابة عبر UART كابل USB-تسلسلي (FTDI). أنشئ البرنامج الثابت هنا واكتبه مباشرة عبر Web Serial — أو نزّل الصورة واكتبها باستخدام esptool.</p>
+<p class='flasher-cta'>
+<a href='../../ar/tutorials/flashing/'>دليل الكتابة عبر UART</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>اكتب Pteronaut-Egg أولاً — فهو يفعّل WiFi على جهاز الاستقبال الأصلي. ثم أنشئ البرنامج الثابت الكامل أدناه وارفع ملف .bin.gz عبر واجهة الويب الخاصة بجهاز الاستقبال.</p>
+<p class='flasher-cta'>
+<a href='../../ar/tutorials/wifi-flashing/'>دليل الكتابة عبر WiFi</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial غير مدعوم في Safari/Firefox. قم ببناء البرنامج الثابت هنا ونزّل ملف .bin ثم اكتبه باستخدام esptool — أو افتح هذه الصفحة في Chrome/Edge/Opera للكتابة عبر USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>بناء البرنامج الثابت</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>وميض عبر Web Serial</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>تنزيل .bin</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>تنزيل .bin.gz (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>تنزيل PTERONAUT-EGG.BIN.gz</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>قطع الاتصال</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>ينتج البناء ملف .bin واحدًا مدمجًا في GitHub Actions (حوالي 3–4 دقائق).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

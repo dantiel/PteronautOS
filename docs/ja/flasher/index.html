@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>UART書き込みにはUSB-シリアル（FTDI）ケーブルが必要です。ここでファームウェアをビルドし、Web Serialで直接書き込むか、イメージをダウンロードしてesptoolで書き込みます。</p>
+<p class='flasher-cta'>
+<a href='../../ja/tutorials/flashing/'>UART書き込みチュートリアル</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>最初にPteronaut-Eggを書き込んでください。標準受信機のWiFiを有効化します。その後、下で完全なファームウェアをビルドし、受信機のWebUIから.bin.gzをアップロードします。</p>
+<p class='flasher-cta'>
+<a href='../../ja/tutorials/wifi-flashing/'>WiFi書き込みチュートリアル</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox は Web Serial に対応していません。ここでファームウェアをビルドして .bin をダウンロードし、esptool で書き込むか、Chrome/Edge/Opera でこのページを開いて USB 書き込みしてください。</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>ファームウェアをビルド</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial で書き込み</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>.bin をダウンロード</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>.bin.gz を取得 (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>PTERONAUT-EGG.BIN.gz をダウンロード</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>切断</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>ビルドはGitHub Actionsで単一の統合.binを生成します（約3〜4分）。</p>
 </section>
 <section class='flasher-card flasher-specimens'>

@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>UART 플래싱은 USB-시리얼(FTDI) 케이블을 사용합니다. 여기서 펌웨어를 빌드하고 Web Serial로 바로 플래시하거나, 이미지를 다운로드해 esptool로 플래시하세요.</p>
+<p class='flasher-cta'>
+<a href='../../ko/tutorials/flashing/'>UART 플래싱 튜토리얼</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>먼저 Pteronaut-Egg를 플래시하세요 — 표준 수신기에 WiFi를 활성화합니다. 그런 다음 아래에서 전체 펌웨어를 빌드하고 수신기 WebUI로 .bin.gz를 업로드하세요.</p>
+<p class='flasher-cta'>
+<a href='../../ko/tutorials/wifi-flashing/'>WiFi 플래싱 튜토리얼</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox에서는 Web Serial이 지원되지 않습니다. 여기서 펌웨어를 빌드하고 .bin을 다운로드한 뒤 esptool로 플래시하세요 — 또는 Chrome/Edge/Opera에서 이 페이지를 열어 USB로 플래시하세요.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>펌웨어 빌드</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial로 플래시</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>.bin 다운로드</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>.bin.gz 다운로드 (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>PTERONAUT-EGG.BIN.gz 다운로드</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>연결 해제</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>빌드는 GitHub Actions에서 단일 병합 .bin을 생성합니다(약 3~4분).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

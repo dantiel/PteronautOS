@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>Das UART-Flashing nutzt ein USB-Seriell-Kabel (FTDI). Erstelle die Firmware hier und flashe sie direkt per Web Serial — oder lade das Image herunter und flashe es mit esptool.</p>
+<p class='flasher-cta'>
+<a href='../../de/tutorials/flashing/'>UART-Flashing-Tutorial</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>Flashe zuerst den Pteronaut-Egg — er aktiviert WiFi auf einem serienmäßigen Receiver. Erstelle dann unten die vollständige Firmware und lade die .bin.gz über die WebUI des Receivers hoch.</p>
+<p class='flasher-cta'>
+<a href='../../de/tutorials/wifi-flashing/'>WiFi-Flashing-Tutorial</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial wird in Safari/Firefox nicht unterstützt. Erstelle die Firmware, lade die .bin herunter und flashe sie mit esptool — oder öffne diese Seite in Chrome/Edge/Opera zum Flashen per USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Firmware bauen</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Via Web Serial flashen</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>.bin herunterladen</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>.bin.gz laden (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>PTERONAUT-EGG.BIN.gz herunterladen</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Trennen</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>Der Build erzeugt eine einzelne zusammengeführte .bin in GitHub Actions (~3–4 min).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

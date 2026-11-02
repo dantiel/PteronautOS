@@ -9,11 +9,11 @@ $ = (sel) -> document.querySelector sel
 els =
   buildBtn: $("#build-btn")
   flashBtn: $("#flash-btn")
-  downloadBtn: $("#download-btn")
   downloadGzBtn: $("#download-gz-btn")
   disconnectBtn: $("#disconnect-btn")
   eggDownload: $("#egg-download")
-  wifiHint: $("#wifi-hint")
+  uartInfo: $("#uart-info")
+  wifiInfo: $("#wifi-info")
   serialWarning: $("#serial-warning")
   statusCard: $("#status-card")
   statusDot: $("#status-dot")
@@ -187,7 +187,6 @@ collectParams = ->
   i18n_locales: checked.join(",")
 
 enableFirmware = ->
-  els.downloadBtn.disabled = false
   els.downloadGzBtn.disabled = false
   els.flashBtn.disabled = false if serialSupported
 
@@ -339,7 +338,6 @@ dismissSpecimen = (id) ->
     selectedSpecimenId = null
     localStorage.removeItem SPECIMEN_KEY
     firmwareBytes = null
-    els.downloadBtn.disabled = true
     els.downloadGzBtn.disabled = true
     els.flashBtn.disabled = true if serialSupported
   await renderSpecimens()
@@ -351,7 +349,6 @@ clearSpecimens = ->
   selectedSpecimenId = null
   localStorage.removeItem SPECIMEN_KEY
   firmwareBytes = null
-  els.downloadBtn.disabled = true
   els.downloadGzBtn.disabled = true
   els.flashBtn.disabled = true if serialSupported
   await renderSpecimens()
@@ -457,7 +454,6 @@ disconnect = ->
 startBuild = ->
   els.buildBtn.disabled = true
   els.flashBtn.disabled = true
-  els.downloadBtn.disabled = true
   els.downloadGzBtn.disabled = true
   firmwareBytes = null
   currentRunId = null
@@ -529,32 +525,10 @@ downloadFirmware = ->
   firmwareBytes = new Uint8Array await resp.arrayBuffer()
   log "Firmware: " + firmwareBytes.length + " bytes (merged image @ 0x0000)"
 
-saveFirmware = ->
-  els.downloadBtn.disabled = true
-  busy = true
-  try
-    unless firmwareBytes?
-      await downloadFirmware()
-    blob = new Blob [firmwareBytes], type: "application/octet-stream"
-    url = URL.createObjectURL blob
-    a = document.createElement "a"
-    a.href = url
-    a.download = "pteronautos-firmware.bin"
-    document.body.appendChild a
-    a.click()
-    a.remove()
-    URL.revokeObjectURL url
-    log "Saved pteronautos-firmware.bin (" + firmwareBytes.length + " bytes)"
-  catch err
-    setStatus "Download failed: " + err.message, "fail"
-  finally
-    els.downloadBtn.disabled = false
-    busy = false
-
 # WiFi OTA image (.bin.gz). Gzip the in-memory .bin client-side (CompressionStream
 # is present in every Web Serial-capable browser) — the resulting stream carries
 # the ISIZE trailer that the ESP8266 eboot bootloader needs to inflate on boot.
-# Kept separate from saveFirmware: this is for the RX WebUI updater (no recovery).
+# This is for the RX WebUI updater (no recovery).
 downloadGzFirmware = ->
   return unless firmwareBytes?
   els.downloadGzBtn.disabled = true
@@ -736,16 +710,16 @@ syncGyroFields = ->
   $("#zephyrus-hint").classList.toggle "hidden", enabled
   $("#ep2-pwm-note").classList.toggle "hidden", not ep2Pwm
 
-# Swap the post-build actions to match the chosen flash method: UART shows
-# "Flash via Web Serial" + "Download .bin"; WiFi shows "Download .bin.gz"
-# plus the prebuilt Pteronaut-Egg link + instructions.
+# Swap the post-build actions to match the chosen flash method. UART surfaces
+# "Flash via Web Serial" + a UART-tutorial info box; WiFi surfaces
+# "Download .bin.gz" + the prebuilt Pteronaut-Egg link and its tutorial.
 syncFlashMethod = ->
   uart = currentFlashMethod() is "uart"
   els.flashBtn.classList.toggle "hidden", not (uart and serialSupported)
-  els.downloadBtn.classList.toggle "hidden", not uart
   els.downloadGzBtn.classList.toggle "hidden", uart
   els.eggDownload.classList.toggle "hidden", uart
-  els.wifiHint.classList.toggle "hidden", uart
+  els.uartInfo.classList.toggle "hidden", not uart
+  els.wifiInfo.classList.toggle "hidden", uart
   els.serialWarning.classList.toggle "hidden", not (uart and not serialSupported)
 
 restoreConfig()
@@ -784,5 +758,4 @@ els.buildBtn.addEventListener "click", startBuild
 els.disconnectBtn.addEventListener "click", disconnect
 els.clearSpecimensBtn.addEventListener "click", clearSpecimens
 els.flashBtn.addEventListener "click", flash
-els.downloadBtn.addEventListener "click", saveFirmware
 els.downloadGzBtn.addEventListener "click", downloadGzFirmware

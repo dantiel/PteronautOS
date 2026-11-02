@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>A gravação UART usa um cabo USB-serial (FTDI). Gere o firmware aqui e grave diretamente pelo Web Serial — ou baixe a imagem e grave com o esptool.</p>
+<p class='flasher-cta'>
+<a href='../tutorials/flashing/'>Tutorial de gravação UART</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>Grave o Pteronaut-Egg primeiro — ele ativa o WiFi num receptor de fábrica. Depois gere o firmware completo abaixo e envie o .bin.gz pela WebUI do receptor.</p>
+<p class='flasher-cta'>
+<a href='../tutorials/wifi-flashing/'>Tutorial de gravação WiFi</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>O Web Serial não é suportado no Safari/Firefox. Gere o firmware, baixe o .bin e grave com o esptool — ou abra esta página no Chrome/Edge/Opera para gravar por USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Compilar firmware</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Gravar via Web Serial</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>Baixar .bin</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>Baixar .bin.gz (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>Baixar PTERONAUT-EGG.BIN.gz</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Desconectar</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>O build compila um único .bin fundido no GitHub Actions (~3–4 min).</p>
 </section>
 <section class='flasher-card flasher-specimens'>

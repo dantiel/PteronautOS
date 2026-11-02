@@ -233,16 +233,26 @@
 </label>
 </div>
 </div>
+<aside class='flasher-callout hidden' id='uart-info'>
+<p class='flasher-callout-text'>La grabación UART usa un cable USB-serie (FTDI). Compila el firmware aquí y grábalo directamente por Web Serial — o descarga la imagen y grábalo con esptool.</p>
+<p class='flasher-cta'>
+<a href='../../es/tutorials/flashing/'>Tutorial de grabación UART</a>
+</p>
+</aside>
+<aside class='flasher-callout hidden' id='wifi-info'>
+<p class='flasher-callout-text'>Graba primero el Pteronaut-Egg — activa el WiFi en un receptor de fábrica. Luego compila el firmware completo abajo y sube el .bin.gz por la WebUI del receptor.</p>
+<p class='flasher-cta'>
+<a href='../../es/tutorials/wifi-flashing/'>Tutorial de grabación WiFi</a>
+</p>
+</aside>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Web Serial no está soportado en Safari/Firefox. Compila el firmware, descarga el .bin y grábalo con esptool — o abre esta página en Chrome/Edge/Opera para grabar por USB.</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>Compilar firmware</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Grabar vía Web Serial</button>
-<button class='flasher-secondary' disabled id='download-btn' type='button'>Descargar .bin</button>
 <button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>Descargar .bin.gz (WiFi)</button>
 <a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>Descargar PTERONAUT-EGG.BIN.gz</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>Desconectar</button>
 </div>
-<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>La compilación genera un único .bin fusionado en GitHub Actions (~3–4 min).</p>
 </section>
 <section class='flasher-card flasher-specimens'>
