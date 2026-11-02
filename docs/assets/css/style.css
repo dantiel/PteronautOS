@@ -639,6 +639,10 @@ footer .lang-switch {
   border-color: var(--text);
 }
 
+p.flasher-cta {
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 480px) {
   nav {
     gap: 0.6rem;
@@ -1932,7 +1936,10 @@ footer .lang-switch {
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
-.flasher-actions button {
+.flasher-actions button,
+.flasher-actions a.flasher-secondary {
+  display: inline-flex;
+  align-items: center;
   font-family: "Turret Road", monospace;
   font-weight: 700;
   font-size: 0.78rem;
@@ -1942,9 +1949,11 @@ footer .lang-switch {
   border-radius: 4px;
   cursor: pointer;
   border: 1px solid var(--dim);
+  text-decoration: none;
   transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-.flasher-actions button:disabled {
+.flasher-actions button:disabled,
+.flasher-actions a.flasher-secondary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

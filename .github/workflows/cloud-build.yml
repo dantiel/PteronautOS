@@ -21,14 +21,6 @@ on:
           - '5'   # GEARBOX_1MOT_2VTAIL_1RUD
           - '6'   # GEARBOX_1ELE_1RUD
           - '7'   # GEARBOX_1MOT_1ELE_1RUD
-      servo_order:
-        description: 'Servo channel order (2 wings + rudder): 0=wings first, 1=rudder first'
-        required: false
-        type: choice
-        default: '0'
-        options:
-          - '0'   # wings first — CH1=L wing, CH4=R wing, CH5=rudder
-          - '1'   # rudder first — CH1=rudder, CH4=L wing, CH5=R wing
       regulatory_domain:
         description: 'RF regulatory domain (2.4 GHz)'
         required: true
@@ -183,9 +175,6 @@ jobs:
             case "${{ inputs.hardware_target }}" in
               pwmp5|pwmp7) echo "-DPTERONAUTOS_HARDWARE=${{ inputs.hardware_target }}" ;;
             esac
-            if [ "${{ inputs.servo_order }}" = "1" ]; then
-              echo "-DORNI_SERVO_ORDER_RUDDER_FIRST=1"
-            fi
             if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
               echo "-DZEPHYRUS_ENABLED=1"
             fi
@@ -301,7 +290,6 @@ jobs:
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
             "hardware_target": "${{ inputs.hardware_target }}",
-            "servo_order": "${{ inputs.servo_order }}",
             "zephyrus_enabled": "${{ inputs.zephyrus_enabled }}",
             "zephyrus_mode": "${{ inputs.zephyrus_mode }}",
             "zephyrus_i2c_pre_detect": "${{ inputs.zephyrus_i2c_pre_detect }}",

@@ -1,77 +1,75 @@
 # 🥚 Pteronaut-Egg
 
-Ein **minimaler WiFi-Bootstrap** für den ESP8285 (1 MB Flash). Seine einzige
-Aufgabe: ein volles PteronautOS-Image über WiFi annehmen und via
-`ESP8266 Updater` (`U_FLASH`) stagen. Kein CRSF, kein WebUI, kein ArduinoJson,
-kein littlefs — nur AP-Modus + roher TCP-Server + die Core-`Updater`-Klasse.
+A **minimal WiFi bootstrap** for the ESP8285 (1 MB flash). Its only job: accept a
+full PteronautOS image over WiFi and stage it via `ESP8266 Updater` (`U_FLASH`).
+No CRSF, no WebUI, no ArduinoJson, no littlefs — just AP mode + a raw TCP server
++ the core `Updater` class.
 
-## Warum das Ei existiert
+## Why the egg exists
 
-Der 8285 hat eine einzige Sketch-Region von **991 216 B** (Linker
-`elrs.flash.1m.ld`). Ein volles PteronautOS-Image ist **636 064 B** groß. Ein
-laufendes Image kann daher nur ein Image nachladen, das in seinen *freien*
-Staging-Space passt:
+The 8285 has a single sketch region of **991 216 B** (linker
+`elrs.flash.1m.ld`). A full PteronautOS image is **636 064 B**. A running image
+can therefore only stage a new image that fits in its *free* staging space:
 
 ```
-freier Space = 995 328 − (laufende Größe + 4096 aufgerundet)
+free space = 995 328 − (running size + 4096 rounded)
 ```
 
-| laufend | freier Space | kann nachladen |
+| running | free space | can stage |
 |---|---|---|
-| **Egg** (289 KB) | **680 KB** | Full (636 KB) ✅ |
-| **Full** (636 KB) | **348 KB** | Egg (289 KB) ✅ |
-| Full (636 KB) | 348 KB | Slim (607 KB) ❌ |
+| **Egg** (291 KB) | **677 KB** | Full (636 KB) ✅ |
+| **Full** (636 KB) | **348 KB** | Egg (291 KB) ✅ |
 
-Das Ei ist **klein genug** (296 159 B ≈ 289 KB, Ziel ≤ 320 KB), dass der
-Zyklus **Egg → Full → Egg** unendlich oft schließt — rein über WiFi, ohne
-FTDI, ohne RP2040-Begleiter.
+The egg is **small enough** (297 743 B ≈ 291 KB, target ≤ 320 KB) that the cycle
+**Egg → Full → Egg** closes indefinitely — entirely over WiFi, no FTDI, no
+RP2040 companion.
 
-## Bauen
+## Building
 
 ```sh
 pio run -d egg
-# → egg/.pio/build/egg/firmware.bin  (~289 KB)
+# → egg/.pio/build/egg/firmware.bin  (~291 KB)
 ```
 
-Das Ei nutzt exakt denselben Linker wie PteronautOS (`elrs.flash.1m.ld`), damit
-littlefs/eeprom/rfcal/wifi bei einem `U_FLASH`-Wechsel an derselben Adresse
-landen. Beide Dateien **byte-identisch halten** — eine Änderung immer in beiden
-(`src/elrs.flash.1m.ld` und `egg/elrs.flash.1m.ld`).
+The egg uses the exact same linker as PteronautOS (`elrs.flash.1m.ld`), so
+littlefs/eeprom/rfcal/wifi land at the same addresses across a `U_FLASH`
+switch. Keep both files **byte-identical** — every change goes in both
+(`src/elrs.flash.1m.ld` and `egg/elrs.flash.1m.ld`).
 
-## Einmalige Erstinstallation
+## One-time first install
 
-Das Ei selbst braucht **einen** UART-Flash (es ist kein Firmware-Update, sondern
-der Bootstrap):
+The egg itself needs **one** UART flash (it is not a firmware update — it is the
+bootstrap):
 
 ```sh
-# FTDI oder Yoshimitsu-Begleiter ('bl' → ESP.rebootIntoUartDownloadMode())
+# FTDI, or the Yoshimitsu companion ('bl' → ESP.rebootIntoUartDownloadMode())
 esptool.py -p <port> -b 460800 write_flash 0x0 egg/.pio/build/egg/firmware.bin
 ```
 
-## Der Zwei-Phasen-Zyklus (danach rein WiFi)
+## The two-phase cycle (WiFi-only afterwards)
 
-1. **Egg läuft** → öffnet AP `PTERONAUT-EGG` (Passwort `hatchnatural`) →
-   `http://pteronaut-egg.local` (Fallback `http://192.168.4.1`) →
-   `firmware.bin` (636 KB) auf das ASCII-Ei ziehen (Drag&Drop) oder klicken →
-   Ei staget und rebootet in volles PteronautOS.
-2. **Voll läuft** → bestehende WebUI → Firmware-Upload → `egg.bin` (277 KB)
-   hochladen („Flash Anyway" bei Target-Mismatch) → rebootet ins Ei.
+1. **Egg runs** → opens AP `PTERONAUT-EGG` (password `hatchnatural`) →
+   `http://pteronaut-egg.local` (fallback `http://192.168.4.1`) →
+   drag `firmware.bin` (636 KB) onto the ASCII egg (drag & drop) or click it →
+   the egg stages and reboots into full PteronautOS.
+2. **Full runs** → existing WebUI → Firmware Update → upload `egg.bin` (277 KB)
+   ("Flash Anyway" on target mismatch) → reboots into the egg.
 
-Pro Update: **2 Uploads, ~913 KB WiFi-Traffic, null Hardware.**
+Per update: **2 uploads, ~913 KB WiFi traffic, zero hardware.**
 
-## Brick-Risiko (ehrlich)
+## Brick risk (honest)
 
-Wie bei jedem OTA: flasht man über das Ei ein **kaputtes** Voll-Image (kein
-WiFi mehr), braucht man doch wieder UART. Das Ei reduziert das Risiko nicht
-unter OTA-Niveau — es entfernt nur das Kabel aus dem *normalen* Update-Pfad.
+As with any OTA: flashing a **broken** full image (no more WiFi) over the egg
+means you need UART again. The egg does not lower the risk below OTA level — it
+only removes the cable from the *normal* update path.
 
-## Sicherheit
+## Security
 
-Der AP ist passwortgeschützt (`hatchnatural`). Da ein offener AP es jedem in
-Reichweite erlaubte, Firmware zu flashen, ist ein Passwort Pflicht. Bei Bedarf
-in `src/main.cpp` (`AP_SSID`/`AP_PASS`/`AP_HOST`) ändern.
+The AP is password-protected (`hatchnatural`). Since an open AP would let anyone
+in range flash firmware, a password is mandatory. Change it in `src/main.cpp`
+(`AP_SSID` / `AP_PASS` / `AP_HOST`) if needed.
 
 ## mDNS
 
-Das Ei antwortet auf `http://pteronaut-egg.local` (Bonjour/mDNS). Fallback,
-falls der Client kein mDNS kann (z. B. manches Android): `http://192.168.4.1`.
+The egg answers at `http://pteronaut-egg.local` (Bonjour/mDNS). Fallback when
+the client has no mDNS (e.g. some Android): `http://192.168.4.1`.

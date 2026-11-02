@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, loadFromDisk, log, openDb, poll, ref, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -19,9 +19,9 @@ els = {
   flashBtn: $("#flash-btn"),
   downloadBtn: $("#download-btn"),
   downloadGzBtn: $("#download-gz-btn"),
-  loadBtn: $("#load-btn"),
   disconnectBtn: $("#disconnect-btn"),
-  fileInput: $("#firmware-file"),
+  eggDownload: $("#egg-download"),
+  wifiHint: $("#wifi-hint"),
   serialWarning: $("#serial-warning"),
   statusCard: $("#status-card"),
   statusDot: $("#status-dot"),
@@ -103,6 +103,7 @@ saveConfig = function() {
       cfg[id] = el.type === "checkbox" ? el.checked : el.value;
     }
     cfg.receiver_board = currentBoard();
+    cfg.flash_method = currentFlashMethod();
     cfg.locales = LOCALES.filter(function(l) {
       return $(`#locale-${l}`).checked;
     });
@@ -134,6 +135,9 @@ restoreConfig = function() {
     }
     if (cfg.receiver_board != null) {
       setBoard(cfg.receiver_board);
+    }
+    if (cfg.flash_method != null) {
+      setFlashMethod(cfg.flash_method);
     }
     if (cfg.locales != null) {
       results = [];
@@ -187,6 +191,21 @@ currentBoard = function() {
 setBoard = function(v) {
   $("#receiver_board_pwm").checked = v === "pwm";
   return $("#receiver_board_crsf").checked = v === "crsf";
+};
+
+// Flash method (UART vs WiFi) is a UI-only choice — it does not change the
+// firmware the worker builds, only which post-build actions are surfaced.
+currentFlashMethod = function() {
+  if ($("#flash_method_wifi").checked) {
+    return "wifi";
+  } else {
+    return "uart";
+  }
+};
+
+setFlashMethod = function(v) {
+  $("#flash_method_uart").checked = v === "uart";
+  return $("#flash_method_wifi").checked = v === "wifi";
 };
 
 currentEp2Pwm = function() {
@@ -617,15 +636,6 @@ restoreSpecimens = async function() {
   return renderSpecimens();
 };
 
-loadFromDisk = async function(file) {
-  var buf;
-  buf = (await file.arrayBuffer());
-  firmwareBytes = new Uint8Array(buf);
-  enableFirmware();
-  log("Loaded " + file.name + " (" + firmwareBytes.length + " bytes) from disk.");
-  return setStatus("Firmware image loaded — ready to flash or download.", "done");
-};
-
 closeSerial = async function() {
   var p, t;
   t = activeTransport;
@@ -1011,6 +1021,20 @@ syncGyroFields = function() {
   return $("#ep2-pwm-note").classList.toggle("hidden", !ep2Pwm);
 };
 
+// Swap the post-build actions to match the chosen flash method: UART shows
+// "Flash via Web Serial" + "Download .bin"; WiFi shows "Download .bin.gz"
+// plus the prebuilt Pteronaut-Egg link + instructions.
+syncFlashMethod = function() {
+  var uart;
+  uart = currentFlashMethod() === "uart";
+  els.flashBtn.classList.toggle("hidden", !(uart && serialSupported));
+  els.downloadBtn.classList.toggle("hidden", !uart);
+  els.downloadGzBtn.classList.toggle("hidden", uart);
+  els.eggDownload.classList.toggle("hidden", uart);
+  els.wifiHint.classList.toggle("hidden", uart);
+  return els.serialWarning.classList.toggle("hidden", !(uart && !serialSupported));
+};
+
 restoreConfig();
 
 // A ?board=pwm|crsf link preselects the board and wins over any saved config.
@@ -1021,6 +1045,8 @@ if (boardParam === "pwm" || boardParam === "crsf") {
 }
 
 syncGyroFields();
+
+syncFlashMethod();
 
 restoreSpecimens();
 
@@ -1046,39 +1072,25 @@ $("#ep2_pwm_enabled").addEventListener("change", function() {
 
 $("#zephyrus_enabled").addEventListener("change", syncGyroFields);
 
-for (k = 0, len2 = LOCALES.length; k < len2; k++) {
-  l = LOCALES[k];
-  $(`#locale-${l}`).addEventListener("change", saveConfig);
+ref1 = ["#flash_method_uart", "#flash_method_wifi"];
+for (k = 0, len2 = ref1.length; k < len2; k++) {
+  sel = ref1[k];
+  $(sel).addEventListener("change", function() {
+    saveConfig();
+    return syncFlashMethod();
+  });
 }
 
-if (!serialSupported) {
-  els.serialWarning.classList.remove("hidden");
-  els.flashBtn.classList.add("hidden");
+for (m = 0, len3 = LOCALES.length; m < len3; m++) {
+  l = LOCALES[m];
+  $(`#locale-${l}`).addEventListener("change", saveConfig);
 }
 
 els.buildBtn.addEventListener("click", startBuild);
 
-els.loadBtn.addEventListener("click", function() {
-  return els.fileInput.click();
-});
-
 els.disconnectBtn.addEventListener("click", disconnect);
 
 els.clearSpecimensBtn.addEventListener("click", clearSpecimens);
-
-els.fileInput.addEventListener("change", async function() {
-  var err, file, ref1;
-  file = (ref1 = els.fileInput.files) != null ? ref1[0] : void 0;
-  if (file) {
-    try {
-      await loadFromDisk(file);
-    } catch (error) {
-      err = error;
-      setStatus("Load failed: " + err.message, "fail");
-    }
-  }
-  return els.fileInput.value = "";
-});
 
 els.flashBtn.addEventListener("click", flash);
 

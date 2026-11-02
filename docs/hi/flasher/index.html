@@ -41,6 +41,13 @@
 </div>
 <p class='flasher-hint'>PWM boards drive servos directly. non-PWM boards (EP1/EP2) expose CRSF on the serial pads — reuse them as PWM servo outputs, or keep CRSF for a MUSHIN RP2040 companion.</p>
 </div>
+<label class='flasher-field receiver-config' id='pwm-board-type-row'>
+<span>PWM board type</span>
+<select id='pwm_board_type'>
+<option selected value='pwmp7'>PWMP7 — 6 servo pads (GPIO0/1/3/9/10/5)</option>
+<option value='pwmp5'>PWMP5 — 5 servo pads (GPIO0/1/3/9/10, GPIO5 = radio BUSY)</option>
+</select>
+</label>
 <label class='flasher-field receiver-config'>
 <span>मिक्सर प्रोफ़ाइल</span>
 <select id='mixer_profile'>
@@ -213,16 +220,29 @@
 <p class='flasher-hint'>WebUI में शामिल करने के लिए भाषाएँ चुनें — कोई चयन नहीं = सभी 11।</p>
 </div>
 </details>
+<div class='flasher-field'>
+<span>फ्लैश विधि</span>
+<div aria-label='फ्लैश विधि' class='flasher-segmented' role='radiogroup'>
+<label class='flasher-seg'>
+<input checked='checked' id='flash_method_uart' name='flash_method' type='radio' value='uart'>
+<span>UART (Web Serial)</span>
+</label>
+<label class='flasher-seg'>
+<input id='flash_method_wifi' name='flash_method' type='radio' value='wifi'>
+<span>WiFi (Pteronaut-Egg)</span>
+</label>
+</div>
+</div>
 <p class='flasher-serial-warning hidden' id='serial-warning'>Safari/Firefox में Web Serial समर्थित नहीं है. यहाँ फर्मवेयर बनाएँ और .bin डाउनलोड करें, फिर esptool से फ्लैश करें — या USB से फ्लैश करने के लिए इस पेज को Chrome/Edge/Opera में खोलें।</p>
 <div class='flasher-actions'>
 <button class='flasher-primary' id='build-btn' type='button'>फ़र्मवेयर बनाएँ</button>
-<button class='flasher-secondary' id='load-btn' type='button'>.bin लोड करें</button>
 <button class='flasher-secondary' disabled id='flash-btn' type='button'>Web Serial से फ्लैश करें</button>
 <button class='flasher-secondary' disabled id='download-btn' type='button'>.bin डाउनलोड करें</button>
-<button class='flasher-secondary' disabled id='download-gz-btn' type='button'>.bin.gz डाउनलोड (WiFi)</button>
+<button class='flasher-secondary hidden' disabled id='download-gz-btn' type='button'>.bin.gz डाउनलोड (WiFi)</button>
+<a class='flasher-secondary hidden' download='PTERONAUT-EGG.BIN.gz' href='../../assets/firmware/PTERONAUT-EGG.BIN.gz' id='egg-download'>PTERONAUT-EGG.BIN.gz डाउनलोड करें</a>
 <button class='flasher-secondary hidden' id='disconnect-btn' type='button'>डिस्कनेक्ट</button>
 </div>
-<input accept='.bin,application/octet-stream' class='hidden' id='firmware-file' type='file'>
+<p class='flasher-hint hidden' id='wifi-hint'>A minimal WiFi bootstrap — flash it once, then update the full firmware over WiFi without a cable.</p>
 <p class='flasher-hint'>बिल्ड GitHub Actions में एकल मर्ज किया हुआ .bin बनाता है (~3–4 मिनट)।</p>
 </section>
 <section class='flasher-card flasher-specimens'>

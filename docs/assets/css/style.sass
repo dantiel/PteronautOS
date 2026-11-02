@@ -1870,7 +1870,10 @@ p.flasher-cta
   gap: .75rem
   margin-top: 1.25rem
 
-  button
+  button,
+  a.flasher-secondary
+    display: inline-flex
+    align-items: center
     font-family: $turret
     font-weight: 700
     font-size: .78rem
@@ -1880,6 +1883,7 @@ p.flasher-cta
     border-radius: 4px
     cursor: pointer
     border: 1px solid var(--dim)
+    text-decoration: none
     transition: opacity .15s ease, border-color .15s ease, background .15s ease
 
     &:disabled

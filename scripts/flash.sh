@@ -98,7 +98,6 @@ usage() {
   say "Device / airframe:"
   say "  --device <k>       receiver hardware: pwmp5 | pwmp7 | ep2pwm | mushin"
   say "  --mixer <0-12>     mixer profile (see --list-mixers)"
-  say "  --servo-order <0|1> 2 wings+rudder: 0=wings first, 1=rudder first"
   say "  --domain <k>       regulatory domain: eu | ism"
   say "  --gyro <k>         gyro: none | rate | ahrs"
   say "  --horizon          experimental Mesozoic HORIZON env (pwmp5/pwmp7)"
@@ -145,7 +144,6 @@ BAUD=115200
 # Config (single source of truth == web flasher collectParams).
 DEVICE=pwmp7
 MIXER_PROFILE=1
-SERVO_ORDER=0          # 0=wings first, 1=rudder first (SERVO_2WING_1RUD)
 DOMAIN=EU_CE_2400
 BINDING_PHRASE=""
 WIFI_INTERVAL=30
@@ -168,7 +166,6 @@ while [[ $# -gt 0 ]]; do
     # --- primary wizard knobs ---
     --device)      DEVICE="${2:?--device requires pwmp5, pwmp7, ep2pwm or mushin}"; shift 2 ;;
     --mixer)       MIXER_PROFILE="${2:?--mixer requires 0..12}"; shift 2 ;;
-    --servo-order) SERVO_ORDER="${2:?--servo-order requires 0 or 1}"; shift 2 ;;
     --domain)
       case "$2" in
         eu|EU|EU_CE_2400) DOMAIN=EU_CE_2400 ;;
@@ -396,8 +393,6 @@ validate_config() {
     || { err "Invalid board rotation: $ZEPHYR_ROTATION (0..6)"; exit 1; }
   [[ "$ZEPHYR_PRE_DETECT" == "0" || "$ZEPHYR_PRE_DETECT" == "1" ]] \
     || { err "Invalid --pre-detect: $ZEPHYR_PRE_DETECT (0|1)"; exit 1; }
-  [[ "$SERVO_ORDER" == "0" || "$SERVO_ORDER" == "1" ]] \
-    || { err "Invalid --servo-order: $SERVO_ORDER (0|1)"; exit 1; }
   if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
     err "--horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
   fi
@@ -447,9 +442,6 @@ write_user_defines() {
     case "$DEVICE" in
       pwmp5|pwmp7) echo "-DPTERONAUTOS_HARDWARE=$DEVICE" ;;
     esac
-    if [[ "$SERVO_ORDER" == "1" ]]; then
-      echo "-DORNI_SERVO_ORDER_RUDDER_FIRST=1"
-    fi
     if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
       echo "-DZEPHYRUS_ENABLED=1"
     fi

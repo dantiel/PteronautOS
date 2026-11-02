@@ -58,12 +58,6 @@
               %option{value: "6"} GEARBOX_1ELE_1RUD — elevator + rudder
               %option{value: "7"} GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder
 
-          %label.flasher-field.receiver-config#servo-order-row
-            %span!= flasher_servo_order
-            %select#servo_order
-              %option{value: "0", selected: true} Wings first — CH1=L wing, CH4=R wing, CH5=rudder
-              %option{value: "1"} Rudder first — CH1=rudder, CH4=L wing, CH5=R wing
-
           %label.flasher-field.receiver-config
             %span!= flasher_regulatory_domain
             %select#regulatory_domain
@@ -182,17 +176,27 @@
                   %span Français
               %p.flasher-hint!= flasher_locales_hint
 
+          .flasher-field
+            %span!= flasher_flash_method
+            .flasher-segmented{role: "radiogroup", "aria-label": flasher_flash_method}
+              %label.flasher-seg
+                %input#flash_method_uart{type: "radio", name: "flash_method", value: "uart", checked: "checked"}
+                %span!= flasher_flash_method_uart
+              %label.flasher-seg
+                %input#flash_method_wifi{type: "radio", name: "flash_method", value: "wifi"}
+                %span!= flasher_flash_method_wifi
+
           %p.flasher-serial-warning.hidden#serial-warning!= flasher_serial_warning
 
           .flasher-actions
             %button.flasher-primary#build-btn{type: "button"}!= flasher_build_btn
-            %button.flasher-secondary#load-btn{type: "button"}!= flasher_load_btn
             %button.flasher-secondary#flash-btn{type: "button", disabled: true}!= flasher_flash_btn
             %button.flasher-secondary#download-btn{type: "button", disabled: true}!= flasher_download_btn
-            %button.flasher-secondary#download-gz-btn{type: "button", disabled: true}!= flasher_download_gz_btn
+            %button.flasher-secondary#download-gz-btn{type: "button", disabled: true, class: "hidden"}!= flasher_download_gz_btn
+            %a.flasher-secondary#egg-download{href: "#{asset_prefix}assets/firmware/PTERONAUT-EGG.BIN.gz", download: "PTERONAUT-EGG.BIN.gz", class: "hidden"}!= wififlash_download
             %button.flasher-secondary#disconnect-btn{type: "button", class: "hidden"}!= flasher_disconnect_btn
 
-          %input#firmware-file{type: "file", accept: ".bin,application/octet-stream", class: "hidden"}
+          %p.flasher-hint#wifi-hint.hidden!= flasher_board_egg_hint
 
           %p.flasher-hint!= flasher_build_hint
 

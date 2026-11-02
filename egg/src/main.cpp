@@ -23,25 +23,33 @@ static const char *AP_HOST = "pteronaut-egg"; // -> http://pteronaut-egg.local
 static WiFiServer gServer(80);
 
 // ── Tiny embedded upload page (single string, no external assets) ─────────
-// The ASCII egg is the drop-zone AND the click target. It swaps between the
-// intact egg (idle / drag-over) and the hatched pterosaur (done).
+// The ASCII egg is the drop-zone AND the click target. It turns gold on
+// drag-over, spins a throbber while flashing, then hatches into a flying
+// pterosaur (done).
 static const char PAGE_HTML[] PROGMEM = R"rawliteral(
 <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width">
 <title>Pteronaut Egg</title>
 <style>
 body{font-family:system-ui,sans-serif;background:#0d1117;color:#d8e0e8;display:grid;place-items:center;min-height:100vh;margin:0}
 main{text-align:center;padding:1.5em}
-.egg{display:inline-block;cursor:pointer;border-radius:16px;padding:1em;transition:box-shadow .15s,transform .15s}
+.egg{display:inline-block;cursor:pointer;position:relative;padding:1em;transition:transform .15s}
 .egg:hover{transform:translateY(-2px)}
-.egg.drag{box-shadow:0 0 0 3px #58a6ff,0 0 34px #58a6ff;transform:scale(1.04)}
-.egg.drag pre{color:#cfe3ff}
-pre#art{font:13px/1.15 ui-monospace,Menlo,Consolas,monospace;color:#9ecbff;margin:0;white-space:pre;text-align:left}
+.egg.gold pre#art{color:#ffd700}
+.egg.busy{transform:scale(1.03)}
+.throb{position:absolute;top:50%;left:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border:3px solid rgba(255,215,0,.25);border-top-color:#ffd700;border-radius:50%;opacity:0;transition:opacity .2s}
+.egg.busy .throb{opacity:1;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+pre#art{font:13px/1.15 ui-monospace,Menlo,Consolas,monospace;color:#9ecbff;margin:0;white-space:pre;text-align:left;transition:color .25s}
+pre#art.fly{animation:hatch 1.1s ease-out both,hover 2.6s ease-in-out 1.1s infinite}
+@keyframes hatch{from{transform:translateY(26px) scale(.55);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes hover{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-9px) rotate(1.5deg)}}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 code{background:#1b222c;padding:.15em .4em;border-radius:4px}
 #st{white-space:pre-wrap;font-size:.85em;color:#8b98a5;min-height:2.5em;margin-top:1em}
 </style>
 <main>
   <label class="egg" id="egg" for="f">
+    <span class="throb" aria-hidden="true"></span>
     <pre id="art"></pre>
     <input type="file" id="f" class="visually-hidden">
   </label>
@@ -85,19 +93,24 @@ const ART_DONE=String.raw`⠀⠀⠀⠀⠀⣠⣤⣤⣤⡀⠀⠐⢶⣤⣤⣀⡀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`;
 art.textContent=ART_IDLE;
 
-function setArt(s,cls){art.textContent=s;egg.classList.toggle('drag',cls);}
-['dragenter','dragover'].forEach(ev=>egg.addEventListener(ev,e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';setArt(ART_DRAG,true);}));
-egg.addEventListener('dragleave',e=>{e.preventDefault();setArt(ART_IDLE,false);});
+function setArt(s,mode){
+  art.textContent=s;
+  egg.classList.toggle('gold',mode!=='idle');
+  egg.classList.toggle('busy',mode==='busy');
+  art.classList.toggle('fly',mode==='done');
+}
+['dragenter','dragover'].forEach(ev=>egg.addEventListener(ev,e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';setArt(ART_DRAG,'drag');}));
+egg.addEventListener('dragleave',e=>{e.preventDefault();setArt(ART_IDLE,'idle');});
 egg.addEventListener('drop',e=>{e.preventDefault();const x=e.dataTransfer.files[0];if(x)upload(x);});
 f.addEventListener('change',()=>{if(f.files[0])upload(f.files[0]);});
 
 async function upload(x){
-  setArt(ART_DRAG,true);st.textContent='uploading '+x.size+' B …';
+  setArt(ART_IDLE,'busy');st.textContent='uploading '+x.size+' B …';
   try{
     const r=await fetch('/update',{method:'POST',body:x});
-    if(r.ok){setArt(ART_DONE,false);st.textContent='flashing — the egg hatches, wait for reboot';}
-    else{setArt(ART_IDLE,false);st.textContent='HTTP '+r.status+' — FAILED: '+await r.text();}
-  }catch(e){setArt(ART_IDLE,false);st.textContent='ERR '+e;}
+    if(r.ok){setArt(ART_DONE,'done');st.textContent='flashing — the egg hatches, wait for reboot';}
+    else{setArt(ART_IDLE,'idle');st.textContent='HTTP '+r.status+' — FAILED: '+await r.text();}
+  }catch(e){setArt(ART_IDLE,'idle');st.textContent='ERR '+e;}
 }
 </script>
 )rawliteral";

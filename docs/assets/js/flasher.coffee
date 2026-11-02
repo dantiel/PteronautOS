@@ -11,9 +11,9 @@ els =
   flashBtn: $("#flash-btn")
   downloadBtn: $("#download-btn")
   downloadGzBtn: $("#download-gz-btn")
-  loadBtn: $("#load-btn")
   disconnectBtn: $("#disconnect-btn")
-  fileInput: $("#firmware-file")
+  eggDownload: $("#egg-download")
+  wifiHint: $("#wifi-hint")
   serialWarning: $("#serial-warning")
   statusCard: $("#status-card")
   statusDot: $("#status-dot")
@@ -91,6 +91,7 @@ saveConfig = ->
       el = $(id)
       cfg[id] = if el.type is "checkbox" then el.checked else el.value
     cfg.receiver_board = currentBoard()
+    cfg.flash_method = currentFlashMethod()
     cfg.locales = LOCALES.filter (l) -> $("#locale-#{l}").checked
     localStorage.setItem CONFIG_KEY, JSON.stringify cfg
   catch
@@ -106,6 +107,7 @@ restoreConfig = ->
       else
         el.value = cfg[id] if cfg[id]?
     setBoard cfg.receiver_board if cfg.receiver_board?
+    setFlashMethod cfg.flash_method if cfg.flash_method?
     if cfg.locales?
       for l in LOCALES
         $("#locale-#{l}").checked = l in cfg.locales
@@ -136,6 +138,15 @@ currentBoard = ->
 setBoard = (v) ->
   $("#receiver_board_pwm").checked = v is "pwm"
   $("#receiver_board_crsf").checked = v is "crsf"
+
+# Flash method (UART vs WiFi) is a UI-only choice — it does not change the
+# firmware the worker builds, only which post-build actions are surfaced.
+currentFlashMethod = ->
+  if $("#flash_method_wifi").checked then "wifi" else "uart"
+
+setFlashMethod = (v) ->
+  $("#flash_method_uart").checked = v is "uart"
+  $("#flash_method_wifi").checked = v is "wifi"
 
 currentEp2Pwm = ->
   currentBoard() is "crsf" and $("#ep2_pwm_enabled").checked
@@ -425,13 +436,6 @@ restoreSpecimens = ->
     catch
       # no storage or blocked — nothing to load
   renderSpecimens()
-
-loadFromDisk = (file) ->
-  buf = await file.arrayBuffer()
-  firmwareBytes = new Uint8Array buf
-  enableFirmware()
-  log "Loaded " + file.name + " (" + firmwareBytes.length + " bytes) from disk."
-  setStatus "Firmware image loaded — ready to flash or download.", "done"
 
 closeSerial = ->
   t = activeTransport
@@ -732,6 +736,18 @@ syncGyroFields = ->
   $("#zephyrus-hint").classList.toggle "hidden", enabled
   $("#ep2-pwm-note").classList.toggle "hidden", not ep2Pwm
 
+# Swap the post-build actions to match the chosen flash method: UART shows
+# "Flash via Web Serial" + "Download .bin"; WiFi shows "Download .bin.gz"
+# plus the prebuilt Pteronaut-Egg link + instructions.
+syncFlashMethod = ->
+  uart = currentFlashMethod() is "uart"
+  els.flashBtn.classList.toggle "hidden", not (uart and serialSupported)
+  els.downloadBtn.classList.toggle "hidden", not uart
+  els.downloadGzBtn.classList.toggle "hidden", uart
+  els.eggDownload.classList.toggle "hidden", uart
+  els.wifiHint.classList.toggle "hidden", uart
+  els.serialWarning.classList.toggle "hidden", not (uart and not serialSupported)
+
 restoreConfig()
 
 # A ?board=pwm|crsf link preselects the board and wins over any saved config.
@@ -740,6 +756,7 @@ if boardParam in ["pwm", "crsf"]
   setBoard boardParam
 
 syncGyroFields()
+syncFlashMethod()
 restoreSpecimens()
 
 for id in FIELD_IDS
@@ -755,25 +772,17 @@ $("#ep2_pwm_enabled").addEventListener "change", ->
   syncGyroFields()
 $("#zephyrus_enabled").addEventListener "change", syncGyroFields
 
+for sel in ["#flash_method_uart", "#flash_method_wifi"]
+  $(sel).addEventListener "change", ->
+    saveConfig()
+    syncFlashMethod()
+
 for l in LOCALES
   $("#locale-#{l}").addEventListener "change", saveConfig
 
-unless serialSupported
-  els.serialWarning.classList.remove "hidden"
-  els.flashBtn.classList.add "hidden"
-
 els.buildBtn.addEventListener "click", startBuild
-els.loadBtn.addEventListener "click", -> els.fileInput.click()
 els.disconnectBtn.addEventListener "click", disconnect
 els.clearSpecimensBtn.addEventListener "click", clearSpecimens
-els.fileInput.addEventListener "change", ->
-  file = els.fileInput.files?[0]
-  if file
-    try
-      await loadFromDisk file
-    catch err
-      setStatus "Load failed: " + err.message, "fail"
-  els.fileInput.value = ""
 els.flashBtn.addEventListener "click", flash
 els.downloadBtn.addEventListener "click", saveFirmware
 els.downloadGzBtn.addEventListener "click", downloadGzFirmware
