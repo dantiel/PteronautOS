@@ -643,6 +643,28 @@ p.flasher-cta {
   margin-bottom: 1rem;
 }
 
+.flasher-callout .flasher-cta a {
+  display: inline;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 0.82rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.flasher-callout .flasher-cta a:hover {
+  background: none;
+  color: var(--accent);
+  border-color: transparent;
+  text-decoration: none;
+}
+
 @media (max-width: 480px) {
   nav {
     gap: 0.6rem;
