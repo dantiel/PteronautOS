@@ -235,7 +235,11 @@ def appendConfiguration(source, target, env):
             # can emit PWMP5 or PWMP7 images (Fossil Etcher / flash.sh pass it).
             build_flags = env.get('BUILD_FLAGS', [])
             gyro_on = any('ZEPHYRUS_ENABLED' in flag for flag in build_flags)
-            hw_flag = next((f for f in build_flags if f.startswith('-DPTERONAUTOS_HARDWARE=')), None)
+            # Accept both "-DPTERONAUTOS_HARDWARE=pwmp5" (user_defines.txt) and
+            # "-D PTERONAUTOS_HARDWARE=pwmp5" (platformio.ini env build_flags);
+            # the latter carries a space after -D and was silently falling
+            # through to the pwmp7 default, producing a mislabeled image.
+            hw_flag = next((f for f in build_flags if 'PTERONAUTOS_HARDWARE=' in f), None)
             pwm_kind = hw_flag.split('=', 1)[1].strip() if hw_flag else 'pwmp7'
             if target_name == 'PteronautOS_ESP8285_EP2_2400_RX':
                 kind = 'mushin'
