@@ -52,7 +52,6 @@ CONFIG_KEY = "pteronautos-flasher-config"
 FIELD_IDS = [
   "#mixer_profile"
   "#pwm_board_type"
-  "#servo_order"
   "#regulatory_domain"
   "#binding_phrase"
   "#auto_wifi_on_interval"
@@ -169,7 +168,6 @@ collectParams = ->
   # the receiver surfaces its config page when no RC link appears after boot.
   wifi = $("#auto_wifi_on_interval").value
   mixer_profile: $("#mixer_profile").value
-  servo_order: $("#servo_order").value
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
   auto_wifi_on_interval: wifi

@@ -67,7 +67,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#pwm_board_type", "#servo_order", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#ep2_pwm_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#pwm_board_type", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#ep2_pwm_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -241,7 +241,6 @@ collectParams = function() {
   wifi = $("#auto_wifi_on_interval").value;
   return {
     mixer_profile: $("#mixer_profile").value,
-    servo_order: $("#servo_order").value,
     regulatory_domain: $("#regulatory_domain").value,
     binding_phrase: $("#binding_phrase").value.trim(),
     auto_wifi_on_interval: wifi,
