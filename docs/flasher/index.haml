@@ -40,6 +40,12 @@
                 %span!= flasher_board_crsf
             %p.flasher-hint!= flasher_board_hint
 
+          %label.flasher-field.receiver-config#pwm-board-type-row
+            %span!= flasher_pwm_board_type
+            %select#pwm_board_type
+              %option{value: "pwmp7", selected: true} PWMP7 — 6 servo pads (GPIO0/1/3/9/10/5)
+              %option{value: "pwmp5"} PWMP5 — 5 servo pads (GPIO0/1/3/9/10, GPIO5 = radio BUSY)
+
           %label.flasher-field.receiver-config
             %span!= flasher_mixer_profile
             %select#mixer_profile
@@ -51,6 +57,12 @@
               %option{value: "5"} GEARBOX_1MOT_2VTAIL_1RUD — motor + V-tail + rudder
               %option{value: "6"} GEARBOX_1ELE_1RUD — elevator + rudder
               %option{value: "7"} GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder
+
+          %label.flasher-field.receiver-config#servo-order-row
+            %span!= flasher_servo_order
+            %select#servo_order
+              %option{value: "0", selected: true} Wings first — CH1=L wing, CH4=R wing, CH5=rudder
+              %option{value: "1"} Rudder first — CH1=rudder, CH4=L wing, CH5=R wing
 
           %label.flasher-field.receiver-config
             %span!= flasher_regulatory_domain

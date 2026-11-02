@@ -51,6 +51,8 @@ API_BASE = (new URLSearchParams(location.search).get("api") or DEFAULT_API_BASE 
 CONFIG_KEY = "pteronautos-flasher-config"
 FIELD_IDS = [
   "#mixer_profile"
+  "#pwm_board_type"
+  "#servo_order"
   "#regulatory_domain"
   "#binding_phrase"
   "#auto_wifi_on_interval"
@@ -141,9 +143,12 @@ currentEp2Pwm = ->
 currentMushin = ->
   currentBoard() is "crsf" and not $("#ep2_pwm_enabled").checked
 
+currentPwmBoardType = ->
+  $("#pwm_board_type").value or "pwmp7"
+
 currentTarget = ->
   if currentEp2Pwm() then "ep2pwm"
-  else if currentBoard() is "pwm" then "pwmp7"
+  else if currentBoard() is "pwm" then currentPwmBoardType()
   else "mushin"
 
 collectParams = ->
@@ -153,6 +158,7 @@ collectParams = ->
   # the receiver surfaces its config page when no RC link appears after boot.
   wifi = $("#auto_wifi_on_interval").value
   mixer_profile: $("#mixer_profile").value
+  servo_order: $("#servo_order").value
   regulatory_domain: $("#regulatory_domain").value
   binding_phrase: $("#binding_phrase").value.trim()
   auto_wifi_on_interval: wifi
@@ -241,6 +247,7 @@ MIXER_LABELS =
   "7": "motor + elevator + rudder"
 
 HARDWARE_LABELS =
+  "pwmp5": "PWMP5"
   "pwmp7": "PWMP7"
   "ep2pwm": "EP2 PWM"
   "mushin": "EP2 + RP2040"
@@ -626,8 +633,8 @@ flash = ->
     if info.usbVendorId is 0x2e8a
       log "RP2040 serial port detected — flashing through the Yoshimitsu MEDITATION bridge (115200 baud, byte-transparent to the EP2 UART)."
       log "If the flash fails with “Failed to connect”, Yoshimitsu is not in MEDITATION: enter it first (serial command MEDITATION, or 4 quick RESET-taps), then re-flash."
-      if currentTarget() is "pwmp7"
-        log "⚠️ Target is the standalone PWM board (PWMP7), but this bridge is wired to an EP2 (CRSF) radio. Select the \"CRSF board\" option unless you really mean to flash a PWMP7 image onto an EP2."
+      if currentTarget() in ["pwmp5", "pwmp7"]
+        log "⚠️ Target is the standalone PWM board (PWMP5/PWMP7), but this bridge is wired to an EP2 (CRSF) radio. Select the \\\"CRSF board\\\" option unless you really mean to flash a PWM-board image onto an EP2."
 
     # Manual bootloader entry matches HARDWARE.md: hold BOOT (GPIO0 / CH1),
     # power-cycle, keep holding ~1 s, then release. Try a manual sync first
@@ -702,6 +709,7 @@ syncGyroFields = ->
   zeph = $("#zephyrus_enabled")
   zephRow = zeph.closest ".flasher-toggle"
   ep2PwmRow = $("#ep2-pwm-toggle-row")
+  pwmTypeRow = $("#pwm-board-type-row")
   # Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   # free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   unless localGyro
@@ -714,6 +722,8 @@ syncGyroFields = ->
   # "Reuse as PWM" only applies to a non-PWM board (its CRSF pad pair).
   ep2PwmRow.classList.toggle "hidden", board isnt "crsf"
   $("#ep2_pwm_enabled").checked = false if board isnt "crsf"
+  # PWMP5 vs PWMP7 sub-selector only applies to the standalone PWM board.
+  pwmTypeRow.classList.toggle "hidden", board isnt "pwm"
   enabled = zeph.checked and localGyro
   wrap = $("#zephyrus-fields")
   wrap.classList.toggle "is-greyed", not enabled

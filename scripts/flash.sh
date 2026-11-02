@@ -53,9 +53,10 @@ declare -A LANG_NAMES=(
 )
 
 # Device keys mirror cloud-build.yml `hardware_target` (single source of truth).
-DEVICE_KEYS=(pwmp7 ep2pwm mushin)
+DEVICE_KEYS=(pwmp5 pwmp7 ep2pwm mushin)
 DEVICE_LABELS=(
-  "pwmp7  · PWMP7 — 3/6 local servo pads (native PWM)"
+  "pwmp5  · PWMP5 — 5 local servo pads (GPIO0/1/3/9/10, GPIO5=radio BUSY)"
+  "pwmp7  · PWMP7 — 6 local servo pads (GPIO0/1/3/9/10/5)"
   "ep2pwm · EP2 PWM — standalone, RX/TX (GPIO3/1) as 2 servos"
   "mushin · EP2 + RP2040 — MUSHIN companion bridge (9 ch)"
 )
@@ -95,12 +96,13 @@ usage() {
   say "PteronautOS Flash Script — wizard or flags; build WebUI + firmware, then flash."
   say ""
   say "Device / airframe:"
-  say "  --device <k>       receiver hardware: pwmp7 | ep2pwm | mushin"
+  say "  --device <k>       receiver hardware: pwmp5 | pwmp7 | ep2pwm | mushin"
   say "  --mixer <0-12>     mixer profile (see --list-mixers)"
+  say "  --servo-order <0|1> 2 wings+rudder: 0=wings first, 1=rudder first"
   say "  --domain <k>       regulatory domain: eu | ism"
   say "  --gyro <k>         gyro: none | rate | ahrs"
-  say "  --horizon          experimental Mesozoic HORIZON env (pwmp7 only)"
-  say "                     (legacy: --target pwmp7|ep2|ep2-pwm, --mode none|rate|horizon)"
+  say "  --horizon          experimental Mesozoic HORIZON env (pwmp5/pwmp7)"
+  say "                     (legacy: --target pwmp5|pwmp7|ep2|ep2-pwm, --mode none|rate|horizon)"
   say ""
   say "Radio / network / gyro detail:"
   say "  --binding-phrase <s>   hardcoded binding phrase (empty = traditional bind)"
@@ -143,6 +145,7 @@ BAUD=115200
 # Config (single source of truth == web flasher collectParams).
 DEVICE=pwmp7
 MIXER_PROFILE=1
+SERVO_ORDER=0          # 0=wings first, 1=rudder first (SERVO_2WING_1RUD)
 DOMAIN=EU_CE_2400
 BINDING_PHRASE=""
 WIFI_INTERVAL=30
@@ -163,8 +166,9 @@ ORIG_ARGS=("$@")   # snapshot before the parser shift()s them away
 while [[ $# -gt 0 ]]; do
   case "$1" in
     # --- primary wizard knobs ---
-    --device)      DEVICE="${2:?--device requires pwmp7, ep2pwm or mushin}"; shift 2 ;;
+    --device)      DEVICE="${2:?--device requires pwmp5, pwmp7, ep2pwm or mushin}"; shift 2 ;;
     --mixer)       MIXER_PROFILE="${2:?--mixer requires 0..12}"; shift 2 ;;
+    --servo-order) SERVO_ORDER="${2:?--servo-order requires 0 or 1}"; shift 2 ;;
     --domain)
       case "$2" in
         eu|EU|EU_CE_2400) DOMAIN=EU_CE_2400 ;;
@@ -193,10 +197,11 @@ while [[ $# -gt 0 ]]; do
     # --- legacy aliases ---
     --target)
       case "$2" in
+        pwmp5)   DEVICE=pwmp5 ;;
         pwmp7)   DEVICE=pwmp7 ;;
         ep2)     DEVICE=mushin ;;
         ep2-pwm) DEVICE=ep2pwm ;;
-        *) err "--target requires pwmp7, ep2 or ep2-pwm"; exit 1 ;;
+        *) err "--target requires pwmp5, pwmp7, ep2 or ep2-pwm"; exit 1 ;;
       esac; shift 2 ;;
     --mode)
       case "$2" in
@@ -391,8 +396,10 @@ validate_config() {
     || { err "Invalid board rotation: $ZEPHYR_ROTATION (0..6)"; exit 1; }
   [[ "$ZEPHYR_PRE_DETECT" == "0" || "$ZEPHYR_PRE_DETECT" == "1" ]] \
     || { err "Invalid --pre-detect: $ZEPHYR_PRE_DETECT (0|1)"; exit 1; }
-  if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp7" ]]; then
-    err "--horizon is pwmp7-only (got --device $DEVICE)"; exit 1
+  [[ "$SERVO_ORDER" == "0" || "$SERVO_ORDER" == "1" ]] \
+    || { err "Invalid --servo-order: $SERVO_ORDER (0|1)"; exit 1; }
+  if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
+    err "--horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
   fi
 }
 
@@ -408,15 +415,22 @@ resolve_target() {
   case "$DEVICE" in
     ep2pwm) EXPECT_PRODUCT="PteronautOS EP2 PWM" ;;
     mushin) EXPECT_PRODUCT="PteronautOS EP2" ;;
+    pwmp5)  EXPECT_PRODUCT="PteronautOS PWMP5" ;;
     *)      EXPECT_PRODUCT="PteronautOS PWMP7" ;;
   esac
 
   PWM_OUT=""
-  if [[ "$DEVICE" == "pwmp7" ]]; then
-    local gyro_active=0
-    [[ "$HORIZON" == "1" || "$ZEPHYR_ENABLED" == "1" ]] && gyro_active=1
-    if [[ "$gyro_active" == "1" ]]; then PWM_OUT="0,9,10,5"; else PWM_OUT="0,1,3,9,10,5"; fi
-  fi
+  case "$DEVICE" in
+    pwmp5|pwmp7)
+      local gyro_active=0
+      [[ "$HORIZON" == "1" || "$ZEPHYR_ENABLED" == "1" ]] && gyro_active=1
+      if [[ "$gyro_active" == "1" ]]; then
+        if [[ "$DEVICE" == "pwmp5" ]]; then PWM_OUT="0,9,10"; else PWM_OUT="0,9,10,5"; fi
+      else
+        if [[ "$DEVICE" == "pwmp5" ]]; then PWM_OUT="0,1,3,9,10"; else PWM_OUT="0,1,3,9,10,5"; fi
+      fi
+      ;;
+  esac
 }
 
 # ---- user_defines.txt (mirrors cloud-build.yml "Write user defines") --------
@@ -430,6 +444,12 @@ write_user_defines() {
     echo "-DZEPHYR_I2C_SCL=$ZEPHYR_SCL"
     echo "-DZEPHYR_BOARD_ROTATION=$ZEPHYR_ROTATION"
     echo "-DRCVR_UART_BAUD=$UART_BAUD"
+    case "$DEVICE" in
+      pwmp5|pwmp7) echo "-DPTERONAUTOS_HARDWARE=$DEVICE" ;;
+    esac
+    if [[ "$SERVO_ORDER" == "1" ]]; then
+      echo "-DORNI_SERVO_ORDER_RUDDER_FIRST=1"
+    fi
     if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
       echo "-DZEPHYRUS_ENABLED=1"
     fi

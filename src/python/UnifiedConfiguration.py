@@ -231,32 +231,41 @@ def appendConfiguration(source, target, env):
         if 'PteronautOS' in target_name:
             # Project-owned map, NOT the ignored upstream hardware checkout.
             # GPIO2 resets this receiver's radio and must never become PWM.
+            # The standalone PWM board is chosen by a build flag so the one env
+            # can emit PWMP5 or PWMP7 images (Fossil Etcher / flash.sh pass it).
+            build_flags = env.get('BUILD_FLAGS', [])
+            gyro_on = any('ZEPHYRUS_ENABLED' in flag for flag in build_flags)
+            hw_flag = next((f for f in build_flags if f.startswith('-DPTERONAUTOS_HARDWARE=')), None)
+            pwm_kind = hw_flag.split('=', 1)[1].strip() if hw_flag else 'pwmp7'
             if target_name == 'PteronautOS_ESP8285_EP2_2400_RX':
                 kind = 'mushin'
             elif target_name == 'PteronautOS_ESP8285_EP2_2400_RX_PWM':
                 kind = 'ep2pwm'
+            elif pwm_kind in ('pwmp5', 'pwmp7'):
+                kind = pwm_kind
             else:
                 kind = 'pwmp7'
             hw_name = {
                 'mushin': 'pteronautos-ep2.json',
                 'ep2pwm': 'pteronautos-ep2-pwm.json',
+                'pwmp5': 'pteronautos-pwmp5.json',
                 'pwmp7': 'pteronautos-pwmp7.json',
             }[kind]
             product = {
                 'mushin': 'PteronautOS EP2',
                 'ep2pwm': 'PteronautOS EP2 PWM',
+                'pwmp5': 'PteronautOS PWMP5',
                 'pwmp7': 'PteronautOS PWMP7',
             }[kind]
             lua_name = {
                 'mushin': 'EP2 RP2040',
                 'ep2pwm': 'EP2 PWM RX',
+                'pwmp5': 'PWMP5 RX',
                 'pwmp7': 'PWMP7 RX',
             }[kind]
-            # Derive the local PWM pads from the build flags: PWMP7 gains the
-            # two I²C pins (GPIO1/GPIO3) as extra servos when Zephyrus is not
-            # compiled in; EP2 standalone keeps [3,1]; MUSHIN has no local PWM.
-            build_flags = env.get('BUILD_FLAGS', [])
-            gyro_on = any('ZEPHYRUS_ENABLED' in flag for flag in build_flags)
+            # Derive the local PWM pads from the build flags: PWMP5/PWMP7 gain
+            # the two I²C pins (GPIO1/GPIO3) as extra servos when Zephyrus is
+            # not compiled in; EP2 standalone keeps [3,1]; MUSHIN has no PWM.
             pwm_outputs = derive_pwm_outputs(kind, gyro_on)
             hw_file = Path(__file__).resolve().parents[1] / ('targets/hardware/' + hw_name)
             appendToFirmware(

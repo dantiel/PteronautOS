@@ -300,6 +300,21 @@ LED:  GPIO16 (digital only)
 BOOT: Hold CH1 button during power-on
 ```
 
+### Pin Cheat Sheet (PWMP5 — 5-servo, GPIO5 = radio BUSY)
+
+```
+I²C:  SDA=CH2 (GPIO1)  SCL=CH3 (GPIO3)  (unplug MPU to flash)
+PWM:  CH1=GPIO0  CH2=GPIO1  CH3=GPIO3  CH4=GPIO9  CH5=GPIO10
+      GPIO5 is SX1280 BUSY — NOT a servo pad (do not add to pwm_outputs)
+LED:  GPIO16
+BOOT: Hold CH1 (GPIO0) during power-on
+```
+
+> PWMP5 vs PWMP7: the only difference is GPIO5. On the PWMP7 it is a 6th
+> servo pad (`radio_busy=-1`); on the PWMP5 it is the radio BUSY line
+> (`radio_busy=5`), so only 5 servo pads exist. Select **PWMP5** in Fossil
+> Etcher (or `--device pwmp5` / `-e PteronautOS_ESP8285_2400_RX_PWMP5`).
+
 ### Voltage Cheat Sheet
 
 ```

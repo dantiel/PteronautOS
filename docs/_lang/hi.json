@@ -940,6 +940,8 @@
  "flasher_board_pwm": "PWM board",
  "flasher_board_crsf": "non-PWM (EP1/EP2)",
  "flasher_board_hint": "PWM boards drive servos directly. non-PWM boards (EP1/EP2) expose CRSF on the serial pads — reuse them as PWM servo outputs, or keep CRSF for a MUSHIN RP2040 companion.",
+ "flasher_pwm_board_type": "PWM board type",
+ "flasher_servo_order": "Servo channel order (2 wings + rudder)",
  "flasher_wifi_interval": "WiFi auto-on interval (s)",
  "flasher_build_btn": "फ़र्मवेयर बनाएँ",
  "flasher_flash_btn": "Web Serial से फ्लैश करें",

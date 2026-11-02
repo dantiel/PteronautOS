@@ -940,6 +940,8 @@
  "flasher_board_pwm": "Placa PWM",
  "flasher_board_crsf": "sem PWM (EP1/EP2)",
  "flasher_board_hint": "Placas PWM acionam os servos diretamente. Placas sem PWM (EP1/EP2) expõem CRSF nos pads seriais — reaproveite-os como saídas PWM de servo, ou mantenha o CRSF para um companheiro MUSHIN RP2040.",
+ "flasher_pwm_board_type": "Tipo de placa PWM",
+ "flasher_servo_order": "Ordem dos canais de servo (2 asas + leme)",
  "flasher_wifi_interval": "Intervalo WiFi auto-on (s)",
  "flasher_build_btn": "Compilar firmware",
  "flasher_flash_btn": "Gravar via Web Serial",

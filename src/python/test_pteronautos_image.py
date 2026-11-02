@@ -54,11 +54,21 @@ class ImageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Hardware differs'):
             verify_image(self.image(product=b'PteronautOS EP2'))
 
-    def test_pwmp7_gyro_derivation(self):
+    def test_pwmp5_and_pwmp7_gyro_derivation(self):
+        self.assertEqual(derive_pwm_outputs('pwmp5', True), [0, 9, 10])
+        self.assertEqual(derive_pwm_outputs('pwmp5', False), [0, 1, 3, 9, 10])
         self.assertEqual(derive_pwm_outputs('pwmp7', True), [0, 9, 10, 5])
         self.assertEqual(derive_pwm_outputs('pwmp7', False), [0, 1, 3, 9, 10, 5])
         self.assertEqual(derive_pwm_outputs('ep2pwm', False), [3, 1])
         self.assertIsNone(derive_pwm_outputs('mushin', False))
+
+    def test_pwmp5_map_and_product(self):
+        hw = json.loads(HARDWARE_PATH.with_name('pteronautos-pwmp5.json').read_text())
+        self.assertEqual(hw['radio_busy'], 5)
+        self.assertEqual(hw['pwm_outputs'], [0, 1, 3, 9, 10])
+        verify_image(self.image(hardware=hw, product=b'PteronautOS PWMP5'))
+        with self.assertRaisesRegex(ValueError, 'Hardware differs'):
+            verify_image(self.image(hardware=hw))
 
     def test_pwmp7_gyro_on_map_needs_override(self):
         # The static project map is the gyro-OFF natural order; the gyro-ON map

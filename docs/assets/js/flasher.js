@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentMushin, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, loadFromDisk, log, openDb, poll, ref, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, loadFromDisk, log, openDb, poll, ref, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveFirmware, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -67,7 +67,7 @@ API_BASE = (new URLSearchParams(location.search).get("api") || DEFAULT_API_BASE 
 // Persist config on this device (localStorage) so values survive page reloads.
 CONFIG_KEY = "pteronautos-flasher-config";
 
-FIELD_IDS = ["#mixer_profile", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#ep2_pwm_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
+FIELD_IDS = ["#mixer_profile", "#pwm_board_type", "#servo_order", "#regulatory_domain", "#binding_phrase", "#auto_wifi_on_interval", "#zephyrus_i2c_sda", "#zephyrus_i2c_scl", "#zephyrus_board_rotation", "#ep2_pwm_enabled", "#zephyrus_enabled", "#zephyrus_mode", "#zephyrus_i2c_pre_detect", "#rcvr_uart_baud", "#device_name", "#home_wifi_ssid", "#home_wifi_password"];
 
 LOCALES = ["pt", "en", "ru", "es", "de", "ko", "ja", "zh", "ar", "hi", "fr"];
 
@@ -197,11 +197,15 @@ currentMushin = function() {
   return currentBoard() === "crsf" && !$("#ep2_pwm_enabled").checked;
 };
 
+currentPwmBoardType = function() {
+  return $("#pwm_board_type").value || "pwmp7";
+};
+
 currentTarget = function() {
   if (currentEp2Pwm()) {
     return "ep2pwm";
   } else if (currentBoard() === "pwm") {
-    return "pwmp7";
+    return currentPwmBoardType();
   } else {
     return "mushin";
   }
@@ -218,6 +222,7 @@ collectParams = function() {
   wifi = $("#auto_wifi_on_interval").value;
   return {
     mixer_profile: $("#mixer_profile").value,
+    servo_order: $("#servo_order").value,
     regulatory_domain: $("#regulatory_domain").value,
     binding_phrase: $("#binding_phrase").value.trim(),
     auto_wifi_on_interval: wifi,
@@ -365,6 +370,7 @@ MIXER_LABELS = {
 };
 
 HARDWARE_LABELS = {
+  "pwmp5": "PWMP5",
   "pwmp7": "PWMP7",
   "ep2pwm": "EP2 PWM",
   "mushin": "EP2 + RP2040"
@@ -849,7 +855,7 @@ attemptConnect = async function(resetArg = null) {
 };
 
 flash = async function() {
-  var attempt, chip, conn, err, esploader, i, info, lastErr, mushin;
+  var attempt, chip, conn, err, esploader, i, info, lastErr, mushin, ref;
   if (!("serial" in navigator)) {
     setStatus("Web Serial is not supported in this browser — use Chrome, Edge or Opera.", "fail");
     return;
@@ -879,8 +885,8 @@ flash = async function() {
     if (info.usbVendorId === 0x2e8a) {
       log("RP2040 serial port detected — flashing through the Yoshimitsu MEDITATION bridge (115200 baud, byte-transparent to the EP2 UART).");
       log("If the flash fails with “Failed to connect”, Yoshimitsu is not in MEDITATION: enter it first (serial command MEDITATION, or 4 quick RESET-taps), then re-flash.");
-      if (currentTarget() === "pwmp7") {
-        log("⚠️ Target is the standalone PWM board (PWMP7), but this bridge is wired to an EP2 (CRSF) radio. Select the \"CRSF board\" option unless you really mean to flash a PWMP7 image onto an EP2.");
+      if ((ref = currentTarget()) === "pwmp5" || ref === "pwmp7") {
+        log("⚠️ Target is the standalone PWM board (PWMP5/PWMP7), but this bridge is wired to an EP2 (CRSF) radio. Select the \\\"CRSF board\\\" option unless you really mean to flash a PWM-board image onto an EP2.");
       }
     }
     // Manual bootloader entry matches HARDWARE.md: hold BOOT (GPIO0 / CH1),
@@ -968,13 +974,14 @@ flash = async function() {
 };
 
 syncGyroFields = function() {
-  var board, el, enabled, ep2Pwm, ep2PwmRow, i, len, localGyro, ref, wrap, zeph, zephRow;
+  var board, el, enabled, ep2Pwm, ep2PwmRow, i, len, localGyro, pwmTypeRow, ref, wrap, zeph, zephRow;
   board = currentBoard();
   localGyro = board === "pwm";
   ep2Pwm = currentEp2Pwm();
   zeph = $("#zephyrus_enabled");
   zephRow = zeph.closest(".flasher-toggle");
   ep2PwmRow = $("#ep2-pwm-toggle-row");
+  pwmTypeRow = $("#pwm-board-type-row");
   // Local MPU6050 gyro exists only on the PWM board — non-PWM boards have no
   // free I2C pins (GPIO4/5 are radio), and MUSHIN owns gyro on the RP2040.
   if (!localGyro) {
@@ -990,6 +997,8 @@ syncGyroFields = function() {
   if (board !== "crsf") {
     $("#ep2_pwm_enabled").checked = false;
   }
+  // PWMP5 vs PWMP7 sub-selector only applies to the standalone PWM board.
+  pwmTypeRow.classList.toggle("hidden", board !== "pwm");
   enabled = zeph.checked && localGyro;
   wrap = $("#zephyrus-fields");
   wrap.classList.toggle("is-greyed", !enabled);

@@ -21,6 +21,14 @@ on:
           - '5'   # GEARBOX_1MOT_2VTAIL_1RUD
           - '6'   # GEARBOX_1ELE_1RUD
           - '7'   # GEARBOX_1MOT_1ELE_1RUD
+      servo_order:
+        description: 'Servo channel order (2 wings + rudder): 0=wings first, 1=rudder first'
+        required: false
+        type: choice
+        default: '0'
+        options:
+          - '0'   # wings first — CH1=L wing, CH4=R wing, CH5=rudder
+          - '1'   # rudder first — CH1=rudder, CH4=L wing, CH5=R wing
       regulatory_domain:
         description: 'RF regulatory domain (2.4 GHz)'
         required: true
@@ -60,7 +68,8 @@ on:
         required: true
         type: choice
         options:
-          - 'pwmp7'   # PWMP7 — 3 local servo pads (GPIO9/10/5)
+          - 'pwmp5'   # PWMP5 — 5 local servo pads (GPIO0/1/3/9/10), GPIO5=radio BUSY
+          - 'pwmp7'   # PWMP7 — 6 local servo pads (GPIO0/1/3/9/10/5)
           - 'ep2pwm'  # EP2 standalone — 2 local servo pads (GPIO3/1)
           - 'mushin'  # EP2 + RP2040 companion (MUSHIN bridge)
       zephyrus_enabled:
@@ -171,6 +180,12 @@ jobs:
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
             # Companion UART pins/baud belong to the EP2 target, not user overrides.
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
+            case "${{ inputs.hardware_target }}" in
+              pwmp5|pwmp7) echo "-DPTERONAUTOS_HARDWARE=${{ inputs.hardware_target }}" ;;
+            esac
+            if [ "${{ inputs.servo_order }}" = "1" ]; then
+              echo "-DORNI_SERVO_ORDER_RUDDER_FIRST=1"
+            fi
             if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
               echo "-DZEPHYRUS_ENABLED=1"
             fi
@@ -219,6 +234,7 @@ jobs:
           case "${{ inputs.hardware_target }}" in
             ep2pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
             mushin) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
+            pwmp5)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
             pwmp7)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
             *)
               echo "::error::hardware_target is empty or unrecognized ('${{ inputs.hardware_target }}'). Redeploy the worker so it forwards hardware_target."
@@ -250,19 +266,31 @@ jobs:
           case "${{ inputs.hardware_target }}" in
             ep2pwm) EXPECT_PRODUCT="PteronautOS EP2 PWM" ;;
             mushin) EXPECT_PRODUCT="PteronautOS EP2" ;;
+            pwmp5)  EXPECT_PRODUCT="PteronautOS PWMP5" ;;
             *)      EXPECT_PRODUCT="PteronautOS PWMP7" ;;
           esac
           mkdir -p dist
-          if [ "${{ inputs.hardware_target }}" = "pwmp7" ]; then
-            if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
-              PWM_OUT="0,9,10,5"
-            else
-              PWM_OUT="0,1,3,9,10,5"
-            fi
-            python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" --pwm_outputs "$PWM_OUT" "src/.pio/build/$TARGET_ENV/firmware.bin"
-          else
-            python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" "src/.pio/build/$TARGET_ENV/firmware.bin"
-          fi
+          case "${{ inputs.hardware_target }}" in
+            pwmp5|pwmp7)
+              if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+                if [ "${{ inputs.hardware_target }}" = "pwmp5" ]; then
+                  PWM_OUT="0,9,10"
+                else
+                  PWM_OUT="0,9,10,5"
+                fi
+              else
+                if [ "${{ inputs.hardware_target }}" = "pwmp5" ]; then
+                  PWM_OUT="0,1,3,9,10"
+                else
+                  PWM_OUT="0,1,3,9,10,5"
+                fi
+              fi
+              python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" --pwm_outputs "$PWM_OUT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+              ;;
+            *)
+              python src/python/verify_pteronautos_image.py --expect_product "$EXPECT_PRODUCT" "src/.pio/build/$TARGET_ENV/firmware.bin"
+              ;;
+          esac
           cp "src/.pio/build/$TARGET_ENV/firmware.bin" dist/pteronautos.bin
           cat > dist/manifest.json <<'JSON'
           {
@@ -273,6 +301,7 @@ jobs:
             "zephyrus_i2c_scl": "${{ inputs.zephyrus_i2c_scl }}",
             "zephyrus_board_rotation": "${{ inputs.zephyrus_board_rotation }}",
             "hardware_target": "${{ inputs.hardware_target }}",
+            "servo_order": "${{ inputs.servo_order }}",
             "zephyrus_enabled": "${{ inputs.zephyrus_enabled }}",
             "zephyrus_mode": "${{ inputs.zephyrus_mode }}",
             "zephyrus_i2c_pre_detect": "${{ inputs.zephyrus_i2c_pre_detect }}",

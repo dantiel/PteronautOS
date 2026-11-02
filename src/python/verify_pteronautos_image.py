@@ -26,6 +26,8 @@ def derive_pwm_outputs(kind, gyro_on):
     restoring the full six-pad natural order. EP2 standalone drives its two
     broken-out UART pads; the MUSHIN companion has no local PWM at all.
     """
+    if kind == "pwmp5":
+        return [0, 9, 10] if gyro_on else [0, 1, 3, 9, 10]
     if kind == "pwmp7":
         return [0, 9, 10, 5] if gyro_on else [0, 1, 3, 9, 10, 5]
     if kind == "ep2pwm":
@@ -53,7 +55,7 @@ def verify_image(path, expected_pwm_outputs=None, expected_product=None):
     if end + 128 + 16 + 512 + 2048 > len(data):
         raise ValueError("Missing embedded product/options/hardware blocks")
     product = data[end:end + 128].split(b"\0", 1)[0]
-    if product not in (b"PteronautOS PWMP7", b"PteronautOS EP2", b"PteronautOS EP2 PWM"):
+    if product not in (b"PteronautOS PWMP5", b"PteronautOS PWMP7", b"PteronautOS EP2", b"PteronautOS EP2 PWM"):
         raise ValueError("Unexpected receiver product")
     if expected_product is not None and product != expected_product.encode():
         raise ValueError(f"Product {product!r} does not match expected {expected_product!r}")
@@ -66,6 +68,8 @@ def verify_image(path, expected_pwm_outputs=None, expected_product=None):
         layout = HARDWARE_PATH.with_name('pteronautos-ep2.json')
     elif product == b"PteronautOS EP2 PWM":
         layout = HARDWARE_PATH.with_name('pteronautos-ep2-pwm.json')
+    elif product == b"PteronautOS PWMP5":
+        layout = HARDWARE_PATH.with_name('pteronautos-pwmp5.json')
     else:
         layout = HARDWARE_PATH
     expected = json.loads(layout.read_text())
