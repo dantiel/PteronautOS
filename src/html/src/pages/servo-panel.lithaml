@@ -20,8 +20,10 @@
           %th= self._t('servo.table.failsafe')
           %th= self._t('servo.table.current')
       %tbody
-        - for ch of self._servoChannels()
-          %tr
+        - for ch, idx of self._servoChannels()
+          %tr{draggable: "true", style: self._rowStyle(idx), @dragstart: self._onDragStart(idx), @dragover: self._onDragOver(idx), @drop: self._onDrop(idx), @dragend: self._onDragEnd}
+            %td{style: "cursor:grab;user-select:none;color:#666;"}
+              = "⋮⋮"
             %td= ch.ch
             %td
               %b= ch.name
@@ -32,6 +34,8 @@
             %td= ch.failsafeLabel
             %td{style: self._liveStyle(ch)}
               = self._liveLabel(ch)
+  %small{style: "color:#888;"}
+    = self._t('servo.table.reorder_hint')
   %br
   %small{style: "color:#888;"}
     = self._footerText()

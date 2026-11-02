@@ -21,6 +21,7 @@ void setOrnithopterProfile(uint8_t p)
 {
     if (p < PROFILE_COUNT && p != (uint8_t)activeProfile) {
         activeProfile = (MixerProfile)p;
+        ornithopter.initFuncMap(p);   // reset routing to the new profile's default
         ornithopter.enterFailsafe();  // recenter servos for the new profile
     }
 }
@@ -149,6 +150,37 @@ Ornithopter::Ornithopter()
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;  // motor stopped
     }
     _loadDefaultFlightProfiles();
+    initFuncMap((uint8_t)MIXER_PROFILE);   // runtime routing (drag-and-drop reorder)
+}
+
+void Ornithopter::initFuncMap(uint8_t profileIdx)
+{
+    if (profileIdx >= PROFILE_COUNT) return;
+    for (uint8_t i = 0; i < ORNI_MAX_OUTPUTS; ++i)
+        funcMap[i] = PROFILES[profileIdx].funcMap[i];
+}
+
+void Ornithopter::setServoOrder(const uint8_t *order, uint8_t n)
+{
+    if (!order || n == 0) return;
+    if (n > ORNI_MAX_OUTPUTS) n = ORNI_MAX_OUTPUTS;
+
+    uint8_t seen[SF_COUNT];
+    for (uint8_t i = 0; i < SF_COUNT; ++i) seen[i] = 0;
+
+    uint8_t candidate[ORNI_MAX_OUTPUTS];
+    for (uint8_t i = 0; i < ORNI_MAX_OUTPUTS; ++i) candidate[i] = SF_NONE;
+
+    for (uint8_t i = 0; i < n; ++i) {
+        uint8_t f = order[i];
+        if (f >= SF_COUNT) return;            // invalid tag → reject whole reorder
+        if (f != SF_NONE && seen[f]) return;  // duplicate function → reject
+        seen[f] = 1;
+        candidate[i] = f;
+    }
+
+    for (uint8_t i = 0; i < ORNI_MAX_OUTPUTS; ++i) funcMap[i] = candidate[i];
+    enterFailsafe();   // recenter servos for the new routing
 }
 
 // ─── Link state ─────────────────────────────────────────────────────

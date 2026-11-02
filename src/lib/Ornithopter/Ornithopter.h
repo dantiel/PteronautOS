@@ -61,6 +61,14 @@ public:
     // Read via funcValue(func)
     uint16_t funcValue(uint8_t func) const { return _f[func]; }
 
+    // ── Runtime servo routing (drag-and-drop reorder in Servo Output tab) ──
+    // funcMap[padIndex] = ServoFunc. Initialized from the active profile's
+    // PROFILES[].funcMap; reorderable at runtime via setServoOrder (persisted
+    // to /pteronautos.conf so it survives reboot).
+    uint8_t funcMap[ORNI_MAX_OUTPUTS];
+    void initFuncMap(uint8_t profileIdx);
+    void setServoOrder(const uint8_t *order, uint8_t n);
+
     // ── Virtual stick injection ────────────────────────────────────
     uint16_t stickChannels[STK_COUNT]; // override values (172–1811 range)
     void setStickChannel(uint8_t ch, uint16_t val) { stickChannels[ch] = val; }

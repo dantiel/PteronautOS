@@ -176,6 +176,7 @@ export default {
     'servo.table.max': 'Máx',
     'servo.table.failsafe': 'Failsafe',
     'servo.table.current': 'Actual',
+    'servo.table.reorder_hint': 'Arraste as linhas para remapear os servos aos pads de saída.',
     'servo.ch.left_wing': 'Asa Esquerda',
     'servo.ch.right_wing': 'Asa Direita',
     'servo.ch.crest_rudder': 'Leme de Crista',

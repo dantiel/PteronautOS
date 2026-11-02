@@ -17,7 +17,7 @@ static inline void ornithopterUpdate() {
 
 static inline uint16_t orniFilterChannel(uint8_t ch, uint16_t us) {
     if (ch >= ORNI_MAX_OUTPUTS) return us;   // unmanaged pad beyond the profile table
-    uint8_t func = PROFILE.funcMap[ch];
+    uint8_t func = ornithopter.funcMap[ch];
     if (func != SF_NONE) return ornithopter.funcValue(func);
     return us;
 }
@@ -25,7 +25,7 @@ static inline uint16_t orniFilterChannel(uint8_t ch, uint16_t us) {
 // Write zeros to all ornithopter-managed PWM indices on init
 static inline void orniInitWrite(void (*write)(uint8_t, uint16_t)) {
     for (uint8_t ch = 0; ch < ORNI_MAX_OUTPUTS; ++ch) {
-        if (PROFILE.funcMap[ch] != SF_NONE) write(ch, 0);
+        if (ornithopter.funcMap[ch] != SF_NONE) write(ch, 0);
     }
 }
 

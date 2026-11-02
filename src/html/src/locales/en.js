@@ -183,6 +183,7 @@ export default {
     'servo.table.max': 'Max',
     'servo.table.failsafe': 'Failsafe',
     'servo.table.current': 'Current',
+    'servo.table.reorder_hint': 'Drag rows to re-map servos to output pads.',
     'servo.ch.left_wing': 'Left Wing',
     'servo.ch.right_wing': 'Right Wing',
     'servo.ch.crest_rudder': 'Crest Rudder',

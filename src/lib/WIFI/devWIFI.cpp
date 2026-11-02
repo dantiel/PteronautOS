@@ -1017,7 +1017,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     for (int ch = 0; ch < PROFILE.servoCount && ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
     {
         pwmPins.add(GPIO_PIN_PWM_OUTPUTS[ch]);
-        funcMap.add(PROFILE.funcMap[ch]);
+        funcMap.add(ornithopter.funcMap[ch]);
     }
     orni["model_name"]          = ornithopter.modelName;
 
@@ -1328,6 +1328,11 @@ static bool SaveOrnithopterConfig()
         if (i) f.print(',');
         f.print((int)ornithopter.servoTrimUs[i]);
     }
+    f.print(F("],\"func_map\":["));
+    for (int i = 0; i < ORNI_MAX_OUTPUTS; ++i) {
+        if (i) f.print(',');
+        f.print((int)ornithopter.funcMap[i]);
+    }
     f.print(F("],\"profile_id\":"));
     f.print((int)activeProfile);
     f.print(F(",\"model_name\":"));
@@ -1540,6 +1545,16 @@ void LoadOrnithopterConfig()
     if (o["profile_id"].is<int>())            setOrnithopterProfile((uint8_t)o["profile_id"].as<int>());
     if (o["model_name"].is<const char*>())
         strlcpy(ornithopter.modelName, o["model_name"].as<const char*>(), sizeof(ornithopter.modelName));
+    // Runtime servo routing — apply after profile_id so it overrides the profile
+    // default (drag-and-drop reorder in the Servo Output tab).
+    if (o["func_map"].is<JsonArray>()) {
+        JsonArray fmArr = o["func_map"].as<JsonArray>();
+        uint8_t order[ORNI_MAX_OUTPUTS];
+        uint8_t n = 0;
+        for (int i = 0; i < ORNI_MAX_OUTPUTS && i < (int)fmArr.size(); ++i)
+            order[n++] = (uint8_t)fmArr[i].as<int>();
+        ornithopter.setServoOrder(order, n);
+    }
     // Glitch Filter — CRSF channel glitch filter (clamped so a corrupt config can't
     // freeze every stick move or pass every glitch).
     if (o["glitch_active"].is<bool>())   ornithopter.glitchActive = o["glitch_active"].as<bool>();
@@ -1665,6 +1680,24 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     // Mixer profile — runtime-switchable
     int pid = _pteroParamInt(request, "profile_id", -1);
     if (pid >= 0) setOrnithopterProfile((uint8_t)pid);
+    // Servo routing — comma-separated ServoFunc tags (drag-and-drop reorder in
+    // the Servo Output tab). Re-maps which function drives which output pad.
+    if (request->hasParam("func_map", true)) {
+        const String &fm = request->getParam("func_map", true)->value();
+        uint8_t order[ORNI_MAX_OUTPUTS];
+        uint8_t n = 0;
+        int start = 0;
+        while (n < ORNI_MAX_OUTPUTS) {
+            int comma = fm.indexOf(',', start);
+            String tok = (comma < 0) ? fm.substring(start) : fm.substring(start, comma);
+            tok.trim();
+            if (tok.length() == 0) break;
+            order[n++] = (uint8_t)tok.toInt();
+            if (comma < 0) break;
+            start = comma + 1;
+        }
+        ornithopter.setServoOrder(order, n);
+    }
     // Zephyrus / Ondas gains
 #ifdef ZEPHYRUS_ENABLED
     ornithopter.cadenceGain     = (float)_pteroParamInt(request, "cadence_gain",       (int)ornithopter.cadenceGain);

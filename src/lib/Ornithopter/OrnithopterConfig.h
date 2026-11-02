@@ -100,12 +100,7 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
     // 0: SERVO_2WING
     { 2, { SF_LEFT_WING, SF_RIGHT_WING } },
     // 1: SERVO_2WING_1RUD
-#ifdef ORNI_SERVO_ORDER_RUDDER_FIRST
-    // Rudder-first wiring: CH1=head rudder, CH4=L wing, CH5=R wing (gyro on).
-    { 3, { SF_RUDDER, SF_LEFT_WING, SF_RIGHT_WING } },
-#else
     { 3, { SF_LEFT_WING, SF_RIGHT_WING, SF_RUDDER } },
-#endif
     // 2: SERVO_4WING — back-right drops when only 3 pads are broken out
     { 4, { SF_LEFT_WING, SF_RIGHT_WING, SF_BACK_LEFT_WING, SF_BACK_RIGHT_WING } },
     // 3: GEARBOX_2VTAIL_1RUD

@@ -25,6 +25,8 @@ class ServoPanel extends PteroElement
     _sweepPos:     {state: true}
     failsafeMode:  {state: true}
     failsafeDelay: {state: true}
+    _dragIndex:     {state: true}
+    _dragOverIndex: {state: true}
 
   constructor: ->
     super()
@@ -39,6 +41,8 @@ class ServoPanel extends PteroElement
     @_sweepPos     = 0
     @failsafeMode  = 'center'
     @failsafeDelay = 1000
+    @_dragIndex     = -1
+    @_dragOverIndex = -1
 
   # — Static config: real GPIO + servo function per pad, from /pteronautos/config —
   _applyConfig: (data) ->
@@ -81,11 +85,46 @@ class ServoPanel extends PteroElement
   _onSelect: (prop) -> (evt) =>
     @[prop] = evt.target.value
 
+  # — Drag-and-drop servo reorder — re-maps which function drives which pad.
+  _onDragStart: (i) -> (evt) =>
+    @_dragIndex = i
+    evt.dataTransfer?.effectAllowed = 'move'
+    try evt.dataTransfer?.setData 'text/plain', String(i)
+
+  _onDragOver: (i) -> (evt) =>
+    evt.preventDefault()
+    evt.dataTransfer?.dropEffect = 'move'
+    @_dragOverIndex = i
+
+  _onDrop: (i) -> (evt) =>
+    evt.preventDefault()
+    @_reorderServo @_dragIndex, i
+    @_dragIndex = -1
+    @_dragOverIndex = -1
+
+  _onDragEnd: (evt) =>
+    @_dragIndex = -1
+    @_dragOverIndex = -1
+
+  _reorderServo: (from, to) ->
+    return if from < 0 or to < 0 or from is to
+    fm = (@funcMap ? []).slice()
+    return if from >= fm.length or to >= fm.length
+    [fm[from], fm[to]] = [fm[to], fm[from]]
+    @funcMap = fm
+    @_persistServoOrder()
+
+  _persistServoOrder: ->
+    body = new URLSearchParams()
+    body.append 'func_map', (@funcMap ? []).join(',')
+    fetch('/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()})
+
   render: -> renderFn(this)
 
   # — Template Helpers —
 
   _servoChannels: -> Servo.channels @funcMap, @pwmPins
+  _rowStyle:      (i) -> if i is @_dragOverIndex then "background:#3a3a18;outline:1px dashed #da0;cursor:grabbing;" else "cursor:grab;"
   _liveUs:        (ch) -> Servo.liveUs ch, @servoLeftUs, @servoRightUs, @servoRudderUs, @servoMotorUs
   _liveLabel:     (ch) -> Servo.liveLabel @_liveUs ch
   _liveStyle:     (ch) -> Servo.liveStyle @_liveUs ch
