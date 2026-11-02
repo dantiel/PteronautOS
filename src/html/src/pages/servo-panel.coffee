@@ -35,8 +35,10 @@ class ServoPanel extends PteroElement
     @servoRudderUs = 1500
     @servoMotorUs  = 1500
     @linkUp        = false
-    @pwmPins       = []
-    @funcMap       = []
+    # Sensible defaults so the table is never empty before/without the one-shot
+    # /pteronautos/config load (which supplies the real per-pad GPIO + func_map).
+    @pwmPins       = [0, 1, 3]
+    @funcMap       = [1, 2, 3]
     @_sweeping     = false
     @_sweepPos     = 0
     @failsafeMode  = 'center'
@@ -48,8 +50,11 @@ class ServoPanel extends PteroElement
   _applyConfig: (data) ->
     o = data?.ornithopter
     return unless o
-    @pwmPins = o.pwm_pins ? []
-    @funcMap = o.func_map ? []
+    # Only override the constructor defaults when the firmware reports real
+    # channels. Empty arrays are legitimate (e.g. a companion with no local
+    # PWM), so keep the defaults in that case instead of blanking the table.
+    @pwmPins = o.pwm_pins if o.pwm_pins?.length
+    @funcMap = o.func_map if o.func_map?.length
 
   # — Apply polled state —
   _applyState: (data) ->

@@ -33,7 +33,7 @@ CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
 
 - **MCU:** ESP8285 @ 80MHz, 1MB Flash
 - **Rádio:** ExpressLRS 2.4GHz (SX1280)
-- **Giroscópio:** MPU6050 (GY-521) — I2C GPIO4(SDA)/GPIO5(SCL)
+- **Giroscópio:** MPU6050 (GY-521) — I2C GPIO1(SDA)/GPIO3(SCL)
 - **Servos:** 3 canais PWM (asa esquerda, asa direita, leme)
 - **Build:** `pio run -e PteronautOS_ESP8285_2400_RX`
 
