@@ -1009,6 +1009,16 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["type"]                = PROFILE_IS_GEARBOX ? "gearbox" : "servo";
     orni["kernel_fixed"]        = false;  // profile is runtime-switchable
     orni["pwm_outputs"]         = GPIO_PIN_PWM_OUTPUTS_COUNT;  // local servo pads (0 = companion)
+    // Per-pad GPIO + servo function, in natural silkscreen order (index 0 = first
+    // broken-out pad). Lets the Servo panel show the real pin for each channel so
+    // users can correlate with the Hardware (pwm_outputs) editor.
+    JsonArray pwmPins = orni["pwm_pins"].to<JsonArray>();
+    JsonArray funcMap = orni["func_map"].to<JsonArray>();
+    for (int ch = 0; ch < PROFILE.servoCount && ch < GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
+    {
+        pwmPins.add(GPIO_PIN_PWM_OUTPUTS[ch]);
+        funcMap.add(PROFILE.funcMap[ch]);
+    }
     orni["model_name"]          = ornithopter.modelName;
 
 #ifdef ZEPHYRUS_ENABLED

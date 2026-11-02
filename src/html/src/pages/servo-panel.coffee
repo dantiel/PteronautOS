@@ -9,12 +9,18 @@ import {i18n} from '../utils/i18n'
 ###
 class ServoPanel extends PteroElement
   pollRate: 2000
+  # Fetch /pteronautos/config once on mount for pwm_pins + func_map (the real
+  # per-pad GPIO + servo-function routing, not the old hardcoded channel table).
+  needsConfig: true
 
   @properties:
     servoLeftUs:   {state: true}
     servoRightUs:  {state: true}
     servoRudderUs: {state: true}
+    servoMotorUs:  {state: true}
     linkUp:        {state: true}
+    pwmPins:       {state: true}
+    funcMap:       {state: true}
     _sweeping:     {state: true}
     _sweepPos:     {state: true}
     failsafeMode:  {state: true}
@@ -25,11 +31,21 @@ class ServoPanel extends PteroElement
     @servoLeftUs   = 1500
     @servoRightUs  = 1500
     @servoRudderUs = 1500
+    @servoMotorUs  = 1500
     @linkUp        = false
+    @pwmPins       = []
+    @funcMap       = []
     @_sweeping     = false
     @_sweepPos     = 0
     @failsafeMode  = 'center'
     @failsafeDelay = 1000
+
+  # — Static config: real GPIO + servo function per pad, from /pteronautos/config —
+  _applyConfig: (data) ->
+    o = data?.ornithopter
+    return unless o
+    @pwmPins = o.pwm_pins ? []
+    @funcMap = o.func_map ? []
 
   # — Apply polled state —
   _applyState: (data) ->
@@ -39,6 +55,7 @@ class ServoPanel extends PteroElement
       @servoLeftUs   = Fmt.f0 o.servo_left_wing_us
       @servoRightUs  = Fmt.f0 o.servo_right_wing_us
       @servoRudderUs = Fmt.f0 o.servo_rudder_us
+      @servoMotorUs  = Fmt.f0 o.servo_motor_us
     # Sweep status from firmware
     if data.sweep
       wasSweeping = @_sweeping
@@ -68,8 +85,8 @@ class ServoPanel extends PteroElement
 
   # — Template Helpers —
 
-  _servoChannels: -> Servo.channels
-  _liveUs:        (ch) -> Servo.liveUs ch, @servoLeftUs, @servoRightUs, @servoRudderUs
+  _servoChannels: -> Servo.channels @funcMap, @pwmPins
+  _liveUs:        (ch) -> Servo.liveUs ch, @servoLeftUs, @servoRightUs, @servoRudderUs, @servoMotorUs
   _liveLabel:     (ch) -> Servo.liveLabel @_liveUs ch
   _liveStyle:     (ch) -> Servo.liveStyle @_liveUs ch
   _badgeStyle:    -> Style.badge Status.color @pollError, @linkUp

@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 مخرج المؤازرة',
     'servo.table.ch': 'قناة',
     'servo.table.name': 'الاسم',
-    'servo.table.pin': 'دبوس',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': 'مركز',
     'servo.table.min': 'أدنى',
     'servo.table.max': 'أقصى',

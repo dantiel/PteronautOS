@@ -177,7 +177,7 @@ export default {
     'servo.panel.title': '🔧 Servo Output',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Name',
-    'servo.table.pin': 'Pin',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': 'Center',
     'servo.table.min': 'Min',
     'servo.table.max': 'Max',

@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 सर्वो आउटपुट',
     'servo.table.ch': 'CH',
     'servo.table.name': 'नाम',
-    'servo.table.pin': 'पिन',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': 'केंद्र',
     'servo.table.min': 'न्यूनतम',
     'servo.table.max': 'अधिकतम',

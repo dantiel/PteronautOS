@@ -274,18 +274,53 @@ API =
 # ═══════════════════════════════════════════════════════════════════
 
 Servo =
-  # Channel definitions for servo panel table
-  _makeCh: (ch, name, pin, pinLabel, center = 1500, min = 1000, max = 2000) ->
-    {ch, name, pin, pinLabel, center, min, max
+  # Channel definitions for servo panel table. `func` is the ServoFunc tag from
+  # OrnithopterConfig.h; `pin` is the actual GPIO read from hardware.json pwm_outputs.
+  _makeCh: (ch, name, pin, func, center = 1500, min = 1000, max = 2000) ->
+    {ch, name, pin, func, center, min, max
+     pinLabel: "GPIO#{pin}"
      centerLabel: "#{center}µs", minLabel: "#{min}µs", maxLabel: "#{max}µs"
      failsafeLabel: "#{center}µs"}
 
-  # Lookup live microsecond value by channel name
-  liveUs: λ (ch, servoLeftUs, servoRightUs, servoRudderUs) ->
-    switch ch.name
-      when 'Left Wing'    then num servoLeftUs
-      when 'Right Wing'   then num servoRightUs
-      when 'Crest Rudder' then num servoRudderUs
+  # ServoFunc enum → human label (mirrors OrnithopterConfig.h)
+  funcName: λ (sf) ->
+    switch int(sf)
+      when 1 then 'Left Wing'
+      when 2 then 'Right Wing'
+      when 3 then 'Crest Rudder'
+      when 4 then 'Motor'
+      when 5 then 'V-Tail Left'
+      when 6 then 'V-Tail Right'
+      when 7 then 'Elevator'
+      when 8 then 'Back Left Wing'
+      when 9 then 'Back Right Wing'
+      when 10 then 'Aileron L'
+      when 11 then 'Aileron R'
+      when 12 then 'Drag L'
+      when 13 then 'Drag R'
+      when 14 then 'Tail Pitch'
+      when 15 then 'Tail Roll L'
+      when 16 then 'Tail Roll R'
+      when 17 then 'Elevon L'
+      when 18 then 'Elevon R'
+      when 19 then 'Tail PitchRot L'
+      when 20 then 'Tail PitchRot R'
+      else '—'
+
+  # Build channel rows from firmware func_map + pwm_pins (index 0 = first pad).
+  channels: λ (funcMap, pwmPins) ->
+    funcMap = funcMap ? []
+    pwmPins = pwmPins ? []
+    funcMap.map (sf, i) ->
+      Servo._makeCh (i + 1), (Servo.funcName sf), (pwmPins[i] ? 0), sf
+
+  # Lookup live microsecond value by servo function tag
+  liveUs: λ (ch, servoLeftUs, servoRightUs, servoRudderUs, servoMotorUs) ->
+    switch int(ch.func)
+      when 1 then num servoLeftUs
+      when 2 then num servoRightUs
+      when 3 then num servoRudderUs
+      when 4 then num servoMotorUs
       else 1500
 
   # Live display label (highlights non-neutral)
@@ -295,15 +330,6 @@ Servo =
   liveStyle: λ (liveUs) ->
     changed = liveUs isnt 1500
     "color:#{if changed then '#d4a017' else '#888'};font-family:monospace;"
-
-# Defined after Servo exists to avoid "undefined is not an object" in JS literal
-Servo.channels = [
-  Servo._makeCh 1, 'Left Wing',    0,  'GPIO0'
-  Servo._makeCh 2, 'Right Wing',   1,  'GPIO1'
-  Servo._makeCh 3, 'Crest Rudder', 3,  'GPIO3'
-  Servo._makeCh 4, 'AUX 4',        9,  'GPIO9'
-  Servo._makeCh 5, 'AUX 5',       10,  'GPIO10'
-]
 
 # ═══════════════════════════════════════════════════════════════════
 # Zephyrus — Gyro-specific helpers

@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 Выход Серво',
     'servo.table.ch': 'Кан',
     'servo.table.name': 'Имя',
-    'servo.table.pin': 'Пин',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': 'Центр',
     'servo.table.min': 'Мин',
     'servo.table.max': 'Макс',

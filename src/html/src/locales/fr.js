@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 Sortie Servo',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Nom',
-    'servo.table.pin': 'Broche',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': 'Centre',
     'servo.table.min': 'Min',
     'servo.table.max': 'Max',

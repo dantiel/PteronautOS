@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 서보 출력',
     'servo.table.ch': 'CH',
     'servo.table.name': '이름',
-    'servo.table.pin': '핀',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': '중앙',
     'servo.table.min': '최소',
     'servo.table.max': '최대',

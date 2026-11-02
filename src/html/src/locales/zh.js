@@ -145,7 +145,7 @@ export default {
     'servo.panel.title': '🔧 舵机输出',
     'servo.table.ch': '通道',
     'servo.table.name': '名称',
-    'servo.table.pin': '引脚',
+    'servo.table.pin': 'GPIO',
     'servo.table.center': '中位',
     'servo.table.min': '最小',
     'servo.table.max': '最大',
