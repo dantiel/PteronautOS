@@ -2652,14 +2652,6 @@ static void startMDNS()
   options += " -DTLM_REPORT_INTERVAL_MS=" + String(firmwareOptions.tlm_report_interval);
   options += " -DFAN_MIN_RUNTIME=" + String(firmwareOptions.fan_min_runtime);
   #endif
-server.addHandler(new AsyncCallbackJsonWebHandler("/options.json", UpdateSettings));
-#if defined(PTERONAUTOS)
-{
-  auto *backupHandler = new AsyncCallbackJsonWebHandler("/pteronautos/backup", PostPteronautosBackup);
-  backupHandler->setMaxContentLength(16384);
-  server.addHandler(backupHandler);
-}
-#endif // defined(PTERONAUTOS)
 #if defined(TARGET_RX)
   if (firmwareOptions.lock_on_first_connection)
   {
@@ -2802,6 +2794,11 @@ static void startServices()
   server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);
   server.on("/pteronautos/sweep/status", HTTP_GET, GetPteronautosSweepStatus);
   server.on("/pteronautos/backup", HTTP_GET, GetPteronautosBackup);
+  {
+    auto *backupHandler = new AsyncCallbackJsonWebHandler("/pteronautos/backup", PostPteronautosBackup);
+    backupHandler->setMaxContentLength(16384);
+    server.addHandler(backupHandler);
+  }
   server.on("/pteronautos/stick", HTTP_GET, GetPteronautosStick);
   server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
   server.on("/pteronautos/blackbox", HTTP_GET, GetPteronautosBlackbox);
