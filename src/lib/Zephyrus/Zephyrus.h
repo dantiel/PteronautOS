@@ -32,7 +32,7 @@ struct ZephyrBbFrame {
 
 class Zephyrus {
 public:
-    bool enabled;           // True if MPU6050 WHO_AM_I matched
+    bool enabled;           // True if the IMU WHO_AM_I matched (MPU6050 or LSM6DS3)
     bool gyroEnabled;       // Runtime toggle — true = auto-detect MPU at boot; false = no I2C/PID
     bool calibrated;        // True after bias calibration succeeds
     uint8_t boardRotation;  // Runtime board orientation (0-6, see ZephyrusConfig.h)

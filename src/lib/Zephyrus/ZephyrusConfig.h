@@ -60,12 +60,46 @@
   #define ZEPHYR_I2C_PRE_DETECT 1
 #endif
 
-// --- MPU6050 I2C Address ---
-#define ZEPHYR_MPU_ADDR      0x68
+// --- IMU Backend Selection --------------------------------------------------
+// Zephyrus drives one 6-DOF IMU over I2C. Two backends are compiled in:
+//   ZEPHYR_IMU_MPU6050  = GY-521 (MPU6050)     — default
+//   ZEPHYR_IMU_LSM6DS3  = GY-LSM6DS3 (LSM6DS3) — compile with
+//                         -D ZEPHYR_IMU=ZEPHYR_IMU_LSM6DS3
+// Only init/read/scale differ; the AHRS, PID, calibration and bus-recovery
+// paths are backend-agnostic.
+#define ZEPHYR_IMU_MPU6050  0
+#define ZEPHYR_IMU_LSM6DS3  1
+#ifndef ZEPHYR_IMU
+  #define ZEPHYR_IMU        ZEPHYR_IMU_MPU6050
+#endif
 
-// --- MPU6050 Scale Ranges ---
+// --- IMU I2C Address ---
+#if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
+  #ifndef ZEPHYR_IMU_ADDR
+    #define ZEPHYR_IMU_ADDR 0x6A   // GY-LSM6DS3 SA0 low; 0x6B when SA0 tied high
+  #endif
+#else
+  #ifndef ZEPHYR_IMU_ADDR
+    #define ZEPHYR_IMU_ADDR 0x68   // GY-521 (MPU6050) AD0 low
+  #endif
+#endif
+// Back-compat alias — the driver still references ZEPHYR_MPU_ADDR.
+#define ZEPHYR_MPU_ADDR     ZEPHYR_IMU_ADDR
+
+// --- MPU6050 Scale Ranges (GY-521 backend) ---
 #define ZEPHYR_ACCEL_SCALE   2         // ±2g → 16384 LSB/g
 #define ZEPHYR_GYRO_SCALE    250       // ±250°/s → 131 LSB/(°/s)
+
+// --- LSM6DS3 constants (GY-LSM6DS3 backend) ---
+#if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
+  #define ZEPHYR_LSM6DS3_WHO_AM_I     0x69
+  #define ZEPHYR_LSM6DS3_ODR_G        0x60    // 416 Hz gyro ODR (CTRL2_G[7:4])
+  #define ZEPHYR_LSM6DS3_FS_G         0x00    // ±245 dps
+  #define ZEPHYR_LSM6DS3_ODR_XL       0x40    // 104 Hz accel ODR (CTRL1_XL[7:4])
+  #define ZEPHYR_LSM6DS3_FS_XL        0x00    // ±2 g
+  #define ZEPHYR_LSM6DS3_GYRO_LSB_DPS 114.2857f // 8.75 mdps/LSB → LSB/(°/s)
+  #define ZEPHYR_LSM6DS3_ACCEL_LSB_G  16384.0f  // 0.061 mg/LSB → LSB/g
+#endif
 
 // --- DLPF Bandwidth (MPU6050 DLPF_CFG=3 → 42Hz accel, 42Hz gyro) ---
 #define ZEPHYR_DLPF_CFG      3

@@ -33,7 +33,7 @@ CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
 
 - **MCU:** ESP8285 @ 80MHz, 1MB Flash
 - **Rádio:** ExpressLRS 2.4GHz (SX1280)
-- **Giroscópio:** MPU6050 (GY-521) — I2C GPIO1(SDA)/GPIO3(SCL)
+- **Giroscópio:** MPU6050 (GY-521) ou LSM6DS3 (GY-LSM6DS3) — I2C GPIO1(SDA)/GPIO3(SCL)
 - **Servos:** 3 canais PWM (asa esquerda, asa direita, leme)
 - **Build:** `pio run -e PteronautOS_ESP8285_2400_RX`
 
@@ -41,6 +41,7 @@ CRSF (rádio) → rx_main → Ornithopter → waveform → PWM servos
 
 - `-D PTERONAUTOS=1` — flag de identidade do projecto
 - `-D ORNITHOPTER_MODE=1` — activa o módulo Ornithopter
+- `-D ZEPHYR_IMU=ZEPHYR_IMU_LSM6DS3` — usa o GY-LSM6DS3 em vez do GY-521 (default: MPU6050)
 - `PLATFORM_ESP8285=1`
 
 ## Proibições

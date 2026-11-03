@@ -60,6 +60,16 @@
 #define MPU_REG_ACCEL_XOUT_H   0x3B   // Start of 14-byte sensor block
 #define MPU_WHO_AM_I_VALUE     0x68
 
+// ---------------------------------------------------------------------------
+//  LSM6DS3 Register Map (GY-LSM6DS3 backend)
+// ---------------------------------------------------------------------------
+#define LSM6_REG_WHO_AM_I    0x0F
+#define LSM6_REG_CTRL1_XL    0x10   // accel ODR + full-scale
+#define LSM6_REG_CTRL2_G     0x11   // gyro ODR + full-scale
+#define LSM6_REG_CTRL3_C     0x12   // BDU, interrupts
+#define LSM6_REG_OUTX_L_G    0x22   // 12-byte block: gyro XYZ then accel XYZ (LE)
+#define LSM6_CTRL3_BDU       0x40   // block-data-update — no mid-sample tearing
+
 // PWR_MGMT_1 bits
 #define MPU_PWR1_DEVICE_RESET  0x80
 #define MPU_PWR1_SLEEP         0x40
@@ -251,6 +261,25 @@ void Zephyrus::_i2cBusRecover() {
 //  MPU6050 Initialization
 // ---------------------------------------------------------------------------
 bool Zephyrus::_mpuInit() {
+#if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
+    // --- GY-LSM6DS3 (LSM6DS3) backend: no device reset, no blocking delay ---
+    // Verify presence first, then configure — same order as the MPU path.
+    uint8_t who = _mpuRead(LSM6_REG_WHO_AM_I);
+    if (who != ZEPHYR_LSM6DS3_WHO_AM_I) {
+        return false;
+    }
+
+    // BDU on (block-data-update) so a 12-byte burst can't tear mid-sample.
+    _mpuWrite(LSM6_REG_CTRL3_C,  LSM6_CTRL3_BDU);
+    // Gyro: 416 Hz ODR, ±245 dps. Accel: 104 Hz ODR, ±2 g.
+    _mpuWrite(LSM6_REG_CTRL2_G,  ZEPHYR_LSM6DS3_ODR_G | ZEPHYR_LSM6DS3_FS_G);
+    _mpuWrite(LSM6_REG_CTRL1_XL, ZEPHYR_LSM6DS3_ODR_XL | ZEPHYR_LSM6DS3_FS_XL);
+
+    _accelScale = ZEPHYR_LSM6DS3_ACCEL_LSB_G;
+    _gyroScale  = ZEPHYR_LSM6DS3_GYRO_LSB_DPS;
+
+    return true;
+#else
     // Full device reset + PLL settle happens exactly ONCE per boot. It needs a
     // ~105ms blocking wait that must NEVER run on the flight hot path: blocking
     // servosUpdate() for >50ms starves PWM.feedWatchdog() and trips the PWM
@@ -315,12 +344,29 @@ bool Zephyrus::_mpuInit() {
     _gyroScale  = GYRO_LSB_PER_DPS[gyroIdx];
 
     return true;
+#endif
 }
 
 // ---------------------------------------------------------------------------
 //  Read sensor block — 14 bytes: AccelX..AccelZ, Temp, GyroX..GyroZ
 // ---------------------------------------------------------------------------
 bool Zephyrus::_mpuReadSensors() {
+#if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
+    uint8_t buf[12];
+    if (!_mpuBurstRead(LSM6_REG_OUTX_L_G, buf, 12)) {
+        return false;
+    }
+
+    // Little-endian int16; order is gyro XYZ then accel XYZ.
+    _gyroRaw[0]  = (int16_t)((buf[1]  << 8) | buf[0]);   // GX
+    _gyroRaw[1]  = (int16_t)((buf[3]  << 8) | buf[2]);   // GY
+    _gyroRaw[2]  = (int16_t)((buf[5]  << 8) | buf[4]);   // GZ
+    _accelRaw[0] = (int16_t)((buf[7]  << 8) | buf[6]);   // AX
+    _accelRaw[1] = (int16_t)((buf[9]  << 8) | buf[8]);   // AY
+    _accelRaw[2] = (int16_t)((buf[11] << 8) | buf[10]);  // AZ
+
+    return true;
+#else
     uint8_t buf[14];
     if (!_mpuBurstRead(MPU_REG_ACCEL_XOUT_H, buf, 14)) {
         return false;
@@ -336,6 +382,7 @@ bool Zephyrus::_mpuReadSensors() {
     _gyroRaw[2]  = (int16_t)((buf[12] << 8) | buf[13]);  // Z
 
     return true;
+#endif
 }
 
 // ---------------------------------------------------------------------------
