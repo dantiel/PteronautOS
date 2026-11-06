@@ -1288,14 +1288,13 @@ RxConfig::SetDefaults(bool commit)
                 mode = somSDA;
             }
 #if defined(ZEPHYRUS_ENABLED)
-            else if (GPIO_PIN_PWM_OUTPUTS[ch] == ZEPHYR_I2C_SCL)
-            {
-                mode = somSCL;
-            }
-            else if (GPIO_PIN_PWM_OUTPUTS[ch] == ZEPHYR_I2C_SDA)
-            {
-                mode = somSDA;
-            }
+            // PteronautOS: do NOT bake somSCL/somSDA into the per-index mode.
+            // The mode field is keyed by PWM index, but this branch keys off the
+            // pin that happens to sit at that index during reset. A later
+            // pwm_outputs reorder leaves a stale somSDA/somSCL behind, which
+            // devServoOutput::initialize() would then use to exclude the wrong
+            // pad. The real Zephyrus I2C pins are excluded by value in
+            // devServoOutput.cpp, so no mode-marker is needed here.
 #endif
             else if ((GPIO_PIN_RCSIGNAL_RX == U0RXD_GPIO_NUM && GPIO_PIN_PWM_OUTPUTS[ch] == U0RXD_GPIO_NUM) ||
                      (GPIO_PIN_RCSIGNAL_TX == U0TXD_GPIO_NUM && GPIO_PIN_PWM_OUTPUTS[ch] == U0TXD_GPIO_NUM))

@@ -127,8 +127,16 @@ static void servoWriteDshot(eServoOutputMode chMode, uint8_t ch, uint16_t us)
 
 static void servoWriteRaw(uint8_t ch, uint16_t us)
 {
+#if defined(PTERONAUTOS)
+    // Every PteronautOS pad is 333Hz servo PWM (see initialize()). A stale
+    // somDShot/somDShot3D mode would route this pad into servoWriteDshot(),
+    // which is a no-op on ESP8266 — silently killing the servo. Force the PWM
+    // write path regardless of the legacy per-index mode field.
+    const eServoOutputMode chMode = som50Hz;
+#else
     const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
     const eServoOutputMode chMode = (eServoOutputMode)chConfig->val.mode;
+#endif
     if (chMode == somDShot || chMode == somDShot3D)
     {
         servoWriteDshot(chMode, ch, us);
@@ -405,11 +413,21 @@ static bool initialize()
         }
 #endif
         // Mark servo pins that are being used for serial (or other purposes) as disconnected
+#if defined(PTERONAUTOS)
+        // PteronautOS drives every pad as 333Hz servo PWM. The per-INDEX mode
+        // field (somSerial/somSCL/somSDA/somDShot/…) is an ELRS-legacy concept
+        // keyed by index, not pin: a stale mode left by a previous hardware map
+        // or a LUA output-mode edit permanently kills whichever pad now sits at
+        // that index (the classic "one PWM index is always ignored" fault).
+        // Real pin conflicts — Zephyrus I2C, debug UART, MUSHIN — are excluded
+        // by VALUE in the blocks below, so ignore the mode field entirely here.
+#else
         auto mode = (eServoOutputMode)config.GetPwmChannel(ch)->val.mode;
         if (mode >= somSerial)
         {
             pin = UNDEF_PIN;
         }
+#endif
 #if defined(ZEPHYRUS_ENABLED)
         // Exclude Zephyrus I2C pins from PWM (reserved for MPU6050 gyro)
         if (pin != UNDEF_PIN && (pin == ZEPHYR_I2C_SDA || pin == ZEPHYR_I2C_SCL))
@@ -444,6 +462,10 @@ static bool initialize()
         // Initialize all servos to low ASAP
         if (pin != UNDEF_PIN)
         {
+#if defined(PTERONAUTOS)
+            // All PteronautOS pads are PWM — never OnOff/DShot (mode ignored).
+            DBGLN("Initializing PWM output: ch: %d, pin: %d", ch, pin);
+#else
             if (mode == somOnOff)
             {
                 DBGLN("Initializing digital output: ch: %d, pin: %d", ch, pin);
@@ -452,6 +474,7 @@ static bool initialize()
             {
                 DBGLN("Initializing PWM output: ch: %d, pin: %d", ch, pin);
             }
+#endif
 
             pinMode(pin, OUTPUT);
             digitalWrite(pin, LOW);
