@@ -1479,31 +1479,45 @@ static void bootAssert(bool hold) {
   }
 }
 
-// 'bl' incantation — a CRSF COMMAND frame (dest=receiver 0xEC, type=0x32) whose
-// payload is the two letters 'b','l'. The receiver's RXEndpoint::handleRaw
-// answers it with reset_into_bootloader() → ESP.rebootIntoUartDownloadMode(),
-// dropping a *running* EP2 into its ROM bootloader over the shared UART — no
-// BOOT hold, no power-cycle. CRC8/DVB-S2 (poly 0xD5) over {0x32,'b','l'} = 0x0A.
+// 'bl' incantation — the full ExpressLRS bootloader command, replicated verbatim
+// from the proven rp2040_uart_adapter: a training preamble (the esptool sync token
+// 0x07 0x07 0x12 0x20 + the 32×0x55 autobaud calibration run) followed by a CRSF
+// COMMAND frame {dest 0xEC, type 0x32, payload "blESP82"}. The receiver's
+// MUSHIN/RXEndpoint answer with reset_into_bootloader() →
+// ESP.rebootIntoUartDownloadMode(), dropping a *running* EP2 into its ROM
+// bootloader over the shared UART — no BOOT hold, no power-cycle. The training
+// run also flushes any stale MUSHIN envelope state so the 0xEC sync is never
+// absorbed as a data byte.
 static void whisperRebootToBootloader() {
-  uint8_t bl[6];
+  // CRSF COMMAND: EC | 09 | 32 | b l E S P 8 2 | CRC8 (CRC over type+payload).
+  uint8_t bl[11];
   bl[0] = 0xEC;                                  // CRSF_ADDRESS_CRSF_RECEIVER
-  bl[1] = 0x04;                                  // frame_size = type(1) + 'bl'(2) + crc(1)
+  bl[1] = 0x09;                                  // frame_size = type(1) + "blESP82"(7) + crc(1)
   bl[2] = 0x32;                                  // CRSF_FRAMETYPE_COMMAND
   bl[3] = 'b';
   bl[4] = 'l';
-  bl[5] = Companion::crc(bl + 2, 3);             // 0x0A
+  bl[5] = 'E';
+  bl[6] = 'S';
+  bl[7] = 'P';
+  bl[8] = '8';
+  bl[9] = '2';
+  bl[10] = Companion::crc(bl + 2, 8);            // CRC8/DVB-S2 over {0x32,'b','l','E','S','P','8','2'}
+
   crsfSerialBegin();                             // the incantation is spoken at CRSF_BAUD (420000)
-  // A single 6-byte frame over a freshly re-initialized UART can be lost if the
-  // receiver's parser is mid-frame on a stale MUSHIN envelope (the 0xEC sync is
-  // then absorbed as a data byte and the whole incantation is discarded). Speak
-  // it three times, each separated by >5 ms so the receiver's parser timeout
-  // resets to idle and every attempt starts from a clean sync.
-  for (int attempt = 0; attempt < 3; ++attempt) {
-    CRSF_SERIAL.write(bl, sizeof(bl));
-    CRSF_SERIAL.flush();
-    if (attempt < 2) delay(6);                   // > Companion::Parser 5 ms timeout
-  }
-  Serial.println("YOSHIMITSU: 'bl' whispered at 420000 — the receiver descends into ROM bootloader.");
+
+  while (CRSF_SERIAL.available()) (void)CRSF_SERIAL.read();   // clear any stale bytes
+
+  // esptool sync token + autobaud calibration — primes the receiver's UART.
+  static const uint8_t training[] = { 0x07, 0x07, 0x12, 0x20 };
+  CRSF_SERIAL.write(training, sizeof(training));
+  for (int i = 0; i < 32; ++i) CRSF_SERIAL.write((uint8_t)0x55);
+  CRSF_SERIAL.flush();
+  delay(200);
+
+  CRSF_SERIAL.write(bl, sizeof(bl));
+  CRSF_SERIAL.flush();
+
+  Serial.println("YOSHIMITSU: full ELRS 'bl ESP82' command spoken at 420000 — the receiver descends into ROM bootloader.");
 }
 
 #if YOSHI_RP2040
