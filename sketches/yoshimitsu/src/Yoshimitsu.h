@@ -2498,11 +2498,13 @@ static void applyResetTapStance() {
     Serial.print("YOSHIMITSU: RESET-tap "); Serial.print((int)taps);
     Serial.print(" → "); Serial.println(STANCE_NAME[stance]);
   } else {
-    // No fresh tap → this is a plain boot (possibly after a power cut). Restore
-    // the last stance from flash, so a shared-rail power-cycle does not yank the
-    // board back to KINCHO mid-flash.
+    // No fresh tap → plain boot. Always land in a flight stance: restore a saved
+    // KINCHO / MANJI_DRAGONFLY, otherwise stay on the KINCHO default from setup().
+    // The flasher/bench poses (MEDITATION, FLEA, NSS, BACK_TURNED) are reached
+    // deliberately via a RESET-tap streak or the POSE command — never by a plain
+    // power-on, so a board left in MEDITATION cannot strand itself there.
     uint8_t saved = EEPROM.read(7);
-    if (saved < STANCE_COUNT && saved != STANCE_FLEA) {
+    if (saved == STANCE_KINCHO || saved == STANCE_MANJI_DRAGONFLY) {
       stance = (Stance)saved;
       Serial.print("YOSHIMITSU: resume "); Serial.println(STANCE_NAME[stance]);
     }

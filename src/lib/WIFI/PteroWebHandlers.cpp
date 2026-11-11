@@ -278,6 +278,13 @@ extern void stopServoSweep();
 extern bool isServoSweepActive();
 extern uint16_t getServoSweepUs();
 
+// ── Mushin bridge externs (defined in MushinNoShin.cpp) ───────────
+#ifdef MUSHIN_ENABLED
+extern bool mushinIsLinked();
+extern uint8_t mushinMuscleVersion();
+extern uint32_t mushinRawRx();
+#endif
+
 // State endpoint — AsyncJsonResponse (same proven pattern as GetPteronautosSystem).
 // ArduinoJson v7 auto-grows from heap. No stack pressure, no format-string bugs.
 void LoadOrnithopterConfig();
@@ -1345,6 +1352,22 @@ static void GetPteronautosSweepStatus(AsyncWebServerRequest *request)
     request->send(200, "application/json", String(sbuf));
 }
 
+// ── Mushin bridge health (spirit side) ────────────────────────────
+// The muscle (RP2040) owns the servos; this EP2 is the spirit and must hear the
+// muscle's 1 Hz ANNOUNCE to consider the bridge "linked". This endpoint is the
+// definitive probe: linked=false means the muscle→spirit heartbeat is not
+// arriving (wiring / baud / EP2 crash-loop), independent of any servo movement.
+#ifdef MUSHIN_ENABLED
+static void GetPteronautosMushinStatus(AsyncWebServerRequest *request)
+{
+    char buf[128];
+    snprintf(buf, sizeof(buf), "{\"linked\":%d,\"muscleVersion\":%u,\"rawRx\":%u}",
+        mushinIsLinked() ? 1 : 0, (unsigned)mushinMuscleVersion(),
+        (unsigned)mushinRawRx());
+    request->send(200, "application/json", buf);
+}
+#endif
+
 // ── Full Config Backup / Restore ────────────────────────────────
 // GET  /pteronautos/backup — one JSON {meta, options, config, pteronautos}
 // POST /pteronautos/backup — restore that same shape, then reboot.
@@ -1549,6 +1572,9 @@ void registerPteronautosHandlers(AsyncWebServer &server)
     server.on("/pteronautos/rx-config", HTTP_GET, GetPteronautosRxConfig);
     server.on("/pteronautos/sweep", HTTP_POST, PostPteronautosSweep);
     server.on("/pteronautos/sweep/status", HTTP_GET, GetPteronautosSweepStatus);
+#ifdef MUSHIN_ENABLED
+    server.on("/pteronautos/mushin/status", HTTP_GET, GetPteronautosMushinStatus);
+#endif
     server.on("/pteronautos/backup", HTTP_GET, GetPteronautosBackup);
     {
         auto *backupHandler = new AsyncCallbackJsonWebHandler("/pteronautos/backup", PostPteronautosBackup);

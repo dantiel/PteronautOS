@@ -90,6 +90,11 @@ uint8_t mushinMuscleVersion()
     return mushin.muscleVersion();
 }
 
+uint32_t mushinRawRx()
+{
+    return mushin.rawRx();
+}
+
 const MushinTelemetry &mushinTelemetry()
 {
     return mushin.telemetry();
@@ -118,6 +123,7 @@ void MushinNoShin::update(uint32_t nowMs)
 
     while (_serial->available())
     {
+        ++_rawRx;
         if (!_transport.feed((uint8_t)_serial->read(), nowMs)) continue;
         // The muscle's flasher bridge (YOSHIMITSU) drops a *running* spirit into
         // its ROM bootloader with a CRSF COMMAND frame {dest 0xEC, type 0x32,

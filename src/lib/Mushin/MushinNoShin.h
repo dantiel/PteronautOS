@@ -87,6 +87,7 @@ public:
     bool isLinked() const;
     uint8_t announcedServoCount() const { return _announcedServos; }
     uint8_t muscleVersion() const { return _announcedVersion; }
+    uint32_t rawRx() const { return _rawRx; }
     const MushinTelemetry &telemetry() const { return _tele; }
     bool telemetryFresh(uint32_t nowMs) const
     {
@@ -105,6 +106,7 @@ private:
     uint8_t  _announcedServos = 0;
     uint8_t  _announcedVersion = 0;
     bool     _linked = false;
+    uint32_t _rawRx = 0;             // every byte read off UART0, valid or not
     MushinTelemetry _tele;
     uint32_t _lastTelemetryMs = 0;
 };
@@ -119,6 +121,7 @@ void mushinStop();
 void mushinEmitSweep(uint16_t us);
 void mushinEmitIntent(const Motion::Intent &intent, uint32_t nowMs);
 uint8_t mushinMuscleVersion();
+uint32_t mushinRawRx();
 const MushinTelemetry &mushinTelemetry();
 bool mushinTelemetryFresh(uint32_t nowMs);
 #endif
