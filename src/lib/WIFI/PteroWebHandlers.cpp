@@ -340,9 +340,12 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["roll_correction"]   = zephyrus.rollCorrection;
     zeph["yaw_correction"]    = zephyrus.yawCorrection;
     zeph["pitch_correction"]  = zephyrus.pitchCorrection;
-    zeph["rudder_correction"] = zephyrus.rudderCorrection;
     zeph["board_rotation"]    = zephyrus.boardRotation;
     zeph["slew_gain"] = (int)zephyrus.slewGain;
+    zeph["gyro_lpf"]         = zephyrus.gyroLpfShift;
+    zeph["mode"]             = (int)zephyrus.gyroMode;
+    zeph["mode_name"]        = (zephyrus.gyroMode == GYRO_MODE_HORIZON) ? "HORIZON"
+                             : (zephyrus.gyroMode == GYRO_MODE_RATE)    ? "RATE" : "OFF";
     zeph["wing_roll_gain"]      = (int)ornithopter.wingRollGain;
     zeph["wing_pitch_gain"]     = (int)ornithopter.wingPitchGain;
     zeph["wing_pitch_fer_gain"] = (int)ornithopter.wingPitchFerGain;
@@ -381,7 +384,6 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["roll_correction"]   = 0.0f;
     zeph["yaw_correction"]    = 0.0f;
     zeph["pitch_correction"]  = 0.0f;
-    zeph["rudder_correction"] = 0.0f;
     zeph["board_rotation"]    = 0;
     zeph["wing_roll_gain"]    = 0;
     zeph["wing_pitch_gain"]   = 0;
@@ -517,8 +519,6 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["aileron_skew_rate_mix"] = (int)ornithopter.flightProfiles[i].aileronSkewRateMix;
         p["glide_angle_deg"]       = ornithopter.flightProfiles[i].glideAngleDeg;
         p["flapping_angle_deg"]    = (int)ornithopter.flightProfiles[i].flappingAngleDeg;
-        p["aileron_scale"]         = (int)ornithopter.flightProfiles[i].aileronScale;
-        p["elevator_scale"]        = (int)ornithopter.flightProfiles[i].elevatorScale;
         p["rudder_ferocity_range"] = (int)ornithopter.flightProfiles[i].rudderFerocityRange;
         p["rudder_amplitude_differential"] = (int)ornithopter.flightProfiles[i].rudderAmplitudeDifferential;
         p["elevator_ferocity_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityMix;
@@ -679,10 +679,6 @@ static bool SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].glideAngleDeg);
         f.print(F(",\"flapping_angle_deg\":"));
         f.print((int)ornithopter.flightProfiles[i].flappingAngleDeg);
-        f.print(F(",\"aileron_scale\":"));
-        f.print((int)ornithopter.flightProfiles[i].aileronScale);
-        f.print(F(",\"elevator_scale\":"));
-        f.print((int)ornithopter.flightProfiles[i].elevatorScale);
         f.print(F(",\"rudder_ferocity_range\":"));
         f.print((int)ornithopter.flightProfiles[i].rudderFerocityRange);
         f.print(F(",\"rudder_amplitude_differential\":"));
@@ -705,6 +701,10 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.rudderYawWeight);
     f.print(F(",\"rudder_roll_weight\":"));
     f.print((int)ornithopter.rudderRollWeight);
+    f.print(F(",\"aileron_scale\":"));
+    f.print((int)ornithopter.aileronScale);
+    f.print(F(",\"elevator_scale\":"));
+    f.print((int)ornithopter.elevatorScale);
     f.print(F(",\"elevon_scale\":"));
     f.print((int)ornithopter.elevonScale);
     f.print(F(",\"motor_min_us\":"));
@@ -756,6 +756,10 @@ static bool SaveOrnithopterConfig()
     f.print(zephyrus.gyroEnabled ? "true" : "false");
     f.print(F(",\"slew_gain\":"));
     f.print((int)zephyrus.slewGain);
+    f.print(F(",\"gyro_lpf\":"));
+    f.print((int)zephyrus.gyroLpfShift);
+    f.print(F(",\"board_rotation\":"));
+    f.print((int)zephyrus.boardRotation);
     f.print(F(",\"wing_roll_gain\":"));
     f.print((int)ornithopter.wingRollGain);
     f.print(F(",\"wing_pitch_gain\":"));
@@ -876,8 +880,6 @@ void LoadOrnithopterConfig()
                             if (fa >  15) fa =  15;
                             dst.flappingAngleDeg = (int8_t)fa;
                         }
-            if (p["aileron_scale"].is<int>())         dst.aileronScale        = p["aileron_scale"].as<int>();
-            if (p["elevator_scale"].is<int>())        dst.elevatorScale       = p["elevator_scale"].as<int>();
             if (p["rudder_ferocity_range"].is<int>()) dst.rudderFerocityRange = p["rudder_ferocity_range"].as<int>();
             if (p["rudder_amplitude_differential"].is<int>()) dst.rudderAmplitudeDifferential = p["rudder_amplitude_differential"].as<int>();
             if (p["elevator_ferocity_mix"].is<int>()) dst.elevatorFerocityMix = p["elevator_ferocity_mix"].as<int>();
@@ -911,6 +913,8 @@ void LoadOrnithopterConfig()
     // Global mixer params
     if (o["rudder_yaw_weight"].is<int>())     ornithopter.rudderYawWeight      = o["rudder_yaw_weight"].as<int>();
     if (o["rudder_roll_weight"].is<int>())    ornithopter.rudderRollWeight     = o["rudder_roll_weight"].as<int>();
+    if (o["aileron_scale"].is<int>())         ornithopter.aileronScale         = o["aileron_scale"].as<int>();
+    if (o["elevator_scale"].is<int>())        ornithopter.elevatorScale        = o["elevator_scale"].as<int>();
     if (o["elevon_scale"].is<int>())          ornithopter.elevonScale          = o["elevon_scale"].as<int>();
     if (o["motor_min_us"].is<int>())          ornithopter.motorMinUs           = (uint16_t)o["motor_min_us"].as<int>();
     if (o["motor_max_us"].is<int>())          ornithopter.motorMaxUs           = (uint16_t)o["motor_max_us"].as<int>();
@@ -992,6 +996,15 @@ void LoadOrnithopterConfig()
         if (sg > 100.0f) sg = 100.0f;
         zephyrus.slewGain = sg;
     }
+    if (o["gyro_lpf"].is<int>()) {
+        int v = o["gyro_lpf"].as<int>();
+        if (v < 0) v = 0; else if (v > 6) v = 6;
+        zephyrus.gyroLpfShift = (uint8_t)v;
+    }
+    if (o["board_rotation"].is<int>()) {
+        int v = o["board_rotation"].as<int>();
+        if (v >= 0 && v <= 6) zephyrus.setBoardRotation((uint8_t)v);
+    }
     if (o["wing_roll_gain"].is<int>()) {
         int v = o["wing_roll_gain"].as<int>();
         if (v < -100) v = -100; else if (v > 100) v = 100;
@@ -1029,15 +1042,15 @@ void LoadOrnithopterConfig()
     }
     // Runtime PID gains — clamped to sane envelopes so a corrupt config can't
     // destabilize the loop (Kp ≤10, Ki/Kd ≤2, Imax ≤100).
-    if (o["pid_roll_p"].is<float>())  { float v = o["pid_roll_p"].as<float>();  if (v >= 0 && v <= 10) zephyrus.rollKp = v; }
+    if (o["pid_roll_p"].is<float>())  { float v = o["pid_roll_p"].as<float>();  if (v >= 0 && v <= 8) zephyrus.rollKp = v; }
     if (o["pid_roll_i"].is<float>())  { float v = o["pid_roll_i"].as<float>();  if (v >= 0 && v <= 2)  zephyrus.rollKi = v; }
     if (o["pid_roll_d"].is<float>())  { float v = o["pid_roll_d"].as<float>();  if (v >= 0 && v <= 2)  zephyrus.rollKd = v; }
     if (o["pid_roll_max"].is<float>()){ float v = o["pid_roll_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.rollImax = v; }
-    if (o["pid_pitch_p"].is<float>()) { float v = o["pid_pitch_p"].as<float>(); if (v >= 0 && v <= 10) zephyrus.pitchKp = v; }
+    if (o["pid_pitch_p"].is<float>()) { float v = o["pid_pitch_p"].as<float>(); if (v >= 0 && v <= 8) zephyrus.pitchKp = v; }
     if (o["pid_pitch_i"].is<float>()) { float v = o["pid_pitch_i"].as<float>(); if (v >= 0 && v <= 2)  zephyrus.pitchKi = v; }
     if (o["pid_pitch_d"].is<float>()) { float v = o["pid_pitch_d"].as<float>(); if (v >= 0 && v <= 2)  zephyrus.pitchKd = v; }
     if (o["pid_pitch_max"].is<float>()){ float v = o["pid_pitch_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.pitchImax = v; }
-    if (o["pid_yaw_p"].is<float>())   { float v = o["pid_yaw_p"].as<float>();   if (v >= 0 && v <= 10) zephyrus.yawKp = v; }
+    if (o["pid_yaw_p"].is<float>())   { float v = o["pid_yaw_p"].as<float>();   if (v >= 0 && v <= 8) zephyrus.yawKp = v; }
     if (o["pid_yaw_i"].is<float>())   { float v = o["pid_yaw_i"].as<float>();   if (v >= 0 && v <= 2)  zephyrus.yawKi = v; }
     if (o["pid_yaw_d"].is<float>())   { float v = o["pid_yaw_d"].as<float>();   if (v >= 0 && v <= 2)  zephyrus.yawKd = v; }
     if (o["pid_yaw_max"].is<float>()) { float v = o["pid_yaw_max"].as<float>(); if (v >= 0 && v <= 100) zephyrus.yawImax = v; }
@@ -1144,16 +1157,21 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     if (slewGain < 0.0f) slewGain = 0.0f;
     if (slewGain > 100.0f) slewGain = 100.0f;
     zephyrus.slewGain = slewGain;
+    int glpf = _pteroParamInt(request, "gyro_lpf", (int)zephyrus.gyroLpfShift);
+    if (glpf < 0) glpf = 0; else if (glpf > 6) glpf = 6;
+    zephyrus.gyroLpfShift = (uint8_t)glpf;
+    int brot = _pteroParamInt(request, "board_rotation", (int)zephyrus.boardRotation);
+    if (brot >= 0 && brot <= 6) zephyrus.setBoardRotation((uint8_t)brot);
     // Runtime PID gains — clamped to the same envelopes as LoadOrnithopterConfig
-    float rp  = _pteroParamFloat(request, "pid_roll_p",  zephyrus.rollKp);   if (rp  < 0) rp  = 0; else if (rp  > 10)  rp  = 10;  zephyrus.rollKp  = rp;
+    float rp  = _pteroParamFloat(request, "pid_roll_p",  zephyrus.rollKp);   if (rp  < 0) rp  = 0; else if (rp  > 8)   rp  = 8;   zephyrus.rollKp  = rp;
     float ri  = _pteroParamFloat(request, "pid_roll_i",  zephyrus.rollKi);   if (ri  < 0) ri  = 0; else if (ri  > 2)   ri  = 2;   zephyrus.rollKi  = ri;
     float rd  = _pteroParamFloat(request, "pid_roll_d",  zephyrus.rollKd);   if (rd  < 0) rd  = 0; else if (rd  > 2)   rd  = 2;   zephyrus.rollKd  = rd;
     float rmx = _pteroParamFloat(request, "pid_roll_max", zephyrus.rollImax); if (rmx < 0) rmx = 0; else if (rmx > 100) rmx = 100; zephyrus.rollImax = rmx;
-    float pp  = _pteroParamFloat(request, "pid_pitch_p", zephyrus.pitchKp);  if (pp  < 0) pp  = 0; else if (pp  > 10)  pp  = 10;  zephyrus.pitchKp  = pp;
+    float pp  = _pteroParamFloat(request, "pid_pitch_p", zephyrus.pitchKp);  if (pp  < 0) pp  = 0; else if (pp  > 8)   pp  = 8;   zephyrus.pitchKp  = pp;
     float pi  = _pteroParamFloat(request, "pid_pitch_i", zephyrus.pitchKi);  if (pi  < 0) pi  = 0; else if (pi  > 2)   pi  = 2;   zephyrus.pitchKi  = pi;
     float pd  = _pteroParamFloat(request, "pid_pitch_d", zephyrus.pitchKd);  if (pd  < 0) pd  = 0; else if (pd  > 2)   pd  = 2;   zephyrus.pitchKd  = pd;
     float pmx = _pteroParamFloat(request, "pid_pitch_max", zephyrus.pitchImax); if (pmx < 0) pmx = 0; else if (pmx > 100) pmx = 100; zephyrus.pitchImax = pmx;
-    float yp  = _pteroParamFloat(request, "pid_yaw_p",  zephyrus.yawKp);     if (yp  < 0) yp  = 0; else if (yp  > 10)  yp  = 10;  zephyrus.yawKp   = yp;
+    float yp  = _pteroParamFloat(request, "pid_yaw_p",  zephyrus.yawKp);     if (yp  < 0) yp  = 0; else if (yp  > 8)   yp  = 8;   zephyrus.yawKp   = yp;
     float yi  = _pteroParamFloat(request, "pid_yaw_i",  zephyrus.yawKi);     if (yi  < 0) yi  = 0; else if (yi  > 2)   yi  = 2;   zephyrus.yawKi   = yi;
     float yd  = _pteroParamFloat(request, "pid_yaw_d",  zephyrus.yawKd);     if (yd  < 0) yd  = 0; else if (yd  > 2)   yd  = 2;   zephyrus.yawKd   = yd;
     float ymx = _pteroParamFloat(request, "pid_yaw_max", zephyrus.yawImax);  if (ymx < 0) ymx = 0; else if (ymx > 100) ymx = 100; zephyrus.yawImax = ymx;
@@ -1167,8 +1185,6 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         int8_t  flapAng = (int8_t)_pteroParamInt(request, "flapping_angle_deg",  defaults.flappingAngleDeg);
         if (flapAng < -15) flapAng = -15;
         if (flapAng >  15) flapAng =  15;
-    float   ail   = (float)_pteroParamInt(request, "aileron_scale",         (int)defaults.aileronScale);
-    float   elev  = (float)_pteroParamInt(request, "elevator_scale",        (int)defaults.elevatorScale);
     float   rudRng= (float)_pteroParamInt(request, "rudder_ferocity_range", (int)defaults.rudderFerocityRange);
     float   rudAmpDiff = (float)_pteroParamInt(request, "rudder_amplitude_differential", (int)defaults.rudderAmplitudeDifferential);
     float   elevFerMix = (float)_pteroParamInt(request, "elevator_ferocity_mix", (int)defaults.elevatorFerocityMix);
@@ -1208,15 +1224,13 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
 
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
         ornithopter.returnFerocity      = rf;
         ornithopter.glideAngleDeg       = glide;
         ornithopter.flappingAngleDeg    = flapAng;
-        ornithopter.aileronScale        = ail;
-        ornithopter.elevatorScale       = elev;
         ornithopter.rudderFerocityRange = rudRng;
         ornithopter.rudderAmplitudeDifferential = rudAmpDiff;
         ornithopter.elevatorFerocityMix = elevFerMix;
@@ -1231,12 +1245,14 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.aileronSkewMix      = ailSkewMix;
         ornithopter.throttleSkewRateMix = thrSkewRateMix;
         ornithopter.aileronSkewRateMix = ailSkewRateMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, ail, elev, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     }
 
     // Global mixer params (not per-profile)
     ornithopter.rudderYawWeight    = (float)_pteroParamInt(request, "rudder_yaw_weight",  (int)ornithopter.rudderYawWeight);
     ornithopter.rudderRollWeight   = (float)_pteroParamInt(request, "rudder_roll_weight", (int)ornithopter.rudderRollWeight);
+    ornithopter.aileronScale       = (float)_pteroParamInt(request, "aileron_scale",      (int)ornithopter.aileronScale);
+    ornithopter.elevatorScale      = (float)_pteroParamInt(request, "elevator_scale",     (int)ornithopter.elevatorScale);
     ornithopter.elevonScale        = (float)_pteroParamInt(request, "elevon_scale",       (int)ornithopter.elevonScale);
     ornithopter.motorMinUs         = (uint16_t)_pteroParamInt(request, "motor_min_us",    ornithopter.motorMinUs);
     ornithopter.motorMaxUs         = (uint16_t)_pteroParamInt(request, "motor_max_us",    ornithopter.motorMaxUs);
@@ -1491,6 +1507,22 @@ static void PostPteronautosStick(AsyncWebServerRequest *request)
     request->send(200, "application/json", "{\"ok\":1}");
 }
 
+// POST /pteronautos/orientation — form-urlencoded: rotation=0..6
+// Runtime MPU board-rotation change + persist. The WebUI API.setOrientation
+// posts here (this route was previously missing → 404 → the panel selector
+// silently no-oped). setBoardRotation remaps axes on the next update() tick.
+#ifdef ZEPHYRUS_ENABLED
+static void PostPteronautosOrientation(AsyncWebServerRequest *request)
+{
+    int rot = _pteroParamInt(request, "rotation", (int)zephyrus.boardRotation);
+    if (rot < 0) rot = 0;
+    if (rot > 6) rot = 6;
+    zephyrus.setBoardRotation((uint8_t)rot);
+    SaveOrnithopterConfig();
+    request->send(200, "application/json", "{\"ok\":1}");
+}
+#endif
+
 static void GetPteronautosStick(AsyncWebServerRequest *request)
 {
     PostPteronautosStick(request); // same response
@@ -1525,6 +1557,9 @@ void registerPteronautosHandlers(AsyncWebServer &server)
     }
     server.on("/pteronautos/stick", HTTP_GET, GetPteronautosStick);
     server.on("/pteronautos/stick", HTTP_POST, PostPteronautosStick);
+#ifdef ZEPHYRUS_ENABLED
+    server.on("/pteronautos/orientation", HTTP_POST, PostPteronautosOrientation);
+#endif
     server.on("/pteronautos/blackbox", HTTP_GET, GetPteronautosBlackbox);
 }
 #endif // defined(PTERONAUTOS)

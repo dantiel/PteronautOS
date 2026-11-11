@@ -33,7 +33,7 @@ Ornithopter::Ornithopter()
   , voiceAileron(992), voiceElevator(992)
   , voiceThrottle(172), voiceRudder(992)
   , voiceArm(172)
-  , voiceFreq(992), voiceProfile(992)
+  , voiceFreq(992), voiceProfile(992), voiceGyro(992)   // gyro centre → RATE damper (safe default)
   , activeFlightProfile(1)
   , lastThrottlePct(0.0f)
   , lastFlapHz(0.0f)
@@ -145,6 +145,7 @@ Ornithopter::Ornithopter()
     stickChannels[STK_ARM]      = 1811; // armed (CRSF full)
     stickChannels[STK_FREQ]     = 1500; // mid flap frequency
     stickChannels[STK_PROFILE]  = 992;  // profile selector mid
+    stickChannels[STK_GYRO]     = 1811; // gyro ON by default
     for (uint8_t i = 0; i < SF_COUNT; ++i) { _f[i] = ORNI_SERVO_CENTER_US; servoTrimUs[i] = ORNI_SERVO_TRIM_US; }
     if (PROFILE_IS_GEARBOX) {
         _f[SF_MOTOR] = ORNI_SERVO_MIN_US;  // motor stopped
@@ -261,6 +262,7 @@ void Ornithopter::_readChannels() {
         voiceArm      = stickChannels[STK_ARM];
         voiceFreq     = stickChannels[STK_FREQ];
         voiceProfile  = stickChannels[STK_PROFILE];
+        voiceGyro     = stickChannels[STK_GYRO];
     } else {
         _applyGlitchFilter();
     }
@@ -316,6 +318,7 @@ bool Ornithopter::update() {
         voiceArm      = 1811;  // armed — mixer runs, throttle keeps it gliding
         voiceFreq     = 992;
         voiceProfile  = 992;
+        voiceGyro     = 992;   // gyro RATE — bench mode keeps the damper live (no self-level drift)
     }
     if (!linkUp && !stickOverride && !benchMode) {
         for (uint8_t i = 0; i < SF_COUNT; ++i) _f[i] = ORNI_SERVO_CENTER_US;

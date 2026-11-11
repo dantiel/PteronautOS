@@ -16,6 +16,16 @@
 #include "MesozoicAttitude.h"
 #endif
 
+// Runtime gyro stabilization mode — selected by the RC 3-way channel (CH8).
+// One firmware carries BOTH the bare rate damper and the full HORIZON cascade;
+// the switch picks which is live at runtime. On a rate-only build the HORIZON
+// code is compiled out and that switch position gracefully falls back to RATE.
+enum GyroMode : uint8_t {
+    GYRO_MODE_OFF     = 0,   // gyro off — corrections zeroed
+    GYRO_MODE_RATE    = 1,   // mesoPid rate damper only (no self-level)
+    GYRO_MODE_HORIZON = 2,   // rate damper + flap-decoupled self-level
+};
+
 // --- Blackbox frame (12 bytes) -----------------------------------------------
 // Compact per-tick record of the stabilizer's hot path. The ring buffer is
 // compiled only under ZEPHYR_BLACKBOX; the fault register (Zephyrus members
@@ -33,7 +43,8 @@ struct ZephyrBbFrame {
 class Zephyrus {
 public:
     bool enabled;           // True if the IMU WHO_AM_I matched (MPU6050 or LSM6DS3)
-    bool gyroEnabled;       // Runtime toggle — true = auto-detect MPU at boot; false = no I2C/PID
+    bool gyroEnabled;       // Runtime master toggle — false = no I2C/PID (WebUI)
+    GyroMode gyroMode;      // RC 3-way switch — OFF / RATE damper / HORIZON self-level
     bool calibrated;        // True after bias calibration succeeds
     uint8_t boardRotation;  // Runtime board orientation (0-6, see ZephyrusConfig.h)
  
@@ -50,6 +61,7 @@ public:
     float rollKp, rollKi, rollKd, rollImax;
     float pitchKp, pitchKi, pitchKd, pitchImax;
     float yawKp, yawKi, yawKd, yawImax;
+    uint8_t gyroLpfShift;  // Mesozoic gyro rate LPF shift (0=off, 2≈10Hz default)
 
     // AHRS outputs (updated each update() call)
     float rollDeg;          // Roll angle in degrees
@@ -74,7 +86,6 @@ public:
     float rollCorrection;   // Roll RATE correction (°/s) → wing amplitude (fast)
     float yawCorrection;    // Yaw RATE correction (°/s) → differential ferocity
     float pitchCorrection;  // Pitch RATE correction (°/s) → ferocity dwell (fast)
-    float rudderCorrection; // Combined rudder offset in µs (clamped)
 
     // Attitude error (deg) for the wing CENTRE axis (slow level hold). Under
     // MESOZOIC_HORIZON this is the accelerometer-derived attitude error faded
@@ -171,11 +182,13 @@ private:
     MesoPid _mesoRoll;
     MesoPid _mesoPitch;
     MesoPid _mesoYaw;
+    MesoRateLpf _gyroLpf[3]; // per-axis rate LPF state (rx/ry/rz, before PID)
 
 #ifdef MESOZOIC_HORIZON
     // Mesozoic HORIZON state (float; slow outer loop, off the hot PID path)
     MesoGravity  _mesoGravity;
     MesoAttitude _mesoAttitude;
+    uint8_t _gyroModePrev;   // last gyroMode — re-seeds HORIZON state on entry
 #endif
 
     float _pidCompute(PidState &s, float error, float dt,

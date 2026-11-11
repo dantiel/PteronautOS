@@ -138,9 +138,21 @@
 #define ZEPHYR_PID_PITCH_KD   0.25f
 #define ZEPHYR_PID_PITCH_IMAX 10.0f    // Integrator anti-windup clamp (°/s)
 
-// --- Crest Rudder Mix: maps PID corrections to µs offset ---
-#define ZEPHYR_RUDDER_ROLL_GAIN  2.5f  // µs per degree of roll correction
-#define ZEPHYR_RUDDER_YAW_GAIN   1.5f  // µs per °/s of yaw rate correction
+// --- Gyro rate low-pass (Mesozoic rate-damper input) ---
+// One-pole EMA shift: 0=off (passthrough), 1≈20Hz, 2≈10Hz, 3≈5Hz, 4≈2.5Hz at the
+// 250 Hz gate. Default 2 (≈10 Hz) sits below the ~30 Hz flap fundamental so flap
+// vibration is attenuated, yet well above real maneuvering rates. Runtime-tunable
+// via zephyrus.gyroLpfShift (WebUI "gyro_lpf").
+#define ZEPHYR_GYRO_LPF_SHIFT  2
+
+// --- Crest/Head Rudder Mix: physical scales (µs per unit), NOT mixing weights.
+// The 0–100 mixing authority lives in Ornithopter (`rudderYawWeight` /
+// `rudderRollWeight`); these constants only convert physical gyro units to µs
+// of rudder deflection. Negative = reverse the servo direction to match a
+// mirrored mounting. Applied in OrnithopterMixer.cpp / ZephyrusFilter.h.
+#define ZEPHYR_RUDDER_ROLL_GAIN  2.5f  // µs per °/s of roll-rate correction
+#define ZEPHYR_RUDDER_YAW_GAIN   1.5f  // µs per °/s of yaw-rate correction
+#define ZEPHYR_RUDDER_ROLL_ATT_GAIN 5.0f // µs per deg roll attitude error (HORIZON level hold)
 #define ZEPHYR_RUDDER_CLAMP_US   200   // Hard clamp on gyro correction (±µs)
 
 // --- Gearbox Leg Servo Mix: maps PID corrections to µs offset ---

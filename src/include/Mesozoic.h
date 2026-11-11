@@ -42,6 +42,33 @@ inline void mesoInit(MesoPid &p) {
     p.lastD = 0;
 }
 
+// Gyro rate low-pass — one-pole EMA on the bias-corrected, board-rotated rate,
+// applied BEFORE it feeds mesoPid's P/I/D terms. Sensor noise and flap-coherent
+// vibration (the ~30 Hz flap fundamental sits above the MPU6050's 42 Hz DLPF)
+// otherwise jitter the servos at rest and buzz them during flapping.
+//   state : filtered rate × 256 (Q8) — keeps the shift-division precise at
+//           large shifts (α = 1/2^shift) so the filter never sticks.
+//   shift : 0 = passthrough; 1 ≈ 20 Hz, 2 ≈ 10 Hz, 3 ≈ 5 Hz, 4 ≈ 2.5 Hz at the
+//           250 Hz gate (fc = α/(2π·dt), dt = 4 ms).
+struct MesoRateLpf {
+    int32_t state;   // Q8: filtered rate × 256
+};
+
+inline void mesoLpfInit(MesoRateLpf &f) {
+    f.state = 0;
+}
+
+// x: int16 rate LSB. shift: 0..6. Returns filtered int16 rate LSB.
+inline int16_t mesoLpfApply(MesoRateLpf &f, int16_t x, uint8_t shift) {
+    if (shift == 0) return x;
+    int32_t xq = (int32_t)x << 8;             // input to Q8
+    f.state += (xq - f.state) >> shift;       // y += (x - y)·(1/2^shift)
+    int32_t y = (f.state + 128) >> 8;         // Q8 → int16, rounded
+    if (y >  32767) return  32767;
+    if (y < -32767) return -32767;
+    return (int16_t)y;
+}
+
 // Saturate a rate error (int32 LSB) into the int16 mesoPid() contract. The
 // measured gyro is ±32750 LSB full-scale and the HORIZON rate setpoint adds up
 // to ±5895 LSB, so the raw (setpoint − measured) difference can exceed ±32767.

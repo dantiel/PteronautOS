@@ -8,9 +8,9 @@ void Ornithopter::_loadDefaultFlightProfiles()
 {
     // Three distinct tuning sets (index 0..2). Aggregate init; the trailing
     // fields of FlightProfileParams (incl. name) zero-initialize.
-    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 40.0f, 60.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     setFlightProfileName(0, "Gentle");
     setFlightProfileName(1, "Standard");
     setFlightProfileName(2, "Aggressive");
@@ -46,8 +46,6 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     returnFerocity      = p.returnFerocity;
     glideAngleDeg       = p.glideAngleDeg;
     flappingAngleDeg    = p.flappingAngleDeg;
-    aileronScale        = p.aileronScale;
-    elevatorScale       = p.elevatorScale;
     rudderFerocityRange = p.rudderFerocityRange;
     rudderAmplitudeDifferential = p.rudderAmplitudeDifferential;
     elevatorFerocityMix = p.elevatorFerocityMix;
@@ -66,7 +64,7 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
 
 void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          int8_t glide, int8_t flapAng,
-                                         float ail, float elev, float rudRng,
+                                         float rudRng,
                                          float rudAmpDiff, float elevFerMix,
                                          float thrThrustExpo, float thrThrustShape,
                                          float thrFreqMix,
@@ -82,8 +80,6 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.returnFerocity      = rf;
     p.glideAngleDeg       = glide;
     p.flappingAngleDeg    = flapAng;
-    p.aileronScale        = ail;
-    p.elevatorScale       = elev;
     p.rudderFerocityRange = rudRng;
     p.rudderAmplitudeDifferential = rudAmpDiff;
     p.elevatorFerocityMix = elevFerMix;

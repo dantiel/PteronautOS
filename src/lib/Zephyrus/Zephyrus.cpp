@@ -92,10 +92,11 @@ Zephyrus zephyrus;
 Zephyrus::Zephyrus()
     : enabled(false)
     , gyroEnabled(true)    // ON by default — begin() auto-detects MPU; graceful if absent
+    , gyroMode(GYRO_MODE_RATE) // RC 3-way switch — RATE damper until a channel says otherwise
     , _begun(false)
     , calibrated(false)
     , rollDeg(0.0f), pitchDeg(0.0f), yawRate(0.0f)
-    , rollCorrection(0.0f), yawCorrection(0.0f), pitchCorrection(0.0f), rudderCorrection(0.0f)
+    , rollCorrection(0.0f), yawCorrection(0.0f), pitchCorrection(0.0f)
     , rollAttitudeCorrection(0.0f), pitchAttitudeCorrection(0.0f)
     , pitchPTerm(0.0f), pitchITerm(0.0f), pitchDTerm(0.0f), pitchErrorRate(0.0f)
     , _mpuPresent(false)
@@ -112,6 +113,7 @@ Zephyrus::Zephyrus()
     , rollKp(ZEPHYR_PID_ROLL_KP), rollKi(ZEPHYR_PID_ROLL_KI), rollKd(ZEPHYR_PID_ROLL_KD), rollImax(ZEPHYR_PID_ROLL_IMAX)
     , pitchKp(ZEPHYR_PID_PITCH_KP), pitchKi(ZEPHYR_PID_PITCH_KI), pitchKd(ZEPHYR_PID_PITCH_KD), pitchImax(ZEPHYR_PID_PITCH_IMAX)
     , yawKp(ZEPHYR_PID_YAW_KP), yawKi(ZEPHYR_PID_YAW_KI), yawKd(ZEPHYR_PID_YAW_KD), yawImax(ZEPHYR_PID_YAW_IMAX)
+    , gyroLpfShift(ZEPHYR_GYRO_LPF_SHIFT)
     , _calibrating(false)
     , _calibCount(0), _calibStable(0)
     , _accelRefRoll(0.0f), _accelRefPitch(0.0f)
@@ -127,6 +129,7 @@ Zephyrus::Zephyrus()
         _calibSumSq[i] = 0.0f;
         _prevGyro[i] = 0.0f;
         _accelCalSum[i] = 0.0f;
+        mesoLpfInit(_gyroLpf[i]);
     }
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
@@ -155,6 +158,7 @@ Zephyrus::Zephyrus()
     stickYawNorm = 0.0f;
     mesoGravityInit(_mesoGravity);
     mesoAttitudeInit(_mesoAttitude);
+    _gyroModePrev = GYRO_MODE_RATE;
 #endif
 }
 
@@ -462,6 +466,9 @@ void Zephyrus::onLinkUp() {
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+    mesoLpfInit(_gyroLpf[0]);
+    mesoLpfInit(_gyroLpf[1]);
+    mesoLpfInit(_gyroLpf[2]);
 #ifdef MESOZOIC_HORIZON
     mesoGravityInit(_mesoGravity);
     mesoAttitudeInit(_mesoAttitude);
@@ -476,7 +483,6 @@ void Zephyrus::onLinkDown() {
     rollCorrection = 0.0f;
     yawCorrection = 0.0f;
     pitchCorrection = 0.0f;
-    rudderCorrection = 0.0f;
     _slewLPF = 0.0f;
     _pidReset(_pidRoll);
     _pidReset(_pidYaw);
@@ -484,6 +490,9 @@ void Zephyrus::onLinkDown() {
     mesoInit(_mesoRoll);
     mesoInit(_mesoPitch);
     mesoInit(_mesoYaw);
+    mesoLpfInit(_gyroLpf[0]);
+    mesoLpfInit(_gyroLpf[1]);
+    mesoLpfInit(_gyroLpf[2]);
 #ifdef MESOZOIC_HORIZON
     mesoGravityInit(_mesoGravity);
     mesoAttitudeInit(_mesoAttitude);
@@ -908,8 +917,19 @@ void Zephyrus::update(uint32_t nowUs) {
             begin();
         }
     }
-    if (!enabled || !gyroEnabled) {
-        rudderCorrection = 0.0f;
+#ifdef MESOZOIC_HORIZON
+    // Re-seed the flap-decoupled gravity + attitude on a transition INTO
+    // HORIZON (from OFF/RATE) so a previous session's stale estimate can't
+    // glitch the self-level the instant the switch engages it.
+    if (gyroMode == GYRO_MODE_HORIZON && _gyroModePrev != GYRO_MODE_HORIZON) {
+        mesoGravityInit(_mesoGravity);
+        mesoAttitudeInit(_mesoAttitude);
+        gravX = gravY = gravZ = 0.0f;
+        rollDeg = pitchDeg = 0.0f;
+    }
+    _gyroModePrev = gyroMode;
+#endif
+    if (!enabled || !gyroEnabled || gyroMode == GYRO_MODE_OFF) {
         rollCorrection = 0.0f;
         yawCorrection = 0.0f;
         pitchCorrection = 0.0f;
@@ -938,7 +958,6 @@ void Zephyrus::update(uint32_t nowUs) {
         // Ornithopter Ondas modulation never consumes stale values
         rollCorrection *= 0.9f;
         yawCorrection *= 0.9f;
-        rudderCorrection *= 0.9f;
         pitchCorrection *= 0.9f;
         rollAttitudeCorrection *= 0.9f;
         pitchAttitudeCorrection *= 0.9f;
@@ -1007,8 +1026,16 @@ void Zephyrus::update(uint32_t nowUs) {
             default: break;
             }
         }
-        _lastRxLsb = rx;   // blackbox: board-rotated, bias-corrected rate
+        _lastRxLsb = rx;   // blackbox: board-rotated, bias-corrected rate (RAW)
         _lastRyLsb = ry;
+
+        // Gyro rate low-pass (one-pole EMA) before the PID — attenuates sensor
+        // noise + flap-coherent vibration that would otherwise jitter the servos
+        // at rest and buzz them during flapping. shift 0 = passthrough; state is
+        // reset on arm/disarm. Blackbox keeps the RAW rate above for diagnosis.
+        rx = mesoLpfApply(_gyroLpf[0], rx, gyroLpfShift);
+        ry = mesoLpfApply(_gyroLpf[1], ry, gyroLpfShift);
+        rz = mesoLpfApply(_gyroLpf[2], rz, gyroLpfShift);
 
         // LSB → °/s (MPU6050 ±250 dps ⇒ 131 LSB/(°/s)). One multiply, no division.
         const float lsbToDps = 1.0f / _gyroScale;
@@ -1024,7 +1051,7 @@ void Zephyrus::update(uint32_t nowUs) {
         float pitchRateSetpoint = 0.0f;
         float yawRateSetpoint   = 0.0f;
 #ifdef MESOZOIC_HORIZON
-        {
+        if (gyroMode == GYRO_MODE_HORIZON) {
             float ax = (float)_accelRaw[0] / _accelScale;
             float ay = (float)_accelRaw[1] / _accelScale;
             float az = (float)_accelRaw[2] / _accelScale;
@@ -1070,6 +1097,12 @@ void Zephyrus::update(uint32_t nowUs) {
             pitchRateSetpoint = mesoHorizonRateSetpoint(-pitchDeg, stickPitchNorm,
                                                          MESO_ATT_PITCH_KP, MESO_ATT_MAX_RATE);
             yawRateSetpoint   = stickYawNorm * MESO_ATT_MAX_RATE;
+        } else {
+            rollDeg   = 0.0f;   // RATE/off — no self-level demand
+            pitchDeg  = 0.0f;
+            gravX = gravY = gravZ = 0.0f;
+            rollAttitudeCorrection  = 0.0f;
+            pitchAttitudeCorrection = 0.0f;
         }
 #else
         rollDeg   = 0.0f;   // no attitude in the mesozoic brain
@@ -1091,18 +1124,18 @@ void Zephyrus::update(uint32_t nowUs) {
         // code read the compile-time MESO_* #defines and silently ignored every
         // slider. Clamp to the Q12 rail first: a slider at the POST max (Kp ≤ 10)
         // would otherwise wrap int16 and reverse the damper sign.
-        float rkp = rollKp;   if (rkp < 0.0f) rkp = 0.0f; else if (rkp > 7.5f) rkp = 7.5f;
-        float rki = rollKi;   if (rki < 0.0f) rki = 0.0f; else if (rki > 1.0f) rki = 1.0f;
-        float rkd = rollKd;   if (rkd < 0.0f) rkd = 0.0f; else if (rkd > 1.0f) rkd = 1.0f;
-        float rmx = rollImax; if (rmx < 0.0f) rmx = 0.0f; else if (rmx > 60.0f) rmx = 60.0f;
-        float pkp = pitchKp;  if (pkp < 0.0f) pkp = 0.0f; else if (pkp > 7.5f) pkp = 7.5f;
-        float pki = pitchKi;  if (pki < 0.0f) pki = 0.0f; else if (pki > 1.0f) pki = 1.0f;
-        float pkd = pitchKd;  if (pkd < 0.0f) pkd = 0.0f; else if (pkd > 1.0f) pkd = 1.0f;
-        float pmx = pitchImax; if (pmx < 0.0f) pmx = 0.0f; else if (pmx > 60.0f) pmx = 60.0f;
-        float ykp = yawKp;    if (ykp < 0.0f) ykp = 0.0f; else if (ykp > 7.5f) ykp = 7.5f;
-        float yki = yawKi;    if (yki < 0.0f) yki = 0.0f; else if (yki > 1.0f) yki = 1.0f;
-        float ykd = yawKd;    if (ykd < 0.0f) ykd = 0.0f; else if (ykd > 1.0f) ykd = 1.0f;
-        float ymx = yawImax;  if (ymx < 0.0f) ymx = 0.0f; else if (ymx > 60.0f) ymx = 60.0f;
+        float rkp = rollKp;   if (rkp < 0.0f) rkp = 0.0f; else if (rkp > 7.9f) rkp = 7.9f;
+        float rki = rollKi;   if (rki < 0.0f) rki = 0.0f; else if (rki > 2.0f) rki = 2.0f;
+        float rkd = rollKd;   if (rkd < 0.0f) rkd = 0.0f; else if (rkd > 2.0f) rkd = 2.0f;
+        float rmx = rollImax; if (rmx < 0.0f) rmx = 0.0f; else if (rmx > 100.0f) rmx = 100.0f;
+        float pkp = pitchKp;  if (pkp < 0.0f) pkp = 0.0f; else if (pkp > 7.9f) pkp = 7.9f;
+        float pki = pitchKi;  if (pki < 0.0f) pki = 0.0f; else if (pki > 2.0f) pki = 2.0f;
+        float pkd = pitchKd;  if (pkd < 0.0f) pkd = 0.0f; else if (pkd > 2.0f) pkd = 2.0f;
+        float pmx = pitchImax; if (pmx < 0.0f) pmx = 0.0f; else if (pmx > 100.0f) pmx = 100.0f;
+        float ykp = yawKp;    if (ykp < 0.0f) ykp = 0.0f; else if (ykp > 7.9f) ykp = 7.9f;
+        float yki = yawKi;    if (yki < 0.0f) yki = 0.0f; else if (yki > 2.0f) yki = 2.0f;
+        float ykd = yawKd;    if (ykd < 0.0f) ykd = 0.0f; else if (ykd > 2.0f) ykd = 2.0f;
+        float ymx = yawImax;  if (ymx < 0.0f) ymx = 0.0f; else if (ymx > 100.0f) ymx = 100.0f;
 
         const float gscale = _gyroScale;   // 131 LSB/(°/s) at ±250 dps
         const int16_t rollKpQ   = (int16_t)(rkp * 4096.0f);
@@ -1120,7 +1153,7 @@ void Zephyrus::update(uint32_t nowUs) {
 
         int16_t rollC, pitchC, yawC;
 #ifdef MESOZOIC_HORIZON
-        {
+        if (gyroMode == GYRO_MODE_HORIZON) {
             // HORIZON NaN/Inf + range guard on the rate setpoint → int16 cast.
             // A corrupt setpoint (NaN/Inf float) would be UB when cast to int16
             // and could feed a garbage setpoint into mesoPid.
@@ -1143,6 +1176,10 @@ void Zephyrus::update(uint32_t nowUs) {
             rollC  = mesoPid(_mesoRoll,  (int16_t)mesoClampRateErr((int32_t)rollSpLsb  - rx), rollKpQ,  rollKdQ,  rollKiQ,  rollImaxQ,  dtMs);
             pitchC = mesoPid(_mesoPitch, (int16_t)mesoClampRateErr((int32_t)pitchSpLsb - ry), pitchKpQ, pitchKdQ, pitchKiQ, pitchImaxQ, dtMs);
             yawC   = mesoPid(_mesoYaw,   (int16_t)mesoClampRateErr((int32_t)yawSpLsb   - rz), yawKpQ,   yawKdQ,   yawKiQ,   yawImaxQ,   dtMs);
+        } else {
+            rollC  = mesoPid(_mesoRoll,  -rx, rollKpQ,  rollKdQ,  rollKiQ,  rollImaxQ,  dtMs);
+            pitchC = mesoPid(_mesoPitch, -ry, pitchKpQ, pitchKdQ, pitchKiQ, pitchImaxQ, dtMs);
+            yawC   = mesoPid(_mesoYaw,   -rz, yawKpQ,   yawKdQ,   yawKiQ,   yawImaxQ,   dtMs);
         }
 #else
         rollC  = mesoPid(_mesoRoll,  -rx, rollKpQ,  rollKdQ,  rollKiQ,  rollImaxQ,  dtMs);
@@ -1163,14 +1200,6 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchDTerm = 0.0f;
         pitchErrorRate = 0.0f;
 
-#ifdef ORNITHOPTER_GEARBOX
-        rudderCorrection = yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
-#else
-        rudderCorrection = rollCorrection * ZEPHYR_RUDDER_ROLL_GAIN
-                         + yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
-#endif
-        if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = ZEPHYR_RUDDER_CLAMP_US;
-        if (rudderCorrection < -ZEPHYR_RUDDER_CLAMP_US) rudderCorrection = -ZEPHYR_RUDDER_CLAMP_US;
     }
     _bbTick(nowUs, 0);
     return;
@@ -1227,31 +1256,5 @@ void Zephyrus::update(uint32_t nowUs) {
         pitchErrorRate = _pidPitch.lastDerivative;  // already low-pass filtered °/s
     }
 
-#ifdef ORNITHOPTER_GEARBOX
-    // Gearbox: rudder = yaw-only (roll + pitch go to leg servos separately)
-    rudderCorrection = yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
-#else
-    // Servo: crest rudder = roll + yaw combined
-    rudderCorrection = rollCorrection * ZEPHYR_RUDDER_ROLL_GAIN
-                     + yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
-#endif
-
-    // Slew: transient rudder boost/brake on fast attitude change.
-    // Driven by the filtered roll-error rate (≈ negative roll angular rate):
-    // a gust or hard maneuver briefly adds correction authority; the LPF
-    // (τ = ZEPHYR_SLEW_LPF_TAU) decays the kick once motion settles.
-    // Gain 0 = off; the term is hard-clamped to its own envelope.
-    float slewAlpha = dt / (ZEPHYR_SLEW_LPF_TAU + dt);
-    _slewLPF += (_pidRoll.lastDerivative - _slewLPF) * slewAlpha;
-    float slewBoost = _slewLPF * slewGain * 0.01f * ZEPHYR_SLEW_GAIN;
-    if (slewBoost > ZEPHYR_SLEW_CLAMP_US) slewBoost = ZEPHYR_SLEW_CLAMP_US;
-    if (slewBoost < -ZEPHYR_SLEW_CLAMP_US) slewBoost = -ZEPHYR_SLEW_CLAMP_US;
-    rudderCorrection += slewBoost;
-
-    // Clamp to ±200µs
-    if (rudderCorrection > ZEPHYR_RUDDER_CLAMP_US)
-        rudderCorrection = ZEPHYR_RUDDER_CLAMP_US;
-    if (rudderCorrection < -ZEPHYR_RUDDER_CLAMP_US)
-        rudderCorrection = -ZEPHYR_RUDDER_CLAMP_US;
     _bbTick(nowUs, 0);
 }

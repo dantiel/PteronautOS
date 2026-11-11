@@ -369,6 +369,16 @@ void Ornithopter::_mixerTailOutput(float aileronNorm)
     // ── Tail / back wings (profile-dependent) ──
     float rudderMix = (_crsfToNorm(voiceRudder) * rudderYawWeight * 0.01f)
                     + (aileronNorm * rudderRollWeight * 0.01f);
+#ifdef ZEPHYRUS_ENABLED
+    // Gyro → head rudder mixes through the SAME yaw/roll weights as the pilot
+    // sticks (no duplicate gains). The physical scales (µs per °/s, µs per
+    // deg) live in ZephyrusConfig.h; the 0–100 weights are Ornithopter params
+    // (rudderYawWeight / rudderRollWeight). ×0.002 = normalized rudder per µs
+    // (rudderMix ×500 µs spans the full −1..1 deflection).
+    rudderMix += (gyroYawCorrection   * ZEPHYR_RUDDER_YAW_GAIN     * 0.002f) * rudderYawWeight  * 0.01f
+              +  (gyroRollCorrection  * ZEPHYR_RUDDER_ROLL_GAIN    * 0.002f) * rudderRollWeight * 0.01f
+              +  (gyroRollAttitudeCorrection * ZEPHYR_RUDDER_ROLL_ATT_GAIN * 0.002f) * rudderRollWeight * 0.01f;
+#endif
     if (rudderMix > 1.0f) rudderMix = 1.0f;
     if (rudderMix < -1.0f) rudderMix = -1.0f;
 
@@ -378,11 +388,8 @@ void Ornithopter::_mixerTailOutput(float aileronNorm)
         _f[SF_BACK_RIGHT_WING] = _clampServo((int32_t)_f[SF_RIGHT_WING] + servoTrimUs[SF_BACK_RIGHT_WING]);
     } else if (PROFILE.servoCount >= 3) {
         // SERVO_2WING_1RUD: crest/head rudder.
-        int32_t rudderUs = (int32_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f
-#ifdef ZEPHYRUS_ENABLED
-                                   + gyroRudderCorrection
-#endif
-                                  ) + servoTrimUs[SF_RUDDER];
+        int32_t rudderUs = (int32_t)((float)ORNI_RUDDER_CENTER_US + rudderMix * 500.0f)
+                          + servoTrimUs[SF_RUDDER];
         _f[SF_RUDDER] = _clampServo(rudderUs);
     }
 }

@@ -110,13 +110,23 @@ async function handleBuild(request, env) {
       zephyrus_board_rotation: ["0", "1", "2", "3", "4", "5", "6"],
       hardware_target: ["pwmp5", "pwmp7", "ep2pwm", "mushin"],
       zephyrus_enabled: ["0", "1"],
-      zephyrus_mode: ["0", "1"],
+      zephyrus_mode: ["rate", "horizon"],
       zephyrus_i2c_pre_detect: ["0", "1"],
     };
     for (const [k, valid] of Object.entries(choices)) {
       if (inputs[k] != null && !valid.includes(String(inputs[k]))) {
         return json({ error: `Invalid value for ${k}.` }, 400);
       }
+    }
+
+    // MESOZOIC_HORIZON only exists on the PWM boards (they carry the local I2C
+    // MPU6050); EP2/MUSHIN have no gyro, so horizon is meaningless there.
+    if (
+      inputs.zephyrus_mode === "horizon" &&
+      inputs.hardware_target !== "pwmp5" &&
+      inputs.hardware_target !== "pwmp7"
+    ) {
+      return json({ error: "zephyrus_mode=horizon requires hardware_target pwmp5 or pwmp7." }, 400);
     }
   
     // Only forward keys that exist in cloud-build.yml's dispatch inputs.

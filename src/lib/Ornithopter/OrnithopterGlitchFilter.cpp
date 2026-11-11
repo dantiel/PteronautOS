@@ -33,16 +33,19 @@ void Ornithopter::_applyGlitchFilter() {
         (uint16_t)ChannelData[ORNI_CH_ARM],
         (uint16_t)ChannelData[ORNI_CH_FREQ],
         (uint16_t)ChannelData[ORNI_CH_PROFILE],
+        (uint16_t)ChannelData[ORNI_CH_GYRO],
     };
     uint16_t* out[STK_COUNT] = {
         &voiceAileron, &voiceElevator, &voiceThrottle, &voiceRudder,
         &voiceArm, &voiceFreq, &voiceProfile,
+        &voiceGyro,
     };
     // Arm + profile are switched channels that legitimately jump full-range
     // (172↔1811); everything else is a stick/pot that moves smoothly.
     const uint16_t deltaMaxCanal[STK_COUNT] = {
         glitchDeltaMax, glitchDeltaMax, glitchDeltaMax, glitchDeltaMax,
         glitchDeltaArm, glitchDeltaMax, glitchDeltaArm,
+        glitchDeltaArm,   // gyro switch — full-range jump like arm/profile
     };
 
     // Track frame freshness continuously — even while disabled or pre-link —

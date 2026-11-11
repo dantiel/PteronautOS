@@ -47,8 +47,20 @@ static inline void zephyrusUpdate() {
         zephyrus.stickYawNorm   = rudNorm;
     }
 #endif
+    // RC gyro 3-way switch (CH8): low → OFF, centre → RATE damper, high →
+    // HORIZON self-level. Centre (unassigned) defaults to RATE — the safe
+    // damper — so a missing channel never self-levels unexpectedly.
+    {
+        uint16_t g = ornithopter.voiceGyro;
+        if (g < ORNI_GYRO_OFF_THRESHOLD_US)          zephyrus.gyroMode = GYRO_MODE_OFF;
+        else if (g < ORNI_GYRO_HORIZON_THRESHOLD_US) zephyrus.gyroMode = GYRO_MODE_RATE;
+        else                                         zephyrus.gyroMode = GYRO_MODE_HORIZON;
+    }
     zephyrus.update(now);
-    ornithopter.gyroRudderCorrection = zephyrus.rudderCorrection;
+    // Yaw-only correction in µs (gearbox tail yaw PID + head-rudder yaw).
+    // The waveform head rudder mixes roll/yaw/attitude itself via
+    // Ornithopter's rudderRollWeight/rudderYawWeight (see OrnithopterMixer.cpp).
+    ornithopter.gyroRudderCorrection = zephyrus.yawCorrection * ZEPHYR_RUDDER_YAW_GAIN;
     // Bridge raw PID correction outputs for the 2-wing Mesozoic stabilizer
     // (flapping wings) — unlike gyroAileron/ElevatorCorrection these are NOT
     // gearbox-only; the waveform kernel consumes them directly.

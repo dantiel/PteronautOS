@@ -29,7 +29,8 @@ enum StickCh : uint8_t {
     STK_ARM              = 4,
     STK_FREQ             = 5,   // flap frequency modulator
     STK_PROFILE          = 6,   // flight profile selector (multi-position)
-    STK_COUNT            = 7
+    STK_GYRO             = 7,   // gyro stabilization on/off (low = off)
+    STK_COUNT            = 8
 };
 
 // Per-tick mixer working set (defined after the class — forward-declared here
@@ -53,6 +54,7 @@ public:
     uint16_t voiceArm;
     uint16_t voiceFreq;      // flap frequency modulator channel
     uint16_t voiceProfile;   // flight profile selector channel
+    uint16_t voiceGyro;      // gyro stabilization on/off switch channel
     
     // Unified servo output — indexed by ServoFunc tag
     // _f[SF_LEFT_WING], _f[SF_RIGHT_WING], _f[SF_RUDDER],
@@ -88,7 +90,7 @@ public:
     bool    lastFlapping;          // true = flapping branch ran this tick
     void applyFlightProfile(uint8_t idx);
     void setFlightProfileParams(uint8_t idx, float sf, float rf, int8_t glide,
-                                int8_t flapAng, float ail, float elev,
+                                int8_t flapAng,
                                 float rudRng, float rudAmpDiff,
                                 float elevFerMix, float thrExpo, float thrFerMix,
                                 float thrFreqMix, float ferShapeMix,

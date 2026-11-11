@@ -156,6 +156,14 @@ constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][ORNI_MAX_OUTPUTS] = {
 #define ORNI_CH_ARM             4
 #define ORNI_CH_FREQ            5   // flap frequency modulator channel
 #define ORNI_CH_PROFILE         6   // flight profile selector (multi-position)
+#define ORNI_CH_GYRO            7   // gyro 3-way switch: OFF / RATE / HORIZON
+
+// Gyro 3-way switch (CRSF raw): low → GYRO OFF, centre → Mesozoic RATE damper,
+// high → Mesozoic HORIZON self-level. Centre (992, unassigned channel) defaults
+// to RATE — the safe damper — so a missing channel can never self-level
+// unexpectedly, and a 2-pos switch (low/high) toggles OFF ↔ HORIZON.
+#define ORNI_GYRO_OFF_THRESHOLD_US     660
+#define ORNI_GYRO_HORIZON_THRESHOLD_US 1500
 
 // ─── Servo limits ──────────────────────────────────────────────────
 #define ORNI_SERVO_CENTER_US    1500
@@ -377,8 +385,6 @@ struct FlightProfileParams {
     float   returnFerocity;       // 0–100
     int8_t  glideAngleDeg;        // -15…+15
         int8_t  flappingAngleDeg;     // -15…+15, flap stroke centre offset (deg)
-    float   aileronScale;         // 0–100
-    float   elevatorScale;        // 0–100
     float   rudderFerocityRange;  // 0–100
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection

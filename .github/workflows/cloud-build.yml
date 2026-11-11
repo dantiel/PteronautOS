@@ -71,15 +71,15 @@ on:
         default: '0'
         options:
           - '0'   # no gyro — ZEPHYRUS_ENABLED not compiled in (default)
-          - '1'   # MPU6050 + AHRS/PID compiled in
+          - '1'   # MPU6050 + Mesozoic damper/PID compiled in
       zephyrus_mode:
-        description: 'Stabilizer mode (1=rate-only Mesozoic, 0=AHRS self-level)'
+        description: 'Stabilizer mode (rate=damper, horizon=self-level)'
         required: false
         type: choice
-        default: '1'
+        default: 'rate'
         options:
-          - '0'   # full Mahony AHRS attitude self-level
-          - '1'   # rate-only damper (MESOZOIC_ONLY)
+          - 'rate'    # rate-only damper (MESOZOIC_ONLY)
+          - 'horizon' # rate + flap-decoupled self-level (MESOZOIC_HORIZON)
       zephyrus_i2c_pre_detect:
         description: 'Probe SCL before I2C init to skip a missing MPU (1=on, 0=off)'
         required: false
@@ -178,9 +178,8 @@ jobs:
             if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
               echo "-DZEPHYRUS_ENABLED=1"
             fi
-            if [ "${{ inputs.zephyrus_mode }}" = "0" ]; then
-              echo "!-D MESOZOIC_ONLY=1"
-            fi
+            # MESOZOIC_HORIZON (zephyrus_mode=horizon) is baked by the HORIZON
+            # target env; rate-only (zephyrus_mode=rate) is the default env.
             if [ "${{ inputs.zephyrus_i2c_pre_detect }}" = "0" ]; then
               echo "-DZEPHYR_I2C_PRE_DETECT=0"
             fi
@@ -223,8 +222,13 @@ jobs:
           case "${{ inputs.hardware_target }}" in
             ep2pwm) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX_PWM ;;
             mushin) TARGET_ENV=PteronautOS_ESP8285_EP2_2400_RX ;;
-            pwmp5)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
-            pwmp7)  TARGET_ENV=PteronautOS_ESP8285_2400_RX ;;
+            pwmp5|pwmp7)
+              if [ "${{ inputs.zephyrus_mode }}" = "horizon" ]; then
+                TARGET_ENV=PteronautOS_ESP8285_2400_RX_HORIZON
+              else
+                TARGET_ENV=PteronautOS_ESP8285_2400_RX
+              fi
+              ;;
             *)
               echo "::error::hardware_target is empty or unrecognized ('${{ inputs.hardware_target }}'). Redeploy the worker so it forwards hardware_target."
               exit 1
@@ -261,7 +265,7 @@ jobs:
           mkdir -p dist
           case "${{ inputs.hardware_target }}" in
             pwmp5|pwmp7)
-              if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
+              if [ "${{ inputs.zephyrus_enabled }}" = "1" ] || [ "${{ inputs.zephyrus_mode }}" = "horizon" ]; then
                 if [ "${{ inputs.hardware_target }}" = "pwmp5" ]; then
                   PWM_OUT="0,9,10"
                 else
