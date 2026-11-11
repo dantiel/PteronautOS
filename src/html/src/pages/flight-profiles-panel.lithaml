@@ -123,22 +123,6 @@
            %span.value= self.ferocityShapeMix
            %
         %tr.pfg-hdr
-          %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_scales')
-        %tr
-          %td
-            %b= self._t('ornithopter.aileron_scale.title')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: self.aileronScale, @input: self._onSlider('aileronScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.aileronScale
-            %
-        %tr
-          %td
-            %b= self._t('ornithopter.elevator_scale.title')
-          %td
-            %input{type: "range", min: "0", max: "100", .value: self.elevatorScale, @input: self._onSlider('elevatorScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-            %span.value= self.elevatorScale
-            %
-        %tr.pfg-hdr
           %td{colspan: "2"}= self._t('ornithopter.flight_profiles.group_elev_rudd')
         %tr
           %td

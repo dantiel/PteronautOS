@@ -40,6 +40,8 @@ class OrnithopterPanel extends PteroElement
     rudderYawWeight:    {state: true}
     rudderRollWeight:   {state: true}
     elevonScale:        {state: true}
+    aileronScale:       {state: true}
+    elevatorScale:      {state: true}
     motorMinUs:         {state: true}
     motorMaxUs:         {state: true}
     # Gearbox glide mode
@@ -76,6 +78,8 @@ class OrnithopterPanel extends PteroElement
     @rudderYawWeight      = 65
     @rudderRollWeight     = 35
     @elevonScale          = 50
+    @aileronScale         = 67
+    @elevatorScale        = 100
     @motorMinUs           = 1000
     @motorMaxUs           = 2000
     @glideMode            = false
@@ -153,6 +157,8 @@ class OrnithopterPanel extends PteroElement
       @rudderYawWeight    = o.rudder_yaw_weight    if o.rudder_yaw_weight?
       @rudderRollWeight   = o.rudder_roll_weight   if o.rudder_roll_weight?
       @elevonScale        = o.elevon_scale         if o.elevon_scale?
+      @aileronScale       = o.aileron_scale        if o.aileron_scale?
+      @elevatorScale      = o.elevator_scale       if o.elevator_scale?
       @motorMinUs         = o.motor_min_us         if o.motor_min_us?
       @motorMaxUs         = o.motor_max_us         if o.motor_max_us?
       @glideMode          = o.glide_mode == true   if o.glide_mode?
@@ -337,6 +343,8 @@ class OrnithopterPanel extends PteroElement
     body.append 'rudder_yaw_weight',    parseInt(@rudderYawWeight)
     body.append 'rudder_roll_weight',   parseInt(@rudderRollWeight)
     body.append 'elevon_scale',         parseInt(@elevonScale)
+    body.append 'aileron_scale',        parseInt(@aileronScale)
+    body.append 'elevator_scale',       parseInt(@elevatorScale)
     body.append 'motor_min_us',         parseInt(@motorMinUs)
     body.append 'motor_max_us',         parseInt(@motorMaxUs)
     body.append 'glide_mode',           if @glideMode then '1' else '0'

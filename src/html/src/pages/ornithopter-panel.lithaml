@@ -103,6 +103,24 @@
   %small{style: "color:#888;"}= self._t('ornithopter.mixing.kernel_hint')
   %table.mui-table.mui-table--bordered
     %tbody
+      %tr
+        %td
+          %b= self._t('ornithopter.mixing.aileron_scale')
+          %br
+          %small{style: "color:#888;"}= self._t('ornithopter.mixing.aileron_scale_desc')
+        %td
+          %input{type: "range", min: "0", max: "100", .value: self.aileronScale, @input: self._onSlider('aileronScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+          %span.value= self.aileronScale
+          %
+      %tr
+        %td
+          %b= self._t('ornithopter.mixing.elevator_scale')
+          %br
+          %small{style: "color:#888;"}= self._t('ornithopter.mixing.elevator_scale_desc')
+        %td
+          %input{type: "range", min: "0", max: "100", .value: self.elevatorScale, @input: self._onSlider('elevatorScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+          %span.value= self.elevatorScale
+          %
   - if self._hasRudder()
     %table.mui-table.mui-table--bordered
       %tbody

@@ -8,8 +8,6 @@ PROFILE_FIELDS =
   returnFerocity: 'return_ferocity'
   glideAngleDeg: 'glide_angle_deg'
   flappingAngleDeg: 'flapping_angle_deg'
-  aileronScale: 'aileron_scale'
-  elevatorScale: 'elevator_scale'
   rudderFerocityRange: 'rudder_ferocity_range'
   rudderAmplitudeDifferential: 'rudder_amplitude_differential'
   elevatorFerocityMix: 'elevator_ferocity_mix'
@@ -61,8 +59,6 @@ class FlightProfilesPanel extends PteroElement
     returnFerocity:      {state: true}
     glideAngleDeg:       {state: true}
     flappingAngleDeg:    {state: true}
-    aileronScale:        {state: true}
-    elevatorScale:       {state: true}
     rudderFerocityRange: {state: true}
     rudderAmplitudeDifferential: {state: true}
     elevatorFerocityMix: {state: true}
@@ -105,16 +101,14 @@ class FlightProfilesPanel extends PteroElement
     @profileName          = ''
     @copyFrom             = 0
     @flightProfiles       = [
-      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, aileronScale:40, elevatorScale:60, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
     ]
     @strokeFerocity       = 30
     @returnFerocity       = 50
     @glideAngleDeg        = -4
     @flappingAngleDeg     = 0
-    @aileronScale         = 40
-    @elevatorScale        = 60
     @rudderFerocityRange  = 50
     @rudderAmplitudeDifferential = 0
     @elevatorFerocityMix  = 0
@@ -226,8 +220,6 @@ class FlightProfilesPanel extends PteroElement
         returnFerocity:      p.return_ferocity ? 50
         glideAngleDeg:       p.glide_angle_deg ? -4
         flappingAngleDeg:    p.flapping_angle_deg ? 0
-        aileronScale:        p.aileron_scale ? 40
-        elevatorScale:       p.elevator_scale ? 60
         rudderFerocityRange: p.rudder_ferocity_range ? 50
         rudderAmplitudeDifferential: p.rudder_amplitude_differential ? 0
         elevatorFerocityMix: p.elevator_ferocity_mix ? 0
@@ -265,8 +257,6 @@ class FlightProfilesPanel extends PteroElement
     @returnFerocity      = p.returnFerocity
     @glideAngleDeg       = p.glideAngleDeg
     @flappingAngleDeg    = p.flappingAngleDeg
-    @aileronScale        = p.aileronScale
-    @elevatorScale       = p.elevatorScale
     @rudderFerocityRange = p.rudderFerocityRange
     @rudderAmplitudeDifferential = p.rudderAmplitudeDifferential
     @elevatorFerocityMix = p.elevatorFerocityMix

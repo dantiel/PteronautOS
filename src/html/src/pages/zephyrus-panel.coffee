@@ -22,9 +22,9 @@ class ZephyrusPanel extends PteroElement
     rollCorrection:    {state: true}
     yawCorrection:     {state: true}
     pitchCorrection:   {state: true}
-    rudderCorrection:  {state: true}
     boardRotation:     {state: true}
     slewGain:   {state: true}
+    gyroLpf:    {state: true}
     wingRollGain:  {state: true}
     wingPitchGain: {state: true}
     wingPitchFerGain: {state: true}
@@ -67,9 +67,9 @@ class ZephyrusPanel extends PteroElement
   rollCorrection    = 0
   yawCorrection     = 0
   pitchCorrection   = 0
-  rudderCorrection  = 0
   boardRotation     = 0
   slewGain   = 0
+  gyroLpf    = 2
   wingRollGain  = 0
   wingPitchGain = 0
   wingPitchFerGain = 0
@@ -116,9 +116,9 @@ class ZephyrusPanel extends PteroElement
     @rollCorrection    = Fmt.f0 z.roll_correction
     @yawCorrection     = Fmt.f0 z.yaw_correction
     @pitchCorrection   = Fmt.f0 z.pitch_correction
-    @rudderCorrection  = Fmt.f0 z.rudder_correction
     @boardRotation     = Fmt.f0 z.board_rotation
     @slewGain   = Fmt.f0 z.slew_gain
+    @gyroLpf    = Fmt.f0 z.gyro_lpf
     @wingRollGain  = Fmt.f0 z.wing_roll_gain
     @wingPitchGain = Fmt.f0 z.wing_pitch_gain
     @wingPitchFerGain = Fmt.f0 z.wing_pitch_fer_gain
@@ -182,6 +182,12 @@ class ZephyrusPanel extends PteroElement
     v = parseInt(evt.target.value) || 0
     @slewGain = v
     await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "slew_gain=#{v}"}
+
+  # Gyro rate LPF — one-pole shift (0=off .. 6=strongest); posted live.
+  _onGyroLpf: (evt) ->
+    v = parseInt(evt.target.value) || 0
+    @gyroLpf = v
+    await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: "gyro_lpf=#{v}"}
 
   # Mesozoic 2-wing stabilizer gain (-100..+100; sign = correction direction).
   # Local echo on drag (no network), single POST on release — mirrors the PID

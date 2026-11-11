@@ -72,6 +72,20 @@
 
   - if self.gyroEnabled
     .mui-panel
+      .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.lpf.title')
+      %table.mui-table.mui-table--bordered
+        %tbody
+          %tr
+            %td
+              %b= self._t('zephyrus.lpf.label')
+              %br
+              %small{style: "color:#888;"}= self._t('zephyrus.lpf.desc')
+            %td
+              %input{type: "range", min: "0", max: "6", step: "1", .value: self.gyroLpf, @input: self._onGyroLpf, style: "width:200px;"}
+              %span.value= self.gyroLpf
+
+  - if self.gyroEnabled
+    .mui-panel
       .mui--text-title{style: "font-size:14px;"}= self._t('zephyrus.wing.title')
       %small{style: "color:#888; display:block; margin-bottom:8px;"}
         = self._t('zephyrus.wing.desc')
@@ -160,11 +174,6 @@
             %td
               %b= self._t('zephyrus.telemetry.yaw_corr')
             %td= self._fmt1 self.yawCorrection
-          %tr
-            %td{colspan: "2"}
-              %b= self._t('zephyrus.telemetry.rudder_us')
-            %td{colspan: "2"}= self._fmt1 self.rudderCorrection
-
   - if self.gyroEnabled
     .mui-panel{style: "text-align:center;"}
       .attitude-indicator{style: "font-size:12px; color:#888; margin-bottom:8px;"}= self._t('zephyrus.attitude.title')
@@ -185,26 +194,26 @@
               %td
                 %b= self._t('zephyrus.pid.p')
               %td
-                %input{type: "range", min: "0", max: "5", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p"), style: "width:130px;"}
-                %input.zephyrus-pid-num{type: "number", min: "0", max: "5", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p")}
+                %input{type: "range", min: "0", max: "8", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "8", step: "0.05", .value: axis.p, @input: self._onPidLocal("#{axis.id}P"), @change: self._onPidPost("pid_#{axis.id}_p")}
             %tr
               %td
                 %b= self._t('zephyrus.pid.i')
               %td
-                %input{type: "range", min: "0", max: "0.5", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i"), style: "width:130px;"}
-                %input.zephyrus-pid-num{type: "number", min: "0", max: "0.5", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i")}
+                %input{type: "range", min: "0", max: "2", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "2", step: "0.01", .value: axis.i, @input: self._onPidLocal("#{axis.id}I"), @change: self._onPidPost("pid_#{axis.id}_i")}
             %tr
               %td
                 %b= self._t('zephyrus.pid.d')
               %td
-                %input{type: "range", min: "0", max: "0.5", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d"), style: "width:130px;"}
-                %input.zephyrus-pid-num{type: "number", min: "0", max: "0.5", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d")}
+                %input{type: "range", min: "0", max: "2", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "2", step: "0.01", .value: axis.d, @input: self._onPidLocal("#{axis.id}D"), @change: self._onPidPost("pid_#{axis.id}_d")}
             %tr
               %td
                 %b= self._t('zephyrus.pid.max')
               %td
-                %input{type: "range", min: "0", max: "60", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max"), style: "width:130px;"}
-                %input.zephyrus-pid-num{type: "number", min: "0", max: "60", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max")}
+                %input{type: "range", min: "0", max: "100", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max"), style: "width:130px;"}
+                %input.zephyrus-pid-num{type: "number", min: "0", max: "100", step: "1", .value: axis.max, @input: self._onPidLocal("#{axis.id}Max"), @change: self._onPidPost("pid_#{axis.id}_max")}
 
   .mui-panel{style: "text-align:center;"}
     %button.mui-btn.mui-btn--primary{?disabled: self._calibDisabled(), @click: self._doCalibrate}
