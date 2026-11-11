@@ -242,7 +242,7 @@ static int timeout(devserial_ctx_t *ctx)
 
 void sendImmediateRC()
 {
-    if (*(serial0.io) != nullptr && (*(serial0.io))->sendImmediateRC() && connectionState != serialUpdate)
+    if (serial0.io != nullptr && *(serial0.io) != nullptr && (*(serial0.io))->sendImmediateRC() && connectionState != serialUpdate)
     {
         const bool missed = serial0.frameMissed;
         serial0.frameMissed = false;
