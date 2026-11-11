@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, configChanged, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, deselectSpecimen, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
   indexOf = [].indexOf;
 
 import {
@@ -157,6 +157,30 @@ restoreConfig = function() {
   } catch (error) {
 
   }
+};
+
+// Changing any build-config value invalidates the loaded firmware fossil: the
+// .bin no longer matches the fields, so we drop the selection rather than let a
+// stale artifact be flashed against a freshly edited configuration.
+deselectSpecimen = function() {
+  var selectedSpecimenId;
+  if (!((typeof selectedSpecimenId !== "undefined" && selectedSpecimenId !== null) || (firmwareBytes != null))) {
+    return;
+  }
+  selectedSpecimenId = null;
+  firmwareBytes = null;
+  localStorage.removeItem(SPECIMEN_KEY);
+  els.downloadGzBtn.disabled = true;
+  if (serialSupported) {
+    els.flashBtn.disabled = true;
+  }
+  renderSpecimens();
+  return log("Deselected firmware fossil — configuration changed.");
+};
+
+configChanged = function() {
+  saveConfig();
+  return deselectSpecimen();
 };
 
 log = function(line) {
@@ -606,29 +630,11 @@ renderSpecimens = async function() {
   return results;
 };
 
-restoreSpecimens = async function() {
-  var recs, stored, target;
-  if ("indexedDB" in window) {
-    try {
-      recs = (await idbAllSpecimens());
-      if (recs.length) {
-        stored = localStorage.getItem(SPECIMEN_KEY);
-        target = recs.find(function(r) {
-          return r.id === stored;
-        }) || recs[0];
-        if ((target != null ? target.blob : void 0) != null) {
-          firmwareBytes = new Uint8Array(target.blob);
-          selectedSpecimenId = target.id;
-          enableFirmware();
-          log("Restored firmware fossil (" + fmtSize(target.size) + ") — ready to flash or download.");
-          setStatus("Firmware fossil loaded — ready to flash or download.", "done");
-        }
-      }
-    } catch (error) {
-
-    }
-  }
-  // no storage or blocked — nothing to load
+restoreSpecimens = function() {
+  // Firmware fossils persist across reloads, but we never auto-select one: a
+  // stale .bin would silently be flashed against whatever configuration the
+  // user has since edited. The user must consciously re-select a fossil.
+  localStorage.removeItem(SPECIMEN_KEY);
   return renderSpecimens();
 };
 
@@ -1018,21 +1024,21 @@ restoreSpecimens();
 
 for (i = 0, len = FIELD_IDS.length; i < len; i++) {
   id = FIELD_IDS[i];
-  $(id).addEventListener("input", saveConfig);
-  $(id).addEventListener("change", saveConfig);
+  $(id).addEventListener("input", configChanged);
+  $(id).addEventListener("change", configChanged);
 }
 
 ref = ["#receiver_board_pwm", "#receiver_board_crsf"];
 for (j = 0, len1 = ref.length; j < len1; j++) {
   sel = ref[j];
   $(sel).addEventListener("change", function() {
-    saveConfig();
+    configChanged();
     return syncGyroFields();
   });
 }
 
 $("#ep2_pwm_enabled").addEventListener("change", function() {
-  saveConfig();
+  configChanged();
   return syncGyroFields();
 });
 
@@ -1049,7 +1055,7 @@ for (k = 0, len2 = ref1.length; k < len2; k++) {
 
 for (m = 0, len3 = LOCALES.length; m < len3; m++) {
   l = LOCALES[m];
-  $(`#locale-${l}`).addEventListener("change", saveConfig);
+  $(`#locale-${l}`).addEventListener("change", configChanged);
 }
 
 els.buildBtn.addEventListener("click", startBuild);

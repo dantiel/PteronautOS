@@ -31,6 +31,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+# ---- Saved config presets (gitignored — may hold binding/WiFi secrets) ------
+# Named presets live at .pteronautos-flash-<name>.conf; the special/default
+# name maps to .pteronautos-flash.conf. Load with --conf=NAME, save from the
+# wizard (or --save[=NAME] for scripting).
+CONF_ROOT="$PROJECT_ROOT"
+DEFAULT_CONF="$CONF_ROOT/.pteronautos-flash.conf"
+conf_file() {  # conf_file <name> → path ("" or "default" → the default file)
+  local n="$1"
+  if [[ -z "$n" || "$n" == "default" ]]; then echo "$DEFAULT_CONF"; else echo "$CONF_ROOT/.pteronautos-flash-$n.conf"; fi
+}
+HAS_SAVED=0
+CONF_NAME=""       # --conf NAME ("" = default)
+DO_SAVE=0          # --save
+SAVE_CONF_NAME=""  # --save=NAME
+WIZARD_RAN=0       # set when the interactive wizard actually ran
+LANGS="en"
+
 # ---- Colors -----------------------------------------------------------------
 C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'
 C_OK=$'\033[32m'; C_WARN=$'\033[33m'; C_ERR=$'\033[31m'; C_DIM=$'\033[2m'
@@ -84,11 +101,11 @@ DOMAIN_LABELS=(
   "ISM 2400 — full ISM band"
 )
 
-GYRO_KEYS=(none rate ahrs)
+GYRO_KEYS=(none rate horizon)
 GYRO_LABELS=(
   "none — no gyro (default)"
-  "rate — rate-only damper (MESOZOIC)"
-  "ahrs — full self-level (Mahony AHRS)"
+  "rate — rate-only damper (Mesozoic)"
+  "horizon — rate + self-level (Mesozoic HORIZON)"
 )
 
 # ---- Usage ------------------------------------------------------------------
@@ -99,9 +116,8 @@ usage() {
   say "  --device <k>       receiver hardware: pwmp5 | pwmp7 | ep2pwm | mushin"
   say "  --mixer <0-12>     mixer profile (see --list-mixers)"
   say "  --domain <k>       regulatory domain: eu | ism"
-  say "  --gyro <k>         gyro: none | rate | ahrs"
-  say "  --horizon          experimental Mesozoic HORIZON env (pwmp5/pwmp7)"
-  say "                     (legacy: --target pwmp5|pwmp7|ep2|ep2-pwm, --mode none|rate|horizon)"
+  say "  --gyro <k>         gyro: none | rate | horizon"
+  say "                     (legacy: --horizon == --gyro horizon; --mode none|rate|horizon)"
   say ""
   say "Radio / network / gyro detail:"
   say "  --binding-phrase <s>   hardcoded binding phrase (empty = traditional bind)"
@@ -116,7 +132,12 @@ usage() {
   say "  --uart-baud <rate>     CRSF UART baud (default 420000)"
   say ""
   say "WebUI languages:"
-  say "  -l, --lang <codes>   comma-separated locale codes, or 'all' (default all)"
+  say "  -l, --lang <codes>   comma-separated locale codes, or 'all' (default: en; saved settings reused)"
+  say ""
+  say "Saved config presets (default: .pteronautos-flash.conf):"
+  say "  --conf <name>        load a named saved config (--conf=NAME also works)"
+  say "  --save[=<name>]      save this run's config (wizard prompts instead)"
+  say "  --reset              delete the selected saved config"
   say ""
   say "Build / flash control:"
   say "  --no-build           skip rebuild, flash existing .bin"
@@ -133,7 +154,7 @@ usage() {
 
 # ---- Argument parsing -------------------------------------------------------
 # Defaults mirror cloud-build.yml.
-LANG_SEL=""           # "" → interactive prompt
+LANG_SEL=""           # "" → saved settings (if any) or interactive prompt
 BUILD=1
 CHECK_ONLY=0
 LIST_MIXERS=0
@@ -148,7 +169,7 @@ DOMAIN=EU_CE_2400
 BINDING_PHRASE=""
 WIFI_INTERVAL=30
 ZEPHYR_ENABLED=0
-ZEPHYR_MODE=1          # 1=rate-only (MESOZOIC), 0=AHRS self-level
+ZEPHYR_MODE=1          # rate-only damper (MESOZOIC); HORIZON=1 selects MESOZOIC_HORIZON
 ZEPHYR_SDA=1
 ZEPHYR_SCL=3
 ZEPHYR_ROTATION=0
@@ -159,7 +180,91 @@ WIFI_SSID=""
 WIFI_PASS=""
 HORIZON=0
 
-ORIG_ARGS=("$@")   # snapshot before the parser shift()s them away
+# ---- Config persistence ------------------------------------------------------
+load_conf() {   # load_conf <file> — source a saved config as defaults
+  # shellcheck disable=SC1090
+  . "$1"
+  HAS_SAVED=1
+}
+
+save_conf() {   # save_conf <file>
+  local f="$1"
+  {
+    echo "# PteronautOS flash.sh saved config (delete to forget; --reset clears)."
+    printf 'DEVICE=%q\n' "$DEVICE"
+    printf 'MIXER_PROFILE=%q\n' "$MIXER_PROFILE"
+    printf 'DOMAIN=%q\n' "$DOMAIN"
+    printf 'ZEPHYR_ENABLED=%q\n' "$ZEPHYR_ENABLED"
+    printf 'ZEPHYR_MODE=%q\n' "$ZEPHYR_MODE"
+    printf 'HORIZON=%q\n' "$HORIZON"
+    printf 'BINDING_PHRASE=%q\n' "$BINDING_PHRASE"
+    printf 'WIFI_INTERVAL=%q\n' "$WIFI_INTERVAL"
+    printf 'DEVICE_NAME=%q\n' "$DEVICE_NAME"
+    printf 'WIFI_SSID=%q\n' "$WIFI_SSID"
+    printf 'WIFI_PASS=%q\n' "$WIFI_PASS"
+    printf 'ZEPHYR_SDA=%q\n' "$ZEPHYR_SDA"
+    printf 'ZEPHYR_SCL=%q\n' "$ZEPHYR_SCL"
+    printf 'ZEPHYR_ROTATION=%q\n' "$ZEPHYR_ROTATION"
+    printf 'ZEPHYR_PRE_DETECT=%q\n' "$ZEPHYR_PRE_DETECT"
+    printf 'UART_BAUD=%q\n' "$UART_BAUD"
+    printf 'LANGS=%q\n' "${LANGLIST:-en}"
+  } > "$f"
+}
+
+ask_yes() {  # ask_yes <prompt> <default y|n> → y|n
+  local prompt="$1" default="${2:-y}" ans
+  if [[ ! -t 0 ]]; then echo "$default"; return 0; fi
+  local hint
+  if [[ "$default" == "y" ]]; then hint="[Y/n]"; else hint="[y/N]"; fi
+  printf '%s %s > ' "$prompt" "$hint" >&2
+  read -r ans
+  ans="${ans,,}"
+  if [[ -z "$ans" ]]; then echo "$default"; return 0; fi
+  case "$ans" in y|yes) echo "y";; *) echo "n";; esac
+}
+
+# Snapshot args BEFORE the parser shift()s them away.
+ORIG_ARGS=("$@")
+
+# Pre-scan for --conf (needed before parsing so saved defaults load first).
+CONF_NAME=""
+prev=""
+for a in "${ORIG_ARGS[@]}"; do
+  if [[ "$prev" == "--conf" ]]; then CONF_NAME="$a"; break; fi
+  if [[ "$a" == --conf=* ]]; then CONF_NAME="${a#--conf=}"; break; fi
+  prev="$a"
+done
+
+# Which config file to use (default vs named).
+CONF_FILE="$(conf_file "$CONF_NAME")"
+if [[ -n "$CONF_NAME" && ! -f "$CONF_FILE" ]]; then
+  err "No saved config named '$CONF_NAME' (looked for ${CONF_FILE#$PROJECT_ROOT/})."
+  exit 1
+fi
+
+# Detect whether any primary config flag was passed (then we don't prompt).
+CONFIG_GIVEN=0
+for a in "${ORIG_ARGS[@]}"; do
+  case "$a" in
+    --device|--mixer|--domain|--gyro|--horizon|--target|--mode|\
+    --binding-phrase|--wifi-interval|--device-name|--wifi-ssid|--wifi-pass|\
+    --i2c-sda|--i2c-scl|--rotation|--pre-detect|--uart-baud) CONFIG_GIVEN=1 ;;
+  esac
+done
+
+# Load a saved config as defaults:
+#   • explicit --conf → always load
+#   • scripted flags  → load silently (flags still win)
+#   • interactive     → ask first ("Reuse last settings?")
+if [[ -f "$CONF_FILE" ]]; then
+  _reuse=1
+  if [[ -z "$CONF_NAME" && "$CONFIG_GIVEN" == "0" && -t 0 ]]; then
+    [[ "$(ask_yes "Reuse saved settings (${CONF_FILE#$PROJECT_ROOT/})?" "y")" == "y" ]] || _reuse=0
+  fi
+  if [[ "$_reuse" == "1" ]]; then
+    load_conf "$CONF_FILE"
+  fi
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -174,12 +279,12 @@ while [[ $# -gt 0 ]]; do
       esac; shift 2 ;;
     --gyro)
       case "$2" in
-        none) ZEPHYR_ENABLED=0 ;;
-        rate) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1 ;;
-        ahrs) ZEPHYR_ENABLED=1; ZEPHYR_MODE=0 ;;
-        *) err "--gyro requires none, rate or ahrs"; exit 1 ;;
+        none)    ZEPHYR_ENABLED=0; HORIZON=0 ;;
+        rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
+        horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
+        *) err "--gyro requires none, rate or horizon"; exit 1 ;;
       esac; shift 2 ;;
-    --horizon) HORIZON=1; shift ;;
+    --horizon) HORIZON=1; ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; shift ;;
     # --- detail ---
     --binding-phrase) BINDING_PHRASE="$2"; shift 2 ;;
     --wifi-interval) WIFI_INTERVAL="$2"; shift 2 ;;
@@ -202,9 +307,9 @@ while [[ $# -gt 0 ]]; do
       esac; shift 2 ;;
     --mode)
       case "$2" in
-        none)    ZEPHYR_ENABLED=0 ;;
-        rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1 ;;
-        horizon) HORIZON=1; ZEPHYR_ENABLED=1 ;;
+        none)    ZEPHYR_ENABLED=0; HORIZON=0 ;;
+        rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
+        horizon) HORIZON=1; ZEPHYR_ENABLED=1; ZEPHYR_MODE=1 ;;
         *) err "--mode requires none, rate or horizon"; exit 1 ;;
       esac; shift 2 ;;
     # --- build / flash ---
@@ -213,6 +318,11 @@ while [[ $# -gt 0 ]]; do
     --check)        CHECK_ONLY=1; BUILD=0; shift ;;
     --port)         PORT="$2"; shift 2 ;;
     --baud)         BAUD="$2"; shift 2 ;;
+    --conf)         CONF_NAME="$2"; shift 2 ;;
+    --conf=*)       CONF_NAME="${1#--conf=}"; shift ;;
+    --save)         DO_SAVE=1; shift ;;
+    --save=*)       DO_SAVE=1; SAVE_CONF_NAME="${1#--save=}"; shift ;;
+    --reset)        rm -f "$CONF_FILE"; HAS_SAVED=0; shift ;;
     # --- info ---
     --list-mixers)  LIST_MIXERS=1; shift ;;
     --list-devices) LIST_DEVICES=1; shift ;;
@@ -310,9 +420,9 @@ wizard_primary() {
 
   gi="$(choose "Gyro (Zephyrus):" "${GYRO_LABELS[@]}")"
   case "${GYRO_KEYS[$((gi-1))]}" in
-    none) ZEPHYR_ENABLED=0 ;;
-    rate) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1 ;;
-    ahrs) ZEPHYR_ENABLED=1; ZEPHYR_MODE=0 ;;
+    none)    ZEPHYR_ENABLED=0; HORIZON=0 ;;
+    rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
+    horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
   esac
 }
 
@@ -365,23 +475,25 @@ prompt_languages() {
   say "" >&2
   local choice
   choice="$(choose "How should the WebUI be baked in?" \
-    "All ${#ALL_LANGS[@]} languages  (biggest payload — default)" \
+    "English only  (smallest payload — default)" \
     "A selection  (comma-separated codes, e.g. de,en)" \
-    "Skip rebuild   (flash existing firmware.bin as-is)")" || { echo "all"; return 0; }
+    "All ${#ALL_LANGS[@]} languages  (biggest payload)" \
+    "Skip rebuild   (flash existing firmware.bin as-is)")" || { echo "en"; return 0; }
 
   case "$choice" in
-    1) echo "all"; return 0 ;;
-    3) echo "__SKIP__"; return 0 ;;
+    1) echo "en"; return 0 ;;
+    3) echo "all"; return 0 ;;
+    4) echo "__SKIP__"; return 0 ;;
     2)
       local sel
       printf 'Languages (e.g. de,en) > ' >&2
-      read -r sel || { echo "all"; return 0; }
+      read -r sel || { echo "en"; return 0; }
       if [[ -z "${sel//[[:space:]]/}" ]]; then
-        warn "Empty selection — using all languages." >&2
-        echo "all"; return 0
+        warn "Empty selection — using English only." >&2
+        echo "en"; return 0
       fi
       echo "$sel"; return 0 ;;
-    *) echo "all"; return 0 ;;
+    *) echo "en"; return 0 ;;
   esac
 }
 
@@ -394,7 +506,7 @@ validate_config() {
   [[ "$ZEPHYR_PRE_DETECT" == "0" || "$ZEPHYR_PRE_DETECT" == "1" ]] \
     || { err "Invalid --pre-detect: $ZEPHYR_PRE_DETECT (0|1)"; exit 1; }
   if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
-    err "--horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
+    err "--gyro horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
   fi
 }
 
@@ -444,9 +556,6 @@ write_user_defines() {
     esac
     if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
       echo "-DZEPHYRUS_ENABLED=1"
-    fi
-    if [[ "$ZEPHYR_MODE" == "0" ]]; then
-      echo "!-D MESOZOIC_ONLY=1"
     fi
     if [[ "$ZEPHYR_PRE_DETECT" == "0" ]]; then
       echo "-DZEPHYR_I2C_PRE_DETECT=0"
@@ -518,10 +627,9 @@ verify_firmware() {
 # ---- Configuration summary --------------------------------------------------
 summary() {
   local gyro_lbl
-  if [[ "$HORIZON" == "1" ]]; then gyro_lbl="horizon (experimental)";
+  if [[ "$HORIZON" == "1" ]]; then gyro_lbl="horizon (Mesozoic self-level)";
   elif [[ "$ZEPHYR_ENABLED" == "0" ]]; then gyro_lbl="none";
-  elif [[ "$ZEPHYR_MODE" == "1" ]]; then gyro_lbl="rate-only";
-  else gyro_lbl="AHRS self-level"; fi
+  else gyro_lbl="rate-only"; fi
 
   say "${C_BOLD}Configuration${C_RESET}"
   say "  device        : ${DEVICE}"
@@ -533,22 +641,15 @@ summary() {
   [[ -n "$DEVICE_NAME" ]] && say "  device name   : ${DEVICE_NAME}"
   [[ -n "$WIFI_SSID" ]] && say "  home wifi     : ${WIFI_SSID}"
   say "  target env    : ${TARGET_ENV}"
+  [[ "$HAS_SAVED" == "1" ]] && say "  settings      : ${C_DIM}${CONF_FILE#$PROJECT_ROOT/}${C_RESET} (loaded as defaults; --reset to clear)"
   say ""
 }
 
 # ---- Resolve config (interactive if no flags) -------------------------------
-CONFIG_GIVEN=0
-for a in "${ORIG_ARGS[@]}"; do
-  case "$a" in
-    --device|--mixer|--domain|--gyro|--horizon|--target|--mode|\
-    --binding-phrase|--wifi-interval|--device-name|--wifi-ssid|--wifi-pass|\
-    --i2c-sda|--i2c-scl|--rotation|--pre-detect|--uart-baud) CONFIG_GIVEN=1 ;;
-  esac
-done
-
-if [[ "$BUILD" == "1" && "$CONFIG_GIVEN" == "0" ]]; then
+if [[ "$BUILD" == "1" && "$CONFIG_GIVEN" == "0" && "$HAS_SAVED" == "0" ]]; then
   wizard_primary
   wizard_advanced
+  WIZARD_RAN=1
 fi
 
 validate_config
@@ -558,6 +659,8 @@ resolve_target
 if [[ "$BUILD" == "1" ]]; then
   if [[ -n "$LANG_SEL" ]]; then
     if ! LANGLIST="$(normalize_langs "$LANG_SEL")"; then exit 1; fi
+  elif [[ "$HAS_SAVED" == "1" ]]; then
+    LANGLIST="$(normalize_langs "${LANGS:-en}")"
   else
     local_raw="$(prompt_languages)"
     if [[ "$local_raw" == "__SKIP__" ]]; then
@@ -573,8 +676,17 @@ if [[ "$BUILD" == "1" ]]; then
     build_webui "${LANGLIST:-}"
     build_firmware
   fi
-else
+elif [[ "$CHECK_ONLY" == "0" ]]; then
   summary
+fi
+
+# ---- Save config (opt-in) ----------------------------------------------------
+if [[ "$DO_SAVE" == "1" ]]; then
+  save_conf "$(conf_file "${SAVE_CONF_NAME:-default}")"
+elif [[ "$WIZARD_RAN" == "1" && -t 0 ]]; then
+  if [[ "$(ask_yes "Save this configuration?" "n")" == "y" ]]; then
+    save_conf "$(conf_file "$(ask_text "Configuration name" "default")")"
+  fi
 fi
 
 # ---- 1) Locate esptool ------------------------------------------------------
@@ -619,26 +731,29 @@ if [[ -n "$PORT" ]]; then
   [[ -e "$PORT" ]] || { err "Port does not exist: $PORT"; exit 1; }
 else
   PORT=$(ls /dev/cu.* 2>/dev/null | grep -Ev 'Bluetooth|debug|wlan' | head -1 || true)
-  [[ -n "$PORT" ]] || { err "No USB serial port found. Plug in the FTDI adapter."; exit 1; }
+  [[ -n "$PORT" ]] || { err "No USB serial port found. Plug in the FTDI adapter or RP2040 bridge."; exit 1; }
 fi
 ok "Port: $C_DIM$PORT$C_RESET"
 
 # ---- 4) Check mode (no firmware needed, no flash) ---------------------------
 if [[ "$CHECK_ONLY" == "1" ]]; then
-  step "Checking bootloader (chip id)"
-  CHIP=$("$ESPT" --chip esp8266 --port "$PORT" --baud "$BAUD" --before no_reset chip_id 2>&1 | grep -oE 'Chip ID: 0x[0-9a-fA-F]+' | head -1 || true)
-  if [[ -z "$CHIP" ]]; then
+  step "Checking bootloader (read MAC)"
+  # read_mac is the reliable "chip is alive" probe on every ROM target.
+  # (esp8266 ROM also supports chip_id via OTP reads, but read_mac is the
+  # standard, unambiguous probe.)
+  MAC=$("$ESPT" --chip esp8266 --port "$PORT" --baud "$BAUD" --before no_reset read_mac 2>&1 | grep -oE 'MAC: [0-9a-fA-F:]+' | head -1 || true)
+  if [[ -z "$MAC" ]]; then
     warn "No chip detected in bootloader mode."
     cat <<'EOF'
-  Boot cycle (FTDI has NO auto-reset):
-    1. HOLD BOOT (GPIO0)
-    2. Unplug FTDI/USB → plug it back in
+  Boot cycle (the bridge has NO auto-reset — DTR/RTS is not wired to EN/GPIO0):
+    1. HOLD BOOT (GPIO0) on the receiver
+    2. Power-cycle the receiver (unplug its 3.3V/USB → plug it back in)
     3. Keep holding ~1 s, then release BOOT
   Then run again: ./scripts/flash.sh --check
 EOF
     exit 1
   fi
-  ok "$CHIP"
+  ok "$MAC"
   say "\n${C_OK}Chip is ready.${C_RESET} (--check only, no flash.)"
   exit 0
 fi
@@ -656,7 +771,7 @@ verify_firmware "$FW"
 # ---- 6) Flash (single connection, no pre-probe) -----------------------------
 step "Flashing firmware"
 
-say "${C_DIM}Tip: disconnect servos / external load from the FTDI 3.3V rail while${C_RESET}"
+say "${C_DIM}Tip: disconnect servos / external load from the 3.3V rail while${C_RESET}"
 say "${C_DIM}flashing — the ESP draws more current during flash and can brown out.${C_RESET}"
 say ""
 
@@ -671,7 +786,7 @@ for attempt in 1 2 3; do
   fi
   if "$ESPT" "${FLASH_OPTS[@]}"; then
     ok "Flash complete."
-    say "${C_DIM}Afterwards: unplug FTDI → plug back in (do NOT hold GPIO0) for normal boot.${C_RESET}"
+    say "${C_DIM}Afterwards: unplug the bridge/receiver → plug back in (do NOT hold GPIO0) for normal boot.${C_RESET}"
     exit 0
   fi
   [[ $attempt -lt 3 ]] && sleep 1
@@ -681,7 +796,7 @@ err "Flash failed after 3 attempts."
 cat <<'EOF'
   Possible causes & fixes:
     1. Chip not cleanly in bootloader → redo the boot cycle:
-       HOLD BOOT (GPIO0) → unplug FTDI → plug in → hold ~1s → release BOOT.
+       HOLD BOOT (GPIO0) → power-cycle the receiver → hold ~1s → release BOOT.
     2. Servos/external load sagging the 3.3V rail → disconnect them, retry.
     3. Marginal serial → try a lower baud:  ./scripts/flash.sh --baud 9600
 EOF

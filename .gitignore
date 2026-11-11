@@ -1,6 +1,10 @@
 # PlatformIO build artifacts (src/ and egg/)
 .pio/
 
+# flash.sh saved config presets (may contain binding phrase / WiFi password)
+.pteronautos-flash.conf
+.pteronautos-flash-*.conf
+
 # macOS + Python transient artifacts
 .DS_Store
 __pycache__/

@@ -115,6 +115,23 @@ restoreConfig = ->
         $("#locale-#{l}").checked = false
   catch
 
+# Changing any build-config value invalidates the loaded firmware fossil: the
+# .bin no longer matches the fields, so we drop the selection rather than let a
+# stale artifact be flashed against a freshly edited configuration.
+deselectSpecimen = ->
+  return unless selectedSpecimenId? or firmwareBytes?
+  selectedSpecimenId = null
+  firmwareBytes = null
+  localStorage.removeItem SPECIMEN_KEY
+  els.downloadGzBtn.disabled = true
+  els.flashBtn.disabled = true if serialSupported
+  renderSpecimens()
+  log "Deselected firmware fossil — configuration changed."
+
+configChanged = ->
+  saveConfig()
+  deselectSpecimen()
+
 log = (line) ->
   els.log.textContent += line + "\n"
   els.log.scrollTop = els.log.scrollHeight
@@ -416,20 +433,10 @@ renderSpecimens = ->
     els.specimensList.appendChild specimenNode rec
 
 restoreSpecimens = ->
-  if "indexedDB" of window
-    try
-      recs = await idbAllSpecimens()
-      if recs.length
-        stored = localStorage.getItem SPECIMEN_KEY
-        target = recs.find((r) -> r.id is stored) or recs[0]
-        if target?.blob?
-          firmwareBytes = new Uint8Array target.blob
-          selectedSpecimenId = target.id
-          enableFirmware()
-          log "Restored firmware fossil (" + fmtSize(target.size) + ") — ready to flash or download."
-          setStatus "Firmware fossil loaded — ready to flash or download.", "done"
-    catch
-      # no storage or blocked — nothing to load
+  # Firmware fossils persist across reloads, but we never auto-select one: a
+  # stale .bin would silently be flashed against whatever configuration the
+  # user has since edited. The user must consciously re-select a fossil.
+  localStorage.removeItem SPECIMEN_KEY
   renderSpecimens()
 
 closeSerial = ->
@@ -732,15 +739,15 @@ syncFlashMethod()
 restoreSpecimens()
 
 for id in FIELD_IDS
-  $(id).addEventListener "input", saveConfig
-  $(id).addEventListener "change", saveConfig
+  $(id).addEventListener "input", configChanged
+  $(id).addEventListener "change", configChanged
 
 for sel in ["#receiver_board_pwm", "#receiver_board_crsf"]
   $(sel).addEventListener "change", ->
-    saveConfig()
+    configChanged()
     syncGyroFields()
 $("#ep2_pwm_enabled").addEventListener "change", ->
-  saveConfig()
+  configChanged()
   syncGyroFields()
 $("#zephyrus_enabled").addEventListener "change", syncGyroFields
 
@@ -750,7 +757,7 @@ for sel in ["#flash_method_uart", "#flash_method_wifi"]
     syncFlashMethod()
 
 for l in LOCALES
-  $("#locale-#{l}").addEventListener "change", saveConfig
+  $("#locale-#{l}").addEventListener "change", configChanged
 
 els.buildBtn.addEventListener "click", startBuild
 els.disconnectBtn.addEventListener "click", disconnect
