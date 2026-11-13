@@ -36,7 +36,16 @@ template<class Serial> bool send(Serial& serial, uint8_t type, const uint8_t* pa
     uint8_t frame[maxFrame];
     size_t size = encode(type, payload, n, frame);
     // Drop an update instead of blocking the RF loop or emitting a partial frame.
-    if (!size || serial.availableForWrite() < (int)size) return false;
+    if (!size) return false;
+#if defined(ARDUINO_ARCH_RP2040)
+    // arduino-pico's availableForWrite() reports "writable now" (0/1), NOT free
+    // buffer space, so the "< size" test would reject every multi-byte frame and
+    // the muscle would never transmit its announce. It returns 0 only when the
+    // UART is stopped or the TX FIFO is full — the one case worth guarding.
+    if (serial.availableForWrite() <= 0) return false;
+#else
+    if (serial.availableForWrite() < (int)size) return false;
+#endif
     return serial.write(frame, size) == size;
 }
 

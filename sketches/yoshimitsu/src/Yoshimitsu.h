@@ -489,6 +489,8 @@ static uint32_t bridgeUsbToRx  = 0;
 static uint32_t bridgeRxToUsb  = 0;
 static uint32_t bridgeOverflows = 0;
 static uint32_t lastBridgeMs   = 0;
+static uint32_t mushinTxOk     = 0;      // bytes the CRSF UART actually accepted (write() success)
+static uint32_t mushinTxFail   = 0;      // frames refused by availableForWrite()/write()
 
 // CRSF/stats ledger for JIGUANG's HIGHSCORE (arcade-style, told by 極光)
 static uint32_t goodFrames     = 0;        // CRSF RC frames accepted (CRC clean)
@@ -1077,7 +1079,10 @@ static void mushinSend(uint8_t type, const uint8_t* p, uint8_t n) {
   uint8_t x = (uint8_t)(n ^ type);
   for (uint8_t i = 0; i < n; i++) { frame[i + 3] = p[i]; x ^= p[i]; }
   frame[n + 3] = x;
-  Companion::send(CRSF_SERIAL, Companion::mushinType, frame, n + 4);
+  if (Companion::send(CRSF_SERIAL, Companion::mushinType, frame, n + 4))
+    mushinTxOk += n + 4;                // bytes the UART hardware actually accepted
+  else
+    mushinTxFail++;                     // availableForWrite()/write() refused the frame
   bridgeRxToUsb += n;                   // the muscle also keeps the ledger honest
 }
 
@@ -1826,6 +1831,11 @@ static void printStatus() {
   Serial.print(" bytes · overflows "); Serial.print(bridgeOverflows);
   Serial.print(" · idle "); Serial.print(millis() - lastBridgeMs);
   Serial.println(" ms");
+  if (mushin) {
+    Serial.print("  mushin TX: "); Serial.print(mushinTxOk);
+    Serial.print(" B written · "); Serial.print(mushinTxFail);
+    Serial.println(" dropped");
+  }
   printPinMap();
 }
 
