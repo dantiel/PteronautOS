@@ -101,9 +101,9 @@ class FlightProfilesPanel extends PteroElement
     @profileName          = ''
     @copyFrom             = 0
     @flightProfiles       = [
-      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:0, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
     ]
     @strokeFerocity       = 30
     @returnFerocity       = 50
@@ -112,7 +112,7 @@ class FlightProfilesPanel extends PteroElement
     @rudderFerocityRange  = 50
     @rudderAmplitudeDifferential = 0
     @elevatorFerocityMix  = 0
-    @throttleFrequencyMix = 0
+    @throttleFrequencyMix = 30
     @ferocityShapeMix      = 0
     @strokeSkew            = 0
     @returnSkew            = 0
@@ -471,7 +471,7 @@ class FlightProfilesPanel extends PteroElement
 
   _boundsFor: (prop) ->
     switch prop
-      when 'glideAngleDeg'    then [-15, 15]
+      when 'glideAngleDeg'    then [-30, 30]
       when 'flappingAngleDeg' then [-15, 15]
       when 'strokeSkew'       then [-100, 100]
       when 'returnSkew'       then [-100, 100]

@@ -62,7 +62,7 @@ class JoypadPanel extends PteroElement
     @servoRudderUs = 1500
     @voiceArm      = 0
     @activeProfile = 1
-    @_channelTimers   = {}
+    @_sendTimer      = null
     @_channelPending  = {}
     @_touches         = new Map()
     @_pollInFlight    = false
@@ -161,7 +161,11 @@ class JoypadPanel extends PteroElement
       when 2 then 1811
       else 992
 
-  # ── Sending (debounced per channel, non-overlapping) ─────────────
+  # ── Sending (one coalesced POST per 40ms tick) ──────────────────
+  # Each stick move used to fire a separate POST per channel (aileron, elevator,
+  # throttle, rudder = 4 concurrent 40ms timers → ~100 req/s). The ESP8285 is
+  # simultaneously running CRSF RX + the servo NMI, so that firehose starved the
+  # WiFi stack and rebooted it. Now every pending channel rides ONE debounced POST.
   _ensureOverride: ->
     return if @stickOverride
     @stickOverride = true
@@ -169,16 +173,18 @@ class JoypadPanel extends PteroElement
 
   _sendChannel: (idx, val) ->
     @_channelPending[idx] = val
-    clearTimeout @_channelTimers[idx] if @_channelTimers[idx]
-    @_channelTimers[idx] = setTimeout (=>
-      @_channelTimers[idx] = null
-      @_sendChannelNow idx, @_channelPending[idx]
+    clearTimeout @_sendTimer if @_sendTimer
+    @_sendTimer = setTimeout (=>
+      @_sendTimer = null
+      @_flushChannels()
     ), 40
 
-  _sendChannelNow: (idx, val) ->
+  _flushChannels: ->
     body = new URLSearchParams()
-    body.append 'override', '1'
-    body.append "ch#{idx}", val
+    body.append 'override', if @stickOverride then '1' else '0'
+    for idx, val of @_channelPending
+      body.append "ch#{idx}", val
+    @_channelPending = {}
     try
       await fetch '/pteronautos/stick', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
     catch

@@ -8,9 +8,9 @@ void Ornithopter::_loadDefaultFlightProfiles()
 {
     // Three distinct tuning sets (index 0..2). Aggregate init; the trailing
     // fields of FlightProfileParams (incl. name) zero-initialize.
-    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
     setFlightProfileName(0, "Gentle");
     setFlightProfileName(1, "Standard");
     setFlightProfileName(2, "Aggressive");

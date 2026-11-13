@@ -73,7 +73,7 @@
             %br
             %small{style: "color:#888;"} = self._t('ornithopter.glide_angle.desc')
           %td
-            %input{type: "number", min: "-15", max: "15", step: "1", .value: self.glideAngleDeg, @input: self._onNumberInput('glideAngleDeg'), @change: self._onNumberCommit('glideAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
+            %input{type: "number", min: "-30", max: "30", step: "1", .value: self.glideAngleDeg, @input: self._onNumberInput('glideAngleDeg'), @change: self._onNumberCommit('glideAngleDeg'), @focus: self._onFieldFocus, @blur: self._onFieldBlur, .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;"}
             | °
             %small.label= self._glideAngleLabel()
         %tr

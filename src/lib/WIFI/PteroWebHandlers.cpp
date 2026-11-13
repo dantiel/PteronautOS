@@ -880,7 +880,12 @@ void LoadOrnithopterConfig()
                 if (mix > 100) mix = 100;
                 dst.aileronSkewRateMix = mix;
             }
-            if (p["glide_angle_deg"].is<int>())       dst.glideAngleDeg       = (int8_t)p["glide_angle_deg"].as<int>();
+            if (p["glide_angle_deg"].is<int>()) {
+                int32_t ga = p["glide_angle_deg"].as<int>();
+                if (ga < -30) ga = -30;
+                if (ga >  30) ga =  30;
+                dst.glideAngleDeg = (int8_t)ga;
+            }
                         if (p["flapping_angle_deg"].is<int>()) {
                             int32_t fa = p["flapping_angle_deg"].as<int>();
                             if (fa < -15) fa = -15;
@@ -1189,6 +1194,8 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     float   sf    = (float)_pteroParamInt(request, "stroke_ferocity",       (int)defaults.strokeFerocity);
     float   rf    = (float)_pteroParamInt(request, "return_ferocity",       (int)defaults.returnFerocity);
     int8_t  glide = (int8_t)_pteroParamInt(request, "glide_angle_deg",      defaults.glideAngleDeg);
+        if (glide < -30) glide = -30;
+        if (glide >  30) glide =  30;
         int8_t  flapAng = (int8_t)_pteroParamInt(request, "flapping_angle_deg",  defaults.flappingAngleDeg);
         if (flapAng < -15) flapAng = -15;
         if (flapAng >  15) flapAng =  15;

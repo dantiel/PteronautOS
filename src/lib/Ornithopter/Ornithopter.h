@@ -104,7 +104,7 @@ public:
     // ── Runtime waveform/mixer params (init from OrnithopterConfig.h defaults) ──
     float   strokeFerocity;       // 0–100, waveform aggression
     float   returnFerocity;       // 0–100, upstroke speed
-    int8_t  glideAngleDeg;        // -15…+15, static glide wing angle
+    int8_t  glideAngleDeg;        // -30…+30, static glide wing angle
         int8_t  flappingAngleDeg;     // -15…+15, flapping stroke centre offset (deg)
     float   aileronScale;         // 0–100, roll authority
     float   elevatorScale;        // 0–100, pitch authority

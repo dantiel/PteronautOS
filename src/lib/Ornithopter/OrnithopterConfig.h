@@ -383,7 +383,7 @@ constexpr float orniElevatorAntigravity(float gate01, float elevatorDeflection01
 struct FlightProfileParams {
     float   strokeFerocity;       // 0–100
     float   returnFerocity;       // 0–100
-    int8_t  glideAngleDeg;        // -15…+15
+    int8_t  glideAngleDeg;        // -30…+30
         int8_t  flappingAngleDeg;     // -15…+15, flap stroke centre offset (deg)
     float   rudderFerocityRange;  // 0–100
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
