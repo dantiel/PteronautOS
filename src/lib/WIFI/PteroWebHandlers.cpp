@@ -278,8 +278,9 @@ extern void stopServoSweep();
 extern bool isServoSweepActive();
 extern uint16_t getServoSweepUs();
 
-// ── Mushin bridge externs (defined in MushinNoShin.cpp) ───────────
+// ─── Mushin bridge externs (defined in MushinNoShin.cpp) ─────────────────────
 #ifdef MUSHIN_ENABLED
+#include "../Mushin/MushinNoShin.h"   // MushinTelemetry + mushinTelemetry()
 extern bool mushinIsLinked();
 extern uint8_t mushinMuscleVersion();
 extern uint32_t mushinRawRx();
@@ -324,6 +325,21 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     orni["active_flight_profile"] = ornithopter.activeFlightProfile;
     orni["active_profile"] = (uint8_t)activeProfile;
     orni["servo_count"] = PROFILE.servoCount;
+
+    // Altitude hold live state + baro source (direct-I2C or MUSHIN companion).
+    orni["altitude_hold_active"]   = ornithopter.altHoldState.active;
+    orni["altitude_hold_desired"]  = ornithopter.altHoldState.desiredM;
+    orni["altitude_hold_output"]   = (int)ornithopter.altHoldState.outputRaw;
+    JsonObject baro = root["baro"].to<JsonObject>();
+    baro["valid"]    = PteroAltitude::valid;
+    baro["altitude_m"] = PteroAltitude::currentM;
+#if defined(PTERONAUTOS_BARO)
+    baro["source"]   = "i2c";
+#elif defined(MUSHIN_ENABLED)
+    baro["source"]   = "mushin";
+#else
+    baro["source"]   = "none";
+#endif
 
     JsonObject zeph = root["zephyrus"].to<JsonObject>();
     // Compile-time AHRS mode — replaces the old hardcoded "Mahony" panel label.
@@ -495,6 +511,15 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["ratchet_timeout_ms"]  = ornithopter.ratchetTimeoutMs;
     orni["servo_speed"]         = (int)ornithopter.servoSpeed;
     orni["flap_base_freq"]      = (int)ornithopter.flapBaseFreq;
+    // Altitude hold (AltitudeHold.h)
+    orni["altitude_hold_enabled"] = ornithopter.altHold.enabled;
+    orni["altitude_hold_gain"]    = (int)ornithopter.altHold.gain;
+    orni["altitude_hold_error_filter"] = (int)(ornithopter.altHold.errorFilter * 100.0f + 0.5f);
+    orni["altitude_hold_deadband_cm"]  = (int)(ornithopter.altHold.deadbandM * 100.0f + 0.5f);
+    orni["altitude_hold_max_rate"]     = (int)ornithopter.altHold.maxRate;
+    orni["altitude_hold_max_alt_m"]    = (int)ornithopter.altHold.maxAltitudeM;
+    orni["altitude_hold_engage_threshold"] = (int)(ornithopter.altHold.engageThreshold * 100.0f + 0.5f);
+    orni["altitude_hold_channel"] = (int)ornithopter.altHold.channel;
     JsonArray trimArr = orni["servo_trim"].to<JsonArray>();
     for (int i = 0; i < SF_COUNT; ++i) trimArr.add((int)ornithopter.servoTrimUs[i]);
 
@@ -730,6 +755,22 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.servoSpeed);
     f.print(F(",\"flap_base_freq\":"));
     f.print((int)ornithopter.flapBaseFreq);
+    f.print(F(",\"altitude_hold_enabled\":"));
+    f.print(ornithopter.altHold.enabled ? "true" : "false");
+    f.print(F(",\"altitude_hold_gain\":"));
+    f.print((int)ornithopter.altHold.gain);
+    f.print(F(",\"altitude_hold_error_filter\":"));
+    f.print((int)(ornithopter.altHold.errorFilter * 100.0f + 0.5f));
+    f.print(F(",\"altitude_hold_deadband_cm\":"));
+    f.print((int)(ornithopter.altHold.deadbandM * 100.0f + 0.5f));
+    f.print(F(",\"altitude_hold_max_rate\":"));
+    f.print((int)ornithopter.altHold.maxRate);
+    f.print(F(",\"altitude_hold_max_alt_m\":"));
+    f.print((int)ornithopter.altHold.maxAltitudeM);
+    f.print(F(",\"altitude_hold_engage_threshold\":"));
+    f.print((int)(ornithopter.altHold.engageThreshold * 100.0f + 0.5f));
+    f.print(F(",\"altitude_hold_channel\":"));
+    f.print((int)ornithopter.altHold.channel);
     f.print(F(",\"servo_min_us\":"));
     f.print((int)ornithopter.servoMinUs);
     f.print(F(",\"servo_max_us\":"));
@@ -816,7 +857,7 @@ void LoadOrnithopterConfig()
     if (!LittleFS.exists("/pteronautos.conf")) return;
     File f = LittleFS.open("/pteronautos.conf", "r");
     if (!f) return;
-    DynamicJsonDocument doc(2048);
+    DynamicJsonDocument doc(3072);
     DeserializationError err = deserializeJson(doc, f);
     f.close();
     if (err) return;
@@ -945,6 +986,43 @@ void LoadOrnithopterConfig()
         if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
         if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
         ornithopter.flapBaseFreq = (uint16_t)bf;
+    }
+    // Altitude hold (AltitudeHold.h)
+    if (o["altitude_hold_enabled"].is<bool>()) ornithopter.altHold.enabled = o["altitude_hold_enabled"].as<bool>();
+    if (o["altitude_hold_gain"].is<int>()) {
+        int32_t g = o["altitude_hold_gain"].as<int>();
+        if (g < 0) g = 0; else if (g > 200) g = 200;
+        ornithopter.altHold.gain = (float)g;
+    }
+    if (o["altitude_hold_error_filter"].is<int>()) {
+        int32_t ef = o["altitude_hold_error_filter"].as<int>();
+        if (ef < 1) ef = 1; else if (ef > 100) ef = 100;
+        ornithopter.altHold.errorFilter = (float)ef * 0.01f;
+    }
+    if (o["altitude_hold_deadband_cm"].is<int>()) {
+        int32_t db = o["altitude_hold_deadband_cm"].as<int>();
+        if (db < 0) db = 0; else if (db > 500) db = 500;
+        ornithopter.altHold.deadbandM = (float)db * 0.01f;
+    }
+    if (o["altitude_hold_max_rate"].is<int>()) {
+        int32_t mr = o["altitude_hold_max_rate"].as<int>();
+        if (mr < 1) mr = 1; else if (mr > 200) mr = 200;
+        ornithopter.altHold.maxRate = (float)mr;
+    }
+    if (o["altitude_hold_max_alt_m"].is<int>()) {
+        int32_t ma = o["altitude_hold_max_alt_m"].as<int>();
+        if (ma < 1) ma = 1; else if (ma > 100) ma = 100;
+        ornithopter.altHold.maxAltitudeM = (float)ma;
+    }
+    if (o["altitude_hold_engage_threshold"].is<int>()) {
+        int32_t et = o["altitude_hold_engage_threshold"].as<int>();
+        if (et < 1) et = 1; else if (et > 100) et = 100;
+        ornithopter.altHold.engageThreshold = (float)et * 0.01f;
+    }
+    if (o["altitude_hold_channel"].is<int>()) {
+        int32_t ch = o["altitude_hold_channel"].as<int>();
+        if (ch < 8) ch = 8; else if (ch > 15) ch = 15;
+        ornithopter.altHold.channel = (uint8_t)ch;
     }
     if (o["servo_min_us"].is<int>())          ornithopter.servoMinUs           = (uint16_t)o["servo_min_us"].as<int>();
     if (o["servo_max_us"].is<int>())          ornithopter.servoMaxUs           = (uint16_t)o["servo_max_us"].as<int>();
@@ -1285,6 +1363,32 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.flapBaseFreq = (uint16_t)bf;
     }
 
+    // Altitude hold (AltitudeHold.h)
+    {
+        ornithopter.altHold.enabled = _pteroParamInt(request, "altitude_hold_enabled", ornithopter.altHold.enabled ? 1 : 0) != 0;
+        int32_t g = _pteroParamInt(request, "altitude_hold_gain", (int)ornithopter.altHold.gain);
+        if (g < 0) g = 0; else if (g > 200) g = 200;
+        ornithopter.altHold.gain = (float)g;
+        int32_t ef = _pteroParamInt(request, "altitude_hold_error_filter", (int)(ornithopter.altHold.errorFilter * 100.0f + 0.5f));
+        if (ef < 1) ef = 1; else if (ef > 100) ef = 100;
+        ornithopter.altHold.errorFilter = (float)ef * 0.01f;
+        int32_t db = _pteroParamInt(request, "altitude_hold_deadband_cm", (int)(ornithopter.altHold.deadbandM * 100.0f + 0.5f));
+        if (db < 0) db = 0; else if (db > 500) db = 500;
+        ornithopter.altHold.deadbandM = (float)db * 0.01f;
+        int32_t mr = _pteroParamInt(request, "altitude_hold_max_rate", (int)ornithopter.altHold.maxRate);
+        if (mr < 1) mr = 1; else if (mr > 200) mr = 200;
+        ornithopter.altHold.maxRate = (float)mr;
+        int32_t ma = _pteroParamInt(request, "altitude_hold_max_alt_m", (int)ornithopter.altHold.maxAltitudeM);
+        if (ma < 1) ma = 1; else if (ma > 100) ma = 100;
+        ornithopter.altHold.maxAltitudeM = (float)ma;
+        int32_t et = _pteroParamInt(request, "altitude_hold_engage_threshold", (int)(ornithopter.altHold.engageThreshold * 100.0f + 0.5f));
+        if (et < 1) et = 1; else if (et > 100) et = 100;
+        ornithopter.altHold.engageThreshold = (float)et * 0.01f;
+        int32_t ch = _pteroParamInt(request, "altitude_hold_channel", ornithopter.altHold.channel);
+        if (ch < 8) ch = 8; else if (ch > 15) ch = 15;
+        ornithopter.altHold.channel = (uint8_t)ch;
+    }
+
     // Servo sweep pulse limits (kernel-level, wing 0°..180° map)
     {
         int32_t mn = _pteroParamInt(request, "servo_min_us", ornithopter.servoMinUs);
@@ -1367,10 +1471,12 @@ static void GetPteronautosSweepStatus(AsyncWebServerRequest *request)
 #ifdef MUSHIN_ENABLED
 static void GetPteronautosMushinStatus(AsyncWebServerRequest *request)
 {
-    char buf[128];
-    snprintf(buf, sizeof(buf), "{\"linked\":%d,\"muscleVersion\":%u,\"rawRx\":%u}",
+    const MushinTelemetry &t = mushinTelemetry();
+    char buf[192];
+    snprintf(buf, sizeof(buf),
+        "{\"linked\":%d,\"muscleVersion\":%u,\"rawRx\":%u,\"altitudeDm\":%d,\"hasAltitude\":%d}",
         mushinIsLinked() ? 1 : 0, (unsigned)mushinMuscleVersion(),
-        (unsigned)mushinRawRx());
+        (unsigned)mushinRawRx(), (int)t.altitudeDm, t.hasAltitude ? 1 : 0);
     request->send(200, "application/json", buf);
 }
 #endif

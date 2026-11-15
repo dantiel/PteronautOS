@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': '자이로 감지 시 사용 가능',
     'zephyrus.calibrate.hint_hold': '기체를 고정하세요 — 약 5초 후 자동 완료',
     'zephyrus.calibrate.hint_ready': '수평으로 놓고 눌러 보정',
-    'servo.panel.title': '🔧 서보 출력',
+    'servo.panel.title': '서보 출력',
     'servo.table.ch': 'CH',
     'servo.table.name': '이름',
     'servo.table.pin': 'GPIO',

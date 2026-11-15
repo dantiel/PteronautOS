@@ -167,7 +167,7 @@ export default {
     'zephyrus.wing.yaw_desc': 'Taxa de yaw → ferocidade diferencial (arrasto)',
     'zephyrus.wing.yaw_skew': 'Skew de Yaw',
     'zephyrus.wing.yaw_skew_desc': 'Taxa de yaw → skew do timing inercial E/D (ponte de skew)',
-    'servo.panel.title': '🔧 Servo Output',
+    'servo.panel.title': 'Servo Output',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Nome',
     'servo.table.pin': 'GPIO',
@@ -657,6 +657,24 @@ export default {
     'ornithopter.glitch.delta_persist_desc': 'Δ entre dois frames candidatos necessário para aceitar um salto como movimento real do stick (persistência de 2 frames).',
     'ornithopter.glitch.simult_threshold': 'Limiar Fantasma',
     'ornithopter.glitch.simult_threshold_desc': 'Se ≥N canais saltarem num só frame, rejeita o frame inteiro como um fantasma eléctrico colectivo.',
+
+    // ── Altitude Hold (barómetro BMP180) ───────────────────────────
+    'ornithopter.althold.title': 'Sustentação de Altitude',
+    'ornithopter.althold.desc': 'Sustentação barométrica de altitude (porta do sustentarAltura da Gralha Azul). Trava a altitude actual num canal dedicado e conduz o acelerador/amplitude de batimento ao erro zero. Requer um barómetro detectado (I2C directo ou companheiro MUSHIN).',
+    'ornithopter.althold.gain': 'Ganho',
+    'ornithopter.althold.gain_desc': 'Acelerador (CRSF raw) por metro de erro de altitude.',
+    'ornithopter.althold.error_filter': 'Filtro de Erro',
+    'ornithopter.althold.error_filter_desc': 'Suavização passa-baixa do erro de altitude (amortecimento).',
+    'ornithopter.althold.deadband': 'Banda Morta',
+    'ornithopter.althold.deadband_desc': '± altitude onde o erro é forçado a zero.',
+    'ornithopter.althold.max_rate': 'Taxa Máxima',
+    'ornithopter.althold.max_rate_desc': 'Limite de slew do acelerador por tick do mixer (anti-windup).',
+    'ornithopter.althold.max_alt': 'Altitude Máxima',
+    'ornithopter.althold.max_alt_desc': 'Limite do setpoint acima/abaixo do ponto de partida.',
+    'ornithopter.althold.engage': 'Limiar de Engate',
+    'ornithopter.althold.engage_desc': 'Ganho do canal de sustentação abaixo do qual o controlador liberta.',
+    'ornithopter.althold.channel': 'Canal',
+    'ornithopter.althold.channel_desc': 'Canal CRSF do botão de sustentação (0-based).',
 
     // ── Joypad (Virtual Stick) ─────────────────────────────────────
     'joypad.title': 'Joypad',

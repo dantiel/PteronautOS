@@ -14,6 +14,7 @@
 /* ── Feature gates ─────────────────────────────────────────────── */
 #define JIGUANG_DEFAULT             1
 #define YOSHI_GYRO_DEFAULT          1
+#define YOSHI_BARO_DEFAULT          0
 
 #define JIGUANG_PROMPT_DEFAULT      "極光"
 
@@ -39,6 +40,8 @@
 #define RP2040_TINY_RX_PWR_PIN_DEFAULT       6    // P-MOSFET gate (LOW = receiver powered); define RX_PWR_MANUAL 1 to skip the MOSFET
 #define RP2040_TINY_GYRO_SDA_PIN_DEFAULT     10   // MPU6050 SDA (optional, Wire)
 #define RP2040_TINY_GYRO_SCL_PIN_DEFAULT     11   // MPU6050 SCL
+#define RP2040_TINY_BARO_SDA_PIN_DEFAULT     10   // BMP180 SDA — shares the gyro I2C bus
+#define RP2040_TINY_BARO_SCL_PIN_DEFAULT     11   // BMP180 SCL
 #define RP2040_TINY_RGB_LED_PIN_DEFAULT      16   // onboard WS2812B
 
 /* ── Waveshare ESP32-S3-Tiny / -Micro / -Nano ─────────────────── */
@@ -61,6 +64,8 @@
 #define S3_WAVESHARE_RX_BOOT_PIN_DEFAULT     9    // receiver BOOT pad (active low)
 #define S3_WAVESHARE_GYRO_SDA_PIN_DEFAULT    15   // MPU6050 SDA (optional, Wire)
 #define S3_WAVESHARE_GYRO_SCL_PIN_DEFAULT    16   // MPU6050 SCL
+#define S3_WAVESHARE_BARO_SDA_PIN_DEFAULT    15   // BMP180 SDA — shares the gyro I2C bus
+#define S3_WAVESHARE_BARO_SCL_PIN_DEFAULT    16   // BMP180 SCL
 #define S3_WAVESHARE_LED_PIN_DEFAULT         21   // status LED (-1 disables)
 
 /* ── Waveshare RP2040-Zero — its own profile (shares the Tiny pinout) ── */
@@ -85,6 +90,8 @@
 #define RP2040_ZERO_RX_PWR_PIN_DEFAULT       RP2040_TINY_RX_PWR_PIN_DEFAULT
 #define RP2040_ZERO_GYRO_SDA_PIN_DEFAULT     RP2040_TINY_GYRO_SDA_PIN_DEFAULT
 #define RP2040_ZERO_GYRO_SCL_PIN_DEFAULT     RP2040_TINY_GYRO_SCL_PIN_DEFAULT
+#define RP2040_ZERO_BARO_SDA_PIN_DEFAULT     RP2040_TINY_BARO_SDA_PIN_DEFAULT
+#define RP2040_ZERO_BARO_SCL_PIN_DEFAULT     RP2040_TINY_BARO_SCL_PIN_DEFAULT
 #define RP2040_ZERO_RGB_LED_PIN_DEFAULT      RP2040_TINY_RGB_LED_PIN_DEFAULT
 
 /* ── CRSF / servo constants ────────────────────────────────────── */
@@ -121,5 +128,10 @@
 #define GYRO_GAIN_DEFAULT            4     // µs of correction per dps (tune me)
 #define GYRO_CORRECTION_SERVO_DEFAULT 2    // servo index fed by the gyro (crest)
 #define ARM_CHANNEL_DEFAULT          4     // CRSF channel that arms (0-based)
+
+/* ── Oráculo baro link (BMP180 over Wire) ───────────────────────── */
+#define BARO_ADDR_DEFAULT            0x77
+#define BARO_CHIPID_DEFAULT          0x55
+#define BARO_SEALEVEL_PA_DEFAULT     101325UL
 
 #endif  // YOSHIMITSU_LOADOUT_H

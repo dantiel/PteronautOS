@@ -132,6 +132,7 @@ Ornithopter::Ornithopter()
   , _glitchGhostStreak(0)
 {
     modelName[0] = '\0';
+    altHold.channel = ORNI_CH_ALTHOLD;   // sustain knob rides the gyro-adjacent CRSF channel
     _glitchFrameTick = 0;
     _armLowFrame = 0xFFFF;   // arm-high sentinel — no debounce state at boot
     for (uint8_t i = 0; i < STK_COUNT; ++i) {
@@ -301,6 +302,23 @@ uint16_t Ornithopter::_clampServo(int32_t us) {
     if (us < ORNI_SERVO_ABS_MIN_US) return ORNI_SERVO_ABS_MIN_US;
     if (us > ORNI_SERVO_ABS_MAX_US) return ORNI_SERVO_ABS_MAX_US;
     return (uint16_t)us;
+}
+
+// ─── Altitude hold ───────────────────────────────────────────────────
+// Replaces the effective throttle with the altitude-hold controller's output
+// while the sustain channel is above its engage threshold. No sustain channel
+// exists in bench/stick-override, so those always pass the throttle through.
+float Ornithopter::_altitudeHoldThrottle(float rawThrottle)
+{
+    if (stickOverride || benchMode)
+    {
+        altHoldState.active = false;
+        return rawThrottle;
+    }
+    const float engage = (float)ChannelData[altHold.channel];
+    return altitudeHoldStep(altHold, altHoldState,
+                            PteroAltitude::currentM, PteroAltitude::valid,
+                            engage, rawThrottle);
 }
 
 // ─── Update ─────────────────────────────────────────────────────────

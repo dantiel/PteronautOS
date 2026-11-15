@@ -20,7 +20,7 @@ class UpdatePanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">${i18n.t('elrs.update.title')}</div>
+            <div class="mui-panel mui--text-title"><span class="panel-icon icon--symbols icon--symbols--update"></span>${i18n.t('elrs.update.title')}</div>
             <div class="mui-panel">
                 <p>
                     Select the correct

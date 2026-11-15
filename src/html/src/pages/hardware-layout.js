@@ -23,7 +23,7 @@ export class HardwareLayout extends LitElement {
     render() {
         return html`
             <div class="hardware-layout">
-                <div class="mui-panel mui--text-title">${i18n.t('elrs.hardware.title')}</div>
+                <div class="mui-panel mui--text-title"><span class="panel-icon icon--symbols icon--symbols--hardware"></span>${i18n.t('elrs.hardware.title')}</div>
                 <div class="mui-panel">
                     ${i18n.t('elrs.hardware.upload_hint')}
                     <p>

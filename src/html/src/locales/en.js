@@ -176,7 +176,7 @@ export default {
     'zephyrus.fault.summary': 'I²C fails: {{i2c}} · bus rec: {{bus}} · reinit: {{reinit}} · NaN: {{nan}}',
 
     // ── Servo Panel ───────────────────────────────────────────────
-    'servo.panel.title': '🔧 Servo Output',
+    'servo.panel.title': 'Servo Output',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Name',
     'servo.table.pin': 'GPIO',
@@ -721,6 +721,24 @@ export default {
     'ornithopter.glitch.delta_persist_desc': 'Δ between two candidate frames required to accept a jump as a real stick move (2-frame persistence).',
     'ornithopter.glitch.simult_threshold': 'Ghost Threshold',
     'ornithopter.glitch.simult_threshold_desc': 'If ≥N channels jump in one frame, reject the whole frame as a collective electrical ghost.',
+
+    // ── Altitude Hold (BMP180 barometer) ──────────────────────────
+    'ornithopter.althold.title': 'Altitude Hold',
+    'ornithopter.althold.desc': 'Barometric altitude hold (Gralha Azul sustain port). Latches the current altitude on a dedicated sustain channel and drives throttle/flap amplitude toward zero error. Requires a detected barometer (direct-I2C or MUSHIN companion).',
+    'ornithopter.althold.gain': 'Gain',
+    'ornithopter.althold.gain_desc': 'Throttle (CRSF raw) per metre of altitude error.',
+    'ornithopter.althold.error_filter': 'Error Filter',
+    'ornithopter.althold.error_filter_desc': 'Low-pass smoothing of the altitude error (damping).',
+    'ornithopter.althold.deadband': 'Deadband',
+    'ornithopter.althold.deadband_desc': '± altitude where the error is forced to zero.',
+    'ornithopter.althold.max_rate': 'Max Rate',
+    'ornithopter.althold.max_rate_desc': 'Throttle slew limit per mixer tick (anti-integral-windup).',
+    'ornithopter.althold.max_alt': 'Max Altitude',
+    'ornithopter.althold.max_alt_desc': 'Setpoint clamp above/below launch home.',
+    'ornithopter.althold.engage': 'Engage Threshold',
+    'ornithopter.althold.engage_desc': 'Sustain-channel gain below which the controller releases.',
+    'ornithopter.althold.channel': 'Channel',
+    'ornithopter.althold.channel_desc': 'CRSF channel carrying the sustain knob (0-based).',
 
     // ── Joypad (Virtual Stick) ─────────────────────────────────────
     'joypad.title': 'Joypad',

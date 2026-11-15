@@ -82,6 +82,15 @@ static uint32_t motionLastUs = 0, motionLastMs = 0;
   #include <Wire.h>
 #endif
 
+/* ── Optional Oráculo baro link (BMP180 over Wire) — shares the gyro bus ── */
+#if !defined(YOSHI_BARO)
+  #define YOSHI_BARO YOSHI_BARO_DEFAULT
+#endif
+#if YOSHI_BARO
+  #include <Wire.h>
+  #include <math.h>          // powf — barometric altitude formula
+#endif
+
 /* ── JIGUANG (極光 — the aurora) — the storyteller/administrator ── */
 // Hermetic compile gate. 1 = omnipresent: the 極光 sigil is written everywhere
 // and the storyteller may speak. 0 = hermetically deactivated: the lamb — not
@@ -169,6 +178,12 @@ static uint32_t motionLastUs = 0, motionLastMs = 0;
   #ifndef GYRO_SCL_PIN
     #define GYRO_SCL_PIN YOSHI_DEFAULT(GYRO_SCL_PIN)
   #endif
+  #ifndef BARO_SDA_PIN
+    #define BARO_SDA_PIN YOSHI_DEFAULT(BARO_SDA_PIN)
+  #endif
+  #ifndef BARO_SCL_PIN
+    #define BARO_SCL_PIN YOSHI_DEFAULT(BARO_SCL_PIN)
+  #endif
   #ifndef RGB_LED_PIN
     #define RGB_LED_PIN YOSHI_DEFAULT(RGB_LED_PIN)
   #endif
@@ -238,6 +253,12 @@ static uint32_t motionLastUs = 0, motionLastMs = 0;
   #endif
   #ifndef GYRO_SCL_PIN
     #define GYRO_SCL_PIN YOSHI_DEFAULT(GYRO_SCL_PIN)
+  #endif
+  #ifndef BARO_SDA_PIN
+    #define BARO_SDA_PIN YOSHI_DEFAULT(BARO_SDA_PIN)
+  #endif
+  #ifndef BARO_SCL_PIN
+    #define BARO_SCL_PIN YOSHI_DEFAULT(BARO_SCL_PIN)
   #endif
   #ifndef LED_PIN
     #define LED_PIN YOSHI_DEFAULT(LED_PIN)
@@ -411,6 +432,15 @@ static void bridgeSerialRecover() {
 #endif
 #ifndef ARM_CHANNEL
   #define ARM_CHANNEL ARM_CHANNEL_DEFAULT
+#endif
+#ifndef BARO_ADDR
+  #define BARO_ADDR BARO_ADDR_DEFAULT
+#endif
+#ifndef BARO_CHIPID
+  #define BARO_CHIPID BARO_CHIPID_DEFAULT
+#endif
+#ifndef BARO_SEALEVEL_PA
+  #define BARO_SEALEVEL_PA BARO_SEALEVEL_PA_DEFAULT
 #endif
 
 // =============================================================================
@@ -870,6 +900,106 @@ static int32_t gyroZRate() {
 }
 #endif
 
+/* ── Oráculo baro (BMP180 over Wire) — the muscle's altitude source ── */
+#if YOSHI_BARO
+static bool baroConnected = false;
+static bool baroHomeSet = false;
+static int32_t baroHomePa = 0;
+static int16_t b_ac1, b_ac2, b_ac3, b_b1, b_b2, b_mb, b_mc, b_md;
+static uint16_t b_ac4, b_ac5, b_ac6;
+
+static int16_t baroReadI16(uint8_t reg) {
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(reg);
+  if (Wire.endTransmission(false) != 0) return 0;
+  if (Wire.requestFrom((int)BARO_ADDR, 2) != 2) return 0;
+  return (int16_t)((Wire.read() << 8) | Wire.read());
+}
+static uint16_t baroReadU16(uint8_t reg) { return (uint16_t)baroReadI16(reg); }
+
+static bool baroInit() {
+#if YOSHI_RP2040
+  Wire.setSDA(BARO_SDA_PIN);
+  Wire.setSCL(BARO_SCL_PIN);
+  Wire.begin();
+  Wire.setClock(400000);
+  Wire.setTimeout(2, true);
+#else
+  Wire.begin(BARO_SDA_PIN, BARO_SCL_PIN, 400000UL);
+#endif
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(0xD0);                              // chip id register
+  if (Wire.endTransmission(false) != 0) { baroConnected = false; return false; }
+  if (Wire.requestFrom((int)BARO_ADDR, 1) != 1) { baroConnected = false; return false; }
+  baroConnected = (Wire.available() && Wire.read() == BARO_CHIPID);
+  if (!baroConnected) return false;
+  // Calibration coefficients are big-endian (MSB first) — read each explicitly.
+  b_ac1 = baroReadI16(0xAA); b_ac2 = baroReadI16(0xAC); b_ac3 = baroReadI16(0xAE);
+  b_ac4 = baroReadU16(0xB0); b_ac5 = baroReadU16(0xB2); b_ac6 = baroReadU16(0xB4);
+  b_b1  = baroReadI16(0xB6); b_b2  = baroReadI16(0xB8);
+  b_mb  = baroReadI16(0xBA); b_mc  = baroReadI16(0xBC); b_md  = baroReadI16(0xBE);
+  return true;
+}
+
+static int32_t baroReadUT() {
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(0xF4); Wire.write(0x2E);           // measure temperature
+  if (Wire.endTransmission() != 0) { baroConnected = false; return 0; }
+  delay(5);
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(0xF6);
+  if (Wire.endTransmission(false) != 0) { baroConnected = false; return 0; }
+  if (Wire.requestFrom((int)BARO_ADDR, 2) != 2) { baroConnected = false; return 0; }
+  return (int32_t)(int16_t)((Wire.read() << 8) | Wire.read());
+}
+
+static int32_t baroReadRawPressure() {
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(0xF4); Wire.write(0x34);           // measure pressure, oss=0
+  if (Wire.endTransmission() != 0) { baroConnected = false; return 0; }
+  delay(5);
+  Wire.beginTransmission(BARO_ADDR);
+  Wire.write(0xF6);
+  if (Wire.endTransmission(false) != 0) { baroConnected = false; return 0; }
+  if (Wire.requestFrom((int)BARO_ADDR, 3) != 3) { baroConnected = false; return 0; }
+  uint32_t msb = Wire.read(), lsb = Wire.read(), xlsb = Wire.read();
+  return (int32_t)(((msb << 16) | (lsb << 8) | xlsb) >> 8);   // oss=0 → 16-bit
+}
+
+static int32_t baroReadAltitudeDm() {
+  if (!baroConnected) return 0;
+  int32_t ut = baroReadUT();
+  int32_t x1 = ((ut - (int32_t)b_ac6) * (int32_t)b_ac5) >> 15;
+  int32_t x2 = ((int32_t)b_mc << 11) / (x1 + (int32_t)b_md);
+  int32_t b5 = x1 + x2;
+
+  int32_t raw = baroReadRawPressure();
+  int32_t b6 = b5 - 4000;
+  x1 = ((int32_t)b_b2 * ((b6 * b6) >> 12)) >> 11;
+  x2 = ((int32_t)b_ac2 * b6) >> 11;
+  int32_t x3 = x1 + x2;
+  int32_t b3 = ((((int32_t)b_ac1 * 4 + x3) << 0) + 2) / 4;
+  x1 = ((int32_t)b_ac3 * b6) >> 13;
+  x2 = ((int32_t)b_b1 * ((b6 * b6) >> 12)) >> 16;
+  x3 = ((x1 + x2) + 2) >> 2;
+  uint32_t b4 = ((uint32_t)b_ac4 * (uint32_t)(x3 + 32768)) >> 15;
+  uint32_t b7 = ((uint32_t)raw - (uint32_t)b3) * (uint32_t)(50000UL >> 0);
+  int32_t p;
+  if (b7 < 0x80000000UL) p = (int32_t)((b7 * 2) / b4);
+  else                    p = (int32_t)((b7 / b4) * 2);
+  x1 = (p >> 8) * (p >> 8);
+  x1 = (x1 * 3038) >> 16;
+  x2 = (-7357 * p) >> 16;
+  p = p + ((x1 + x2 + 3791) >> 4);               // pressure in Pa
+
+  if (!baroHomeSet) { baroHomePa = p; baroHomeSet = true; return 0; }
+
+  const float altAbs  = 44330.0f * (1.0f - powf((float)p / (float)BARO_SEALEVEL_PA, 0.190284f));
+  const float altHome = 44330.0f * (1.0f - powf((float)baroHomePa / (float)BARO_SEALEVEL_PA, 0.190284f));
+  return (int32_t)((altAbs - altHome) * 10.0f);  // decimetres, 0 = launch home
+}
+#endif
+
 static void applyChannels() {
   if (millis() - lastGoodMs > FAILSAFE_MS) {
     for (uint8_t i = 0; i < servoCount; i++) servos[i].writeMicroseconds(1500);
@@ -1109,11 +1239,16 @@ static void mushinAnnounce() {
     corr = -(rate * GYRO_GAIN) / GYRO_SCALE_LSB;
   }
 #endif
-  uint8_t t[6];
+  int32_t altDm = 0;
+#if YOSHI_BARO
+  if (baroConnected) altDm = baroReadAltitudeDm();
+#endif
+  uint8_t t[8];
   t[0] = (uint8_t)(rate & 0xFF);  t[1] = (uint8_t)((rate >> 8) & 0xFF);
   t[2] = (uint8_t)(corr & 0xFF);  t[3] = (uint8_t)((corr >> 8) & 0xFF);
   t[4] = mushinLinked ? 1 : 0;    t[5] = MUSHIN_VER;
-  mushinSend(MUSHIN_TELEMETRY, t, 6);
+  t[6] = (uint8_t)(altDm & 0xFF); t[7] = (uint8_t)((altDm >> 8) & 0xFF);
+  mushinSend(MUSHIN_TELEMETRY, t, 8);
 }
 
 // =============================================================================
@@ -1703,6 +1838,10 @@ static void validatePins() {
   CHECK_PIN("GYRO_SDA",  GYRO_SDA_PIN);
   CHECK_PIN("GYRO_SCL",  GYRO_SCL_PIN);
 #endif
+#if YOSHI_BARO
+  CHECK_PIN("BARO_SDA",  BARO_SDA_PIN);
+  CHECK_PIN("BARO_SCL",  BARO_SCL_PIN);
+#endif
   for (uint8_t i = 0; i < SERVO_COUNT_MAX; i++) {
     if (SERVO_PIN[i] > gpioMax) {                    // -1 (unused) is fine
       Serial.print("YOSHIMITSU PIN ERROR: SERVO_PIN_");
@@ -1730,6 +1869,9 @@ static void validatePins() {
     {"RX_BOOT",   RX_BOOT_PIN}, {"RX_PWR",    RX_PWR_PIN},
 #if YOSHI_GYRO
     {"GYRO_SDA",  GYRO_SDA_PIN}, {"GYRO_SCL",  GYRO_SCL_PIN},
+#endif
+#if YOSHI_BARO
+    {"BARO_SDA",  BARO_SDA_PIN}, {"BARO_SCL",  BARO_SCL_PIN},
 #endif
   };
   const uint8_t nPin = (uint8_t)(sizeof(pins) / sizeof(pins[0]));
@@ -2463,7 +2605,9 @@ static void nvmWriteU32(int addr, uint32_t v) {
 }
 static uint32_t rtcSeconds() {
 #if YOSHI_RTC
+  if (!rtc_running()) return 0;         // RTC lost power — not a RUN-reset tap
   datetime_t t;
+  memset(&t, 0, sizeof(t));
   rtc_get_datetime(&t);
   return t.sec + 60ul * (t.min + 60ul * t.hour);
 #else
@@ -2479,45 +2623,63 @@ static const Stance TAP_STANCE[5] = {
 // POSE command remains the canonical switch — this is the buttonless gesture.
 static void applyResetTapStance() {
   EEPROM.begin(16);
-  uint32_t now = rtcSeconds();
   uint8_t m = EEPROM.read(6);              // MUSHIN persistence: 1 = strike on boot
   if (m == 0) mushin = false;
   else if (m == 1) mushin = true;
+
+#if YOSHI_RTC
+  // The AON RTC survives a RUN-pin (RESET) tap but not a power cut. A dead RTC
+  // therefore means we lost power — (re)start it and treat this as a plain boot.
+  // Fix: the RTC was only ever initialized on first boot, so after a power cycle
+  // rtcSeconds() read garbage and the tap streak kept advancing (KINCHO → MANJI →
+  // NSS → BACK → MEDITATION) on every boot, stranding the board in MEDITATION.
+  bool freshPower = !rtc_running();
+  if (freshPower) {
+    rtc_init();
+    datetime_t t;
+    memset(&t, 0, sizeof(t));
+    t.month = 1; t.day = 1;               // valid datetime — year 0, Jan 1, 00:00:00
+    rtc_set_datetime(&t);                 // actually enable the RTC (rtc_init alone does not)
+  }
+#else
+  bool freshPower = true;                   // no RTC → every boot is a plain boot
+#endif
+  uint32_t now = rtcSeconds();
+
   if (EEPROM.read(0) != NVM_MAGIC) {
     EEPROM.write(0, NVM_MAGIC);
     EEPROM.write(1, 0);
     nvmWriteU32(2, now);
     EEPROM.write(7, STANCE_KINCHO);              // first boot → default stance persisted
     EEPROM.commit();
-#if YOSHI_RTC
-    rtc_init();                              // start the AON RTC on first-ever boot
-#endif
     return;                                  // first boot → default KINCHO
   }
+
   uint8_t taps  = EEPROM.read(1);
   uint32_t last = nvmReadU32(2);
-  uint32_t diff = (now >= last) ? (now - last) : (now + 86400ul - last);
-  if (diff <= RESET_TAP_WINDOW_SEC) taps = (uint8_t)((taps + 1) % 5);
-  else taps = 0;
+  if (freshPower) {
+    taps = 0;                                // power cut kills the tap streak
+  } else {
+    uint32_t diff = (now >= last) ? (now - last) : (now + 86400ul - last);
+    if (diff <= RESET_TAP_WINDOW_SEC) taps = (uint8_t)((taps + 1) % 5);
+    else taps = 0;                           // waited a few seconds → plain boot
+  }
   EEPROM.write(1, taps);
   nvmWriteU32(2, now);
   EEPROM.commit();
+
   if (taps > 0) {
     stance = TAP_STANCE[taps];
     nvmPersistStance();                         // a tapped stance is a real stance — remember it
     Serial.print("YOSHIMITSU: RESET-tap "); Serial.print((int)taps);
     Serial.print(" → "); Serial.println(STANCE_NAME[stance]);
   } else {
-    // No fresh tap → plain boot. Always land in a flight stance: restore a saved
-    // KINCHO / MANJI_DRAGONFLY, otherwise stay on the KINCHO default from setup().
-    // The flasher/bench poses (MEDITATION, FLEA, NSS, BACK_TURNED) are reached
-    // deliberately via a RESET-tap streak or the POSE command — never by a plain
-    // power-on, so a board left in MEDITATION cannot strand itself there.
-    uint8_t saved = EEPROM.read(7);
-    if (saved == STANCE_KINCHO || saved == STANCE_MANJI_DRAGONFLY) {
-      stance = (Stance)saved;
-      Serial.print("YOSHIMITSU: resume "); Serial.println(STANCE_NAME[stance]);
-    }
+    // Plain boot → always KINCHO. The flasher/bench poses (MEDITATION, FLEA, NSS,
+    // BACK_TURNED) are reached deliberately via a RESET-tap streak or the POSE
+    // command — never by a plain power-on, so a board left in MEDITATION cannot
+    // strand itself there.
+    stance = STANCE_KINCHO;
+    Serial.println("YOSHIMITSU: plain boot → KINCHO");
   }
 }
 #else
@@ -2576,6 +2738,9 @@ void setup() {
     attachServos();
 #if YOSHI_GYRO
     if (stance == STANCE_MANJI_DRAGONFLY) gyroInit();
+#endif
+#if YOSHI_BARO
+    baroInit();                       // BMP180 — shares the gyro I2C bus (or its own pins)
 #endif
   } else if (stance == STANCE_NSS) {
     rxPower(false);

@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'متاح عند اكتشاف الجايرو',
     'zephyrus.calibrate.hint_hold': 'أبقِ الطائرة ثابتة — تكتمل تلقائياً خلال ~5 ثوانٍ',
     'zephyrus.calibrate.hint_ready': 'ضع الطائرة باستواء واضغط للمعايرة',
-    'servo.panel.title': '🔧 مخرج المؤازرة',
+    'servo.panel.title': 'مخرج المؤازرة',
     'servo.table.ch': 'قناة',
     'servo.table.name': 'الاسم',
     'servo.table.pin': 'GPIO',

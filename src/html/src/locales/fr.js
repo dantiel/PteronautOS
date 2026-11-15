@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'Disponible quand le gyroscope est détecté',
     'zephyrus.calibrate.hint_hold': 'Maintenir immobile — termine en ~5s',
     'zephyrus.calibrate.hint_ready': 'Placer à l\'horizontale et appuyer pour calibrer',
-    'servo.panel.title': '🔧 Sortie Servo',
+    'servo.panel.title': 'Sortie Servo',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Nom',
     'servo.table.pin': 'GPIO',

@@ -420,6 +420,7 @@ void Ornithopter::_computeServoMixer()
     m.elevatorNorm = _crsfToNorm(voiceElevator);
     m.rudderNorm   = _crsfToNorm(voiceRudder);
     m.throttleUsF  = (float)voiceThrottle;
+    m.throttleUsF  = _altitudeHoldThrottle(m.throttleUsF);   // altitude hold → amplitude
 
     bool armed = _isArmed();
     bool isFlapping = _mixerIsFlapping(m.throttleUsF, armed);

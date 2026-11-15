@@ -33,7 +33,7 @@ class BindingPanel extends LitElement {
 
     render() {
         return html`
-            <div class="mui-panel mui--text-title">${i18n.t('elrs.binding.title')}</div>
+            <div class="mui-panel mui--text-title"><span class="panel-icon icon--symbols icon--symbols--bind"></span>${i18n.t('elrs.binding.title')}</div>
             <div class="mui-panel">
                 <form class="mui-form">
                     <!-- FEATURE:NOT IS_TX -->

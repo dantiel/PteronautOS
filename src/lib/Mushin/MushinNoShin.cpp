@@ -3,6 +3,7 @@
 #if defined(MUSHIN_ENABLED)
 
 #include <Arduino.h>
+#include "../Ornithopter/AltitudeHold.h"   // PteroAltitude::set — companion baro → altitude hold
 
 extern void reset_into_bootloader();
 
@@ -175,8 +176,17 @@ void MushinNoShin::update(uint32_t nowMs)
                 _tele.correction = (int16_t)(_buf[2] | (_buf[3] << 8));
                 _tele.linked     = _buf[4];
                 _tele.version    = _buf[5];
+                _tele.hasAltitude = false;
+                if (_len >= 8)
+                {
+                    _tele.altitudeDm = (int16_t)(_buf[6] | (_buf[7] << 8));
+                    _tele.hasAltitude = true;
+                }
                 _tele.fresh      = true;
                 _lastTelemetryMs = nowMs;
+                // Companion baro feeds the same altitude-hold controller the
+                // direct-I2C baro would (freshness is the gate, not the source).
+                PteroAltitude::set(_tele.altitudeM(), _tele.hasAltitude);
             }
             break;
         }

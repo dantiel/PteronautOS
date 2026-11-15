@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'Доступно при обнаружении гироскопа',
     'zephyrus.calibrate.hint_hold': 'Держите неподвижно — завершится через ~5с',
     'zephyrus.calibrate.hint_ready': 'Установите горизонтально и нажмите для калибровки',
-    'servo.panel.title': '🔧 Выход Серво',
+    'servo.panel.title': 'Выход Серво',
     'servo.table.ch': 'Кан',
     'servo.table.name': 'Имя',
     'servo.table.pin': 'GPIO',

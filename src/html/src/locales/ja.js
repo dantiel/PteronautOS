@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'ジャイロ検出時に利用可能',
     'zephyrus.calibrate.hint_hold': '機体を静止させてください — 約5秒で自動完了',
     'zephyrus.calibrate.hint_ready': '機体を水平に置き、押してキャリブレーション',
-    'servo.panel.title': '🔧 サーボ出力',
+    'servo.panel.title': 'サーボ出力',
     'servo.table.ch': 'CH',
     'servo.table.name': '名前',
     'servo.table.pin': 'GPIO',

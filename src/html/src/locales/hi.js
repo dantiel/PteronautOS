@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'जायरो का पता चलने पर उपलब्ध',
     'zephyrus.calibrate.hint_hold': 'विमान को स्थिर रखें — ~5 सेकंड में स्वतः पूर्ण',
     'zephyrus.calibrate.hint_ready': 'समतल रखें और कैलिब्रेट करने के लिए दबाएं',
-    'servo.panel.title': '🔧 सर्वो आउटपुट',
+    'servo.panel.title': 'सर्वो आउटपुट',
     'servo.table.ch': 'CH',
     'servo.table.name': 'नाम',
     'servo.table.pin': 'GPIO',

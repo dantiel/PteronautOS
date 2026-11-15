@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include "OrnithopterConfig.h"
+#include "AltitudeHold.h"
 #include "OrnithopterWaveform.h"
 #if defined(MUSHIN_ENABLED)
 #include "../../../sketches/yoshimitsu/src/PreparedMotion.h"
@@ -124,7 +125,10 @@ public:
     float   returnSkew;           // -100…+100, upstroke wave-centre shift
     float   throttleThrustShapeMix; // 0–100, throttle→thrust-shape coupling (blended dwell + centre)
     float   throttleThrustExpo;     // -100…+100, curve of the thrust aggression (soft ↔ direct)
- 
+
+    // ── Altitude hold (AltitudeHold.h) ────────────────────────────────
+    AltitudeHoldParams  altHold;       // tuned via WebUI (gain, filter, deadband, …)
+    AltitudeHoldState   altHoldState;  // latch/desired/output — lives across mixer ticks
     float   aileronSkewMix;      // 0–100, aileron → L/R differential skew (roll)
     float   throttleSkewRateMix; // 0–100, throttle-rate → transient skew boost/brake
     float   aileronSkewRateMix; // 0–100, aileron-rate → transient differential skew boost/brake (slew)
@@ -295,6 +299,7 @@ private:
     // ── Mixer kernels ────────────────────────────────────────────────
     void  _computeServoMixer();    // waveform kernel  (OrnithopterMixer.cpp)
     void  _computeGearboxMixer();  // gearbox kernel   (OrnithopterGearbox.cpp)
+    float _altitudeHoldThrottle(float rawThrottle);  // altitude-hold override (AltitudeHold.h)
     void  _gearboxTailRotation3(float rollUs, float pitchUs, float yawUs);
     void  _gearboxTailRotation1(float rollUs, float pitchUs, float yawUs);
     void  _gearboxTailMerged(float rollUs, float pitchUs, float yawUs);

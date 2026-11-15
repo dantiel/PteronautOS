@@ -56,6 +56,15 @@ class OrnithopterPanel extends PteroElement
     glitchDeltaArm:     {state: true}
     glitchDeltaPersist: {state: true}
     glitchSimultThreshold: {state: true}
+    # Altitude hold (AltitudeHold.h)
+    altHoldEnabled:       {state: true}
+    altHoldGain:          {state: true}
+    altHoldErrorFilter:   {state: true}
+    altHoldDeadbandCm:    {state: true}
+    altHoldMaxRate:       {state: true}
+    altHoldMaxAltM:       {state: true}
+    altHoldEngageThreshold: {state: true}
+    altHoldChannel:       {state: true}
 
   constructor: ->
     super()
@@ -92,6 +101,14 @@ class OrnithopterPanel extends PteroElement
     @glitchDeltaArm     = 800
     @glitchDeltaPersist = 320
     @glitchSimultThreshold = 4
+    @altHoldEnabled       = false
+    @altHoldGain          = 40
+    @altHoldErrorFilter   = 10
+    @altHoldDeadbandCm    = 50
+    @altHoldMaxRate       = 20
+    @altHoldMaxAltM       = 20
+    @altHoldEngageThreshold = 10
+    @altHoldChannel       = 8
     @_pollInFlight        = false
     @_saveInFlight        = false
     @_fieldFocused        = false
@@ -170,6 +187,14 @@ class OrnithopterPanel extends PteroElement
       @glitchDeltaArm     = o.glitch_delta_arm        if o.glitch_delta_arm?
       @glitchDeltaPersist = o.glitch_delta_persist    if o.glitch_delta_persist?
       @glitchSimultThreshold = o.glitch_simult_threshold    if o.glitch_simult_threshold?
+      @altHoldEnabled       = o.altitude_hold_enabled == true   if o.altitude_hold_enabled?
+      @altHoldGain          = o.altitude_hold_gain              if o.altitude_hold_gain?
+      @altHoldErrorFilter   = o.altitude_hold_error_filter      if o.altitude_hold_error_filter?
+      @altHoldDeadbandCm    = o.altitude_hold_deadband_cm       if o.altitude_hold_deadband_cm?
+      @altHoldMaxRate       = o.altitude_hold_max_rate          if o.altitude_hold_max_rate?
+      @altHoldMaxAltM       = o.altitude_hold_max_alt_m         if o.altitude_hold_max_alt_m?
+      @altHoldEngageThreshold = o.altitude_hold_engage_threshold if o.altitude_hold_engage_threshold?
+      @altHoldChannel       = o.altitude_hold_channel           if o.altitude_hold_channel?
 
   render: -> renderFn(this)
 
@@ -312,6 +337,13 @@ class OrnithopterPanel extends PteroElement
       when 'glitchDeltaArm'     then [100, 1639]
       when 'glitchDeltaPersist' then [20, 1000]
       when 'glitchSimultThreshold' then [2, 7]
+      when 'altHoldGain'        then [0, 200]
+      when 'altHoldErrorFilter' then [1, 100]
+      when 'altHoldDeadbandCm'  then [0, 500]
+      when 'altHoldMaxRate'     then [1, 200]
+      when 'altHoldMaxAltM'     then [1, 100]
+      when 'altHoldEngageThreshold' then [1, 100]
+      when 'altHoldChannel'     then [8, 15]
       else null
 
   _clamp: (prop, v) ->
@@ -357,6 +389,14 @@ class OrnithopterPanel extends PteroElement
     body.append 'glitch_delta_arm',     parseInt(@glitchDeltaArm)
     body.append 'glitch_delta_persist', parseInt(@glitchDeltaPersist)
     body.append 'glitch_simult_threshold', parseInt(@glitchSimultThreshold)
+    body.append 'altitude_hold_enabled', if @altHoldEnabled then '1' else '0'
+    body.append 'altitude_hold_gain', parseInt(@altHoldGain)
+    body.append 'altitude_hold_error_filter', parseInt(@altHoldErrorFilter)
+    body.append 'altitude_hold_deadband_cm', parseInt(@altHoldDeadbandCm)
+    body.append 'altitude_hold_max_rate', parseInt(@altHoldMaxRate)
+    body.append 'altitude_hold_max_alt_m', parseInt(@altHoldMaxAltM)
+    body.append 'altitude_hold_engage_threshold', parseInt(@altHoldEngageThreshold)
+    body.append 'altitude_hold_channel', parseInt(@altHoldChannel)
     try
       res = await fetch '/pteronautos/config', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()}
       if res and res.ok

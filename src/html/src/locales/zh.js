@@ -142,7 +142,7 @@ export default {
     'zephyrus.calibrate.hint_available': '检测到陀螺仪时可用',
     'zephyrus.calibrate.hint_hold': '保持飞行器静止 — 约5秒自动完成',
     'zephyrus.calibrate.hint_ready': '水平放置飞行器，按下进行校准',
-    'servo.panel.title': '🔧 舵机输出',
+    'servo.panel.title': '舵机输出',
     'servo.table.ch': '通道',
     'servo.table.name': '名称',
     'servo.table.pin': 'GPIO',

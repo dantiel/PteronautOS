@@ -8,6 +8,7 @@
 #include "baro_spl06.h"
 #include "logging.h"
 #include "baro_bmp085.h"
+#include "../Ornithopter/AltitudeHold.h"   // PteroAltitude::set — altitude-hold source
 
 #define BARO_STARTUP_INTERVAL       100
 
@@ -81,6 +82,9 @@ static void Baro_PublishPressure(uint32_t pressuredPa)
         // skip sending the first reading because the VSpd will be bonkers
         return;
     }
+
+    // Feed the altitude-hold controller (relative altitude in metres).
+    PteroAltitude::set((altitude_cm - baro->getAltitudeHome()) / 100.0f, true);
 
     CRSF_MK_FRAME_T(crsf_sensor_baro_vario_t) crsfBaro = {0};
 

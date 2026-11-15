@@ -23,7 +23,9 @@ void Ornithopter::_computeGearboxMixer()
 {
     const float aileronNorm  = _crsfToNorm(voiceAileron);
     const float elevatorNorm = _crsfToNorm(voiceElevator);
-    const float throttleNorm = _crsfToNorm(voiceThrottle);
+    // Altitude hold modulates the motor throttle (gearbox) exactly as it does
+    // flap amplitude (servo) — the controller output replaces the stick value.
+    const float throttleNorm = _crsfToNorm(_altitudeHoldThrottle((float)voiceThrottle));
     const float rudderNorm   = _crsfToNorm(voiceRudder);
     const bool  armed        = _isArmed();
 

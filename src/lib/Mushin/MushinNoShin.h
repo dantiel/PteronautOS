@@ -72,9 +72,12 @@ struct MushinTelemetry
     int16_t correction = 0; // µs added to the crest servo by the muscle's PID
     uint8_t linked = 0;     // the muscle's own view of the link (1 = linked)
     uint8_t version = 0;    // muscle protocol version
+    int16_t altitudeDm = 0; // companion baro relative altitude, decimetres (0 = home)
+    bool    hasAltitude = false; // true when the muscle reported a valid baro reading
     bool    fresh = false;  // set on every parsed TELEMETRY frame
 
     float gyroDps() const { return (float)gyroRate / MUSHIN_GYRO_SCALE_LSB; }
+    float altitudeM() const { return (float)altitudeDm * 0.1f; }
 };
 
 class Stream;

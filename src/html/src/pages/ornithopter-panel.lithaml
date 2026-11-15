@@ -259,6 +259,81 @@
             %input{type: "range", min: "2", max: "7", .value: self.glitchSimultThreshold, @input: self._onSlider('glitchSimultThreshold'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
             %span.value= self.glitchSimultThreshold
 
+.mui-panel
+  .mui--text-title
+    = self._t('ornithopter.althold.title')
+    %label{style: "cursor:pointer;"}
+      %input{type: "checkbox", checked: self.altHoldEnabled, @change: self._onCheck('altHoldEnabled'), .disabled: self._uiLocked(), style: "width:18px;height:18px;accent-color:#ccc;margin-left:12px;vertical-align:middle;"}
+      %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.altHoldEnabled ? self._t('ornithopter.glide.enabled') : self._t('ornithopter.glide.disabled')
+  %small{style: "color:#888;"}= self._t('ornithopter.althold.desc')
+  - if self.altHoldEnabled
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.gain')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.gain_desc')
+          %td
+            %input{type: "range", min: "0", max: "200", .value: self.altHoldGain, @input: self._onSlider('altHoldGain'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldGain
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.error_filter')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.error_filter_desc')
+          %td
+            %input{type: "range", min: "1", max: "100", .value: self.altHoldErrorFilter, @input: self._onSlider('altHoldErrorFilter'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldErrorFilter
+            |  %
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.deadband')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.deadband_desc')
+          %td
+            %input{type: "range", min: "0", max: "500", step: "5", .value: self.altHoldDeadbandCm, @input: self._onSlider('altHoldDeadbandCm'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldDeadbandCm
+            |  cm
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.max_rate')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.max_rate_desc')
+          %td
+            %input{type: "range", min: "1", max: "200", .value: self.altHoldMaxRate, @input: self._onSlider('altHoldMaxRate'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldMaxRate
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.max_alt')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.max_alt_desc')
+          %td
+            %input{type: "range", min: "1", max: "100", .value: self.altHoldMaxAltM, @input: self._onSlider('altHoldMaxAltM'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldMaxAltM
+            |  m
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.engage')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.engage_desc')
+          %td
+            %input{type: "range", min: "1", max: "100", .value: self.altHoldEngageThreshold, @input: self._onSlider('altHoldEngageThreshold'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.altHoldEngageThreshold
+            |  %
+        %tr
+          %td
+            %b= self._t('ornithopter.althold.channel')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.althold.channel_desc')
+          %td
+            %select{@change: self._onSelect('altHoldChannel'), .disabled: self._uiLocked(), style: "width:100px;padding:6px 8px;font-family:inherit;font-size:14px;background:#111;color:#ccc;border:1px solid #333;border-radius:4px;cursor:pointer;"}
+              - for ch of [8,9,10,11,12,13,14,15]
+                - if ch == self.altHoldChannel
+                  %option{value: ch, selected: ""}= "CH#{ch+1}"
+                - else
+                  %option{value: ch}= "CH#{ch+1}"
+
 .mui-panel.ptero-centered
   %button.ptero-btn{@click: self._saveConfig, .disabled: self._uiLocked()}= self._t('ornithopter.save')
   - if self._saveStateText().length

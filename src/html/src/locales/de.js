@@ -141,7 +141,7 @@ export default {
     'zephyrus.calibrate.hint_available': 'Verfügbar wenn Gyro erkannt wird',
     'zephyrus.calibrate.hint_hold': 'Fluggerät stillhalten — automatisch in ~5s',
     'zephyrus.calibrate.hint_ready': 'Fluggerät waagerecht platzieren und zur Kalibrierung drücken',
-    'servo.panel.title': '🔧 Servo Ausgang',
+    'servo.panel.title': 'Servo Ausgang',
     'servo.table.ch': 'CH',
     'servo.table.name': 'Name',
     'servo.table.pin': 'GPIO',

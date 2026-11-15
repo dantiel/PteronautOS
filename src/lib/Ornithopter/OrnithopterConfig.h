@@ -157,6 +157,7 @@ constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][ORNI_MAX_OUTPUTS] = {
 #define ORNI_CH_FREQ            5   // flap frequency modulator channel
 #define ORNI_CH_PROFILE         6   // flight profile selector (multi-position)
 #define ORNI_CH_GYRO            7   // gyro 3-way switch: OFF / RATE / HORIZON
+#define ORNI_CH_ALTHOLD         8   // altitude-hold sustain knob (gain 0..1, engage > threshold)
 
 // Gyro 3-way switch (CRSF raw): low → GYRO OFF, centre → Mesozoic RATE damper,
 // high → Mesozoic HORIZON self-level. Centre (992, unassigned channel) defaults
