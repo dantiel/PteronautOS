@@ -6,6 +6,15 @@
 #include <functional>
 #include <Wire.h>
 
+#if defined(PTERONAUTOS_BARO)
+#ifndef ZEPHYR_I2C_SDA
+#define ZEPHYR_I2C_SDA 1
+#endif
+#ifndef ZEPHYR_I2C_SCL
+#define ZEPHYR_I2C_SCL 3
+#endif
+#endif
+
 static const int maxDeferredFunctions = 3;
 
 struct deferred_t {
@@ -49,6 +58,16 @@ static void setupWire()
         {
             gpio_sda = pin;
         }
+    }
+#endif
+#if defined(PTERONAUTOS_BARO)
+    // PteronautOS: the baro shares the Zephyrus gyro I2C bus (GPIO1 SDA / GPIO3
+    // SCL on PWMP7/PWMP5). Bring the bus up here so Baro_Detect() during
+    // devicesInit() finds a live Wire even when the gyro module is disabled.
+    if (gpio_sda == UNDEF_PIN || gpio_scl == UNDEF_PIN)
+    {
+        gpio_sda = ZEPHYR_I2C_SDA;
+        gpio_scl = ZEPHYR_I2C_SCL;
     }
 #endif
     if(gpio_sda != UNDEF_PIN && gpio_scl != UNDEF_PIN)

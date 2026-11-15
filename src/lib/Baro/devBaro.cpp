@@ -7,7 +7,7 @@
 #include "baro_bmp280.h"
 #include "baro_spl06.h"
 #include "logging.h"
-//#include "baro_bmp085.h"
+#include "baro_bmp085.h"
 
 #define BARO_STARTUP_INTERVAL       100
 
@@ -34,13 +34,12 @@ static bool Baro_Detect()
             baro = new BMP280();
             return true;
         }
-        // Untested
-        // if (BMP085::detect())
-        // {
-        //     DBGLN("Detected baro: BMP085");
-        //     baro = new BMP085();
-        //     return true;
-        // }
+        if (BMP085::detect())
+        {
+            DBGLN("Detected baro: BMP085");
+            baro = new BMP085();
+            return true;
+        }
         // DBGLN("No baro detected");
     } // I2C
     return false;

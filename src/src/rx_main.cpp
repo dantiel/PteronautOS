@@ -96,7 +96,7 @@ device_affinity_t ui_devices[] = {
   {&AnalogVbat_device, 0},
 #endif
   {&ServoOut_device, 1},
-#ifndef ORNITHOPTER_MODE
+#if defined(PTERONAUTOS_BARO)
   {&Baro_device, 0}, // must come after AnalogVbat_device to slow updates
 #endif
 #if defined(PLATFORM_ESP32) && !defined(PLATFORM_ESP32_C3) && !defined(ORNITHOPTER_MODE)

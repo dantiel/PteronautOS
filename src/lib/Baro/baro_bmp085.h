@@ -1,4 +1,3 @@
-#if 0
 // BRY: I implemented this entire unit thinking I had a BMP085 on hand
 // but I do not so this code is completely untested and never has run
 // but it compiles, so ship it!
@@ -50,4 +49,3 @@ protected:
 private:
     int32_t computeB5(int32_t UT) const;
 };
-#endif

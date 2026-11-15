@@ -1,4 +1,3 @@
-#if 0 // UNTESTED
 #include "baro_bmp085.h"
 
 /****
@@ -17,6 +16,8 @@ void BMP085::initialize()
     // All the calibration registers are in order of our struct and are 2 bytes long too,
     // so just read them directly into our calib data
     readRegister(BMP085_CALIB_COEFFS_START, (uint8_t *)&m_calib, sizeof(m_calib));
+
+    m_initialized = true;
 }
 
 uint8_t BMP085::getPressureDuration()
@@ -107,4 +108,3 @@ bool BMP085::detect()
     readRegister(BMP085_REG_CHIPID, &chipid, sizeof(chipid));
     return chipid == BMP085_CHIPID;
 }
-#endif
