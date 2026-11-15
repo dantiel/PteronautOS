@@ -225,7 +225,7 @@ constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][ORNI_MAX_OUTPUTS] = {
 #define ORNI_SERVO_SPEED_MS_DEFAULT  70   // 0.070 s/60° (857°/s)
 #define ORNI_SERVO_SPEED_MIN_MS  25      // 0.025 s/60° (2400°/s)
 #define ORNI_SERVO_SPEED_MAX_MS  250     // 0.250 s/60° (240°/s)
-#define ORNI_AMP_MAX             55.0f   // AMPLITUDE_MAXIMA_SERVO_PADRAO (pre-multiplier)
+#define ORNI_AMP_MAX             70.0f   // soft safety ceiling (pre-multiplier); hard bound = servo travel
 #define ORNI_FLAP_ANGLE_DEG_DEFAULT  0      // per-flight-profile flap stroke centre offset (deg)
 #define ORNI_FREQ_MIN            0.5f    // Hz at 1000µs
 #define ORNI_FLAP_BASE_FREQ_DHZ_DEFAULT  50   // 5.0 Hz at 2000µs

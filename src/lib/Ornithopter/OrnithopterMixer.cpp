@@ -88,7 +88,7 @@ void Ornithopter::_flapAmplitude(OrniServoMix &m)
     // Amplitude = throttle % of the servo-speed-limited max at this freq.
     float degPerSec = 60.0f / (servoSpeed * 0.001f);       // ms/60° → °/s
     float ampMax = degPerSec / (2.0f * m.freqHz);
-    if (ampMax > ORNI_AMP_MAX) ampMax = ORNI_AMP_MAX;      // hard safety ceiling
+    if (ampMax > ORNI_AMP_MAX) ampMax = ORNI_AMP_MAX;      // soft safety ceiling (servo travel is the hard bound)
     m.amplitude = m.throttlePct * ampMax;
 }
 
@@ -262,6 +262,25 @@ void Ornithopter::_flapSkewAndRoll(OrniServoMix &m)
     if (rollAmpDiff < -0.9f) rollAmpDiff = -0.9f;
     m.amplitudeL = m.amplitude * (1.0f + rollAmpDiff);
     m.amplitudeR = m.amplitude * (1.0f - rollAmpDiff);
+
+    // ── Absolute servo-boundary coupling ──────────────────────────────
+    // The flap half-swing in servo degrees is amplitude × ORNI_ANGULAR_MULTIPLIER.
+    // Couple it to the servo's PHYSICAL travel (0°↔servoMinUs, 180°↔servoMaxUs)
+    // about the current steering/flap centre, so no command can ever push a wing
+    // past its configured endpoint. This hard bound supersedes the soft
+    // ORNI_AMP_MAX ceiling whenever the stick is deflected or neutral is off-centre.
+    const float centreL = ORNI_NEUTRAL_ANGLE_DEG +
+        (m.aileronCmd + m.elevatorCmd + m.flapCenterCmd + m.gyroPitchCenter + m.gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
+    const float centreR = ORNI_NEUTRAL_ANGLE_DEG +
+        (m.aileronCmd - m.elevatorCmd - m.flapCenterCmd - m.gyroPitchCenter + m.gyroRollCenter) * ORNI_ANGULAR_MULTIPLIER;
+    float travelL = fminf(centreL, 180.0f - centreL);
+    float travelR = fminf(centreR, 180.0f - centreR);
+    if (travelL < 0.0f) travelL = 0.0f;   // centre already pinned → no flap room
+    if (travelR < 0.0f) travelR = 0.0f;
+    const float ampBoundL = travelL / ORNI_ANGULAR_MULTIPLIER;
+    const float ampBoundR = travelR / ORNI_ANGULAR_MULTIPLIER;
+    if (m.amplitudeL > ampBoundL) m.amplitudeL = ampBoundL;
+    if (m.amplitudeR > ampBoundR) m.amplitudeR = ampBoundR;
 }
 
 void Ornithopter::_flapPulses(OrniServoMix &m)
