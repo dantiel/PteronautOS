@@ -112,6 +112,7 @@ async function handleBuild(request, env) {
       zephyrus_enabled: ["0", "1"],
       zephyrus_mode: ["rate", "horizon"],
       zephyrus_i2c_pre_detect: ["0", "1"],
+      pteronautos_baro: ["0", "1"],
     };
     for (const [k, valid] of Object.entries(choices)) {
       if (inputs[k] != null && !valid.includes(String(inputs[k]))) {
@@ -128,6 +129,16 @@ async function handleBuild(request, env) {
     ) {
       return json({ error: "zephyrus_mode=horizon requires hardware_target pwmp5 or pwmp7." }, 400);
     }
+
+    // Direct-to-ELRS baro rides the PWM boards' I2C bus (GPIO1/3). The RP2040
+    // companion carries its own baro, so pteronautos_baro is PWM-only.
+    if (
+      inputs.pteronautos_baro === "1" &&
+      inputs.hardware_target !== "pwmp5" &&
+      inputs.hardware_target !== "pwmp7"
+    ) {
+      return json({ error: "pteronautos_baro=1 requires hardware_target pwmp5 or pwmp7." }, 400);
+    }
   
     // Only forward keys that exist in cloud-build.yml's dispatch inputs.
     const allowed = new Set([
@@ -142,6 +153,7 @@ async function handleBuild(request, env) {
       "zephyrus_enabled",
       "zephyrus_mode",
       "zephyrus_i2c_pre_detect",
+      "pteronautos_baro",
       "mushin_rx_pin",
       "mushin_tx_pin",
       "mushin_baud",

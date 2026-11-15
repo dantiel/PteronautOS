@@ -118,6 +118,7 @@ usage() {
   say "  --domain <k>       regulatory domain: eu | ism"
   say "  --gyro <k>         gyro: none | rate | horizon"
   say "                     (legacy: --horizon == --gyro horizon; --mode none|rate|horizon)"
+  say "  --baro <0|1>       BMP180 barometer + altitude hold (default 0; shares gyro I²C bus)"
   say ""
   say "Radio / network / gyro detail:"
   say "  --binding-phrase <s>   hardcoded binding phrase (empty = traditional bind)"
@@ -179,6 +180,7 @@ DEVICE_NAME=""
 WIFI_SSID=""
 WIFI_PASS=""
 HORIZON=0
+BARO_ENABLED=0         # BMP180 barometer (PTERONAUTOS_BARO) — shares the gyro I2C bus
 
 # ---- Config persistence ------------------------------------------------------
 load_conf() {   # load_conf <file> — source a saved config as defaults
@@ -202,6 +204,7 @@ save_conf() {   # save_conf <file>
     printf 'DEVICE_NAME=%q\n' "$DEVICE_NAME"
     printf 'WIFI_SSID=%q\n' "$WIFI_SSID"
     printf 'WIFI_PASS=%q\n' "$WIFI_PASS"
+    printf 'BARO_ENABLED=%q\n' "$BARO_ENABLED"
     printf 'ZEPHYR_SDA=%q\n' "$ZEPHYR_SDA"
     printf 'ZEPHYR_SCL=%q\n' "$ZEPHYR_SCL"
     printf 'ZEPHYR_ROTATION=%q\n' "$ZEPHYR_ROTATION"
@@ -246,7 +249,7 @@ fi
 CONFIG_GIVEN=0
 for a in "${ORIG_ARGS[@]}"; do
   case "$a" in
-    --device|--mixer|--domain|--gyro|--horizon|--target|--mode|\
+    --device|--mixer|--domain|--gyro|--horizon|--target|--mode|--baro|\
     --binding-phrase|--wifi-interval|--device-name|--wifi-ssid|--wifi-pass|\
     --i2c-sda|--i2c-scl|--rotation|--pre-detect|--uart-baud) CONFIG_GIVEN=1 ;;
   esac
@@ -283,6 +286,12 @@ while [[ $# -gt 0 ]]; do
         rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
         horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
         *) err "--gyro requires none, rate or horizon"; exit 1 ;;
+      esac; shift 2 ;;
+    --baro)
+      case "$2" in
+        0) BARO_ENABLED=0 ;;
+        1) BARO_ENABLED=1 ;;
+        *) err "--baro requires 0 or 1"; exit 1 ;;
       esac; shift 2 ;;
     --horizon) HORIZON=1; ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; shift ;;
     # --- detail ---
@@ -424,6 +433,16 @@ wizard_primary() {
     rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
     horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
   esac
+
+  # Baro rides the same I²C bus as the gyro — only the PWM boards carry it.
+  if [[ "$DEVICE" == "pwmp5" || "$DEVICE" == "pwmp7" ]]; then
+    bi="$(choose "Barometer (BMP180 + altitude hold):" \
+      "off — no baro (default)" \
+      "on — BMP180 on the gyro I²C bus + altitude hold")"
+    BARO_ENABLED=$((bi-1))
+  else
+    BARO_ENABLED=0
+  fi
 }
 
 wizard_advanced() {
@@ -508,6 +527,9 @@ validate_config() {
   if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
     err "--gyro horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
   fi
+  if [[ "$BARO_ENABLED" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
+    err "--baro is pwmp5/pwmp7-only (got --device $DEVICE; the RP2040 companion carries its own baro)"; exit 1
+  fi
 }
 
 # ---- Resolve target env / product / pwm outputs -----------------------------
@@ -556,6 +578,9 @@ write_user_defines() {
     esac
     if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
       echo "-DZEPHYRUS_ENABLED=1"
+    fi
+    if [[ "$BARO_ENABLED" == "1" ]]; then
+      echo "-DPTERONAUTOS_BARO=1"
     fi
     if [[ "$ZEPHYR_PRE_DETECT" == "0" ]]; then
       echo "-DZEPHYR_I2C_PRE_DETECT=0"
@@ -636,6 +661,7 @@ summary() {
   say "  mixer         : ${MIXER_LABELS[$MIXER_PROFILE]}"
   say "  domain        : ${DOMAIN}"
   say "  gyro          : ${gyro_lbl}"
+  [[ "$BARO_ENABLED" == "1" ]] && say "  baro          : BMP180 + altitude hold"
   [[ -n "$BINDING_PHRASE" ]] && say "  binding       : ${BINDING_PHRASE}"
   say "  wifi interval : ${WIFI_INTERVAL}s"
   [[ -n "$DEVICE_NAME" ]] && say "  device name   : ${DEVICE_NAME}"

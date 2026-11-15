@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "PteronautOS completo",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "Barómetro BMP180 + mantenimiento de altitud",
+ "flasher_baro_hint": "Añade un BMP180 en el bus I2C del giro (GPIO1/3) para telemetría de altitud en vivo y mantenimiento de altitud. Solo placas PWM."
 }

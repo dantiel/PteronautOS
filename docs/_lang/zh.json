@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "完整 PteronautOS",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "BMP180气压计 + 高度保持",
+ "flasher_baro_hint": "在陀螺仪I2C总线(GPIO1/3)上添加BMP180，提供实时高度遥测和高度保持。仅限PWM板。"
 }

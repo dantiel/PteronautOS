@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "完全な PteronautOS",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "BMP180気圧計 + 高度維持",
+ "flasher_baro_hint": "ジャイロI2Cバス(GPIO1/3)にBMP180を追加し、ライブ高度テレメトリと高度維持を提供します。PWMボード専用。"
 }

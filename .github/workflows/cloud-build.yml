@@ -88,6 +88,14 @@ on:
         options:
           - '0'   # off — always attempt I2C init
           - '1'   # on — skip I2C cleanly when MPU absent
+      pteronautos_baro:
+        description: 'BMP180 barometer + altitude hold on the gyro I2C bus (0=off, 1=on; PWM boards only)'
+        required: false
+        type: choice
+        default: '0'
+        options:
+          - '0'   # no baro
+          - '1'   # PTERONAUTOS_BARO compiled in
       mushin_rx_pin:
         description: 'Deprecated / ignored: EP2 RX is GPIO3'
         required: false
@@ -177,6 +185,9 @@ jobs:
             esac
             if [ "${{ inputs.zephyrus_enabled }}" = "1" ]; then
               echo "-DZEPHYRUS_ENABLED=1"
+            fi
+            if [ "${{ inputs.pteronautos_baro }}" = "1" ]; then
+              echo "-DPTERONAUTOS_BARO=1"
             fi
             # MESOZOIC_HORIZON (zephyrus_mode=horizon) is baked by the HORIZON
             # target env; rate-only (zephyrus_mode=rate) is the default env.

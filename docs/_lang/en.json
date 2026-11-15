@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "Full PteronautOS",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "BMP180 barometer + altitude hold",
+ "flasher_baro_hint": "Adds a BMP180 on the gyro I2C bus (GPIO1/3) for live altitude telemetry and altitude hold. PWM boards only."
 }

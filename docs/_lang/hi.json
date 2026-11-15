@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "पूर्ण PteronautOS",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "BMP180 बैरोमीटर + ऊँचाई होल्ड",
+ "flasher_baro_hint": "जाइरो I2C बस (GPIO1/3) पर BMP180 जोड़ता है — लाइव ऊँचाई टेलीमेट्री और ऊँचाई होल्ड के लिए। केवल PWM बोर्ड।"
 }

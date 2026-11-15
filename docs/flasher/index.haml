@@ -116,6 +116,13 @@
                     %span.flasher-switch-knob
               %p.flasher-hint!= flasher_pre_detect_hint
               %p.flasher-hint#zephyrus-hint.hidden!= flasher_zephyrus_hint
+            %label.flasher-field.flasher-toggle
+              %span.flasher-toggle-text!= flasher_baro
+              %span.flasher-switch
+                %input.flasher-switch-input#pteronautos_baro{type: "checkbox"}
+                %span.flasher-switch-track
+                  %span.flasher-switch-knob
+            %p.flasher-hint!= flasher_baro_hint
             %label.flasher-field
               %span!= flasher_wifi_interval
               %input#auto_wifi_on_interval{type: "number", value: "30", min: "-1"}

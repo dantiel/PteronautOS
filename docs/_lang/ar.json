@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "PteronautOS الكامل",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "بارومتر BMP180 + تثبيت الارتفاع",
+ "flasher_baro_hint": "يضيف BMP180 على ناقل I2C للجيروسكوب (GPIO1/3) لقياس الارتفاع المباشر وتثبيت الارتفاع. لوحات PWM فقط."
 }

@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "Полный PteronautOS",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "Барометр BMP180 + удержание высоты",
+ "flasher_baro_hint": "Добавляет BMP180 на шину I2C гироскопа (GPIO1/3) для телеметрии высоты и удержания высоты. Только платы PWM."
 }

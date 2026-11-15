@@ -62,6 +62,7 @@ FIELD_IDS = [
   "#zephyrus_enabled"
   "#zephyrus_mode"
   "#zephyrus_i2c_pre_detect"
+  "#pteronautos_baro"
   "#rcvr_uart_baud"
   "#device_name"
   "#home_wifi_ssid"
@@ -195,6 +196,7 @@ collectParams = ->
   zephyrus_enabled: zeph
   zephyrus_mode: $("#zephyrus_mode").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
+  pteronautos_baro: (if $("#pteronautos_baro").checked then "1" else "0")
   rcvr_uart_baud: $("#rcvr_uart_baud").value
   device_name: $("#device_name").value.trim()
   home_wifi_ssid: $("#home_wifi_ssid").value.trim()

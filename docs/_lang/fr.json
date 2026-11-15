@@ -1049,5 +1049,7 @@
  "wififlash_stage_egg": "Pteronaut-Egg",
  "wififlash_stage_full": "PteronautOS complet",
  "wififlash_page_stock": "WebUI → Firmware Update",
- "wififlash_page_full": "WebUI → Firmware Update"
+ "wififlash_page_full": "WebUI → Firmware Update",
+ "flasher_baro": "Baromètre BMP180 + maintien d'altitude",
+ "flasher_baro_hint": "Ajoute un BMP180 sur le bus I2C du gyro (GPIO1/3) pour la télémétrie d'altitude et le maintien d'altitude. Cartes PWM uniquement."
 }
