@@ -131,6 +131,18 @@ async function handleBuild(request, env) {
       return json({ error: "zephyrus_mode=horizon requires hardware_target pwmp5 or pwmp7." }, 400);
     }
 
+    // Zephyrus gyro is PWM-only. On EP2/MUSHIN the gyro lives on the RP2040
+    // (MUSHIN runs the stabilization there and never talks gyro back to the
+    // ELRS chip), and EP2-as-PWM has no free I2C pad pair — so gyro and EP2
+    // are mutually exclusive. Fail closed rather than build a nonsense image.
+    if (
+      inputs.zephyrus_enabled === "1" &&
+      inputs.hardware_target !== "pwmp5" &&
+      inputs.hardware_target !== "pwmp7"
+    ) {
+      return json({ error: "zephyrus_enabled=1 requires hardware_target pwmp5 or pwmp7 (gyro is RP2040/MUSHIN-only on EP2)." }, 400);
+    }
+
     // Direct-to-ELRS baro rides the PWM boards' I2C bus (GPIO1/3). The RP2040
     // companion carries its own baro, so pteronautos_baro is PWM-only.
     if (

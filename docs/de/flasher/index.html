@@ -144,7 +144,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Prüft SCL vor der I2C-Initialisierung, damit ein fehlender MPU6050 sauber bootet. Bei ungewöhnlichen Pull-ups deaktivieren.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Lokales Gyro nur auf der PWMP7-Platine.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Lokales Gyro nur auf den PWM-Platinen (PWMP5/PWMP7); beim EP2 sitzt das Gyro auf dem RP2040-Begleiter (MUSHIN führt dort die Stabilisierung aus und meldet das Gyro nie an den ELRS-Chip zurück).</p>
 </div>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>BMP180-Barometer + Höhenhaltung</span>

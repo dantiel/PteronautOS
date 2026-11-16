@@ -144,7 +144,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Sondea SCL antes de iniciar I2C para que un MPU6050 ausente arranque limpio. Desactívala para pull-ups no estándar.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Giro apagado — activa Zephyrus para usar el MPU6050. Giro local solo en la placa PWMP7.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Giro apagado — activa Zephyrus para usar el MPU6050. Giro local solo en las placas PWM (PWMP5/PWMP7); en el EP2 el giro vive en el compañero RP2040 (MUSHIN ejecuta allí la estabilización y nunca devuelve el giro al chip ELRS).</p>
 </div>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Barómetro BMP180 + mantenimiento de altitud</span>

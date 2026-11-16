@@ -524,8 +524,8 @@ validate_config() {
     || { err "Invalid board rotation: $ZEPHYR_ROTATION (0..6)"; exit 1; }
   [[ "$ZEPHYR_PRE_DETECT" == "0" || "$ZEPHYR_PRE_DETECT" == "1" ]] \
     || { err "Invalid --pre-detect: $ZEPHYR_PRE_DETECT (0|1)"; exit 1; }
-  if [[ "$HORIZON" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
-    err "--gyro horizon is pwmp5/pwmp7-only (got --device $DEVICE)"; exit 1
+  if [[ "$ZEPHYR_ENABLED" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
+    err "--gyro (rate|horizon) is pwmp5/pwmp7-only (got --device $DEVICE; on EP2 the gyro lives on the RP2040/MUSHIN companion)"; exit 1
   fi
   if [[ "$BARO_ENABLED" == "1" && "$DEVICE" != "pwmp5" && "$DEVICE" != "pwmp7" ]]; then
     err "--baro is pwmp5/pwmp7-only (got --device $DEVICE; the RP2040 companion carries its own baro)"; exit 1

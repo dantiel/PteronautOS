@@ -973,7 +973,7 @@
  "flasher_ep2_pwm_enabled": "Reutilizar pads serie como PWM (2 servos)",
  "flasher_zephyrus_mode": "Modo de estabilización",
  "flasher_zephyrus_imu": "Giroscopio (IMU)",
- "flasher_zephyrus_hint": "Giro apagado — activa Zephyrus para usar el MPU6050. Giro local solo en la placa PWMP7.",
+ "flasher_zephyrus_hint": "Giro apagado — activa Zephyrus para usar el MPU6050. Giro local solo en las placas PWM (PWMP5/PWMP7); en el EP2 el giro vive en el compañero RP2040 (MUSHIN ejecuta allí la estabilización y nunca devuelve el giro al chip ELRS).",
  "flasher_ep2_pwm_hint": "Reasigna los pads CRSF (RX/TX) del EP1/EP2 como 2 salidas PWM de servo — sin compañero MUSHIN.",
  "flasher_pre_detect": "Predetección I2C del MPU",
  "flasher_pre_detect_hint": "Sondea SCL antes de iniciar I2C para que un MPU6050 ausente arranque limpio. Desactívala para pull-ups no estándar.",

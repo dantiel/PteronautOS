@@ -144,7 +144,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Verifica SCL antes da inicialização I2C para que um MPU6050 ausente inicie normalmente. Desative para pull-ups fora do padrão.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Giro desligado — ative o Zephyrus para usar o MPU6050. Giro local apenas na placa PWMP7.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Giro desligado — ative o Zephyrus para usar o MPU6050. Giro local apenas nas placas PWM (PWMP5/PWMP7); no EP2 o giro fica no companheiro RP2040 (o MUSHIN roda a estabilização lá e não devolve giro ao chip ELRS).</p>
 </div>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Barómetro BMP180 + altitude hold</span>

@@ -144,7 +144,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Probes SCL before I2C init so a missing MPU6050 boots cleanly. Disable for non-standard pull-ups.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro is off — enable Zephyrus to use the MPU6050. Local gyro only on the PWMP7 board.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro is off — enable Zephyrus to use the MPU6050. Local gyro only on the PWM boards (PWMP5/PWMP7); on EP2 the gyro lives on the RP2040 companion (MUSHIN runs stabilization there and never talks gyro back to the ELRS chip).</p>
 </div>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>بارومتر BMP180 + تثبيت الارتفاع</span>

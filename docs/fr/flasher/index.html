@@ -144,7 +144,7 @@
 </span>
 </label>
 <p class='flasher-hint'>Sonde SCL avant l'initialisation I2C pour qu'un MPU6050 absent démarre proprement. Désactive pour des pull-ups non standard.</p>
-<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro désactivé — activez Zephyrus pour utiliser le MPU6050. Gyro local uniquement sur la carte PWMP7.</p>
+<p class='flasher-hint hidden' id='zephyrus-hint'>Gyro désactivé — activez Zephyrus pour utiliser le MPU6050. Gyro local uniquement sur les cartes PWM (PWMP5/PWMP7); sur l'EP2 le gyro vit sur le compagnon RP2040 (MUSHIN y exécute la stabilisation et ne renvoie jamais le gyro à la puce ELRS).</p>
 </div>
 <label class='flasher-field flasher-toggle'>
 <span class='flasher-toggle-text'>Baromètre BMP180 + maintien d'altitude</span>
