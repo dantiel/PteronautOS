@@ -1,4 +1,12 @@
 #include "Ornithopter.h"
+#ifdef UNIT_TEST
+  #include <stdint.h>
+  static inline uint32_t micros() { return 0; }
+  static inline uint32_t millis() { return 0; }
+  static inline void delay(unsigned long) {}
+#else
+  #include <Arduino.h>
+#endif
 
 // ─────────────────────────────────────────────────────────────────────
 //  GEARBOX MIXER — CRSF channel → PWM (motor + head rudder + tail surfaces)
@@ -29,14 +37,48 @@ void Ornithopter::_computeGearboxMixer()
     const float rudderNorm   = _crsfToNorm(voiceRudder);
     const bool  armed        = _isArmed();
 
+    // ── Dantiel-style gearbox glide: pilot throttle below the glide
+    //    threshold engages glide — a leveling burst at glideThrottleUs
+    //    settles the bird, then the motor drops to glideIdleUs. Above the
+    //    threshold the stick drives the motor normally. Operates on the RAW
+    //    stick so a manual pull-to-glide overrides altitude hold.
+    if (glideMode && armed)
+    {
+        const uint16_t stickUs = (uint16_t)_crsfToFloat((float)voiceThrottle,
+                                                        (float)ORNI_SERVO_MIN_US,
+                                                        (float)ORNI_SERVO_MAX_US);
+        if (stickUs < glideThrottleUs)
+        {
+            if (!glideActive) { glideActive = true; _glideEnteredMs = millis(); }
+        }
+        else
+        {
+            glideActive = false;
+        }
+    }
+    else
+    {
+        glideActive = false;
+    }
+
 #ifdef ZEPHYRUS_ENABLED
-    const bool motorRunning = armed && (throttleNorm > 0.1f);
+    const bool motorRunning = armed && (throttleNorm > 0.1f) && !glideActive;
     aeroGainScale = motorRunning ? (aeroFlapCoeff * 0.01f) : (aeroGlideCoeff * 0.01f);
 #endif
 
     // ── Motor (0..1 throttle across the configured idle→full window) ──
-    const float motorF = armed ? ((throttleNorm + 1.0f) * 0.5f) : 0.0f;
-    _f[SF_MOTOR] = _clampServo((int32_t)((float)motorMinUs + motorF * (float)(motorMaxUs - motorMinUs)));
+    uint16_t motorUs;
+    if (glideActive)
+    {
+        const uint32_t elapsed = millis() - _glideEnteredMs;
+        motorUs = (elapsed < glideLevelMs) ? glideThrottleUs : glideIdleUs;
+    }
+    else
+    {
+        const float motorF = armed ? ((throttleNorm + 1.0f) * 0.5f) : 0.0f;
+        motorUs = (uint16_t)((float)motorMinUs + motorF * (float)(motorMaxUs - motorMinUs));
+    }
+    _f[SF_MOTOR] = _clampServo((int32_t)motorUs);
 
     // ── Glide controller: attitude + rate closed loop (µs) ────────────
     // Rate dampers (gyroAileron/ElevatorCorrection) plus attitude level hold

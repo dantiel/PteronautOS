@@ -46,6 +46,10 @@ class OrnithopterPanel extends PteroElement
     motorMaxUs:         {state: true}
     # Gearbox glide mode
     glideMode:          {state: true}
+    glideActive:        {state: true}
+    glideThrottleUs:    {state: true}
+    glideIdleUs:        {state: true}
+    glideLevelMs:       {state: true}
     hallSensorPin:      {state: true}
     ratchetThrottlePct: {state: true}
     ratchetTimeoutMs:   {state: true}
@@ -92,6 +96,10 @@ class OrnithopterPanel extends PteroElement
     @motorMinUs           = 1000
     @motorMaxUs           = 2000
     @glideMode            = false
+    @glideActive          = false
+    @glideThrottleUs      = 1150
+    @glideIdleUs          = 950
+    @glideLevelMs         = 1500
     @hallSensorPin        = 12
     @ratchetThrottlePct   = 15
     @ratchetTimeoutMs     = 500
@@ -179,6 +187,10 @@ class OrnithopterPanel extends PteroElement
       @motorMinUs         = o.motor_min_us         if o.motor_min_us?
       @motorMaxUs         = o.motor_max_us         if o.motor_max_us?
       @glideMode          = o.glide_mode == true   if o.glide_mode?
+      @glideActive        = o.glide_active == true if o.glide_active?
+      @glideThrottleUs    = o.glide_throttle_us    if o.glide_throttle_us?
+      @glideIdleUs        = o.glide_idle_us        if o.glide_idle_us?
+      @glideLevelMs       = o.glide_level_ms       if o.glide_level_ms?
       @hallSensorPin      = o.hall_sensor_pin      if o.hall_sensor_pin?
       @ratchetThrottlePct = o.ratchet_throttle_pct if o.ratchet_throttle_pct?
       @ratchetTimeoutMs   = o.ratchet_timeout_ms   if o.ratchet_timeout_ms?
@@ -344,6 +356,9 @@ class OrnithopterPanel extends PteroElement
       when 'altHoldMaxAltM'     then [1, 100]
       when 'altHoldEngageThreshold' then [1, 100]
       when 'altHoldChannel'     then [8, 15]
+      when 'glideThrottleUs'    then [900, 1200]
+      when 'glideIdleUs'        then [900, 1200]
+      when 'glideLevelMs'       then [0, 5000]
       else null
 
   _clamp: (prop, v) ->
@@ -380,6 +395,9 @@ class OrnithopterPanel extends PteroElement
     body.append 'motor_min_us',         parseInt(@motorMinUs)
     body.append 'motor_max_us',         parseInt(@motorMaxUs)
     body.append 'glide_mode',           if @glideMode then '1' else '0'
+    body.append 'glide_throttle_us',    parseInt(@glideThrottleUs)
+    body.append 'glide_idle_us',        parseInt(@glideIdleUs)
+    body.append 'glide_level_ms',       parseInt(@glideLevelMs)
     body.append 'hall_sensor_pin',      parseInt(@hallSensorPin)
     body.append 'ratchet_throttle_pct', parseInt(@ratchetThrottlePct)
     body.append 'ratchet_timeout_ms',   parseInt(@ratchetTimeoutMs)

@@ -139,7 +139,11 @@ public:
     float   tailYawCoupling;      // 0–100, rotation-tail pitch-gated yaw authority
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
-        bool    glideMode;            // true = gearbox idle glide
+        bool    glideMode;            // true = gearbox idle glide (enable)
+        bool    glideActive;          // live: glide engaged (stick below glideThrottleUs)
+        uint16_t glideThrottleUs;     // µs, glide threshold + leveling burst throttle
+        uint16_t glideIdleUs;         // µs, motor idle pulse during glide
+        uint16_t glideLevelMs;        // ms, leveling burst after glide entry
         bool    benchMode;            // true = WiFi/panel bench mode (servos hold glide + trim)
     uint8_t hallSensorPin;        // GPIO pin for hall sensor (12–15)
     uint8_t ratchetThrottlePct;   // 0–100, detent step size
@@ -255,6 +259,7 @@ private:
     bool _armedState;         // arming latch — throttle-zero + arm-switch high
     bool _wasArmedAtLoss;     // armed state snapshot at link loss (grants recovery re-arm)
     bool _wasFlapping;        // flap/glide hysteresis latch (throttle threshold)
+    uint32_t _glideEnteredMs; // millis() at glide entry (leveling burst clock)
   
     float _prevThrottlePct;   // last flap-tick throttle (sentinel -1 after glide/reset)
     float _throttleRateLPF;   // low-passed throttle slew (1/s) — slew boost

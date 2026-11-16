@@ -183,8 +183,38 @@
         %span{style: "color:#888;margin-left:6px;font-size:13px;vertical-align:middle;"}= self.glideMode ? self._t('ornithopter.glide.enabled') : self._t('ornithopter.glide.disabled')
     %small{style: "color:#888;"}= self._t('ornithopter.glide.gearbox_desc')
     - if self.glideMode
+      %div{style: "font-size:13px;margin:6px 0 10px;"}
+        %span{style: "color:#888;"}= self._t('ornithopter.glide.state')
+        %span{style: "margin-left:6px;font-weight:600;"}= self.glideActive ? self._t('ornithopter.glide.active') : self._t('ornithopter.glide.inactive')
       %table.mui-table.mui-table--bordered
         %tbody
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.throttle_us')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.throttle_us_desc')
+            %td
+              %input{type: "range", min: "900", max: "1200", .value: self.glideThrottleUs, @input: self._onSlider('glideThrottleUs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+              %span.value= self.glideThrottleUs
+              |  µs
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.idle_us')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.idle_us_desc')
+            %td
+              %input{type: "range", min: "900", max: "1200", .value: self.glideIdleUs, @input: self._onSlider('glideIdleUs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+              %span.value= self.glideIdleUs
+              |  µs
+          %tr
+            %td
+              %b= self._t('ornithopter.glide.level_ms')
+              %br
+              %small{style: "color:#888;"}= self._t('ornithopter.glide.level_ms_desc')
+            %td
+              %input{type: "range", min: "0", max: "5000", step: "100", .value: self.glideLevelMs, @input: self._onSlider('glideLevelMs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+              %span.value= self.glideLevelMs
+              |  ms
           %tr
             %td
               %b= self._t('ornithopter.glide.hall_sensor_pin')

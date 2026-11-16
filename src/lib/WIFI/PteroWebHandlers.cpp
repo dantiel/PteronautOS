@@ -506,6 +506,10 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         orni["servo_max_us"] = ornithopter.servoMaxUs;
     }
     orni["glide_mode"]          = ornithopter.glideMode;
+    orni["glide_active"]        = ornithopter.glideActive;
+    orni["glide_throttle_us"]   = ornithopter.glideThrottleUs;
+    orni["glide_idle_us"]       = ornithopter.glideIdleUs;
+    orni["glide_level_ms"]      = ornithopter.glideLevelMs;
     orni["hall_sensor_pin"]     = ornithopter.hallSensorPin;
     orni["ratchet_throttle_pct"] = ornithopter.ratchetThrottlePct;
     orni["ratchet_timeout_ms"]  = ornithopter.ratchetTimeoutMs;
@@ -745,6 +749,12 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.motorMaxUs);
     f.print(F(",\"glide_mode\":"));
     f.print(ornithopter.glideMode ? "true" : "false");
+    f.print(F(",\"glide_throttle_us\":"));
+    f.print((int)ornithopter.glideThrottleUs);
+    f.print(F(",\"glide_idle_us\":"));
+    f.print((int)ornithopter.glideIdleUs);
+    f.print(F(",\"glide_level_ms\":"));
+    f.print((int)ornithopter.glideLevelMs);
     f.print(F(",\"hall_sensor_pin\":"));
     f.print((int)ornithopter.hallSensorPin);
     f.print(F(",\"ratchet_throttle_pct\":"));
@@ -972,6 +982,9 @@ void LoadOrnithopterConfig()
     if (o["motor_min_us"].is<int>())          ornithopter.motorMinUs           = (uint16_t)o["motor_min_us"].as<int>();
     if (o["motor_max_us"].is<int>())          ornithopter.motorMaxUs           = (uint16_t)o["motor_max_us"].as<int>();
     if (o["glide_mode"].is<bool>())           ornithopter.glideMode            = o["glide_mode"].as<bool>();
+    if (o["glide_throttle_us"].is<int>())     ornithopter.glideThrottleUs      = (uint16_t)o["glide_throttle_us"].as<int>();
+    if (o["glide_idle_us"].is<int>())         ornithopter.glideIdleUs          = (uint16_t)o["glide_idle_us"].as<int>();
+    if (o["glide_level_ms"].is<int>())        ornithopter.glideLevelMs         = (uint16_t)o["glide_level_ms"].as<int>();
     if (o["hall_sensor_pin"].is<int>())       ornithopter.hallSensorPin        = (uint8_t)o["hall_sensor_pin"].as<int>();
     if (o["ratchet_throttle_pct"].is<int>())  ornithopter.ratchetThrottlePct   = (uint8_t)o["ratchet_throttle_pct"].as<int>();
     if (o["ratchet_timeout_ms"].is<int>())    ornithopter.ratchetTimeoutMs     = (uint16_t)o["ratchet_timeout_ms"].as<int>();
@@ -1349,6 +1362,9 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.motorMinUs         = (uint16_t)_pteroParamInt(request, "motor_min_us",    ornithopter.motorMinUs);
     ornithopter.motorMaxUs         = (uint16_t)_pteroParamInt(request, "motor_max_us",    ornithopter.motorMaxUs);
     ornithopter.glideMode          = _pteroParamInt(request, "glide_mode", ornithopter.glideMode ? 1 : 0) != 0;
+    ornithopter.glideThrottleUs    = (uint16_t)_pteroParamInt(request, "glide_throttle_us", ornithopter.glideThrottleUs);
+    ornithopter.glideIdleUs        = (uint16_t)_pteroParamInt(request, "glide_idle_us",     ornithopter.glideIdleUs);
+    ornithopter.glideLevelMs       = (uint16_t)_pteroParamInt(request, "glide_level_ms",    ornithopter.glideLevelMs);
     ornithopter.hallSensorPin      = (uint8_t)_pteroParamInt(request, "hall_sensor_pin",  ornithopter.hallSensorPin);
     ornithopter.ratchetThrottlePct = (uint8_t)_pteroParamInt(request, "ratchet_throttle_pct", ornithopter.ratchetThrottlePct);
     ornithopter.ratchetTimeoutMs   = (uint16_t)_pteroParamInt(request, "ratchet_timeout_ms", ornithopter.ratchetTimeoutMs);

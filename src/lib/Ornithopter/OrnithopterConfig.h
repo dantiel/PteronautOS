@@ -436,6 +436,15 @@ struct FlightProfileParams {
 #define ORNI_AERO_GLIDE_COEFF 40      // 0-100, gain modulation during glide
 #define ORNI_AERO_FLAP_COEFF  40      // 0-100, gain modulation during flap
 
+// ─── Gearbox Glide Mode (dantiel-style throttle-threshold idle) ────
+// When the pilot's throttle falls below ORNI_GLIDE_THROTTLE_US the motor
+// runs a brief leveling burst at that same pulse for ORNI_GLIDE_LEVEL_MS,
+// then drops to ORNI_GLIDE_IDLE_US (idle glide). Above the threshold the
+// motor follows the stick normally. All three are WebUI-configurable.
+#define ORNI_GLIDE_THROTTLE_US 1150   // µs, glide threshold + leveling burst throttle
+#define ORNI_GLIDE_IDLE_US     950    // µs, motor idle pulse during glide
+#define ORNI_GLIDE_LEVEL_MS    1500   // ms, leveling burst after glide entry
+
 // ─── 2-Wing Mesozoic Stabilizer Runtime Gains (0-100) ──────────────
 // Direct PID → flapping-servo mapping for 2-servo ornithopters (no rudder/
 // tail). 0 disables the axis. Roll → differential amplitude, pitch →
