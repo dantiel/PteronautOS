@@ -111,6 +111,7 @@ async function handleBuild(request, env) {
       hardware_target: ["pwmp5", "pwmp7", "ep2pwm", "mushin"],
       zephyrus_enabled: ["0", "1"],
       zephyrus_mode: ["rate", "horizon"],
+      zephyrus_imu: ["mpu6050", "lsm6ds3"],
       zephyrus_i2c_pre_detect: ["0", "1"],
       pteronautos_baro: ["0", "1"],
     };
@@ -152,6 +153,7 @@ async function handleBuild(request, env) {
       "hardware_target",
       "zephyrus_enabled",
       "zephyrus_mode",
+      "zephyrus_imu",
       "zephyrus_i2c_pre_detect",
       "pteronautos_baro",
       "mushin_rx_pin",

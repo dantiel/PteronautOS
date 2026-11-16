@@ -80,6 +80,14 @@ on:
         options:
           - 'rate'    # rate-only damper (MESOZOIC_ONLY)
           - 'horizon' # rate + flap-decoupled self-level (MESOZOIC_HORIZON)
+      zephyrus_imu:
+        description: 'Gyro IMU chip (MPU6050 = GY-521, LSM6DS3 = GY-LSM6DS3)'
+        required: false
+        type: choice
+        default: 'mpu6050'
+        options:
+          - 'mpu6050'  # GY-521 (MPU6050) — ZEPHYR_IMU_MPU6050 (default)
+          - 'lsm6ds3'  # GY-LSM6DS3 (LSM6DS3) — ZEPHYR_IMU_LSM6DS3
       zephyrus_i2c_pre_detect:
         description: 'Probe SCL before I2C init to skip a missing MPU (1=on, 0=off)'
         required: false
@@ -178,6 +186,10 @@ jobs:
             echo "-DZEPHYR_I2C_SDA=${{ inputs.zephyrus_i2c_sda }}"
             echo "-DZEPHYR_I2C_SCL=${{ inputs.zephyrus_i2c_scl }}"
             echo "-DZEPHYR_BOARD_ROTATION=${{ inputs.zephyrus_board_rotation }}"
+            case "${{ inputs.zephyrus_imu }}" in
+              lsm6ds3) echo "-DZEPHYR_IMU=ZEPHYR_IMU_LSM6DS3" ;;
+              *)       echo "-DZEPHYR_IMU=ZEPHYR_IMU_MPU6050" ;;
+            esac
             # Companion UART pins/baud belong to the EP2 target, not user overrides.
             echo "-DRCVR_UART_BAUD=${{ inputs.rcvr_uart_baud }}"
             case "${{ inputs.hardware_target }}" in

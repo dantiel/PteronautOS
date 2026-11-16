@@ -972,6 +972,7 @@
  "flasher_zephyrus_enabled": "Giro Zephyrus (MPU6050)",
  "flasher_ep2_pwm_enabled": "Reaproveitar pads seriais como PWM (2 servos)",
  "flasher_zephyrus_mode": "Modo de estabilização",
+ "flasher_zephyrus_imu": "Giroscópio (IMU)",
  "flasher_zephyrus_hint": "Giro desligado — ative o Zephyrus para usar o MPU6050. Giro local apenas na placa PWMP7.",
  "flasher_ep2_pwm_hint": "Reaproveita os pads CRSF (RX/TX) do EP1/EP2 como 2 saídas PWM de servo — sem companheiro MUSHIN.",
  "flasher_pre_detect": "Pré-detecção I2C do MPU",

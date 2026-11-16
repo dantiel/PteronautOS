@@ -972,6 +972,7 @@
  "flasher_zephyrus_enabled": "Zephyrus-Gyro (MPU6050)",
  "flasher_ep2_pwm_enabled": "Serielle Pads als PWM nutzen (2 Servos)",
  "flasher_zephyrus_mode": "Stabilisierungsmodus",
+ "flasher_zephyrus_imu": "Gyro-IMU",
  "flasher_zephyrus_hint": "Gyro ist aus — aktiviere Zephyrus, um das MPU6050 zu nutzen. Lokales Gyro nur auf der PWMP7-Platine.",
  "flasher_ep2_pwm_hint": "Nutzt die CRSF-Pads (RX/TX) des EP1/EP2 als 2 PWM-Servoausgänge — ohne MUSHIN-Begleiter.",
  "flasher_pre_detect": "MPU-I2C-Vorerkennung",

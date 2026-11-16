@@ -85,6 +85,11 @@
                     %span.flasher-switch-knob
             %p.flasher-conditional#ep2-pwm-note.hidden!= flasher_ep2_pwm_hint
             #zephyrus-fields
+              %label.flasher-field
+                %span!= flasher_zephyrus_imu
+                %select#zephyrus_imu
+                  %option{value: "mpu6050", selected: true} GY-521 (MPU6050) — default
+                  %option{value: "lsm6ds3"} GY-LSM6DS3 (LSM6DS3)
               .flasher-grid
                 %label.flasher-field
                   %span!= flasher_i2c_sda

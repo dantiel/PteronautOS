@@ -96,6 +96,13 @@
 </div>
 <p class='flasher-conditional hidden' id='ep2-pwm-note'>Réaffecte les pads CRSF (RX/TX) de l'EP1/EP2 en 2 sorties PWM de servo — sans companion MUSHIN.</p>
 <div id='zephyrus-fields'>
+<label class='flasher-field'>
+<span>Gyro IMU</span>
+<select id='zephyrus_imu'>
+<option selected value='mpu6050'>GY-521 (MPU6050) — default</option>
+<option value='lsm6ds3'>GY-LSM6DS3 (LSM6DS3)</option>
+</select>
+</label>
 <div class='flasher-grid'>
 <label class='flasher-field'>
 <span>Broche SDA I2C MPU6050</span>

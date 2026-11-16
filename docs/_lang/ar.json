@@ -972,6 +972,7 @@
  "flasher_zephyrus_enabled": "Zephyrus gyro (MPU6050)",
  "flasher_ep2_pwm_enabled": "Reuse serial pads as PWM (2 servos)",
  "flasher_zephyrus_mode": "Stabilizer mode",
+ "flasher_zephyrus_imu": "جيروسكوب IMU",
  "flasher_zephyrus_hint": "Gyro is off — enable Zephyrus to use the MPU6050. Local gyro only on the PWMP7 board.",
  "flasher_ep2_pwm_hint": "Repurposes the EP1/EP2 CRSF pads (RX/TX) into 2 PWM servo outputs — no MUSHIN companion.",
  "flasher_pre_detect": "MPU I2C pre-detect",

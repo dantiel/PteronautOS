@@ -61,6 +61,7 @@ FIELD_IDS = [
   "#ep2_pwm_enabled"
   "#zephyrus_enabled"
   "#zephyrus_mode"
+  "#zephyrus_imu"
   "#zephyrus_i2c_pre_detect"
   "#pteronautos_baro"
   "#rcvr_uart_baud"
@@ -195,6 +196,7 @@ collectParams = ->
   hardware_target: currentTarget()
   zephyrus_enabled: zeph
   zephyrus_mode: $("#zephyrus_mode").value
+  zephyrus_imu: $("#zephyrus_imu").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
   pteronautos_baro: (if $("#pteronautos_baro").checked then "1" else "0")
   rcvr_uart_baud: $("#rcvr_uart_baud").value
