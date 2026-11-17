@@ -81,6 +81,7 @@ complete mixers:
 | 10 | `GEARBOX_1MOT_1RUD_TAIL11` | motor, head rudder, **pitch + 1×rotate** | rotation (simplified) |
 | 11 | `GEARBOX_1MOT_1RUD_TAILMERGED` | motor, head rudder, **2× pitch+rotate** | merged mechanical |
 | 12 | `ZWING_9PWM` | motor, head rudder, **4× wing + 3× tail** | rotation + split wings |
+| 13 | `GEARBOX_1MOT_FLATTAIL` | motor, **2× merged flat tail** | flat elevon ↔ birdlike yaw |
 
 Build a fixed profile with `-D MIXER_PROFILE=N`; switch at runtime with the
 WebUI (`setOrnithopterProfile`).
@@ -138,6 +139,23 @@ differential = rollUs + yawUs · tailDihedralMix
 
 The correct magnitude depends on the surface **size and angle**, which is why it
 is a runtime slider rather than a compile-time constant.
+
+### Merged flat tail (profile 13) — elevon ↔ birdlike-yaw morph
+
+A flat tail with 2 merged servos. Above the pitch threshold it is a **pure flat
+elevon split** (pitch = common mode, roll = differential, zero yaw). Below the
+threshold — negative elevator, the nose-down / tucked-tail regime — it **morphs
+into a birdlike vertical surface**: yaw rides the roll differential scaled by the
+live pitch deflection, inverting with pitch sign exactly like the rotation tails:
+
+```
+differential = rollUs + yawUs · coupling
+coupling     = t · (pitchUs/500) · tailYawCoupling   (t: 0 at threshold → 1 at full nose-down)
+```
+
+`tailFlatYawThreshold` (0–100, default 25) sets the down-elevator threshold where
+the morph begins. The crossfade ramps `t` smoothly so crossing the threshold never
+jumps a servo.
 
 ---
 

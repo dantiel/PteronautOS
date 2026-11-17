@@ -3,7 +3,7 @@
 #include <cstdio>
 #include "Ornithopter.h"
 
-// Regression test for the complete tail-surface mixers (profiles 8–12) and the
+// Regression test for the complete tail-surface mixers (profiles 8–13) and the
 // Z-Wing 9-PWM authority matrix. Compiled WITHOUT ZEPHYRUS_ENABLED, so every
 // gyro correction is 0 and the mixer is pure pilot-stick math — exact µs.
 //
@@ -14,6 +14,7 @@
 uint32_t ChannelData[16];
 static uint32_t clockUs = 1000;
 unsigned long micros() { return clockUs; }
+unsigned long millis() { return clockUs; }
 
 static bool near(int a, int b, int tol = 2) { return std::abs(a - b) <= tol; }
 
@@ -96,6 +97,22 @@ int main() {
     ornithopter.tailDihedralMix = -100;   // anhedral → inverted
     ornithopter.update();
     assert(ornithopter.funcValue(SF_ELEVON_L) < ornithopter.funcValue(SF_ELEVON_R));
+
+    // ── merged flat tail (profile 13): flat elevon above the threshold, ──
+    //    birdlike yaw morph below it (negative elevator).
+    setOrnithopterProfile(GEARBOX_1MOT_FLATTAIL);
+    ornithopter.tailFlatYawThreshold = 25;   // morph begins at −25% elevator
+    // neutral pitch + full rudder → flat elevon → ZERO yaw (both servos equal)
+    ornithopter.setStickChannel(STK_AILERON,  MID);
+    ornithopter.setStickChannel(STK_ELEVATOR, MID);
+    ornithopter.setStickChannel(STK_RUDDER,   HI);
+    ornithopter.update();
+    assert(near(ornithopter.funcValue(SF_TAIL_PITCHROT_L),
+                ornithopter.funcValue(SF_TAIL_PITCHROT_R)));
+    // pitch DOWN past the threshold → birdlike yaw inverts the differential
+    ornithopter.setStickChannel(STK_ELEVATOR, LO);
+    ornithopter.update();
+    assert(ornithopter.funcValue(SF_TAIL_PITCHROT_L) < ornithopter.funcValue(SF_TAIL_PITCHROT_R));
 
     // ── Z-Wing 9-PWM (profile 12) ─────────────────────────────────────
     setOrnithopterProfile(ZWING_9PWM);

@@ -354,6 +354,11 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["compiled"]          = true;
     zeph["enabled"]           = zephyrus.gyroEnabled;
     zeph["connected"]         = zephyrus.enabled;   // WHO_AM_I matched (MPU physically present)
+#if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
+    zeph["imu"] = "LSM6DS3 (GY-LSM6DS3)";
+#else
+    zeph["imu"] = "MPU6050 (GY-521)";
+#endif
     zeph["calibrated"]        = zephyrus.calibrated;
     zeph["calibrating"]       = zephyrus._calibrating;
     zeph["calib_samples"]     = zephyrus._calibCount;
@@ -484,6 +489,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["flapping_angle_deg"]  = (int)ornithopter.flappingAngleDeg;
     orni["aileron_scale"]       = (int)ornithopter.aileronScale;
     orni["elevator_scale"]      = (int)ornithopter.elevatorScale;
+    orni["rudder_scale"]        = (int)ornithopter.rudderScale;
     orni["rudder_yaw_weight"]   = (int)ornithopter.rudderYawWeight;
     orni["rudder_roll_weight"]  = (int)ornithopter.rudderRollWeight;
     orni["rudder_ferocity_range"] = (int)ornithopter.rudderFerocityRange;
@@ -743,6 +749,8 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.elevatorScale);
     f.print(F(",\"elevon_scale\":"));
     f.print((int)ornithopter.elevonScale);
+    f.print(F(",\"rudder_scale\":"));
+    f.print((int)ornithopter.rudderScale);
     f.print(F(",\"motor_min_us\":"));
     f.print((int)ornithopter.motorMinUs);
     f.print(F(",\"motor_max_us\":"));
@@ -979,6 +987,7 @@ void LoadOrnithopterConfig()
     if (o["aileron_scale"].is<int>())         ornithopter.aileronScale         = o["aileron_scale"].as<int>();
     if (o["elevator_scale"].is<int>())        ornithopter.elevatorScale        = o["elevator_scale"].as<int>();
     if (o["elevon_scale"].is<int>())          ornithopter.elevonScale          = o["elevon_scale"].as<int>();
+    if (o["rudder_scale"].is<int>())          ornithopter.rudderScale          = o["rudder_scale"].as<int>();
     if (o["motor_min_us"].is<int>())          ornithopter.motorMinUs           = (uint16_t)o["motor_min_us"].as<int>();
     if (o["motor_max_us"].is<int>())          ornithopter.motorMaxUs           = (uint16_t)o["motor_max_us"].as<int>();
     if (o["glide_mode"].is<bool>())           ornithopter.glideMode            = o["glide_mode"].as<bool>();
@@ -1359,6 +1368,7 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.aileronScale       = (float)_pteroParamInt(request, "aileron_scale",      (int)ornithopter.aileronScale);
     ornithopter.elevatorScale      = (float)_pteroParamInt(request, "elevator_scale",     (int)ornithopter.elevatorScale);
     ornithopter.elevonScale        = (float)_pteroParamInt(request, "elevon_scale",       (int)ornithopter.elevonScale);
+    ornithopter.rudderScale        = (float)_pteroParamInt(request, "rudder_scale",       (int)ornithopter.rudderScale);
     ornithopter.motorMinUs         = (uint16_t)_pteroParamInt(request, "motor_min_us",    ornithopter.motorMinUs);
     ornithopter.motorMaxUs         = (uint16_t)_pteroParamInt(request, "motor_max_us",    ornithopter.motorMaxUs);
     ornithopter.glideMode          = _pteroParamInt(request, "glide_mode", ornithopter.glideMode ? 1 : 0) != 0;

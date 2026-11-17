@@ -6,7 +6,7 @@
     -D MIXER_PROFILE=1   →  SERVO_2WING_1RUD (default, 3-servo waveform)
     -D MIXER_PROFILE=5   →  GEARBOX_1MOT_2VTAIL_1RUD (4-servo gearbox)
     -D MIXER_PROFILE=7   →  GEARBOX_1MOT_1ELE_1RUD (3-servo, traditional tail)
-    -D MIXER_PROFILE=8..12 → complete tail mixers + Z-Wing 9-PWM (see GEARBOX-MIXERS.md)
+    -D MIXER_PROFILE=8..13 → complete tail mixers + Z-Wing 9-PWM (see GEARBOX-MIXERS.md)
 
   Legacy: -D ORNITHOPTER_GEARBOX=1 still works → defaults to GEARBOX_1MOT_2VTAIL_1RUD.
 */
@@ -29,6 +29,7 @@ enum MixerProfile : uint8_t {
     GEARBOX_1MOT_1RUD_TAIL11= 10, // 4 servo: motor + head rudder + 1-pitch 1-rotate tail
     GEARBOX_1MOT_1RUD_TAILMERGED = 11, // 4 servo: motor + head rudder + merged 2-servo tail
     ZWING_9PWM              = 12, // 9 servo: motor + head rudder + 4 wing + 3-servo tail
+    GEARBOX_1MOT_FLATTAIL   = 13, // 3 servo: motor + merged flat tail 
     PROFILE_COUNT
 };
 
@@ -123,6 +124,8 @@ constexpr ProfileDesc PROFILES[PROFILE_COUNT] = {
     { 4, { SF_MOTOR, SF_RUDDER, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R } },
     // 12: ZWING_9PWM — motor, head rudder, 4 wing surfaces, 3-servo rotation tail
     { 9, { SF_MOTOR, SF_RUDDER, SF_WING_AIL_L, SF_WING_DRAG_L, SF_WING_AIL_R, SF_WING_DRAG_R, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R } },
+    // 13: GEARBOX_1MOT_FLATTAIL — motor, merged flat 2-servo tail 
+    { 3, { SF_MOTOR, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R } },
 };
 
 #define PROFILE PROFILES[activeProfile]
@@ -145,6 +148,7 @@ constexpr uint8_t COMPANION_FUNCTIONS[PROFILE_COUNT][ORNI_MAX_OUTPUTS] = {
     {SF_MOTOR, SF_RUDDER, SF_TAIL_PITCH, SF_TAIL_ROLL_L},
     {SF_MOTOR, SF_RUDDER, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R},
     {SF_MOTOR, SF_RUDDER, SF_WING_AIL_L, SF_WING_DRAG_L, SF_WING_AIL_R, SF_WING_DRAG_R, SF_TAIL_PITCH, SF_TAIL_ROLL_L, SF_TAIL_ROLL_R},
+    {SF_MOTOR, SF_TAIL_PITCHROT_L, SF_TAIL_PITCHROT_R},
 };
 #endif
 

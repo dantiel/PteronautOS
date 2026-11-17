@@ -105,9 +105,19 @@ void Ornithopter::_computeGearboxMixer()
                               + servoTrimUs[SF_RUDDER]);
 
     // ── Tail command (µs around centre): pilot ±500 µs + glide correction ──
-    const float rollUs  = aileronNorm  * 500.0f + rollPidUs;
-    const float pitchUs = elevatorNorm * 500.0f + pitchPidUs;
-    const float yawUs   = rudderNorm   * 500.0f + yawPidUs;
+    // Authority scales (0–100) gate BOTH the pilot stick and the gyro PID on
+    // the same axis. The gyro PID (Zephyrus) already applied its own gains in
+    // µs; these scales are the per-axis authority gate on top — the same role
+    // aileronScale/elevatorScale play in the servo-waveform kernel. rudderScale
+    // is the yaw equivalent for the tail surfaces (flattail + rotation/elevon/
+    // merged tails, which drive BOTH roll and yaw off the same differential).
+    const float rollScale  = aileronScale  * 0.01f;
+    const float pitchScale = elevatorScale * 0.01f;
+    const float yawScale   = rudderScale   * 0.01f;
+
+    const float rollUs  = (aileronNorm  * 500.0f + rollPidUs)  * rollScale;
+    const float pitchUs = (elevatorNorm * 500.0f + pitchPidUs) * pitchScale;
+    const float yawUs   = (rudderNorm   * 500.0f + yawPidUs)   * yawScale;
 
     switch (ACTIVE_PROFILE)
     {
@@ -144,6 +154,9 @@ void Ornithopter::_computeGearboxMixer()
         break;
     case GEARBOX_1MOT_1RUD_ELEVON:
         _gearboxTailElevon(rollUs, pitchUs, yawUs);
+        break;
+    case GEARBOX_1MOT_FLATTAIL:
+        _gearboxTailFlat(rollUs, pitchUs, yawUs);
         break;
     case ZWING_9PWM:
         // Airbrake rides CH6 (the flap-frequency channel), which is otherwise
@@ -205,6 +218,34 @@ void Ornithopter::_gearboxTailElevon(float rollUs, float pitchUs, float yawUs)
     const float differential = rollUs + yawUs * dihedral;
     _f[SF_ELEVON_L] = _clampServo((int32_t)((float)ORNI_SERVO_CENTER_US + common + differential) + servoTrimUs[SF_ELEVON_L]);
     _f[SF_ELEVON_R] = _clampServo((int32_t)((float)ORNI_SERVO_CENTER_US + common - differential) + servoTrimUs[SF_ELEVON_R]);
+}
+
+// ─── Merged flat tail: elevon ↔ birdlike-yaw morph ───────────────────
+void Ornithopter::_gearboxTailFlat(float rollUs, float pitchUs, float yawUs)
+{
+    // A flat tail with 2 servos (merged mechanical linkage). Above the pitch
+    // threshold it is a pure flat elevon split: pitch = common mode, roll =
+    // differential, ZERO yaw (dihedral 0). Below the threshold — negative
+    // elevator, the nose-down / tucked-tail regime — the tail morphs into a
+    // birdlike vertical surface: yaw rides the roll differential scaled by the
+    // live pitch deflection, inverting with pitch sign exactly like the
+    // rotation tails. The morph ramps smoothly so crossing the threshold never
+    // jumps a servo.
+    const float pitchNorm  = pitchUs * (1.0f / 500.0f);
+    const float threshold  = -(tailFlatYawThreshold * 0.01f);   // −1..0
+    float coupling = 0.0f;
+    if (pitchNorm < threshold)
+    {
+        // t = 0 at the threshold → 1 at full nose-down (pitchNorm = −1).
+        const float span = threshold + 1.0f;
+        float t = (span > 1e-6f) ? ((threshold - pitchNorm) / span) : 0.0f;
+        if (t < 0.0f) t = 0.0f; else if (t > 1.0f) t = 1.0f;
+        coupling = t * pitchNorm * (tailYawCoupling * 0.01f);
+    }
+    const float common       = pitchUs;
+    const float differential = rollUs + yawUs * coupling;
+    _f[SF_TAIL_PITCHROT_L] = _clampServo((int32_t)((float)ORNI_SERVO_CENTER_US + common + differential) + servoTrimUs[SF_TAIL_PITCHROT_L]);
+    _f[SF_TAIL_PITCHROT_R] = _clampServo((int32_t)((float)ORNI_SERVO_CENTER_US + common - differential) + servoTrimUs[SF_TAIL_PITCHROT_R]);
 }
 
 // ─── Z-Wing 9-PWM complete mixer ──────────────────────────────────────

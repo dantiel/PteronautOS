@@ -109,6 +109,7 @@ public:
         int8_t  flappingAngleDeg;     // -15…+15, flapping stroke centre offset (deg)
     float   aileronScale;         // 0–100, roll authority
     float   elevatorScale;        // 0–100, pitch authority
+    float   rudderScale;          // 0–100, yaw authority (gearbox tail surfaces)
     uint16_t servoSpeed;          // ms per 60° stroke (25–250), kernel-level servo rate
     uint16_t flapBaseFreq;        // deci-Hz (10–200), CH6 frequency window ceiling
     uint16_t servoMinUs;          // µs, wing servo 0° pulse (500–1490)
@@ -137,6 +138,7 @@ public:
     float   elevonScale;          // 0–100, elevon mix authority (gearbox)
     float   tailDihedralMix;      // -100…+100, split-tail dihedral/anhedral → yaw↔roll coupling
     float   tailYawCoupling;      // 0–100, rotation-tail pitch-gated yaw authority
+    float   tailFlatYawThreshold; // 0-100, down-elevator threshold where the flat merged tail morphs to birdlike yaw
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
         bool    glideMode;            // true = gearbox idle glide (enable)
@@ -309,6 +311,7 @@ private:
     void  _gearboxTailRotation1(float rollUs, float pitchUs, float yawUs);
     void  _gearboxTailMerged(float rollUs, float pitchUs, float yawUs);
     void  _gearboxTailElevon(float rollUs, float pitchUs, float yawUs);
+    void  _gearboxTailFlat(float rollUs, float pitchUs, float yawUs);
     void  _gearboxZwing(float rollUs, float pitchUs, float yawUs, float airbrake01);
 
     // ── Mesozoic stabilizer bridge (OrnithopterStabilizer.cpp) ───────
