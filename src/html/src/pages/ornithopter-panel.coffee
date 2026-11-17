@@ -5,10 +5,12 @@ import {i18n} from '../utils/i18n'
 ###
 # Ornithopter Panel — bench mode: kernel + base configuration.
 # Two-tier selector: Kernel (Servo-Drive | Gearbox) → Mixer (profile).
-# 8 mixer profiles matching firmware MixerProfile enum:
+# 14 mixer profiles matching firmware MixerProfile enum:
 #   0=SERVO_2WING, 1=SERVO_2WING_1RUD, 2=SERVO_4WING,
 #   3=GEARBOX_2VTAIL_1RUD, 4=GEARBOX_1MOT_2VTAIL, 5=GEARBOX_1MOT_2VTAIL_1RUD,
-#   6=GEARBOX_1ELE_1RUD, 7=GEARBOX_1MOT_1ELE_1RUD
+#   6=GEARBOX_1ELE_1RUD, 7=GEARBOX_1MOT_1ELE_1RUD,
+#   8=GEARBOX_1MOT_1RUD_TAIL3, 9=GEARBOX_1MOT_1RUD_ELEVON, 10=GEARBOX_1MOT_1RUD_TAIL11,
+#   11=GEARBOX_1MOT_1RUD_TAILMERGED, 12=ZWING_9PWM, 13=GEARBOX_1MOT_FLATTAIL
 # Per-flight-profile tuning lives in FlightProfilesPanel (separate tab).
 # FEATURE:PTERONAUTOS
 ###
@@ -36,12 +38,24 @@ class OrnithopterPanel extends PteroElement
     servoTrimElevator:      {state: true}
     servoTrimBackLeftWing:  {state: true}
     servoTrimBackRightWing: {state: true}
+    servoTrimWingAilL:     {state: true}
+    servoTrimWingAilR:     {state: true}
+    servoTrimWingDragL:    {state: true}
+    servoTrimWingDragR:    {state: true}
+    servoTrimTailPitch:    {state: true}
+    servoTrimTailRollL:    {state: true}
+    servoTrimTailRollR:    {state: true}
+    servoTrimElevonL:      {state: true}
+    servoTrimElevonR:      {state: true}
+    servoTrimTailPitchrotL:{state: true}
+    servoTrimTailPitchrotR:{state: true}
     # Global mixing params
     rudderYawWeight:    {state: true}
     rudderRollWeight:   {state: true}
     elevonScale:        {state: true}
     aileronScale:       {state: true}
     elevatorScale:      {state: true}
+    rudderScale:        {state: true}
     motorMinUs:         {state: true}
     motorMaxUs:         {state: true}
     # Gearbox glide mode
@@ -88,11 +102,23 @@ class OrnithopterPanel extends PteroElement
     @servoTrimElevator    = 0
     @servoTrimBackLeftWing  = 0
     @servoTrimBackRightWing = 0
+    @servoTrimWingAilL     = 0
+    @servoTrimWingAilR     = 0
+    @servoTrimWingDragL    = 0
+    @servoTrimWingDragR    = 0
+    @servoTrimTailPitch    = 0
+    @servoTrimTailRollL    = 0
+    @servoTrimTailRollR    = 0
+    @servoTrimElevonL      = 0
+    @servoTrimElevonR      = 0
+    @servoTrimTailPitchrotL = 0
+    @servoTrimTailPitchrotR = 0
     @rudderYawWeight      = 65
     @rudderRollWeight     = 35
     @elevonScale          = 50
     @aileronScale         = 67
     @elevatorScale        = 100
+    @rudderScale          = 100
     @motorMinUs           = 1000
     @motorMaxUs           = 2000
     @glideMode            = false
@@ -144,6 +170,12 @@ class OrnithopterPanel extends PteroElement
     {id:5, name:'GEARBOX_1MOT_2VTAIL_1RUD',label:self._t('ornithopter.profile.motor_vtail_rudder'), kernel:'gearbox', servos:4, rudder:true, vtail:true, motor:true, map:'Rudder GPIO9 · Motor GPIO10 · V-Tail L GPIO5'}
     {id:6, name:'GEARBOX_1ELE_1RUD',       label:self._t('ornithopter.profile.elev_rudder'),           kernel:'gearbox', servos:2, rudder:true,  vtail:false, motor:false, map:'Rudder GPIO9 · Elevator GPIO10'}
     {id:7, name:'GEARBOX_1MOT_1ELE_1RUD',  label:self._t('ornithopter.profile.motor_elev_rudder'),       kernel:'gearbox', servos:3, rudder:true,  vtail:false, motor:true,  map:'Rudder GPIO9 · Motor GPIO10 · Elevator GPIO5'}
+    {id:8, name:'GEARBOX_1MOT_1RUD_TAIL3', label:self._t('ornithopter.profile.motor_rudder_tail3'),     kernel:'gearbox', servos:5, rudder:true,  vtail:false, motor:true,  map:'Rudder GPIO9 · Motor GPIO10 · Tail Pitch · Roll L · Roll R'}
+    {id:9, name:'GEARBOX_1MOT_1RUD_ELEVON',label:self._t('ornithopter.profile.motor_rudder_elevon'),    kernel:'gearbox', servos:4, rudder:true,  vtail:false, motor:true,  map:'Rudder GPIO9 · Motor GPIO10 · Elevon L · Elevon R'}
+    {id:10,name:'GEARBOX_1MOT_1RUD_TAIL11',label:self._t('ornithopter.profile.motor_rudder_tail11'),   kernel:'gearbox', servos:4, rudder:true,  vtail:false, motor:true,  map:'Rudder GPIO9 · Motor GPIO10 · Tail Pitch · Roll'}
+    {id:11,name:'GEARBOX_1MOT_1RUD_TAILMERGED',label:self._t('ornithopter.profile.motor_rudder_tailmerged'), kernel:'gearbox', servos:4, rudder:true, vtail:false, motor:true, map:'Rudder GPIO9 · Motor GPIO10 · Pitch/Rot L · Pitch/Rot R'}
+    {id:12,name:'ZWING_9PWM',              label:self._t('ornithopter.profile.zwing_9pwm'),             kernel:'gearbox', servos:9, rudder:true,  vtail:false, motor:true,  map:'Motor · Rudder · 4 Wing · 3 Tail (9 PWM)'}
+    {id:13,name:'GEARBOX_1MOT_FLATTAIL',   label:self._t('ornithopter.profile.motor_flattail'),         kernel:'gearbox', servos:3, rudder:false, vtail:false, motor:true,  map:'Motor GPIO9 · Flat Tail L GPIO10 · Flat Tail R GPIO5'}
   ]
 
   # ── Apply polled state (bench is config-driven; state only unlocks UI) ──
@@ -179,11 +211,23 @@ class OrnithopterPanel extends PteroElement
         @servoTrimElevator     = t[7] ? 0
         @servoTrimBackLeftWing = t[8] ? 0
         @servoTrimBackRightWing = t[9] ? 0
+        @servoTrimWingAilL     = t[10] ? 0
+        @servoTrimWingAilR     = t[11] ? 0
+        @servoTrimWingDragL    = t[12] ? 0
+        @servoTrimWingDragR    = t[13] ? 0
+        @servoTrimTailPitch    = t[14] ? 0
+        @servoTrimTailRollL    = t[15] ? 0
+        @servoTrimTailRollR    = t[16] ? 0
+        @servoTrimElevonL      = t[17] ? 0
+        @servoTrimElevonR      = t[18] ? 0
+        @servoTrimTailPitchrotL = t[19] ? 0
+        @servoTrimTailPitchrotR = t[20] ? 0
       @rudderYawWeight    = o.rudder_yaw_weight    if o.rudder_yaw_weight?
       @rudderRollWeight   = o.rudder_roll_weight   if o.rudder_roll_weight?
       @elevonScale        = o.elevon_scale         if o.elevon_scale?
       @aileronScale       = o.aileron_scale        if o.aileron_scale?
       @elevatorScale      = o.elevator_scale       if o.elevator_scale?
+      @rudderScale        = o.rudder_scale         if o.rudder_scale?
       @motorMinUs         = o.motor_min_us         if o.motor_min_us?
       @motorMaxUs         = o.motor_max_us         if o.motor_max_us?
       @glideMode          = o.glide_mode == true   if o.glide_mode?
@@ -259,8 +303,26 @@ class OrnithopterPanel extends PteroElement
       if p.vtail
         out.push {prop: 'servoTrimVtailLeft', label: self._t('ornithopter.servo.vtail_left')}
         out.push {prop: 'servoTrimVtailRight', label: self._t('ornithopter.servo.vtail_right')}
-      else
-        out.push {prop: 'servoTrimElevator', label: self._t('ornithopter.servo.elevator')} if p.id in [6, 7]
+      else if p.id in [6, 7]
+        out.push {prop: 'servoTrimElevator', label: self._t('ornithopter.servo.elevator')}
+      else if p.id in [8, 12]
+        out.push {prop: 'servoTrimTailPitch', label: self._t('ornithopter.servo.tail_pitch')}
+        out.push {prop: 'servoTrimTailRollL', label: self._t('ornithopter.servo.tail_roll_l')}
+        out.push {prop: 'servoTrimTailRollR', label: self._t('ornithopter.servo.tail_roll_r')}
+      else if p.id == 10
+        out.push {prop: 'servoTrimTailPitch', label: self._t('ornithopter.servo.tail_pitch')}
+        out.push {prop: 'servoTrimTailRollL', label: self._t('ornithopter.servo.tail_roll_l')}
+      else if p.id == 9
+        out.push {prop: 'servoTrimElevonL', label: self._t('ornithopter.servo.elevon_l')}
+        out.push {prop: 'servoTrimElevonR', label: self._t('ornithopter.servo.elevon_r')}
+      else if p.id in [11, 13]
+        out.push {prop: 'servoTrimTailPitchrotL', label: self._t('ornithopter.servo.tail_pitchrot_l')}
+        out.push {prop: 'servoTrimTailPitchrotR', label: self._t('ornithopter.servo.tail_pitchrot_r')}
+      if p.id == 12
+        out.push {prop: 'servoTrimWingAilL', label: self._t('ornithopter.servo.wing_ail_l')}
+        out.push {prop: 'servoTrimWingAilR', label: self._t('ornithopter.servo.wing_ail_r')}
+        out.push {prop: 'servoTrimWingDragL', label: self._t('ornithopter.servo.wing_drag_l')}
+        out.push {prop: 'servoTrimWingDragR', label: self._t('ornithopter.servo.wing_drag_r')}
       out
 
   # ── Hall sensor free-pin map per profile ──────────────────────────
@@ -359,6 +421,7 @@ class OrnithopterPanel extends PteroElement
       when 'glideThrottleUs'    then [900, 1200]
       when 'glideIdleUs'        then [900, 1200]
       when 'glideLevelMs'       then [0, 5000]
+      when 'rudderScale'        then [0, 100]
       else null
 
   _clamp: (prop, v) ->
@@ -387,11 +450,23 @@ class OrnithopterPanel extends PteroElement
     body.append 'servo_trim_7',         parseInt(@servoTrimElevator)
     body.append 'servo_trim_8',         parseInt(@servoTrimBackLeftWing)
     body.append 'servo_trim_9',         parseInt(@servoTrimBackRightWing)
+    body.append 'servo_trim_10',        parseInt(@servoTrimWingAilL)
+    body.append 'servo_trim_11',        parseInt(@servoTrimWingAilR)
+    body.append 'servo_trim_12',        parseInt(@servoTrimWingDragL)
+    body.append 'servo_trim_13',        parseInt(@servoTrimWingDragR)
+    body.append 'servo_trim_14',        parseInt(@servoTrimTailPitch)
+    body.append 'servo_trim_15',        parseInt(@servoTrimTailRollL)
+    body.append 'servo_trim_16',        parseInt(@servoTrimTailRollR)
+    body.append 'servo_trim_17',        parseInt(@servoTrimElevonL)
+    body.append 'servo_trim_18',        parseInt(@servoTrimElevonR)
+    body.append 'servo_trim_19',        parseInt(@servoTrimTailPitchrotL)
+    body.append 'servo_trim_20',        parseInt(@servoTrimTailPitchrotR)
     body.append 'rudder_yaw_weight',    parseInt(@rudderYawWeight)
     body.append 'rudder_roll_weight',   parseInt(@rudderRollWeight)
     body.append 'elevon_scale',         parseInt(@elevonScale)
     body.append 'aileron_scale',        parseInt(@aileronScale)
     body.append 'elevator_scale',       parseInt(@elevatorScale)
+    body.append 'rudder_scale',         parseInt(@rudderScale)
     body.append 'motor_min_us',         parseInt(@motorMinUs)
     body.append 'motor_max_us',         parseInt(@motorMaxUs)
     body.append 'glide_mode',           if @glideMode then '1' else '0'

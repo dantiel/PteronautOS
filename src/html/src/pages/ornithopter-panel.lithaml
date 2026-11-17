@@ -121,6 +121,18 @@
           %input{type: "range", min: "0", max: "100", .value: self.elevatorScale, @input: self._onSlider('elevatorScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
           %span.value= self.elevatorScale
           %
+  - if self._isGearboxProfile()
+    %table.mui-table.mui-table--bordered
+      %tbody
+        %tr
+          %td
+            %b= self._t('ornithopter.mixing.rudder_scale')
+            %br
+            %small{style: "color:#888;"}= self._t('ornithopter.mixing.rudder_scale_desc')
+          %td
+            %input{type: "range", min: "0", max: "100", .value: self.rudderScale, @input: self._onSlider('rudderScale'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+            %span.value= self.rudderScale
+            %
   - if self._hasRudder()
     %table.mui-table.mui-table--bordered
       %tbody
