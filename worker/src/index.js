@@ -105,7 +105,7 @@ async function handleBuild(request, env) {
     }
 
     const choices = {
-      mixer_profile: ["0", "1", "2", "3", "4", "5", "6", "7"],
+      mixer_profile: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"],
       regulatory_domain: ["EU_CE_2400", "ISM_2400"],
       zephyrus_board_rotation: ["0", "1", "2", "3", "4", "5", "6"],
       hardware_target: ["pwmp5", "pwmp7", "ep2pwm", "mushin"],

@@ -93,6 +93,7 @@ MIXER_LABELS=(
   "10 · motor + rudder + 1-pitch 1-rotate tail (gearbox)"
   "11 · motor + rudder + merged 2-servo tail (gearbox)"
   "12 · Z-Wing 9-PWM (motor + rudder + 4 wing + 3 tail)"
+  "13 · motor + merged flat tail (gearbox)"
 )
 
 DOMAIN_KEYS=(EU_CE_2400 ISM_2400)
@@ -108,13 +109,20 @@ GYRO_LABELS=(
   "horizon — rate + self-level (Mesozoic HORIZON)"
 )
 
+# Gyro IMU chip (mirrors cloud-build.yml zephyrus_imu: mpu6050 | lsm6ds3).
+IMU_KEYS=(mpu6050 lsm6ds3)
+IMU_LABELS=(
+  "mpu6050 · GY-521 (MPU6050) — default"
+  "lsm6ds3 · GY-LSM6DS3 (LSM6DS3)"
+)
+
 # ---- Usage ------------------------------------------------------------------
 usage() {
   say "PteronautOS Flash Script — wizard or flags; build WebUI + firmware, then flash."
   say ""
   say "Device / airframe:"
   say "  --device <k>       receiver hardware: pwmp5 | pwmp7 | ep2pwm | mushin"
-  say "  --mixer <0-12>     mixer profile (see --list-mixers)"
+  say "  --mixer <0-13>     mixer profile (see --list-mixers)"
   say "  --domain <k>       regulatory domain: eu | ism"
   say "  --gyro <k>         gyro: none | rate | horizon"
   say "                     (legacy: --horizon == --gyro horizon; --mode none|rate|horizon)"
@@ -128,6 +136,7 @@ usage() {
   say "  --wifi-pass <s>        home WiFi password"
   say "  --i2c-sda <gpio>       MPU6050 SDA (default 1)"
   say "  --i2c-scl <gpio>       MPU6050 SCL (default 3)"
+  say "  --imu <k>           gyro IMU chip: mpu6050 | lsm6ds3 (default mpu6050)"
   say "  --rotation <0-6>       MPU6050 board rotation"
   say "  --pre-detect <0|1>     probe SCL before I²C init (default 1)"
   say "  --uart-baud <rate>     CRSF UART baud (default 420000)"
@@ -175,6 +184,7 @@ ZEPHYR_SDA=1
 ZEPHYR_SCL=3
 ZEPHYR_ROTATION=0
 ZEPHYR_PRE_DETECT=1
+ZEPHYR_IMU=mpu6050      # gyro IMU chip: mpu6050 (GY-521) | lsm6ds3 (GY-LSM6DS3)
 UART_BAUD=420000
 DEVICE_NAME=""
 WIFI_SSID=""
@@ -209,6 +219,7 @@ save_conf() {   # save_conf <file>
     printf 'ZEPHYR_SCL=%q\n' "$ZEPHYR_SCL"
     printf 'ZEPHYR_ROTATION=%q\n' "$ZEPHYR_ROTATION"
     printf 'ZEPHYR_PRE_DETECT=%q\n' "$ZEPHYR_PRE_DETECT"
+    printf 'ZEPHYR_IMU=%q\n' "$ZEPHYR_IMU"
     printf 'UART_BAUD=%q\n' "$UART_BAUD"
     printf 'LANGS=%q\n' "${LANGLIST:-en}"
   } > "$f"
@@ -251,7 +262,7 @@ for a in "${ORIG_ARGS[@]}"; do
   case "$a" in
     --device|--mixer|--domain|--gyro|--horizon|--target|--mode|--baro|\
     --binding-phrase|--wifi-interval|--device-name|--wifi-ssid|--wifi-pass|\
-    --i2c-sda|--i2c-scl|--rotation|--pre-detect|--uart-baud) CONFIG_GIVEN=1 ;;
+    --imu|--i2c-sda|--i2c-scl|--rotation|--pre-detect|--uart-baud) CONFIG_GIVEN=1 ;;
   esac
 done
 
@@ -273,7 +284,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     # --- primary wizard knobs ---
     --device)      DEVICE="${2:?--device requires pwmp5, pwmp7, ep2pwm or mushin}"; shift 2 ;;
-    --mixer)       MIXER_PROFILE="${2:?--mixer requires 0..12}"; shift 2 ;;
+    --mixer)       MIXER_PROFILE="${2:?--mixer requires 0..13}"; shift 2 ;;
     --domain)
       case "$2" in
         eu|EU|EU_CE_2400) DOMAIN=EU_CE_2400 ;;
@@ -286,6 +297,12 @@ while [[ $# -gt 0 ]]; do
         rate)    ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=0 ;;
         horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
         *) err "--gyro requires none, rate or horizon"; exit 1 ;;
+      esac; shift 2 ;;
+    --imu)
+      case "$2" in
+        mpu6050|gy-521|mpu)     ZEPHYR_IMU=mpu6050 ;;
+        lsm6ds3|gy-lsm6ds3|lsm) ZEPHYR_IMU=lsm6ds3 ;;
+        *) err "--imu requires mpu6050 or lsm6ds3"; exit 1 ;;
       esac; shift 2 ;;
     --baro)
       case "$2" in
@@ -434,6 +451,12 @@ wizard_primary() {
     horizon) ZEPHYR_ENABLED=1; ZEPHYR_MODE=1; HORIZON=1 ;;
   esac
 
+  # IMU chip choice only matters when the gyro is on.
+  if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
+    ii="$(choose "Gyro IMU chip:" "${IMU_LABELS[@]}")"
+    ZEPHYR_IMU="${IMU_KEYS[$((ii-1))]}"
+  fi
+
   # Baro rides the same I²C bus as the gyro — only the PWM boards carry it.
   if [[ "$DEVICE" == "pwmp5" || "$DEVICE" == "pwmp7" ]]; then
     bi="$(choose "Barometer (BMP180 + altitude hold):" \
@@ -518,8 +541,8 @@ prompt_languages() {
 
 # ---- Validate config --------------------------------------------------------
 validate_config() {
-  [[ "$MIXER_PROFILE" =~ ^[0-9]+$ && "$MIXER_PROFILE" -ge 0 && "$MIXER_PROFILE" -le 12 ]] \
-    || { err "Invalid mixer profile: $MIXER_PROFILE (0..12)"; exit 1; }
+  [[ "$MIXER_PROFILE" =~ ^[0-9]+$ && "$MIXER_PROFILE" -ge 0 && "$MIXER_PROFILE" -le 13 ]] \
+    || { err "Invalid mixer profile: $MIXER_PROFILE (0..13)"; exit 1; }
   [[ "$ZEPHYR_ROTATION" =~ ^[0-9]+$ && "$ZEPHYR_ROTATION" -le 6 ]] \
     || { err "Invalid board rotation: $ZEPHYR_ROTATION (0..6)"; exit 1; }
   [[ "$ZEPHYR_PRE_DETECT" == "0" || "$ZEPHYR_PRE_DETECT" == "1" ]] \
@@ -578,6 +601,11 @@ write_user_defines() {
     esac
     if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
       echo "-DZEPHYRUS_ENABLED=1"
+      if [[ "$ZEPHYR_IMU" == "lsm6ds3" ]]; then
+        echo "-DZEPHYR_IMU=ZEPHYR_IMU_LSM6DS3"
+      else
+        echo "-DZEPHYR_IMU=ZEPHYR_IMU_MPU6050"
+      fi
     fi
     if [[ "$BARO_ENABLED" == "1" ]]; then
       echo "-DPTERONAUTOS_BARO=1"
@@ -661,6 +689,13 @@ summary() {
   say "  mixer         : ${MIXER_LABELS[$MIXER_PROFILE]}"
   say "  domain        : ${DOMAIN}"
   say "  gyro          : ${gyro_lbl}"
+  if [[ "$ZEPHYR_ENABLED" == "1" ]]; then
+    if [[ "$ZEPHYR_IMU" == "lsm6ds3" ]]; then
+      say "  imu           : GY-LSM6DS3 (LSM6DS3)"
+    else
+      say "  imu           : GY-521 (MPU6050)"
+    fi
+  fi
   [[ "$BARO_ENABLED" == "1" ]] && say "  baro          : BMP180 + altitude hold"
   [[ -n "$BINDING_PHRASE" ]] && say "  binding       : ${BINDING_PHRASE}"
   say "  wifi interval : ${WIFI_INTERVAL}s"

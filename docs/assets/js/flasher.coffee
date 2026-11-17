@@ -97,6 +97,16 @@ saveConfig = ->
     localStorage.setItem CONFIG_KEY, JSON.stringify cfg
   catch
 
+# A stored config can predate a change to a <select>'s option values (e.g. the
+# zephyrus_mode whitelist moved from "0"/"1" to "rate"/"horizon"). Setting an
+# unknown value on a select clears its selection and yields an empty value on
+# submit — which the worker then rejects. Only restore values that still exist.
+validSelectValue = (el, value) ->
+  return false unless el.tagName is "SELECT"
+  for opt in el.options
+    return true if opt.value is value
+  false
+
 restoreConfig = ->
   try
     cfg = JSON.parse localStorage.getItem CONFIG_KEY
@@ -106,7 +116,10 @@ restoreConfig = ->
       if el.type is "checkbox"
         el.checked = cfg[id] if cfg[id]?
       else
-        el.value = cfg[id] if cfg[id]?
+        if el.tagName is "SELECT"
+          el.value = cfg[id] if validSelectValue el, cfg[id]
+        else
+          el.value = cfg[id] if cfg[id]?
     setBoard cfg.receiver_board if cfg.receiver_board?
     setFlashMethod cfg.flash_method if cfg.flash_method?
     if cfg.locales?
@@ -195,7 +208,7 @@ collectParams = ->
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
   hardware_target: currentTarget()
   zephyrus_enabled: zeph
-  zephyrus_mode: $("#zephyrus_mode").value
+  zephyrus_mode: ($("#zephyrus_mode").value or "horizon")
   zephyrus_imu: $("#zephyrus_imu").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
   pteronautos_baro: (if $("#pteronautos_baro").checked then "1" else "0")
@@ -274,6 +287,12 @@ MIXER_LABELS =
   "5": "motor + V-tail + rudder"
   "6": "elevator + rudder"
   "7": "motor + elevator + rudder"
+  "8": "motor + rudder + 3-servo tail"
+  "9": "motor + rudder + split elevon"
+  "10": "motor + rudder + 1-pitch 1-rotate"
+  "11": "motor + rudder + merged tail"
+  "12": "Z-Wing 9-PWM"
+  "13": "motor + flat tail"
 
 HARDWARE_LABELS =
   "pwmp5": "PWMP5"

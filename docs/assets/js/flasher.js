@@ -2,7 +2,7 @@
   // PteronautOS Cloud Build & Flasher — browser client (CoffeeScript).
   // Drives a small Cloudflare Worker (worker/) that holds the GitHub token, then
   // flashes over Web Serial with esptool-js. No secrets live in the browser.
-var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, configChanged, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, deselectSpecimen, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal,
+var $, API_BASE, BUILD_STORE, CONFIG_KEY, DB_NAME, DB_VERSION, DEFAULT_API_BASE, FIELD_IDS, HARDWARE_LABELS, LOCALES, MIXER_LABELS, SPECIMEN_KEY, SPECIMEN_STORE, activePort, activeTransport, apiFetch, attemptConnect, boardParam, busy, clearSpecimens, closeSerial, collectParams, configChanged, currentBoard, currentBuildInfo, currentEp2Pwm, currentFlashMethod, currentMushin, currentPwmBoardType, currentRunId, currentTarget, dbPromise, deselectSpecimen, disconnect, dismissSpecimen, downloadFirmware, downloadGzFirmware, downloadSpecimen, els, enableFirmware, firmwareBytes, flash, fmtSize, fmtWhen, i, id, idbAllSpecimens, idbClearSpecimens, idbDeleteSpecimen, idbPutSpecimen, j, k, l, len, len1, len2, len3, log, m, openDb, poll, ref, ref1, renderSpecimens, restoreConfig, restoreSpecimens, saveConfig, saveSpecimen, sel, selectSpecimen, selectedSpecimenId, serialSupported, setBoard, setFlashMethod, setStatus, sleep, specimenMeta, specimenNode, startBuild, syncFlashMethod, syncGyroFields, terminal, validSelectValue,
   indexOf = [].indexOf;
 
 import {
@@ -113,6 +113,25 @@ saveConfig = function() {
   }
 };
 
+// A stored config can predate a change to a <select>'s option values (e.g. the
+// zephyrus_mode whitelist moved from "0"/"1" to "rate"/"horizon"). Setting an
+// unknown value on a select clears its selection and yields an empty value on
+// submit — which the worker then rejects. Only restore values that still exist.
+validSelectValue = function(el, value) {
+  var i, len, opt, ref;
+  if (el.tagName !== "SELECT") {
+    return false;
+  }
+  ref = el.options;
+  for (i = 0, len = ref.length; i < len; i++) {
+    opt = ref[i];
+    if (opt.value === value) {
+      return true;
+    }
+  }
+  return false;
+};
+
 restoreConfig = function() {
   var cfg, el, i, id, j, k, l, len, len1, len2, results, results1;
   try {
@@ -128,8 +147,14 @@ restoreConfig = function() {
           el.checked = cfg[id];
         }
       } else {
-        if (cfg[id] != null) {
-          el.value = cfg[id];
+        if (el.tagName === "SELECT") {
+          if (validSelectValue(el, cfg[id])) {
+            el.value = cfg[id];
+          }
+        } else {
+          if (cfg[id] != null) {
+            el.value = cfg[id];
+          }
         }
       }
     }
@@ -273,7 +298,7 @@ collectParams = function() {
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
     hardware_target: currentTarget(),
     zephyrus_enabled: zeph,
-    zephyrus_mode: $("#zephyrus_mode").value,
+    zephyrus_mode: $("#zephyrus_mode").value || "horizon",
     zephyrus_imu: $("#zephyrus_imu").value,
     zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
     pteronautos_baro: ($("#pteronautos_baro").checked ? "1" : "0"),
@@ -409,7 +434,13 @@ MIXER_LABELS = {
   "4": "motor + V-tail",
   "5": "motor + V-tail + rudder",
   "6": "elevator + rudder",
-  "7": "motor + elevator + rudder"
+  "7": "motor + elevator + rudder",
+  "8": "motor + rudder + 3-servo tail",
+  "9": "motor + rudder + split elevon",
+  "10": "motor + rudder + 1-pitch 1-rotate",
+  "11": "motor + rudder + merged tail",
+  "12": "Z-Wing 9-PWM",
+  "13": "motor + flat tail"
 };
 
 HARDWARE_LABELS = {

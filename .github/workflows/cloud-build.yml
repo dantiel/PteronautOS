@@ -21,6 +21,12 @@ on:
           - '5'   # GEARBOX_1MOT_2VTAIL_1RUD
           - '6'   # GEARBOX_1ELE_1RUD
           - '7'   # GEARBOX_1MOT_1ELE_1RUD
+          - '8'   # GEARBOX_1MOT_1RUD_TAIL3
+          - '9'   # GEARBOX_1MOT_1RUD_ELEVON
+          - '10'  # GEARBOX_1MOT_1RUD_TAIL11
+          - '11'  # GEARBOX_1MOT_1RUD_TAILMERGED
+          - '12'  # ZWING_9PWM
+          - '13'  # GEARBOX_1MOT_FLATTAIL
       regulatory_domain:
         description: 'RF regulatory domain (2.4 GHz)'
         required: true

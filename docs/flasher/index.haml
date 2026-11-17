@@ -57,6 +57,12 @@
               %option{value: "5"} GEARBOX_1MOT_2VTAIL_1RUD — motor + V-tail + rudder
               %option{value: "6"} GEARBOX_1ELE_1RUD — elevator + rudder
               %option{value: "7"} GEARBOX_1MOT_1ELE_1RUD — motor + elevator + rudder
+              %option{value: "8"} GEARBOX_1MOT_1RUD_TAIL3 — motor + head rudder + 3-servo rotation tail
+              %option{value: "9"} GEARBOX_1MOT_1RUD_ELEVON — motor + head rudder + 2-servo split elevon tail
+              %option{value: "10"} GEARBOX_1MOT_1RUD_TAIL11 — motor + head rudder + 1-pitch 1-rotate tail
+              %option{value: "11"} GEARBOX_1MOT_1RUD_TAILMERGED — motor + head rudder + merged 2-servo tail
+              %option{value: "12"} ZWING_9PWM — motor + head rudder + 4 wing + 3-servo tail
+              %option{value: "13"} GEARBOX_1MOT_FLATTAIL — motor + merged flat tail
 
           %label.flasher-field.receiver-config
             %span!= flasher_regulatory_domain
@@ -111,8 +117,8 @@
                 %label.flasher-field
                   %span!= flasher_zephyrus_mode
                   %select#zephyrus_mode
-                    %option{value: "rate", selected: true} Rate-only damper (Mesozoic) — recommended
-                    %option{value: "horizon"} Self-level (Mesozoic HORIZON)
+                    %option{value: "rate"} Rate-only damper (Mesozoic)
+                    %option{value: "horizon", selected: true} Self-level (Mesozoic HORIZON) — recommended
               %label.flasher-field.flasher-toggle
                 %span.flasher-toggle-text!= flasher_pre_detect
                 %span.flasher-switch
