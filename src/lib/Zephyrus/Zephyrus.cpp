@@ -102,6 +102,7 @@ Zephyrus::Zephyrus()
     , _mpuPresent(false)
     , _fullResetDone(false)
     , _wireBegun(false)
+    , _imuAddr(ZEPHYR_MPU_ADDR)
     , _accelScale(ACCEL_LSB_PER_G[0])
     , _gyroScale(GYRO_LSB_PER_DPS[0])
     , _lastAhrsUs(0)
@@ -198,29 +199,37 @@ void Zephyrus::_bbTick(uint32_t nowUs, uint8_t flags) {
 // ---------------------------------------------------------------------------
 //  I2C Helpers — Register-level MPU6050 access via Wire.h
 // ---------------------------------------------------------------------------
-void Zephyrus::_mpuWrite(uint8_t reg, uint8_t val) {
-    Wire.beginTransmission(ZEPHYR_MPU_ADDR);
+void Zephyrus::_mpuWriteAddr(uint8_t reg, uint8_t val, uint8_t addr) {
+    Wire.beginTransmission(addr);
     Wire.write(reg);
     Wire.write(val);
     Wire.endTransmission();
 }
 
-uint8_t Zephyrus::_mpuRead(uint8_t reg) {
-    Wire.beginTransmission(ZEPHYR_MPU_ADDR);
+uint8_t Zephyrus::_mpuReadAddr(uint8_t reg, uint8_t addr) {
+    Wire.beginTransmission(addr);
     Wire.write(reg);
     Wire.endTransmission(false);
-    Wire.requestFrom(ZEPHYR_MPU_ADDR, (uint8_t)1);
+    Wire.requestFrom(addr, (uint8_t)1);
     uint32_t deadline = micros() + ZEPHYR_I2C_TIMEOUT_US;
     while (Wire.available() < 1 && micros() < deadline) { /* wait */ }
     return (Wire.available() >= 1) ? Wire.read() : 0;
 }
 
+void Zephyrus::_mpuWrite(uint8_t reg, uint8_t val) {
+    _mpuWriteAddr(reg, val, _imuAddr);
+}
+
+uint8_t Zephyrus::_mpuRead(uint8_t reg) {
+    return _mpuReadAddr(reg, _imuAddr);
+}
+
 bool Zephyrus::_mpuBurstRead(uint8_t reg, uint8_t *buf, uint8_t len) {
-    Wire.beginTransmission(ZEPHYR_MPU_ADDR);
+    Wire.beginTransmission(_imuAddr);
     Wire.write(reg);
     if (Wire.endTransmission(false) != 0) return false;
 
-    Wire.requestFrom(ZEPHYR_MPU_ADDR, len);
+    Wire.requestFrom(_imuAddr, len);
     uint32_t deadline = micros() + ZEPHYR_I2C_TIMEOUT_US;
     while (Wire.available() < len && micros() < deadline) { /* wait */ }
     if (Wire.available() < len) return false;
@@ -267,11 +276,18 @@ void Zephyrus::_i2cBusRecover() {
 bool Zephyrus::_mpuInit() {
 #if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
     // --- GY-LSM6DS3 (LSM6DS3) backend: no device reset, no blocking delay ---
-    // Verify presence first, then configure — same order as the MPU path.
-    uint8_t who = _mpuRead(LSM6_REG_WHO_AM_I);
+    // SA0 strap selects 0x6A (low) or 0x6B (high). Probe both so a board
+    // strapped opposite the compile-time default still connects.
+    uint8_t who  = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6A);
+    uint8_t addr = 0x6A;
+    if (who != ZEPHYR_LSM6DS3_WHO_AM_I) {
+        addr = 0x6B;
+        who  = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6B);
+    }
     if (who != ZEPHYR_LSM6DS3_WHO_AM_I) {
         return false;
     }
+    _imuAddr = addr;
 
     // BDU on (block-data-update) so a 12-byte burst can't tear mid-sample.
     _mpuWrite(LSM6_REG_CTRL3_C,  LSM6_CTRL3_BDU);
@@ -284,6 +300,19 @@ bool Zephyrus::_mpuInit() {
 
     return true;
 #else
+    // MPU6050 AD0 strap selects 0x68 (low) or 0x69 (high). Probe both BEFORE
+    // the once-per-boot device reset so the reset lands on the right address.
+    uint8_t who  = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x68);
+    uint8_t addr = 0x68;
+    if (who != MPU_WHO_AM_I_VALUE) {
+        addr = 0x69;
+        who  = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x69);
+    }
+    if (who != MPU_WHO_AM_I_VALUE) {
+        return false;
+    }
+    _imuAddr = addr;
+
     // Full device reset + PLL settle happens exactly ONCE per boot. It needs a
     // ~105ms blocking wait that must NEVER run on the flight hot path: blocking
     // servosUpdate() for >50ms starves PWM.feedWatchdog() and trips the PWM
@@ -303,14 +332,8 @@ bool Zephyrus::_mpuInit() {
         // Re-init (stuck-bus recovery / re-probe): NO device reset, NO blocking
         // delay. Re-assert wake+PLL clock (idempotent — also recovers a device
         // that power-glitched while the bus was out) and fall through to the
-        // WHO_AM_I probe + register re-program.
+        // register re-program.
         _mpuWrite(MPU_REG_PWR_MGMT_1, MPU_PWR1_CLKSEL_PLL);
-    }
-
-    // Verify presence
-    uint8_t who = _mpuRead(MPU_REG_WHO_AM_I);
-    if (who != MPU_WHO_AM_I_VALUE) {
-        return false;
     }
 
     // Sample rate divider

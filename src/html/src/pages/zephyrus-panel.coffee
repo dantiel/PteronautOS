@@ -33,6 +33,7 @@ class ZephyrusPanel extends PteroElement
     wingYawSkewGain: {state: true}
     wingYawGain:   {state: true}
     ahrs:              {state: true}
+    imu:               {state: true}
     uptimeMs:          {state: true}
     # Roll PID
     rollP:   {state: true}
@@ -78,6 +79,7 @@ class ZephyrusPanel extends PteroElement
   wingYawSkewGain = 0
   wingYawGain   = 0
   ahrs              = ""
+  imu               = ""
   uptimeMs          = 0
   # Roll — runtime PID gains (units match firmware ZephyrusConfig.h defaults)
   rollP   = 1.2; rollI   = 0.05; rollD   = 0.15; rollMax = 30
@@ -127,6 +129,7 @@ class ZephyrusPanel extends PteroElement
     @wingYawSkewGain = Fmt.f0 z.wing_yaw_skew_gain
     @wingYawGain   = Fmt.f0 z.wing_yaw_gain
     @ahrs          = z.ahrs or ""
+    @imu           = z.imu or ""
     # Fault register — a counter delta vs the previous poll = a NEW event.
     nan    = Number(z.fault_nan)         or 0
     i2c    = Number(z.fault_i2c_fail)    or 0
@@ -221,6 +224,7 @@ class ZephyrusPanel extends PteroElement
   _toggleLabel:     -> if @gyroEnabled then self._t('zephyrus.toggle.disable') else self._t('zephyrus.toggle.enable')
   _uptimeLabel:     -> Fmt.uptime @uptimeMs
   _ahrsLabel:       -> @ahrs or "—"
+  _sensorLabel:     -> @imu or @_t('zephyrus.info.sensor_val')
   _rotationOptions: -> Zephyrus.rotationOptions
   _isRotation:      (val) -> Zephyrus.isRotation @boardRotation, val
   _calibrateLabel:  -> Status.calibLabel @_calibrating

@@ -26,7 +26,7 @@
         %tr
           %td
             %b= self._t('zephyrus.info.sensor')
-          %td= self._t('zephyrus.info.sensor_val')
+          %td= self._sensorLabel()
         %tr
           %td
             %b= self._t('zephyrus.info.bus')

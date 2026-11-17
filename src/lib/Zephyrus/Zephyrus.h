@@ -134,6 +134,7 @@ private:
     bool    _mpuPresent;
     bool    _fullResetDone; // MPU6050 device-reset + settle performed (once per boot)
     bool    _wireBegun;     // Wire.begin() performed once per boot — never re-run
+    uint8_t _imuAddr;       // Resolved I2C address (AD0/SA0 strap auto-detected)
     int16_t _gyroRaw[3];    // X, Y, Z raw
     int16_t _accelRaw[3];   // X, Y, Z raw
     float   _gyroBias[3];   // Calibrated offsets
@@ -144,6 +145,8 @@ private:
     void _mpuWrite(uint8_t reg, uint8_t val);
     uint8_t _mpuRead(uint8_t reg);
     bool _mpuBurstRead(uint8_t reg, uint8_t *buf, uint8_t len);
+    uint8_t _mpuReadAddr(uint8_t reg, uint8_t addr);           // probe a specific address
+    void    _mpuWriteAddr(uint8_t reg, uint8_t val, uint8_t addr);
     void _i2cBusRecover();
     bool _mpuInit();
     bool _mpuReadSensors();
