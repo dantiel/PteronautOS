@@ -208,7 +208,10 @@ collectParams = ->
   zephyrus_board_rotation: $("#zephyrus_board_rotation").value
   hardware_target: currentTarget()
   zephyrus_enabled: zeph
-  zephyrus_mode: ($("#zephyrus_mode").value or "horizon")
+  # Horizon only exists on the PWM boards (their local I2C MPU). On EP2-as-PWM
+  # and MUSHIN the gyro is disabled, so send the neutral "rate" — otherwise a
+  # defaulted horizon would make every EP2 PWM build fail worker validation.
+  zephyrus_mode: (if zeph is "1" then ($("#zephyrus_mode").value or "horizon") else "rate")
   zephyrus_imu: $("#zephyrus_imu").value
   zephyrus_i2c_pre_detect: (if $("#zephyrus_i2c_pre_detect").checked then "1" else "0")
   pteronautos_baro: (if $("#pteronautos_baro").checked then "1" else "0")
@@ -725,6 +728,18 @@ syncGyroFields = ->
   else
     zeph.disabled = false
     zephRow.classList.remove "is-disabled"
+  # Direct-to-ELRS baro (BMP180) rides the same GPIO1/3 I2C bus as the gyro, so
+  # it is likewise PWM-only. EP2-as-PWM and MUSHIN exclude it — MUSHIN's baro
+  # lives on the RP2040 companion, not on the ELRS I2C pads.
+  baro = $("#pteronautos_baro")
+  baroRow = baro.closest ".flasher-toggle"
+  unless localGyro
+    baro.checked = false
+    baro.disabled = true
+    baroRow.classList.add "is-disabled"
+  else
+    baro.disabled = false
+    baroRow.classList.remove "is-disabled"
   # "Reuse as PWM" only applies to a non-PWM board (its CRSF pad pair).
   ep2PwmRow.classList.toggle "hidden", board isnt "crsf"
   $("#ep2_pwm_enabled").checked = false if board isnt "crsf"

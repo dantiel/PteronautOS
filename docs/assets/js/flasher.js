@@ -298,7 +298,10 @@ collectParams = function() {
     zephyrus_board_rotation: $("#zephyrus_board_rotation").value,
     hardware_target: currentTarget(),
     zephyrus_enabled: zeph,
-    zephyrus_mode: $("#zephyrus_mode").value || "horizon",
+    // Horizon only exists on the PWM boards (their local I2C MPU). On EP2-as-PWM
+    // and MUSHIN the gyro is disabled, so send the neutral "rate" — otherwise a
+    // defaulted horizon would make every EP2 PWM build fail worker validation.
+    zephyrus_mode: (zeph === "1" ? $("#zephyrus_mode").value || "horizon" : "rate"),
     zephyrus_imu: $("#zephyrus_imu").value,
     zephyrus_i2c_pre_detect: ($("#zephyrus_i2c_pre_detect").checked ? "1" : "0"),
     pteronautos_baro: ($("#pteronautos_baro").checked ? "1" : "0"),
@@ -989,7 +992,7 @@ flash = async function() {
 };
 
 syncGyroFields = function() {
-  var board, el, enabled, ep2Pwm, ep2PwmRow, i, len, localGyro, pwmTypeRow, ref, wrap, zeph, zephRow;
+  var baro, baroRow, board, el, enabled, ep2Pwm, ep2PwmRow, i, len, localGyro, pwmTypeRow, ref, wrap, zeph, zephRow;
   board = currentBoard();
   localGyro = board === "pwm";
   ep2Pwm = currentEp2Pwm();
@@ -1006,6 +1009,19 @@ syncGyroFields = function() {
   } else {
     zeph.disabled = false;
     zephRow.classList.remove("is-disabled");
+  }
+  // Direct-to-ELRS baro (BMP180) rides the same GPIO1/3 I2C bus as the gyro, so
+  // it is likewise PWM-only. EP2-as-PWM and MUSHIN exclude it — MUSHIN's baro
+  // lives on the RP2040 companion, not on the ELRS I2C pads.
+  baro = $("#pteronautos_baro");
+  baroRow = baro.closest(".flasher-toggle");
+  if (!localGyro) {
+    baro.checked = false;
+    baro.disabled = true;
+    baroRow.classList.add("is-disabled");
+  } else {
+    baro.disabled = false;
+    baroRow.classList.remove("is-disabled");
   }
   // "Reuse as PWM" only applies to a non-PWM board (its CRSF pad pair).
   ep2PwmRow.classList.toggle("hidden", board !== "crsf");
