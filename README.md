@@ -37,6 +37,13 @@ cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX
 
 Requires Node.js 20+. The `I18N_LOCALES` flag (and `--lang` on the flash script) selects which languages are baked into the WebUI — a comma-separated list (e.g. `en,de`) or a single code; omit it to include all 11 languages.
 
+### Developer guides
+
+| Guide | Scope |
+|-------|-------|
+| [DEVELOPING.md](DEVELOPING.md) | Developer tutorial — toolchain setup, repo layout, build order, target envs, config, and build rules |
+| [FLASH-SCRIPT.md](FLASH-SCRIPT.md) | `scripts/flash.sh` tutorial — flags, mixers, saved presets, `--no-build`, and flashing |
+
 ### Current Footprint (ESP8285)
 
 | Resource | Used | Free |
