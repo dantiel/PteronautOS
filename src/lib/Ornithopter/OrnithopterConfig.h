@@ -394,6 +394,7 @@ struct FlightProfileParams {
     float   rudderAmplitudeDifferential; // 0–100, rudder → L/R differential flap amplitude
     float   elevatorFerocityMix;  // 0–100, extra ferocity per |elevator| deflection
     float   throttleFrequencyMix; // 0–100, CH6→throttle frequency-command blend
+    uint16_t flapBaseFreqDhZ;     // 10–200 deci-Hz, per-profile base flap frequency ceiling
     float   ferocityShapeMix;     // 0–100, plateau/square → rounded pyramidal
     float   strokeSkew;           // -100…+100, downstroke centre shift (front-load vs late thrust)
     float   returnSkew;           // -100…+100, upstroke centre shift
@@ -440,14 +441,12 @@ struct FlightProfileParams {
 #define ORNI_AERO_GLIDE_COEFF 40      // 0-100, gain modulation during glide
 #define ORNI_AERO_FLAP_COEFF  40      // 0-100, gain modulation during flap
 
-// ─── Gearbox Glide Mode (dantiel-style throttle-threshold idle) ────
-// When the pilot's throttle falls below ORNI_GLIDE_THROTTLE_US the motor
-// runs a brief leveling burst at that same pulse for ORNI_GLIDE_LEVEL_MS,
-// then drops to ORNI_GLIDE_IDLE_US (idle glide). Above the threshold the
-// motor follows the stick normally. All three are WebUI-configurable.
-#define ORNI_GLIDE_THROTTLE_US 1150   // µs, glide threshold + leveling burst throttle
-#define ORNI_GLIDE_IDLE_US     950    // µs, motor idle pulse during glide
-#define ORNI_GLIDE_LEVEL_MS    1500   // ms, leveling burst after glide entry
+// ─── Gearbox Glide Mode (throttle-threshold ratchet seek) ───────────
+// When the pilot's throttle falls below ORNI_GLIDE_THROTTLE_US (the min-
+// throttle threshold) the motor runs a ratchet-seek burst at the seek
+// throttle (ratchetThrottlePct) for up to ratchetTimeoutMs, then cuts to
+// motorMinUs. Above the threshold the motor follows the stick normally.
+#define ORNI_GLIDE_THROTTLE_US 1150   // µs, min-throttle threshold that activates glide
 
 // ─── 2-Wing Mesozoic Stabilizer Runtime Gains (0-100) ──────────────
 // Direct PID → flapping-servo mapping for 2-servo ornithopters (no rudder/

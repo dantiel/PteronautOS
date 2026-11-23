@@ -12,6 +12,7 @@ PROFILE_FIELDS =
   rudderAmplitudeDifferential: 'rudder_amplitude_differential'
   elevatorFerocityMix: 'elevator_ferocity_mix'
   throttleFrequencyMix: 'throttle_frequency_mix'
+  flapBaseFreq: 'flap_base_freq'
   ferocityShapeMix: 'ferocity_shape_mix'
   strokeSkew: 'stroke_skew'
   returnSkew: 'return_skew'
@@ -63,6 +64,7 @@ class FlightProfilesPanel extends PteroElement
     rudderAmplitudeDifferential: {state: true}
     elevatorFerocityMix: {state: true}
     throttleFrequencyMix: {state: true}
+    flapBaseFreq:         {state: true}
     ferocityShapeMix:     {state: true}
     strokeSkew:           {state: true}
     returnSkew:           {state: true}
@@ -101,9 +103,9 @@ class FlightProfilesPanel extends PteroElement
     @profileName          = ''
     @copyFrom             = 0
     @flightProfiles       = [
-      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
-      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:30, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, flapBaseFreq:50, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:50, returnFerocity:50, glideAngleDeg:-4, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, flapBaseFreq:50, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
+      {strokeFerocity:70, returnFerocity:50, glideAngleDeg: 2, flappingAngleDeg:0, rudderFerocityRange:50, rudderAmplitudeDifferential:0, elevatorFerocityMix:0, throttleFrequencyMix:30, flapBaseFreq:50, ferocityShapeMix:0, strokeSkew:0, returnSkew:0, throttleThrustShapeMix:0, throttleThrustExpo:0, aileronSkewMix:0, throttleSkewRateMix:0, aileronSkewRateMix:0, elevatorFerocityRateMix:0, elevatorAntigravityMix:0}
     ]
     @strokeFerocity       = 30
     @returnFerocity       = 50
@@ -113,6 +115,7 @@ class FlightProfilesPanel extends PteroElement
     @rudderAmplitudeDifferential = 0
     @elevatorFerocityMix  = 0
     @throttleFrequencyMix = 30
+    @flapBaseFreq         = 50
     @ferocityShapeMix      = 0
     @strokeSkew            = 0
     @returnSkew            = 0
@@ -224,6 +227,7 @@ class FlightProfilesPanel extends PteroElement
         rudderAmplitudeDifferential: p.rudder_amplitude_differential ? 0
         elevatorFerocityMix: p.elevator_ferocity_mix ? 0
         throttleFrequencyMix: p.throttle_frequency_mix ? 0
+        flapBaseFreq: p.flap_base_freq ? 50
         ferocityShapeMix: p.ferocity_shape_mix ? 0
         strokeSkew:       p.stroke_skew ? 0
         returnSkew:       p.return_skew ? 0
@@ -261,6 +265,7 @@ class FlightProfilesPanel extends PteroElement
     @rudderAmplitudeDifferential = p.rudderAmplitudeDifferential
     @elevatorFerocityMix = p.elevatorFerocityMix
     @throttleFrequencyMix = p.throttleFrequencyMix
+    @flapBaseFreq = p.flapBaseFreq
     @ferocityShapeMix = p.ferocityShapeMix
     @strokeSkew       = p.strokeSkew
     @returnSkew       = p.returnSkew
@@ -476,6 +481,7 @@ class FlightProfilesPanel extends PteroElement
       when 'strokeSkew'       then [-100, 100]
       when 'returnSkew'       then [-100, 100]
       when 'throttleThrustExpo' then [-100, 100]
+      when 'flapBaseFreq' then [10, 200]
       else null
 
   _clamp: (prop, v) ->
@@ -504,6 +510,9 @@ class FlightProfilesPanel extends PteroElement
   _thrustExpoLabel: ->
     v = @throttleThrustExpo
     if v > 25 then @_t('ornithopter.throttle_thrust_expo.soft') else if v < -25 then @_t('ornithopter.throttle_thrust_expo.direct') else @_t('ornithopter.throttle_thrust_expo.linear')
+
+  _flapBaseFreqLabel: ->
+    "#{(@flapBaseFreq / 10).toFixed(1)} Hz"
 
 
   _aileronSkewMixLabel: ->

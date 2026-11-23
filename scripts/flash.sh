@@ -673,7 +673,14 @@ build_firmware() {
 verify_firmware() {
   local fw="$1" args=()
   args+=(--expect_product "$EXPECT_PRODUCT")
-  [[ -n "$PWM_OUT" ]] && args+=(--pwm_outputs "$PWM_OUT")
+  if [[ "$BUILD" == "1" ]]; then
+    # Fresh build: the bin must match the flags just passed.
+    [[ -n "$PWM_OUT" ]] && args+=(--pwm_outputs "$PWM_OUT")
+  else
+    # --no-build: the bin is the truth — trust its embedded hardware map
+    # (gyro on/off variant is whatever was last compiled in).
+    args+=(--trust_embedded)
+  fi
   python3 "$PROJECT_ROOT/src/python/verify_pteronautos_image.py" "${args[@]}" "$fw"
 }
 

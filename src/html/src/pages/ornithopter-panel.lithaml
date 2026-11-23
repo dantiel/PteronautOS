@@ -62,14 +62,6 @@
               %option{value: idx}= pr.label
       %tr
         %td
-          %b= self._t('ornithopter.kernel.base_freq')
-          %br
-          %small{style: "color:#888;"}= self._t('ornithopter.kernel.base_freq_desc')
-        %td
-          %input{type: "range", min: "10", max: "200", step: "5", .value: self.flapBaseFreq, @input: self._onSlider('flapBaseFreq'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-          %span.value= self._flapBaseFreqLabel()
-      %tr
-        %td
           %b= self._t('ornithopter.kernel.servo_min_us')
           %br
           %small{style: "color:#888;"}= self._t('ornithopter.kernel.servo_pulse_desc')
@@ -209,24 +201,6 @@
               %input{type: "range", min: "900", max: "1200", .value: self.glideThrottleUs, @input: self._onSlider('glideThrottleUs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
               %span.value= self.glideThrottleUs
               |  µs
-          %tr
-            %td
-              %b= self._t('ornithopter.glide.idle_us')
-              %br
-              %small{style: "color:#888;"}= self._t('ornithopter.glide.idle_us_desc')
-            %td
-              %input{type: "range", min: "900", max: "1200", .value: self.glideIdleUs, @input: self._onSlider('glideIdleUs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-              %span.value= self.glideIdleUs
-              |  µs
-          %tr
-            %td
-              %b= self._t('ornithopter.glide.level_ms')
-              %br
-              %small{style: "color:#888;"}= self._t('ornithopter.glide.level_ms_desc')
-            %td
-              %input{type: "range", min: "0", max: "5000", step: "100", .value: self.glideLevelMs, @input: self._onSlider('glideLevelMs'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
-              %span.value= self.glideLevelMs
-              |  ms
           %tr
             %td
               %b= self._t('ornithopter.glide.hall_sensor_pin')

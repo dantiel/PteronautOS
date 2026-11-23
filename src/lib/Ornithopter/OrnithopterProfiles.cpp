@@ -8,9 +8,9 @@ void Ornithopter::_loadDefaultFlightProfiles()
 {
     // Three distinct tuning sets (index 0..2). Aggregate init; the trailing
     // fields of FlightProfileParams (incl. name) zero-initialize.
-    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 50.0f, 0.0f, 0.0f, 30.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[0] = { 30.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 50, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[1] = { 50.0f, 50.0f, -4, 0, 50.0f, 0.0f, 0.0f, 30.0f, 50, 0.0f, 0.0f, 0.0f, 0.0f };
+    flightProfiles[2] = { 70.0f, 50.0f,  2, 0, 50.0f, 0.0f, 0.0f, 30.0f, 50, 0.0f, 0.0f, 0.0f, 0.0f };
     setFlightProfileName(0, "Gentle");
     setFlightProfileName(1, "Standard");
     setFlightProfileName(2, "Aggressive");
@@ -50,6 +50,7 @@ void Ornithopter::applyFlightProfile(uint8_t idx)
     rudderAmplitudeDifferential = p.rudderAmplitudeDifferential;
     elevatorFerocityMix = p.elevatorFerocityMix;
     throttleFrequencyMix = p.throttleFrequencyMix;
+    flapBaseFreq        = p.flapBaseFreqDhZ;
     ferocityShapeMix = p.ferocityShapeMix;
     strokeSkew        = p.strokeSkew;
     returnSkew        = p.returnSkew;
@@ -67,7 +68,7 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
                                          float rudRng,
                                          float rudAmpDiff, float elevFerMix,
                                          float thrThrustExpo, float thrThrustShape,
-                                         float thrFreqMix,
+                                         float thrFreqMix, uint16_t baseFreqDhZ,
                                          float ferShapeMix,
                                          float strokeSkew, float returnSkew,
                                          float ailSkewMix,
@@ -86,6 +87,7 @@ void Ornithopter::setFlightProfileParams(uint8_t idx, float sf, float rf,
     p.throttleThrustShapeMix = thrThrustShape;
     p.throttleThrustExpo  = thrThrustExpo;
     p.throttleFrequencyMix = thrFreqMix;
+    p.flapBaseFreqDhZ = baseFreqDhZ;
     p.ferocityShapeMix = ferShapeMix;
     p.strokeSkew       = strokeSkew;
     p.returnSkew       = returnSkew;

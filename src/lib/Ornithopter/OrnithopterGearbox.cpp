@@ -37,11 +37,12 @@ void Ornithopter::_computeGearboxMixer()
     const float rudderNorm   = _crsfToNorm(voiceRudder);
     const bool  armed        = _isArmed();
 
-    // ── Dantiel-style gearbox glide: pilot throttle below the glide
-    //    threshold engages glide — a leveling burst at glideThrottleUs
-    //    settles the bird, then the motor drops to glideIdleUs. Above the
-    //    threshold the stick drives the motor normally. Operates on the RAW
-    //    stick so a manual pull-to-glide overrides altitude hold.
+    // ── Gearbox glide: pilot throttle below the min-throttle threshold
+    //    engages glide. On entry the motor runs a ratchet-seek burst at the
+    //    seek throttle (independent of RC) for the seek timeout, then cuts to
+    //    motorMinUs. Above the threshold the stick drives the motor normally.
+    //    Operates on the RAW stick so a manual pull-to-glide overrides
+    //    altitude hold.
     if (glideMode && armed)
     {
         const uint16_t stickUs = (uint16_t)_crsfToFloat((float)voiceThrottle,
@@ -70,8 +71,13 @@ void Ornithopter::_computeGearboxMixer()
     uint16_t motorUs;
     if (glideActive)
     {
+        // Ratchet-seek phase: run the motor at the seek throttle (independent
+        // of the RC stick) until the lock is found or the seek timeout ends,
+        // then cut to motorMinUs — no separate glide-idle pulse.
         const uint32_t elapsed = millis() - _glideEnteredMs;
-        motorUs = (elapsed < glideLevelMs) ? glideThrottleUs : glideIdleUs;
+        const uint16_t seekUs = (uint16_t)((float)motorMinUs +
+            ((float)ratchetThrottlePct * 0.01f) * (float)(motorMaxUs - motorMinUs));
+        motorUs = (elapsed < ratchetTimeoutMs) ? seekUs : motorMinUs;
     }
     else
     {

@@ -122,6 +122,11 @@ public:
     uint16_t faultReinit;
     uint8_t  lastFaultReason;
 
+    // --- Live IMU probe diagnostics (surface WHY "no connection" in the WebUI) ---
+    uint8_t probeStage;    // 0=idle, 1=SCL pre-detect skipped, 2=no ACK, 3=WHO_AM_I mismatch, 4=ok
+    uint8_t probeWho;      // WHO_AM_I byte actually read (0 = no response)
+    uint8_t probeAddr;     // I2C address that responded (0 = none)
+
 #ifdef ZEPHYR_BLACKBOX
     ZephyrBbFrame bbRing[ZEPHYR_BB_SAMPLES];
     uint16_t bbHead;      // next write index

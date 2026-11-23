@@ -10,6 +10,13 @@ from pathlib import Path
 
 HARDWARE_PATH = Path(__file__).resolve().parents[1] / "targets/hardware/pteronautos-pwmp7.json"
 
+KIND_BY_PRODUCT = {
+    b"Pteronautos PWMP5": "pwmp5",
+    b"Pteronautos PWMP7": "pwmp7",
+    b"Pteronautos EP2 PWM": "ep2pwm",
+    b"Pteronautos EP2": "mushin",
+}
+
 
 def derive_pwm_outputs(kind, gyro_on):
     """Canonical PteronautOS pin-map derivation, shared by the build and the verifier.
@@ -35,7 +42,17 @@ def derive_pwm_outputs(kind, gyro_on):
     return None
 
 
-def verify_image(path, expected_pwm_outputs=None, expected_product=None):
+def _mismatch(actual, expected):
+    for key in sorted(set(actual) | set(expected)):
+        if actual.get(key) != expected.get(key):
+            if key == "pwm_outputs":
+                return (f"pwm_outputs {actual.get(key)} != expected {expected.get(key)} "
+                        "(image was built with a different gyro setting)")
+            return f"{key} {actual.get(key)!r} != expected {expected.get(key)!r}"
+    return "hardware map differs"
+
+
+def verify_image(path, expected_pwm_outputs=None, expected_product=None, trust_embedded=False):
     data = Path(path).read_bytes()
     if len(data) < 0x1008 or data[:2] != b"\xe9\x02":
         raise ValueError("Not a complete ESP8285 image at offset zero")
@@ -73,10 +90,29 @@ def verify_image(path, expected_pwm_outputs=None, expected_product=None):
     else:
         layout = HARDWARE_PATH
     expected = json.loads(layout.read_text())
+    if hardware.get("radio_rst") != 2 or 2 in hardware.get("pwm_outputs", []):
+        raise ValueError("GPIO2 is radio reset and must not be a PWM output")
     if expected_pwm_outputs is not None:
         expected["pwm_outputs"] = expected_pwm_outputs
-    if hardware != expected or hardware.get("radio_rst") != 2 or 2 in hardware.get("pwm_outputs", []):
-        raise ValueError("Hardware differs from project map (GPIO2 is radio reset, not PWM)")
+        if hardware != expected:
+            raise ValueError(_mismatch(hardware, expected))
+    elif trust_embedded:
+        # --no-build: trust the image's own embedded map. pwm_outputs is the only
+        # field that varies at build time (gyro holds GPIO1/GPIO3 I²C); accept
+        # either valid variant, keep every other pin exact.
+        kind = KIND_BY_PRODUCT.get(product)
+        base = dict(expected)
+        base.pop("pwm_outputs", None)
+        actual = dict(hardware)
+        actual_pwm = actual.pop("pwm_outputs", None)
+        if actual != base:
+            raise ValueError(_mismatch(hardware, expected))
+        if kind in ("pwmp5", "pwmp7"):
+            valid = [derive_pwm_outputs(kind, False), derive_pwm_outputs(kind, True)]
+            if actual_pwm not in valid:
+                raise ValueError(f"pwm_outputs {actual_pwm} is not a valid PWM map for {product.decode()}")
+    elif hardware != expected:
+        raise ValueError(_mismatch(hardware, expected))
     if not isinstance(options, dict):
         raise ValueError("Options must be a JSON object")
     interval = options.get("wifi-on-interval", -1)
@@ -98,7 +134,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--expect_product",
-        help="Expected product name (e.g. 'PteronautOS EP2 PWM'); fails the build on mismatch.",
+        help="Expected product name (e.g. 'Pteronautos EP2 PWM'); fails the build on mismatch.",
+    )
+    parser.add_argument(
+        "--trust_embedded",
+        action="store_true",
+        help="Validate against the image's own embedded hardware map (gyro variant may differ).",
     )
     args = parser.parse_args()
     expected_pwm = None
@@ -109,6 +150,7 @@ if __name__ == "__main__":
             args.image,
             expected_pwm_outputs=expected_pwm,
             expected_product=args.expect_product,
+            trust_embedded=args.trust_embedded,
         )
     except (ValueError, OSError) as error:
         parser.exit(1, f"Firmware verification failed: {error}\n")

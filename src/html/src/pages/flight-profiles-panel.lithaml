@@ -106,6 +106,14 @@
             %small.label= self._returnLabel()
        %tr
          %td
+           %b= self._t('ornithopter.flap_base_freq.title')
+           %br
+           %small{style: "color:#888;"}= self._t('ornithopter.flap_base_freq.desc')
+         %td
+           %input{type: "range", min: "10", max: "200", step: "5", .value: self.flapBaseFreq, @input: self._onSlider('flapBaseFreq'), @change: self._onSliderCommit, .disabled: self._uiLocked(), style: "width:200px;"}
+           %span.value= self._flapBaseFreqLabel()
+       %tr
+         %td
            %b= self._t('ornithopter.throttle_frequency_mix.title')
            %br
            %small{style: "color:#888;"}= self._t('ornithopter.throttle_frequency_mix.desc')

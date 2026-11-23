@@ -94,7 +94,8 @@ public:
                                 int8_t flapAng,
                                 float rudRng, float rudAmpDiff,
                                 float elevFerMix, float thrExpo, float thrFerMix,
-                                float thrFreqMix, float ferShapeMix,
+                                float thrFreqMix, uint16_t baseFreqDhZ,
+                                float ferShapeMix,
                                 float strokeSkew, float returnSkew,
                                 float ailSkewMix,
                                 float thrSkewRateMix, float ailSkewRateMix,
@@ -141,11 +142,9 @@ public:
     float   tailFlatYawThreshold; // 0-100, down-elevator threshold where the flat merged tail morphs to birdlike yaw
     uint16_t motorMinUs;          // µs, motor idle pulse (900–1200)
     uint16_t motorMaxUs;          // µs, motor full pulse (1800–2100)
-        bool    glideMode;            // true = gearbox idle glide (enable)
+        bool    glideMode;            // true = gearbox glide (enable)
         bool    glideActive;          // live: glide engaged (stick below glideThrottleUs)
-        uint16_t glideThrottleUs;     // µs, glide threshold + leveling burst throttle
-        uint16_t glideIdleUs;         // µs, motor idle pulse during glide
-        uint16_t glideLevelMs;        // ms, leveling burst after glide entry
+        uint16_t glideThrottleUs;     // µs, min-throttle threshold that activates glide
         bool    benchMode;            // true = WiFi/panel bench mode (servos hold glide + trim)
     uint8_t hallSensorPin;        // GPIO pin for hall sensor (12–15)
     uint8_t ratchetThrottlePct;   // 0–100, detent step size

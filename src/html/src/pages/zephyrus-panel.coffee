@@ -100,6 +100,9 @@ class ZephyrusPanel extends PteroElement
   _prevReinit    = 0
   _stallKind     = ''
   _stallAt       = 0
+  probeStage     = 0
+  probeWho       = 0
+  probeAddr      = 0
 
   # Apply polled state
   _applyState: (data) ->
@@ -130,6 +133,9 @@ class ZephyrusPanel extends PteroElement
     @wingYawGain   = Fmt.f0 z.wing_yaw_gain
     @ahrs          = z.ahrs or ""
     @imu           = z.imu or ""
+    @probeStage    = Number(z.probe_stage) or 0
+    @probeWho      = Number(z.probe_who)   or 0
+    @probeAddr     = Number(z.probe_addr)  or 0
     # Fault register — a counter delta vs the previous poll = a NEW event.
     nan    = Number(z.fault_nan)         or 0
     i2c    = Number(z.fault_i2c_fail)    or 0
@@ -235,6 +241,16 @@ class ZephyrusPanel extends PteroElement
 
   # --- Fault register / MPU-lost live indicators ---
   _mpuLost:      -> @gyroEnabled and not @gyroConnected
+  _probeDetail: ->
+    return '' unless @gyroEnabled and not @gyroConnected
+    who  = "0x#{@probeWho.toString(16)}"
+    addr = "0x#{@probeAddr.toString(16)}"
+    switch @probeStage
+      when 1 then @_t 'zephyrus.probe.predetect'
+      when 2 then @_t 'zephyrus.probe.no_ack'
+      when 3 then @_t 'zephyrus.probe.wrong_who', {who, addr}
+      when 4 then @_t 'zephyrus.probe.ok'
+      else        @_t 'zephyrus.probe.idle'
   _stallActive:  -> !!@_stallAt and (Date.now() - @_stallAt) < 5000
   _stallLabel:   ->
     switch @_stallKind

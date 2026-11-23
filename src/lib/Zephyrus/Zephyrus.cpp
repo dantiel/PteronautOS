@@ -68,6 +68,7 @@
 #define LSM6_REG_CTRL2_G     0x11   // gyro ODR + full-scale
 #define LSM6_REG_CTRL3_C     0x12   // BDU, interrupts
 #define LSM6_REG_OUTX_L_G    0x22   // 12-byte block: gyro XYZ then accel XYZ (LE)
+#define LSM6_REG_AUTO_INC    0x80   // SUB(7)=1 → auto-increment for multi-byte reads
 #define LSM6_CTRL3_BDU       0x40   // block-data-update — no mid-sample tearing
 
 // PWR_MGMT_1 bits
@@ -145,6 +146,9 @@ Zephyrus::Zephyrus()
     faultBusRecover = 0;
     faultReinit = 0;
     lastFaultReason = ZEPHYR_FAULT_NONE;
+    probeStage = 0;
+    probeWho = 0;
+    probeAddr = 0;
 #ifdef ZEPHYR_BLACKBOX
     bbHead = 0;
     bbCount = 0;
@@ -278,15 +282,21 @@ bool Zephyrus::_mpuInit() {
     // --- GY-LSM6DS3 (LSM6DS3) backend: no device reset, no blocking delay ---
     // SA0 strap selects 0x6A (low) or 0x6B (high). Probe both so a board
     // strapped opposite the compile-time default still connects.
-    uint8_t who  = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6A);
+    uint8_t whoA = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6A);
+    uint8_t whoB = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6B);
     uint8_t addr = 0x6A;
-    if (who != ZEPHYR_LSM6DS3_WHO_AM_I) {
+    uint8_t who  = whoA;
+    if (who != ZEPHYR_LSM6DS3_WHO_AM_I && whoB == ZEPHYR_LSM6DS3_WHO_AM_I) {
         addr = 0x6B;
-        who  = _mpuReadAddr(LSM6_REG_WHO_AM_I, 0x6B);
+        who  = whoB;
     }
+    probeWho  = (whoA != 0) ? whoA : whoB;
+    probeAddr = (whoA != 0) ? 0x6A : ((whoB != 0) ? 0x6B : 0);
     if (who != ZEPHYR_LSM6DS3_WHO_AM_I) {
+        probeStage = (probeAddr == 0) ? 2 : 3;   // 2 = no ACK, 3 = wrong WHO_AM_I
         return false;
     }
+    probeStage = 4;
     _imuAddr = addr;
 
     // BDU on (block-data-update) so a 12-byte burst can't tear mid-sample.
@@ -302,15 +312,21 @@ bool Zephyrus::_mpuInit() {
 #else
     // MPU6050 AD0 strap selects 0x68 (low) or 0x69 (high). Probe both BEFORE
     // the once-per-boot device reset so the reset lands on the right address.
-    uint8_t who  = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x68);
+    uint8_t whoA = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x68);
+    uint8_t whoB = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x69);
     uint8_t addr = 0x68;
-    if (who != MPU_WHO_AM_I_VALUE) {
+    uint8_t who  = whoA;
+    if (who != MPU_WHO_AM_I_VALUE && whoB == MPU_WHO_AM_I_VALUE) {
         addr = 0x69;
-        who  = _mpuReadAddr(MPU_REG_WHO_AM_I, 0x69);
+        who  = whoB;
     }
+    probeWho  = (whoA != 0) ? whoA : whoB;
+    probeAddr = (whoA != 0) ? 0x68 : ((whoB != 0) ? 0x69 : 0);
     if (who != MPU_WHO_AM_I_VALUE) {
+        probeStage = (probeAddr == 0) ? 2 : 3;   // 2 = no ACK, 3 = wrong WHO_AM_I
         return false;
     }
+    probeStage = 4;
     _imuAddr = addr;
 
     // Full device reset + PLL settle happens exactly ONCE per boot. It needs a
@@ -380,7 +396,7 @@ bool Zephyrus::_mpuInit() {
 bool Zephyrus::_mpuReadSensors() {
 #if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
     uint8_t buf[12];
-    if (!_mpuBurstRead(LSM6_REG_OUTX_L_G, buf, 12)) {
+    if (!_mpuBurstRead(LSM6_REG_OUTX_L_G | LSM6_REG_AUTO_INC, buf, 12)) {
         return false;
     }
 
@@ -431,6 +447,7 @@ void Zephyrus::begin() {
     if (digitalRead(ZEPHYR_I2C_SCL) == LOW) {
         pinMode(ZEPHYR_I2C_SCL, INPUT);
         _begun = false;   // allow update() to retry (with backoff)
+        probeStage = 1;   // SCL pre-detect failed — skip I2C this attempt
         return;
     }
     pinMode(ZEPHYR_I2C_SCL, INPUT);

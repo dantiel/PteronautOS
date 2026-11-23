@@ -9,6 +9,9 @@
     - if self._mpuLost()
       %div{style: self._lostStyle()}
         = self._t('zephyrus.lost.banner')
+      - if self._probeDetail()
+        %div{style: "font-size:11px;color:#f8c291;margin-top:4px;"}
+          = self._probeDetail()
     - else
       - if self._stallActive()
         %div{style: self._stallStyle()}

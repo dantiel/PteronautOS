@@ -78,8 +78,6 @@ Ornithopter::Ornithopter()
     , glideMode(false)
     , glideActive(false)
     , glideThrottleUs(ORNI_GLIDE_THROTTLE_US)
-    , glideIdleUs(ORNI_GLIDE_IDLE_US)
-    , glideLevelMs(ORNI_GLIDE_LEVEL_MS)
     , benchMode(false)
     , hallSensorPin(12)
   , ratchetThrottlePct(15)
@@ -271,6 +269,7 @@ void Ornithopter::_readChannels() {
         voiceFreq     = stickChannels[STK_FREQ];
         voiceProfile  = stickChannels[STK_PROFILE];
         voiceGyro     = stickChannels[STK_GYRO];
+        _glitchFrameTick++;   // arm-debounce clock advances per tick in virtual mode
     } else {
         _applyGlitchFilter();
     }
@@ -299,7 +298,12 @@ bool Ornithopter::_isArmed() {
     } else {
         _armLowFrame = 0xFFFF;               // arm high — reset the low-run tracker
         if (!_armedState) {
-            _armedState = (voiceThrottle < ORNI_ARM_THROTTLE_ZERO_US);  // arm only at zero throttle
+            // Virtual-stick / bench mode has no real aircraft — the throttle-zero
+            // ceremony is meaningless there and would swallow the first throttle-up
+            // after arming. Arm immediately on the arm-switch high instead.
+            _armedState = (stickOverride || benchMode)
+                ? true
+                : (voiceThrottle < ORNI_ARM_THROTTLE_ZERO_US);
         }
     }
     return _armedState;

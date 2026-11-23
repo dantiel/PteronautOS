@@ -354,6 +354,9 @@ static void GetPteronautosState(AsyncWebServerRequest *request)
     zeph["compiled"]          = true;
     zeph["enabled"]           = zephyrus.gyroEnabled;
     zeph["connected"]         = zephyrus.enabled;   // WHO_AM_I matched (MPU physically present)
+    zeph["probe_stage"]       = (int)zephyrus.probeStage;  // 0=idle,1=pre-detect skip,2=no ACK,3=WHO_AM_I mismatch,4=ok
+    zeph["probe_who"]         = (int)zephyrus.probeWho;    // WHO_AM_I byte actually read (0=none)
+    zeph["probe_addr"]        = (int)zephyrus.probeAddr;   // I2C address that responded (0=none)
 #if ZEPHYR_IMU == ZEPHYR_IMU_LSM6DS3
     zeph["imu"] = "LSM6DS3 (GY-LSM6DS3)";
 #else
@@ -514,13 +517,10 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
     orni["glide_mode"]          = ornithopter.glideMode;
     orni["glide_active"]        = ornithopter.glideActive;
     orni["glide_throttle_us"]   = ornithopter.glideThrottleUs;
-    orni["glide_idle_us"]       = ornithopter.glideIdleUs;
-    orni["glide_level_ms"]      = ornithopter.glideLevelMs;
     orni["hall_sensor_pin"]     = ornithopter.hallSensorPin;
     orni["ratchet_throttle_pct"] = ornithopter.ratchetThrottlePct;
     orni["ratchet_timeout_ms"]  = ornithopter.ratchetTimeoutMs;
     orni["servo_speed"]         = (int)ornithopter.servoSpeed;
-    orni["flap_base_freq"]      = (int)ornithopter.flapBaseFreq;
     // Altitude hold (AltitudeHold.h)
     orni["altitude_hold_enabled"] = ornithopter.altHold.enabled;
     orni["altitude_hold_gain"]    = (int)ornithopter.altHold.gain;
@@ -567,6 +567,7 @@ static void GetPteronautosConfig(AsyncWebServerRequest *request)
         p["elevator_ferocity_rate_mix"] = (int)ornithopter.flightProfiles[i].elevatorFerocityRateMix;
         p["elevator_antigravity_mix"] = (int)ornithopter.flightProfiles[i].elevatorAntigravityMix;
         p["throttle_frequency_mix"] = (int)ornithopter.flightProfiles[i].throttleFrequencyMix;
+        p["flap_base_freq"] = (int)ornithopter.flightProfiles[i].flapBaseFreqDhZ;
         p["ferocity_shape_mix"] = (int)ornithopter.flightProfiles[i].ferocityShapeMix;
     }
 
@@ -733,6 +734,8 @@ static bool SaveOrnithopterConfig()
         f.print((int)ornithopter.flightProfiles[i].elevatorAntigravityMix);
         f.print(F(",\"throttle_frequency_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].throttleFrequencyMix);
+        f.print(F(",\"flap_base_freq\":"));
+        f.print((int)ornithopter.flightProfiles[i].flapBaseFreqDhZ);
         f.print(F(",\"ferocity_shape_mix\":"));
         f.print((int)ornithopter.flightProfiles[i].ferocityShapeMix);
         f.print('}');
@@ -759,10 +762,6 @@ static bool SaveOrnithopterConfig()
     f.print(ornithopter.glideMode ? "true" : "false");
     f.print(F(",\"glide_throttle_us\":"));
     f.print((int)ornithopter.glideThrottleUs);
-    f.print(F(",\"glide_idle_us\":"));
-    f.print((int)ornithopter.glideIdleUs);
-    f.print(F(",\"glide_level_ms\":"));
-    f.print((int)ornithopter.glideLevelMs);
     f.print(F(",\"hall_sensor_pin\":"));
     f.print((int)ornithopter.hallSensorPin);
     f.print(F(",\"ratchet_throttle_pct\":"));
@@ -771,8 +770,6 @@ static bool SaveOrnithopterConfig()
     f.print((int)ornithopter.ratchetTimeoutMs);
     f.print(F(",\"servo_speed\":"));
     f.print((int)ornithopter.servoSpeed);
-    f.print(F(",\"flap_base_freq\":"));
-    f.print((int)ornithopter.flapBaseFreq);
     f.print(F(",\"altitude_hold_enabled\":"));
     f.print(ornithopter.altHold.enabled ? "true" : "false");
     f.print(F(",\"altitude_hold_gain\":"));
@@ -972,6 +969,12 @@ void LoadOrnithopterConfig()
                 if (mix > 100) mix = 100;
                 dst.throttleFrequencyMix = mix;
             }
+            if (p["flap_base_freq"].is<int>()) {
+                int32_t bf = p["flap_base_freq"].as<int>();
+                if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
+                if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
+                dst.flapBaseFreqDhZ = (uint16_t)bf;
+            }
             if (p["ferocity_shape_mix"].is<int>()) {
                 int32_t mix = p["ferocity_shape_mix"].as<int>();
                 if (mix < 0) mix = 0;
@@ -992,8 +995,6 @@ void LoadOrnithopterConfig()
     if (o["motor_max_us"].is<int>())          ornithopter.motorMaxUs           = (uint16_t)o["motor_max_us"].as<int>();
     if (o["glide_mode"].is<bool>())           ornithopter.glideMode            = o["glide_mode"].as<bool>();
     if (o["glide_throttle_us"].is<int>())     ornithopter.glideThrottleUs      = (uint16_t)o["glide_throttle_us"].as<int>();
-    if (o["glide_idle_us"].is<int>())         ornithopter.glideIdleUs          = (uint16_t)o["glide_idle_us"].as<int>();
-    if (o["glide_level_ms"].is<int>())        ornithopter.glideLevelMs         = (uint16_t)o["glide_level_ms"].as<int>();
     if (o["hall_sensor_pin"].is<int>())       ornithopter.hallSensorPin        = (uint8_t)o["hall_sensor_pin"].as<int>();
     if (o["ratchet_throttle_pct"].is<int>())  ornithopter.ratchetThrottlePct   = (uint8_t)o["ratchet_throttle_pct"].as<int>();
     if (o["ratchet_timeout_ms"].is<int>())    ornithopter.ratchetTimeoutMs     = (uint16_t)o["ratchet_timeout_ms"].as<int>();
@@ -1002,12 +1003,6 @@ void LoadOrnithopterConfig()
         if (spd < ORNI_SERVO_SPEED_MIN_MS) spd = ORNI_SERVO_SPEED_MIN_MS;
         if (spd > ORNI_SERVO_SPEED_MAX_MS) spd = ORNI_SERVO_SPEED_MAX_MS;
         ornithopter.servoSpeed = (uint16_t)spd;
-    }
-    if (o["flap_base_freq"].is<int>()) {
-        int32_t bf = o["flap_base_freq"].as<int>();
-        if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
-        if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
-        ornithopter.flapBaseFreq = (uint16_t)bf;
     }
     // Altitude hold (AltitudeHold.h)
     if (o["altitude_hold_enabled"].is<bool>()) ornithopter.altHold.enabled = o["altitude_hold_enabled"].as<bool>();
@@ -1317,6 +1312,9 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     float   thrFreqMix = (float)_pteroParamInt(request, "throttle_frequency_mix", (int)defaults.throttleFrequencyMix);
     if (thrFreqMix < 0.0f) thrFreqMix = 0.0f;
     if (thrFreqMix > 100.0f) thrFreqMix = 100.0f;
+    uint16_t baseFreqDhZ = (uint16_t)_pteroParamInt(request, "flap_base_freq", (int)defaults.flapBaseFreqDhZ);
+    if (baseFreqDhZ < ORNI_FLAP_BASE_FREQ_MIN_DHZ) baseFreqDhZ = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
+    if (baseFreqDhZ > ORNI_FLAP_BASE_FREQ_MAX_DHZ) baseFreqDhZ = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
     float   ferShapeMix = (float)_pteroParamInt(request, "ferocity_shape_mix", (int)defaults.ferocityShapeMix);
     if (ferShapeMix < 0.0f) ferShapeMix = 0.0f;
     if (ferShapeMix > 100.0f) ferShapeMix = 100.0f;
@@ -1338,7 +1336,7 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
 
     if (fp >= 0 && fp < FLIGHT_PROFILE_COUNT) {
         // Write to a specific flight-profile slot (and apply live if active).
-        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
+        ornithopter.setFlightProfileParams((uint8_t)fp, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, baseFreqDhZ, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     } else {
         // Legacy/global path: apply to live fields + store into active profile.
         ornithopter.strokeFerocity      = sf;
@@ -1359,7 +1357,7 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         ornithopter.aileronSkewMix      = ailSkewMix;
         ornithopter.throttleSkewRateMix = thrSkewRateMix;
         ornithopter.aileronSkewRateMix = ailSkewRateMix;
-        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
+        ornithopter.setFlightProfileParams(ornithopter.activeFlightProfile, sf, rf, glide, flapAng, rudRng, rudAmpDiff, elevFerMix, thrThrustExpo, thrThrustShape, thrFreqMix, baseFreqDhZ, ferShapeMix, stSkew, rtSkew, ailSkewMix, thrSkewRateMix, ailSkewRateMix, elevFerRateMix, elevAntiGravMix);
     }
 
     // Global mixer params (not per-profile)
@@ -1373,8 +1371,6 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
     ornithopter.motorMaxUs         = (uint16_t)_pteroParamInt(request, "motor_max_us",    ornithopter.motorMaxUs);
     ornithopter.glideMode          = _pteroParamInt(request, "glide_mode", ornithopter.glideMode ? 1 : 0) != 0;
     ornithopter.glideThrottleUs    = (uint16_t)_pteroParamInt(request, "glide_throttle_us", ornithopter.glideThrottleUs);
-    ornithopter.glideIdleUs        = (uint16_t)_pteroParamInt(request, "glide_idle_us",     ornithopter.glideIdleUs);
-    ornithopter.glideLevelMs       = (uint16_t)_pteroParamInt(request, "glide_level_ms",    ornithopter.glideLevelMs);
     ornithopter.hallSensorPin      = (uint8_t)_pteroParamInt(request, "hall_sensor_pin",  ornithopter.hallSensorPin);
     ornithopter.ratchetThrottlePct = (uint8_t)_pteroParamInt(request, "ratchet_throttle_pct", ornithopter.ratchetThrottlePct);
     ornithopter.ratchetTimeoutMs   = (uint16_t)_pteroParamInt(request, "ratchet_timeout_ms", ornithopter.ratchetTimeoutMs);
@@ -1383,10 +1379,6 @@ static void PostPteronautosConfig(AsyncWebServerRequest *request)
         if (spd < ORNI_SERVO_SPEED_MIN_MS) spd = ORNI_SERVO_SPEED_MIN_MS;
         if (spd > ORNI_SERVO_SPEED_MAX_MS) spd = ORNI_SERVO_SPEED_MAX_MS;
         ornithopter.servoSpeed = (uint16_t)spd;
-        int32_t bf = _pteroParamInt(request, "flap_base_freq", ornithopter.flapBaseFreq);
-        if (bf < ORNI_FLAP_BASE_FREQ_MIN_DHZ) bf = ORNI_FLAP_BASE_FREQ_MIN_DHZ;
-        if (bf > ORNI_FLAP_BASE_FREQ_MAX_DHZ) bf = ORNI_FLAP_BASE_FREQ_MAX_DHZ;
-        ornithopter.flapBaseFreq = (uint16_t)bf;
     }
 
     // Altitude hold (AltitudeHold.h)
