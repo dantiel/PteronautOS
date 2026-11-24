@@ -1,0 +1,347 @@
+!!!
+%html{lang: lang, dir: dir}
+  %head
+    %meta{charset: "utf-8"}
+    %meta{name: "viewport", content: "width=device-width, initial-scale=1"}
+    %title!= fls_title
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true}
+    %link{rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@200;300;400;500;700&display=swap"}
+    %link{rel: "stylesheet", href: "#{asset_prefix}assets/css/style.css"}
+  %body.sub-page
+    %nav.sub-nav
+      .nav-progressive-blur{"aria-hidden": "true"}
+        %span
+        %span
+        %span
+        %span
+      %button.nav-scroll-top{type: "button", onclick: "window.scrollTo({top:0,behavior:'smooth'})", "aria-label": subnav_scroll, title: subnav_scroll} ↑
+      %a.home-link{href: "#{asset_prefix}#{lang_dir}", title: subnav_home}
+        %span.pteronaut> PTERONAUT
+        %span.os OS
+      %a{href: "#{asset_prefix}#{lang_dir}tutorials/", class: "active"}!= nav_tutorials
+      %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+      %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
+    %main.sub-main
+      .sub-content
+        %p.tutorial-number!= fls_number
+        %h1!= fls_h1
+        %p.sub-lead!= fls_lead
+        %p!= fls_p1
+        %p
+          != fls_p2_a
+          %a{href: "#{asset_prefix}#{lang_dir}tutorials/developing/"}!= fls_p2_link
+          != fls_p2_b
+
+        %h2!= fls_h2_prereq
+        %p!= fls_prereq_p
+        %ul
+          %li!= fls_prereq_pio
+          %li!= fls_prereq_node
+          %li!= fls_prereq_py
+          %li!= fls_prereq_serial
+        %aside.flasher-callout
+          %p.flasher-callout-text!= fls_windows_p_html
+
+        %h2!= fls_h2_quick
+        %p!= fls_quick_p
+        %pre
+          %code
+            :preserve
+              ./scripts/flash.sh
+        %pre
+          %code
+            :preserve
+              ./scripts/flash.sh --device pwmp5 --mixer 1 --domain eu --gyro none --lang en
+
+        %h2!= fls_h2_oneliner
+        %p!= fls_oneliner_note
+        %pre
+          %code
+            :preserve
+              # Flash a PWMP5, 2-wings + crest rudder, no gyro, English WebUI
+              ./scripts/flash.sh --device pwmp5 --mixer 1 --gyro none --lang en
+
+              # PWMP7 with rate-only gyro (Mesozoic damper)
+              ./scripts/flash.sh --device pwmp7 --gyro rate
+
+              # Self-level (Horizon) gyro, German + English WebUI
+              ./scripts/flash.sh --gyro horizon --lang de,en
+
+              # Skip the rebuild and flash the existing firmware.bin
+              ./scripts/flash.sh --device pwmp5 --no-build
+
+              # Just probe the bootloader (no build, no flash)
+              ./scripts/flash.sh --check
+
+              # List the catalogs
+              ./scripts/flash.sh --list-devices --list-mixers --list-langs
+
+        %h2!= fls_h2_flags
+
+        %h3!= fls_h3_device
+        %table
+          %tr
+            %th!= fls_th_key
+            %th!= fls_th_hw
+          %tr
+            %td
+              %code pwmp5
+            %td!= fls_dev_pwmp5
+          %tr
+            %td
+              %code pwmp7
+            %td!= fls_dev_pwmp7
+          %tr
+            %td
+              %code ep2pwm
+            %td!= fls_dev_ep2
+          %tr
+            %td
+              %code mushin
+            %td!= fls_dev_mushin
+
+        %h3!= fls_h3_mixer
+        %table
+          %tr
+            %th!= fls_th_num
+            %th!= fls_th_airframe
+          %tr
+            %td
+              %code 0
+            %td!= fls_mix_0
+          %tr
+            %td
+              %code 1
+            %td!= fls_mix_1
+          %tr
+            %td
+              %code 2
+            %td!= fls_mix_2
+          %tr
+            %td
+              %code 3
+            %td!= fls_mix_3
+          %tr
+            %td
+              %code 4
+            %td!= fls_mix_4
+          %tr
+            %td
+              %code 5
+            %td!= fls_mix_5
+          %tr
+            %td
+              %code 6
+            %td!= fls_mix_6
+          %tr
+            %td
+              %code 7
+            %td!= fls_mix_7
+          %tr
+            %td
+              %code 8
+            %td!= fls_mix_8
+          %tr
+            %td
+              %code 9
+            %td!= fls_mix_9
+          %tr
+            %td
+              %code 10
+            %td!= fls_mix_10
+          %tr
+            %td
+              %code 11
+            %td!= fls_mix_11
+          %tr
+            %td
+              %code 12
+            %td!= fls_mix_12
+          %tr
+            %td
+              %code 13
+            %td!= fls_mix_13
+
+        %h3!= fls_h3_domain
+        %table
+          %tr
+            %th!= fls_th_key
+            %th!= fls_th_meaning
+          %tr
+            %td
+              %code eu
+            %td!= fls_domain_eu
+          %tr
+            %td
+              %code ism
+            %td!= fls_domain_ism
+
+        %h3!= fls_h3_gyro
+        %table
+          %tr
+            %th!= fls_th_key
+            %th!= fls_th_effect
+          %tr
+            %td
+              %code none
+            %td!= fls_gyro_none
+          %tr
+            %td
+              %code rate
+            %td!= fls_gyro_rate
+          %tr
+            %td
+              %code horizon
+            %td!= fls_gyro_horizon
+        %p!= fls_gyro_alias
+
+        %h3!= fls_h3_imu
+        %table
+          %tr
+            %th!= fls_th_key
+            %th!= fls_th_board
+          %tr
+            %td
+              %code mpu6050
+            %td!= fls_imu_mpu
+          %tr
+            %td
+              %code lsm6ds3
+            %td!= fls_imu_lsm6
+
+        %h2!= fls_h2_detail
+        %p!= fls_detail_p
+        %pre
+          %code
+            :preserve
+              --binding-phrase &lt;s&gt;   # hardcoded binding phrase (empty = traditional bind)
+              --wifi-interval &lt;n&gt;    # WiFi auto-on seconds (-1 disables, default 30)
+              --device-name &lt;s&gt;      # device hostname
+              --wifi-ssid &lt;s&gt;        # home WiFi SSID (auto-join)
+              --wifi-pass &lt;s&gt;        # home WiFi password
+              --i2c-sda &lt;gpio&gt;       # IMU SDA (default 1)
+              --i2c-scl &lt;gpio&gt;       # IMU SCL (default 3)
+              --rotation &lt;0-6&gt;       # IMU board rotation
+              --pre-detect &lt;0|1&gt;     # probe SCL before I²C init (default 1)
+              --uart-baud &lt;rate&gt;     # CRSF UART baud (default 420000)
+              --baro &lt;0|1&gt;           # BMP180 barometer + altitude hold (shares gyro I²C bus)
+
+        %h3!= fls_h3_lang
+        %pre
+          %code
+            :preserve
+              --lang en        # English only (smallest bundle)
+              --lang en,de     # English + German
+              --lang all       # all 11 languages
+              # omit --lang → interactive pick (or reuse saved settings)
+        %p!= fls_lang_p
+
+        %h2!= fls_h2_save
+        %p!= fls_save_p
+        %pre
+          %code
+            :preserve
+              # Save this run's config (prompts for a name)
+              ./scripts/flash.sh --device pwmp5 --gyro none --save
+
+              # Save under a named preset
+              ./scripts/flash.sh --device pwmp7 --gyro rate --save=turbo
+
+              # Reuse a saved preset (flags override saved defaults)
+              ./scripts/flash.sh --conf=turbo --lang all
+
+              # Delete a saved preset
+              ./scripts/flash.sh --conf=turbo --reset
+        %p!= fls_save_note
+
+        %h2!= fls_h2_nobuild
+        %p!= fls_nobuild_p1
+        %pre
+          %code
+            :preserve
+              ./scripts/flash.sh --device pwmp5 --no-build
+        %p!= fls_nobuild_p2
+        %ul
+          %li!= fls_nobuild_fresh
+          %li!= fls_nobuild_trust
+        %p!= fls_nobuild_guard
+        %aside.flasher-callout
+          %p.flasher-callout-text!= fls_nobuild_warn
+
+        %h2!= fls_h2_flash
+        %p!= fls_flash_p
+        %ol
+          %li!= fls_flash_step1
+          %li!= fls_flash_step2
+          %li!= fls_flash_step3
+        %p!= fls_flash_tips
+        %ul
+          %li!= fls_tip1
+          %li!= fls_tip2
+          %li!= fls_tip3
+          %li!= fls_tip4
+
+        %h2!= fls_h2_output
+        %table
+          %tr
+            %th!= fls_out_th_artifact
+            %th!= fls_out_th_path
+          %tr
+            %td!= fls_out_webui
+            %td
+              %code src/html/headers/web-pteronautos-rx-8285.h
+          %tr
+            %td!= fls_out_fw
+            %td
+              %code src/.pio/build/&lt;target-env&gt;/firmware.bin
+          %tr
+            %td!= fls_out_flags
+            %td
+              %code src/user_defines.txt
+
+        %h2!= fls_h2_sample
+        %p!= fls_sample_note
+        %pre
+          %code
+            :preserve
+              $ ./scripts/flash.sh --device pwmp5 --mixer 1 --gyro none --lang en
+              Configuration
+                device        : pwmp5
+                mixer         : 1  · 2 wings + crest rudder
+                domain        : EU_CE_2400
+                gyro          : none
+                wifi interval : 30s
+                target env    : PteronautOS_ESP8285_2400_RX
+
+              ==> Building WebUI
+              ==> Building firmware (PteronautOS_ESP8285_2400_RX)
+              ==> Locating a working esptool
+              ==> Locating USB serial port
+              ==> Locating firmware binary
+              ==> Flashing firmware
+              ✓ Flash complete.
+    %footer
+      .lang-switch
+        %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT
+        %a{href: sub_lang_href_en, class: sub_lang_class_en} EN
+        %a{href: sub_lang_href_es, class: sub_lang_class_es} ES
+        %a{href: sub_lang_href_fr, class: sub_lang_class_fr} FR
+        %a{href: sub_lang_href_de, class: sub_lang_class_de} DE
+        %a{href: sub_lang_href_ru, class: sub_lang_class_ru} RU
+        %a{href: sub_lang_href_ko, class: sub_lang_class_ko} 한국어
+        %a{href: sub_lang_href_ja, class: sub_lang_class_ja} 日本語
+        %a{href: sub_lang_href_zh, class: sub_lang_class_zh} 中文
+        %a{href: sub_lang_href_ar, class: sub_lang_class_ar} عربي
+        %a{href: sub_lang_href_hi, class: sub_lang_class_hi} हिन्दी
+      %p.footer-links
+        %a.ext-link{href: "https://github.com/dantiel/PteronautOS", target: "_blank", rel: "noopener"}!= footer_github
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}documentation/"}!= nav_documentation
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}hardware/"}!= nav_hardware
+        %span.sep ·
+        %a{href: "#{asset_prefix}#{lang_dir}flasher/"}!= nav_flasher
+        %span.sep ·
+        %a.ext-link{href: "https://pteronaut.myspreadshop.de/", target: "_blank", rel: "noopener"}!= footer_store
+      %p.credit!= footer_credit

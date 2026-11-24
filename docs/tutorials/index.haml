@@ -61,6 +61,21 @@
             %span.tutorial-number!= tut_card_egg_number
             %strong!= tut_card_egg_title
             %p!= tut_card_egg_desc
+
+        %section.dev-section
+          %h2.dev-heading
+            %span.dev-tag!= tut_dev_tag
+            != tut_dev_heading
+          %p.dev-note!= tut_dev_note
+          .tutorial-menu
+            %a.tutorial-card.dev-card{href: "#{asset_prefix}#{lang_dir}tutorials/developing/"}
+              %span.tutorial-number!= tut_dev_dev_number
+              %strong!= tut_dev_dev_title
+              %p!= tut_dev_dev_desc
+            %a.tutorial-card.dev-card{href: "#{asset_prefix}#{lang_dir}tutorials/flash-script/"}
+              %span.tutorial-number!= tut_dev_fls_number
+              %strong!= tut_dev_fls_title
+              %p!= tut_dev_fls_desc
     %footer
       .lang-switch
         %a{href: sub_lang_href_pt, class: sub_lang_class_pt} PT

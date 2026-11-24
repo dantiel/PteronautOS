@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html dir='rtl' lang='ar'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>Developing PteronautOS — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='العودة للأعلى' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='العودة للأعلى' type='button'>↑</button>
+<a class='home-link' href='../../../ar/' title='صفحة PteronautOS الرئيسية'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ar/tutorials/'>دروس</a>
+<a href='../../../ar/hardware/'>العتاد</a>
+<a href='../../../ar/documentation/'>التوثيق</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Developer 01</p>
+<h1>Developing PteronautOS</h1>
+<p class='sub-lead'>Build, configure, and extend the hermetic firmware. This guide assumes you are comfortable with the command line.</p>
+<p>PteronautOS is a fork of ExpressLRS 4.x turned into a flight controller for servo-driven ornithopters, running on the ESP8285 @ 80 MHz / 1 MB flash.</p>
+<p>
+If you only want a local build to flash, skip to the 
+<a href='../../../ar/tutorials/flash-script/'>flash.sh guide</a>
+ — it wraps everything below into one command.
+</p>
+<h2>1 · Toolchain prerequisites</h2>
+<p>Follow the <strong><a href="https://www.expresslrs.org/software/toolchain-install/">ExpressLRS toolchain installation guide</a></strong> first — it is the single authoritative setup for the exact PlatformIO + ESP8266 toolchain this fork uses.</p>
+<table>
+<tr>
+<th>Requirement</th>
+<th>Notes</th>
+</tr>
+<tr>
+<td>PlatformIO Core</td>
+<td>`pio` on PATH — pulls the ESP8266/Arduino toolchain on first build</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>`20.x` (`.nvmrc` pins 20.20.2) — use `nvm use 20`</td>
+</tr>
+<tr>
+<td>Git</td>
+<td>to clone the repository</td>
+</tr>
+<tr>
+<td>Python 3</td>
+<td>for the image verifier and build scripts</td>
+</tr>
+</table>
+<p>If you already have PlatformIO installed, verify it:</p>
+<pre><code>pio --version&#x000A;node --version   # should print v20.x&#x000A;</code></pre>
+<aside class='flasher-callout'>
+<p class='flasher-callout-text'>Do not skip the ExpressLRS toolchain step — the machine-level prerequisites (Python, serial/udev drivers, PATH) come from that guide.</p>
+</aside>
+<h2>Windows setup (no VS Code needed)</h2>
+<p>On Windows you don't need VS Code — everything runs from the console. Paste this once into PowerShell (or Windows Terminal):</p>
+<pre><code>winget install --id Git.Git -e&#x000A;winget install --id OpenJS.NodeJS.LTS -e&#x000A;winget install --id Python.Python.3.12 -e&#x000A;python -m pip install -U platformio&#x000A;</code></pre>
+<p>Then open <strong>Git Bash</strong> (installed with Git) and run every command from there — <code>git</code>, <code>pio</code>, <code>npm</code> and <code>./scripts/flash.sh</code> all work unchanged. On Windows, skip <code>nvm use 20</code>: Node 20 is already on your PATH, so just run <code>npm run build:pteronautos</code> directly.</p>
+<p>No winget? Install Git, Node.js 20 and Python from their official download pages, then run the PlatformIO line above.</p>
+<h2>2 · Getting the code</h2>
+<pre><code>git clone https://github.com/dantiel/PteronautOS.git&#x000A;cd PteronautOS&#x000A;</code></pre>
+<p>The project is a self-contained PlatformIO project rooted at `src/`, with no third-party libraries outside the target `lib_deps`.</p>
+<h2>3 · Repository layout</h2>
+<table>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td>
+<code>src/platformio.ini</code>
+</td>
+<td>PlatformIO root — lists the target .ini files</td>
+</tr>
+<tr>
+<td>
+<code>src/targets/pteronautos-rx.ini</code>
+</td>
+<td>PteronautOS target definitions (the envs you build)</td>
+</tr>
+<tr>
+<td>
+<code>src/targets/common.ini</code>
+</td>
+<td>Shared ELRS / ESP8285 platform config</td>
+</tr>
+<tr>
+<td>
+<code>src/lib/Ornithopter/</code>
+</td>
+<td>Wing / motor mixer — waveform, gearbox, channel filter</td>
+</tr>
+<tr>
+<td>
+<code>src/lib/Zephyrus/</code>
+</td>
+<td>Gyro (MPU6050 / LSM6DS3) + Mesozoic stabilizer</td>
+</tr>
+<tr>
+<td>
+<code>src/lib/ServoOutput/</code>
+</td>
+<td>PWM output synced to the CRSF tick</td>
+</tr>
+<tr>
+<td>
+<code>src/lib/WIFI/</code>
+</td>
+<td>WebUI config server + PteroWebHandlers.cpp</td>
+</tr>
+<tr>
+<td>
+<code>src/lib/Mushin/</code>
+</td>
+<td>EP2 + RP2040 companion bridge</td>
+</tr>
+<tr>
+<td>
+<code>src/html/</code>
+</td>
+<td>WebUI source (Vite + CoffeeScript + Haml/Lithaml)</td>
+</tr>
+<tr>
+<td>
+<code>src/python/</code>
+</td>
+<td>Build / pre-build scripts, image verifier</td>
+</tr>
+<tr>
+<td>
+<code>src/src/rx_main.cpp</code>
+</td>
+<td>Entry point (forked ELRS RX loop)</td>
+</tr>
+<tr>
+<td>
+<code>src/user_defines.txt</code>
+</td>
+<td>Your compile-time overrides (gitignored)</td>
+</tr>
+<tr>
+<td>
+<code>src/user_defines.txt.example</code>
+</td>
+<td>Template for user_defines.txt</td>
+</tr>
+<tr>
+<td>
+<code>scripts/flash.sh</code>
+</td>
+<td>One-command build + flash wrapper</td>
+</tr>
+<tr>
+<td>
+<code>hermetic.manifest.md</code>
+</td>
+<td>Mission, architecture, and build prohibitions</td>
+</tr>
+</table>
+<h2>4 · Build order (the one thing that trips people up)</h2>
+<p>PteronautOS builds in two stages, and they must run in this order:</p>
+<table>
+<tr>
+<th>Stage</th>
+<th>Output</th>
+</tr>
+<tr>
+<td>WebUI</td>
+<td>
+<code>src/html/headers/web-pteronautos-rx-8285.h</code>
+</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>
+<code>src/.pio/build/&lt;env&gt;/firmware.bin</code>
+</td>
+</tr>
+</table>
+<p>The firmware build runs copy_html.py as a pre-build step, copying the WebUI header into WebContent.h. Build the WebUI first or you'll bake a stale WebUI into the image.</p>
+<h3>Build the WebUI</h3>
+<pre><code>cd src/html&#x000A;nvm use 20&#x000A;I18N_LOCALES=en npm run build:pteronautos&#x000A;</code></pre>
+<p>I18N_LOCALES selects which languages are baked in:</p>
+<pre><code>I18N_LOCALES=en        npm run build:pteronautos   # English only (smallest)&#x000A;I18N_LOCALES=en,de     npm run build:pteronautos   # English + German&#x000A;I18N_LOCALES=all       npm run build:pteronautos   # all 11 languages&#x000A;</code></pre>
+<h3>Build the firmware</h3>
+<pre><code>cd ../.. && pio run -d src -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
+<p>The binary lands in src/.pio/build/PteronautOS_ESP8285_2400_RX/firmware.bin.</p>
+<h2>5 · Target environments</h2>
+<p>Defined in src/targets/pteronautos-rx.ini:</p>
+<table>
+<tr>
+<th>Environment</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX</code>
+</td>
+<td>PWMP7, no gyro (Mesozoic rate damper compiled but off)</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX_HORIZON</code>
+</td>
+<td>PWMP7, gyro + self-level (HORIZON) + baro</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX_PWMP5</code>
+</td>
+<td>PWMP5 (5 pads, GPIO5 = radio BUSY)</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX_PWMP5_HORIZON</code>
+</td>
+<td>PWMP5 + gyro + self-level + baro</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX_BARO</code>
+</td>
+<td>Barometer-only (BMP180), no gyro</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_2400_RX_GEARBOX</code>
+</td>
+<td>Gearbox variant (mixer profile 5)</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_EP2_2400_RX</code>
+</td>
+<td>EP2 + RP2040 (MUSHIN companion bridge)</td>
+</tr>
+<tr>
+<td>
+<code>PteronautOS_ESP8285_EP2_2400_RX_PWM</code>
+</td>
+<td>EP2 standalone, RX/TX as 2 servos</td>
+</tr>
+</table>
+<p>A normal PWMP7 build with no gyro:</p>
+<pre><code>pio run -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
+<p>To add gyro self-level, build the _HORIZON env (defines ZEPHYRUS_ENABLED + MESOZOIC_HORIZON).</p>
+<h2>6 · Compile-time configuration</h2>
+<p>Two ways to pass build flags — they stack.</p>
+<h3>src/user_defines.txt (your overrides — gitignored)</h3>
+<p>Copy the template and edit it:</p>
+<pre><code>cp src/user_defines.txt.example src/user_defines.txt&#x000A;</code></pre>
+<p>It holds the human-tunable knobs — binding phrase, WiFi, gyro, mixer profile, UART baud:</p>
+<pre><code>-DAUTO_WIFI_ON_INTERVAL=30&#x000A;-DLOCK_ON_FIRST_CONNECTION&#x000A;-DMIXER_PROFILE=1&#x000A;-DZEPHYRUS_ENABLED=1&#x000A;-DZEPHYR_IMU=ZEPHYR_IMU_MPU6050&#x000A;-DMY_BINDING_PHRASE="my-binding-phrase"&#x000A;</code></pre>
+<p>PlatformIO picks this up automatically (build_flags.py) — no CLI flags needed. This is exactly what flash.sh writes for you.</p>
+<h3>One-off flags on the command line</h3>
+<pre><code>PLATFORMIO_BUILD_FLAGS="-DRegulatory_Domain_EU_CE_2400" \\&#x000A;  pio run -e PteronautOS_ESP8285_2400_RX&#x000A;</code></pre>
+<p>flash.sh uses this channel for the regulatory domain; the rest go through user_defines.txt.</p>
+<h3>Core tuning headers</h3>
+<p>For deeper, code-level tuning (channel maps, servo limits, mixer gains), edit the headers directly:</p>
+<ul>
+<li>
+<code>src/lib/Ornithopter/OrnithopterConfig.h</code>
+ — channel mapping, mixer profile enum, servo limits
+</li>
+<li>
+<code>src/lib/Zephyrus/ZephyrusConfig.h</code>
+ — I²C, IMU, AHRS/PID, mixer gains
+</li>
+</ul>
+<h2>7 · Where to make changes</h2>
+<table>
+<tr>
+<th>You want to…</th>
+<th>Edit</th>
+</tr>
+<tr>
+<td>Change wing / motor mixer behaviour</td>
+<td>
+<code>src/lib/Ornithopter/OrnithopterGearbox.cpp</code>
+<span> (gearbox) or Ornithopter.cpp (servo waveform)</span>
+</td>
+</tr>
+<tr>
+<td>Add / tune gyro stabilisation</td>
+<td>
+<code>src/lib/Zephyrus/Zephyrus.cpp</code>
+</td>
+</tr>
+<tr>
+<td>Add a WebUI setting</td>
+<td>
+<code>src/html/src/pages/*.coffee</code>
+<span> + *.lithaml + locales/*.js, then the JSON in PteroWebHandlers.cpp</span>
+</td>
+</tr>
+<tr>
+<td>Change PWM output</td>
+<td>
+<code>src/lib/ServoOutput/devServoOutput.cpp</code>
+</td>
+</tr>
+<tr>
+<td>Change the RX entry loop</td>
+<td>
+<code>src/src/rx_main.cpp</code>
+</td>
+</tr>
+</table>
+<p>After changing WebUI source, re-run the WebUI build, then the firmware build.</p>
+<h2>8 · Build rules (non-negotiable)</h2>
+<p>From hermetic.manifest.md — the target is a 1 MB, 80 MHz ESP8285; every feature pays for itself:</p>
+<ul>
+<li>Never malloc / new — stack and globals only.</li>
+<li>Never delay() — it breaks CRSF timing; everything is async.</li>
+<li>Never block the main loop.</li>
+<li>Never remove the centred failsafe — wings return to 1500 µs on link loss.</li>
+<li>Stay under 65% RAM / 60% Flash.</li>
+<li>Never add GPS / VTX / waypoints / navigation — those belong to OrniFlight.</li>
+</ul>
+<p>Current ESP8285 builds sit near 65% RAM (ELRS WiFi stack + Ornithopter + Zephyrus). Be mindful of buffers and large tables.</p>
+<h2>9 · Quick reference</h2>
+<pre><code># Fresh clone → first build (PWMP7, no gyro, English WebUI)&#x000A;cd src/html && nvm use 20 && I18N_LOCALES=en npm run build:pteronautos&#x000A;cd ../.. && cd src && pio run -e PteronautOS_ESP8285_2400_RX&#x000A;&#x000A;# Build with gyro self-level&#x000A;pio run -e PteronautOS_ESP8285_2400_RX_HORIZON&#x000A;&#x000A;# Build PWMP5&#x000A;pio run -e PteronautOS_ESP8285_2400_RX_PWMP5&#x000A;&#x000A;# Inspect the full target list&#x000A;pio run --list-targets&#x000A;</code></pre>
+<p>
+For the one-command build-and-flash flow (and how --no-build, saved presets, and the bootloader work), read the 
+<a href='../../../ar/tutorials/flash-script/'>flash.sh guide</a>
+.
+</p>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/developing/'>PT</a>
+<a class='' href='../../../en/tutorials/developing/'>EN</a>
+<a class='' href='../../../es/tutorials/developing/'>ES</a>
+<a class='' href='../../../fr/tutorials/developing/'>FR</a>
+<a class='' href='../../../de/tutorials/developing/'>DE</a>
+<a class='' href='../../../ru/tutorials/developing/'>RU</a>
+<a class='' href='../../../ko/tutorials/developing/'>한국어</a>
+<a class='' href='../../../ja/tutorials/developing/'>日本語</a>
+<a class='' href='../../../zh/tutorials/developing/'>中文</a>
+<a class='active' href='../../../ar/tutorials/developing/'>عربي</a>
+<a class='' href='../../../hi/tutorials/developing/'>हिन्दी</a>
+</div>
+<p class='footer-links'>
+<a class='ext-link' href='https://github.com/dantiel/PteronautOS' rel='noopener' target='_blank'>GitHub</a>
+<span class='sep'>·</span>
+<a href='../../../ar/documentation/'>التوثيق</a>
+<span class='sep'>·</span>
+<a href='../../../ar/hardware/'>العتاد</a>
+<span class='sep'>·</span>
+<a href='../../../ar/flasher/'>Fossil Etcher</a>
+<span class='sep'>·</span>
+<a class='ext-link' href='https://pteronaut.myspreadshop.de/' rel='noopener' target='_blank'>متجر البعثة</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

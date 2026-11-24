@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html dir='ltr' lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1' name='viewport'>
+<title>flash.sh — Local Builds — Tutorials</title>
+<link href='https://fonts.googleapis.com' rel='preconnect'>
+<link crossorigin='true' href='https://fonts.gstatic.com' rel='preconnect'>
+<link href='https://fonts.googleapis.com/css2?family=Turret+Road:wght@200;300;400;500;700;800&amp;family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Devanagari:wght@200;300;400;500;700&amp;display=swap' rel='stylesheet'>
+<link href='../../../assets/css/style.css' rel='stylesheet'>
+</head>
+<body class='sub-page'>
+<nav class='sub-nav'>
+<div aria-hidden='true' class='nav-progressive-blur'>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+</div>
+<button aria-label='トップへ' class='nav-scroll-top' onclick='window.scrollTo({top:0,behavior:&#39;smooth&#39;})' title='トップへ' type='button'>↑</button>
+<a class='home-link' href='../../../ja/' title='PteronautOS ホーム'><span class='pteronaut'>PTERONAUT</span><span class='os'>OS</span>
+</a>
+<a class='active' href='../../../ja/tutorials/'>チュートリアル</a>
+<a href='../../../ja/hardware/'>ハードウェア</a>
+<a href='../../../ja/documentation/'>ドキュメント</a>
+</nav>
+<main class='sub-main'>
+<div class='sub-content'>
+<p class='tutorial-number'>Developer 02</p>
+<h1>flash.sh — local builds</h1>
+<p class='sub-lead'>The one-command counterpart to the browser Flasher: build, verify, and flash over UART — no cloud build required.</p>
+<p>flash.sh walks the same configuration surface as the web flasher and the GitHub Actions cloud build, then builds the WebUI, compiles the firmware, verifies the image, and flashes it over UART.</p>
+<p>
+For the manual step-by-step build path, see the 
+<a href='../../../ja/tutorials/developing/'>developing guide</a>
+.
+</p>
+<h2>1 · Prerequisites</h2>
+<p>Same toolchain as developing — see the ExpressLRS toolchain-install guide. In short:</p>
+<ul>
+<li>PlatformIO Core (pio)</li>
+<li>Node.js 20 (nvm use 20)</li>
+<li>Python 3</li>
+<li>An FTDI / serial adapter (or RP2040 bridge) wired to the receiver</li>
+</ul>
+<aside class='flasher-callout'>
+<p class='flasher-callout-text'>Windows users: open <strong>Git Bash</strong> (installed with Git for Windows) and run the exact same commands — <code>./scripts/flash.sh</code> works unchanged. The one-time setup is covered on the Developing page.</p>
+</aside>
+<h2>2 · Quick start — the interactive wizard</h2>
+<p>With no flags, the script runs a guided wizard (device → mixer → domain → gyro → languages) and then builds + flashes. Everything the wizard asks can also be passed directly as a flag:</p>
+<pre><code>./scripts/flash.sh&#x000A;</code></pre>
+<pre><code>./scripts/flash.sh --device pwmp5 --mixer 1 --domain eu --gyro none --lang en&#x000A;</code></pre>
+<h2>3 · Common one-liners</h2>
+<p>The comments in the block describe each flag combination.</p>
+<pre><code># Flash a PWMP5, 2-wings + crest rudder, no gyro, English WebUI&#x000A;./scripts/flash.sh --device pwmp5 --mixer 1 --gyro none --lang en&#x000A;&#x000A;# PWMP7 with rate-only gyro (Mesozoic damper)&#x000A;./scripts/flash.sh --device pwmp7 --gyro rate&#x000A;&#x000A;# Self-level (Horizon) gyro, German + English WebUI&#x000A;./scripts/flash.sh --gyro horizon --lang de,en&#x000A;&#x000A;# Skip the rebuild and flash the existing firmware.bin&#x000A;./scripts/flash.sh --device pwmp5 --no-build&#x000A;&#x000A;# Just probe the bootloader (no build, no flash)&#x000A;./scripts/flash.sh --check&#x000A;&#x000A;# List the catalogs&#x000A;./scripts/flash.sh --list-devices --list-mixers --list-langs&#x000A;</code></pre>
+<h2>4 · Primary flags</h2>
+<h3>Device (--device)</h3>
+<table>
+<tr>
+<th>Key</th>
+<th>Hardware</th>
+</tr>
+<tr>
+<td>
+<code>pwmp5</code>
+</td>
+<td>PWMP5 — 5 servo pads (GPIO0/1/3/9/10, GPIO5 = radio BUSY)</td>
+</tr>
+<tr>
+<td>
+<code>pwmp7</code>
+</td>
+<td>PWMP7 — 6 servo pads (GPIO0/1/3/9/10/5)</td>
+</tr>
+<tr>
+<td>
+<code>ep2pwm</code>
+</td>
+<td>EP2 PWM — standalone, RX/TX (GPIO3/1) as 2 servos</td>
+</tr>
+<tr>
+<td>
+<code>mushin</code>
+</td>
+<td>EP2 + RP2040 — MUSHIN companion bridge (9 ch)</td>
+</tr>
+</table>
+<h3>Mixer profile (--mixer 0-13)</h3>
+<table>
+<tr>
+<th>#</th>
+<th>Airframe</th>
+</tr>
+<tr>
+<td>
+<code>0</code>
+</td>
+<td>2 wings (flapping waveform)</td>
+</tr>
+<tr>
+<td>
+<code>1</code>
+</td>
+<td>2 wings + crest rudder</td>
+</tr>
+<tr>
+<td>
+<code>2</code>
+</td>
+<td>4 wings (front/back flapping)</td>
+</tr>
+<tr>
+<td>
+<code>3</code>
+</td>
+<td>V-tail + head rudder (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>4</code>
+</td>
+<td>motor + V-tail (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>5</code>
+</td>
+<td>motor + V-tail + head rudder (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>6</code>
+</td>
+<td>elevator + rudder (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>7</code>
+</td>
+<td>motor + elevator + rudder (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>8</code>
+</td>
+<td>motor + rudder + 3-servo rotation tail (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>9</code>
+</td>
+<td>motor + rudder + 2-servo split elevon tail (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>10</code>
+</td>
+<td>motor + rudder + 1-pitch 1-rotate tail (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>11</code>
+</td>
+<td>motor + rudder + merged 2-servo tail (gearbox)</td>
+</tr>
+<tr>
+<td>
+<code>12</code>
+</td>
+<td>Z-Wing 9-PWM (motor + rudder + 4 wing + 3 tail)</td>
+</tr>
+<tr>
+<td>
+<code>13</code>
+</td>
+<td>motor + merged flat tail (gearbox)</td>
+</tr>
+</table>
+<h3>Regulatory domain (--domain)</h3>
+<table>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+<tr>
+<td>
+<code>eu</code>
+</td>
+<td>EU CE 2400 — LBT (listen-before-talk, limited)</td>
+</tr>
+<tr>
+<td>
+<code>ism</code>
+</td>
+<td>ISM 2400 — full ISM band</td>
+</tr>
+</table>
+<h3>Gyro (--gyro)</h3>
+<table>
+<tr>
+<th>Key</th>
+<th>Effect</th>
+</tr>
+<tr>
+<td>
+<code>none</code>
+</td>
+<td>no gyro (default)</td>
+</tr>
+<tr>
+<td>
+<code>rate</code>
+</td>
+<td>rate-only damper (Mesozoic)</td>
+</tr>
+<tr>
+<td>
+<code>horizon</code>
+</td>
+<td>rate + self-level (Mesozoic HORIZON)</td>
+</tr>
+</table>
+<p>Legacy aliases still work: --mode none|rate|horizon and --horizon.</p>
+<h3>IMU chip (--imu)</h3>
+<table>
+<tr>
+<th>Key</th>
+<th>Sensor board</th>
+</tr>
+<tr>
+<td>
+<code>mpu6050</code>
+</td>
+<td>GY-521 (MPU6050) — default</td>
+</tr>
+<tr>
+<td>
+<code>lsm6ds3</code>
+</td>
+<td>GY-LSM6DS3 (LSM6DS3)</td>
+</tr>
+</table>
+<h2>5 · Detail flags</h2>
+<p>The full flag reference (each comment explains the flag):</p>
+<pre><code>--binding-phrase &lt;s&gt;   # hardcoded binding phrase (empty = traditional bind)&#x000A;--wifi-interval &lt;n&gt;    # WiFi auto-on seconds (-1 disables, default 30)&#x000A;--device-name &lt;s&gt;      # device hostname&#x000A;--wifi-ssid &lt;s&gt;        # home WiFi SSID (auto-join)&#x000A;--wifi-pass &lt;s&gt;        # home WiFi password&#x000A;--i2c-sda &lt;gpio&gt;       # IMU SDA (default 1)&#x000A;--i2c-scl &lt;gpio&gt;       # IMU SCL (default 3)&#x000A;--rotation &lt;0-6&gt;       # IMU board rotation&#x000A;--pre-detect &lt;0|1&gt;     # probe SCL before I²C init (default 1)&#x000A;--uart-baud &lt;rate&gt;     # CRSF UART baud (default 420000)&#x000A;--baro &lt;0|1&gt;           # BMP180 barometer + altitude hold (shares gyro I²C bus)&#x000A;</code></pre>
+<h3>WebUI languages (--lang / -l)</h3>
+<pre><code>--lang en        # English only (smallest bundle)&#x000A;--lang en,de     # English + German&#x000A;--lang all       # all 11 languages&#x000A;# omit --lang → interactive pick (or reuse saved settings)&#x000A;</code></pre>
+<p>Available codes: en pt de es fr hi ja ko ru zh ar.</p>
+<h2>6 · Saved config presets</h2>
+<p>The script can persist a whole configuration to a gitignored file (safe for binding phrases / WiFi passwords):</p>
+<pre><code># Save this run's config (prompts for a name)&#x000A;./scripts/flash.sh --device pwmp5 --gyro none --save&#x000A;&#x000A;# Save under a named preset&#x000A;./scripts/flash.sh --device pwmp7 --gyro rate --save=turbo&#x000A;&#x000A;# Reuse a saved preset (flags override saved defaults)&#x000A;./scripts/flash.sh --conf=turbo --lang all&#x000A;&#x000A;# Delete a saved preset&#x000A;./scripts/flash.sh --conf=turbo --reset&#x000A;</code></pre>
+<p>Files live at .pteronautos-flash-<name>.conf. Without --conf, a saved default is offered interactively ("Reuse saved settings?").</p>
+<h2>7 · --no-build and image verification</h2>
+<p>--no-build skips the rebuild and flashes the existing firmware.bin:</p>
+<pre><code>./scripts/flash.sh --device pwmp5 --no-build&#x000A;</code></pre>
+<p>Before flashing, the script runs verify_pteronautos_image.py:</p>
+<ul>
+<li>Fresh build (BUILD=1) — the .bin must exactly match the flags you just passed (including the gyro on/off PWM map).</li>
+<li>--no-build (BUILD=0) — the script trusts the embedded hardware map (--trust_embedded), so it no longer complains about a mismatch just because your current flags differ from what the bin was last compiled with.</li>
+</ul>
+<p>One guard is always enforced: the --expect_product board-type check is derived from --device, so you can't accidentally flash a PWMP7 image onto a PWMP5.</p>
+<aside class='flasher-callout'>
+<p class='flasher-callout-text'>If a fresh build fails with "Hardware differs from project map", the bin on disk was built with a different gyro setting — rebuild (drop --no-build), or pass the matching --gyro flag.</p>
+</aside>
+<h2>8 · Flashing (bootloader)</h2>
+<p>The script locates esptool and the USB port, then writes the firmware. It assumes the receiver is already in bootloader mode:</p>
+<ol>
+<li>Hold BOOT (GPIO0) on the receiver.</li>
+<li>Power-cycle the receiver (unplug its 3.3 V / USB → plug back in).</li>
+<li>Keep holding ~1 s, then release.</li>
+</ol>
+<p>Tips:</p>
+<ul>
+<li>Disconnect servos / external load from the 3.3 V rail while flashing — the ESP draws more and can brown out.</li>
+<li>If flashing is flaky, drop the baud: --baud 9600.</li>
+<li>After a successful flash, unplug and re-plug the receiver (do not hold GPIO0) for a normal boot.</li>
+<li>To check the chip is alive without flashing: ./scripts/flash.sh --check.</li>
+</ul>
+<h2>9 · Where the build output lands</h2>
+<table>
+<tr>
+<th>Artifact</th>
+<th>Path</th>
+</tr>
+<tr>
+<td>WebUI header</td>
+<td>
+<code>src/html/headers/web-pteronautos-rx-8285.h</code>
+</td>
+</tr>
+<tr>
+<td>Firmware binary</td>
+<td>
+<code>src/.pio/build/&lt;target-env&gt;/firmware.bin</code>
+</td>
+</tr>
+<tr>
+<td>Your build flags</td>
+<td>
+<code>src/user_defines.txt</code>
+</td>
+</tr>
+</table>
+<h2>10 · What a typical run looks like</h2>
+<p>A sample run with device, mixer, gyro, and language flags:</p>
+<pre><code>$ ./scripts/flash.sh --device pwmp5 --mixer 1 --gyro none --lang en&#x000A;Configuration&#x000A;  device        : pwmp5&#x000A;  mixer         : 1  · 2 wings + crest rudder&#x000A;  domain        : EU_CE_2400&#x000A;  gyro          : none&#x000A;  wifi interval : 30s&#x000A;  target env    : PteronautOS_ESP8285_2400_RX&#x000A;&#x000A;==> Building WebUI&#x000A;==> Building firmware (PteronautOS_ESP8285_2400_RX)&#x000A;==> Locating a working esptool&#x000A;==> Locating USB serial port&#x000A;==> Locating firmware binary&#x000A;==> Flashing firmware&#x000A;✓ Flash complete.&#x000A;</code></pre>
+</div>
+</main>
+<footer>
+<div class='lang-switch'>
+<a class='' href='../../../tutorials/flash-script/'>PT</a>
+<a class='' href='../../../en/tutorials/flash-script/'>EN</a>
+<a class='' href='../../../es/tutorials/flash-script/'>ES</a>
+<a class='' href='../../../fr/tutorials/flash-script/'>FR</a>
+<a class='' href='../../../de/tutorials/flash-script/'>DE</a>
+<a class='' href='../../../ru/tutorials/flash-script/'>RU</a>
+<a class='' href='../../../ko/tutorials/flash-script/'>한국어</a>
+<a class='active' href='../../../ja/tutorials/flash-script/'>日本語</a>
+<a class='' href='../../../zh/tutorials/flash-script/'>中文</a>
+<a class='' href='../../../ar/tutorials/flash-script/'>عربي</a>
+<a class='' href='../../../hi/tutorials/flash-script/'>हिन्दी</a>
+</div>
+<p class='footer-links'>
+<a class='ext-link' href='https://github.com/dantiel/PteronautOS' rel='noopener' target='_blank'>GitHub</a>
+<span class='sep'>·</span>
+<a href='../../../ja/documentation/'>ドキュメント</a>
+<span class='sep'>·</span>
+<a href='../../../ja/hardware/'>ハードウェア</a>
+<span class='sep'>·</span>
+<a href='../../../ja/flasher/'>Fossil Etcher</a>
+<span class='sep'>·</span>
+<a class='ext-link' href='https://pteronaut.myspreadshop.de/' rel='noopener' target='_blank'>エクスペディションストア</a>
+</p>
+<p class='credit'>HERMETIC FIRMWARE</p>
+</footer>
+</body>
+</html>

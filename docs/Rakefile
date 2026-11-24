@@ -27,6 +27,15 @@ def enrich_translations(vars)
   vars
 end
 
+# Merge English as a fallback base so new (often technical) keys never render
+# empty in a language that hasn't translated them yet. The language file still
+# wins for every key it defines.
+def load_vars(lang)
+  en = JSON.parse(File.read("_lang/en.json", encoding: "UTF-8"))
+  own = JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8"))
+  enrich_translations(en.merge(own))
+end
+
 LANGS = %w[pt en ru es de ko ja zh ar hi fr]
 SUBFOLDERS = %w[en ru es de ko ja zh ar hi fr]
 PAGES = %w[
@@ -39,6 +48,8 @@ PAGES = %w[
   tutorials/yoshimitsu
   tutorials/companion-compute
   tutorials/wifi-flashing
+  tutorials/developing
+  tutorials/flash-script
   hardware
   hardware/power
   hardware/telemetry
@@ -63,7 +74,7 @@ CLOBBER.include(
 )
 
 def build_html(lang)
-  vars = enrich_translations(JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8")))
+  vars = load_vars(lang)
   template = File.read("index.haml", encoding: "UTF-8")
   engine = Haml::Template.new { template }
 
@@ -82,7 +93,7 @@ task :haml do
 end
 
 def build_page(name, lang)
-  vars = enrich_translations(JSON.parse(File.read("_lang/#{lang}.json", encoding: "UTF-8")))
+  vars = load_vars(lang)
   template = File.read("#{name}/index.haml", encoding: "UTF-8")
   engine = Haml::Template.new { template }
 

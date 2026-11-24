@@ -39,10 +39,12 @@ Requires Node.js 20+. The `I18N_LOCALES` flag (and `--lang` on the flash script)
 
 ### Developer guides
 
-| Guide | Scope |
-|-------|-------|
-| [DEVELOPING.md](DEVELOPING.md) | Developer tutorial — toolchain setup, repo layout, build order, target envs, config, and build rules |
-| [FLASH-SCRIPT.md](FLASH-SCRIPT.md) | `scripts/flash.sh` tutorial — flags, mixers, saved presets, `--no-build`, and flashing |
+These live on the docs website too — under **Tutorials → For developers** (kept apart from the user tutorials so flying stays easy):
+
+| Guide | Scope | Website |
+|-------|-------|---------|
+| [DEVELOPING.md](DEVELOPING.md) | Developer tutorial — toolchain setup, repo layout, build order, target envs, config, and build rules | [`tutorials/developing`](docs/tutorials/developing/) |
+| [FLASH-SCRIPT.md](FLASH-SCRIPT.md) | `scripts/flash.sh` tutorial — flags, mixers, saved presets, `--no-build`, and flashing | [`tutorials/flash-script`](docs/tutorials/flash-script/) |
 
 ### Current Footprint (ESP8285)
 
